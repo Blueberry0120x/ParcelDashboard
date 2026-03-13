@@ -1,2 +1,466 @@
-﻿<!-- Master Site Dashboard - Shell -->
+﻿<!DOCTYPE html>
+<!-- Master Site Dashboard v6 — Modular Engine Architecture -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Site Analysis Dashboard</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" rel="stylesheet" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* ==========================================
+           1. CORE VARIABLES & BASE
+           ========================================== */
+        :root {
+            --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
+            --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
+            --line: #dbe3ee; --cad-bg: #1a1a1a; --cad-text: #e0e0e0;
+            --cad-border: #444; --cad-accent: #d670d6;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0; padding: 20px 40px;
+            background-color: var(--bg); color: var(--text);
+        }
+        
+        /* ==========================================
+           2. HEADER & BANNER
+           ========================================== */
+        .header {
+            border-bottom: 3px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 28px; }
+        .header-btn {
+            background-color: white; color: var(--primary); border: 2px solid white;
+            padding: 8px 16px; border-radius: 6px; text-decoration: none;
+            font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .header-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Tightly packed property banner */
+        .property-banner {
+            background: var(--primary); color: white; border-radius: 8px; padding: 10px 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;
+            margin-bottom: 20px; box-shadow: 0 4px 6px rgba(15,76,129,.18);
+        }
+        .banner-stat { display: flex; flex-direction: column; }
+        .banner-label { font-size: 0.70em; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 2px; }
+        .banner-value { font-size: 1.05em; font-weight: bold; line-height: 1.2; }
+
+        /* ==========================================
+           3. MAIN LAYOUT GRID (Left: Tools, Right: Map)
+           ========================================== */
+        .main-container { display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: start; }
+
+        /* Left Side: Concept Design & Info */
+        .sidebar-box {
+            background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+            padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(17,24,39,.03);
+        }
+        .sidebar-box h2 { margin: 0 0 10px 0; font-size: 1.1em; color: var(--primary); border-bottom: 2px solid var(--secondary); padding-bottom: 5px; }
+
+        /* CAD-Style Data Tables */
+        details { background: var(--cad-bg); color: var(--cad-text); border: 1px solid var(--cad-border); border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+        summary {
+            padding: 10px 15px; font-weight: bold; font-size: 1.05em; color: var(--cad-accent); background: #222;
+            cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary:after { content: "+"; font-size: 1.2em; color: white; }
+        details[open] summary:after { content: "-"; }
+        details[open] summary { border-bottom: 1px solid var(--cad-border); }
+
+        .cad-table { width: 100%; border-collapse: collapse; font-size: 0.85em; font-family: 'Segoe UI', sans-serif; }
+        .cad-table th, .cad-table td { padding: 6px 10px; border-bottom: 1px solid var(--cad-border); border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle; }
+        .cad-table th { width: 45%; font-weight: bold; background: #2a2a2a; }
+        .cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
+        .cad-table td:last-child { border-right: none; }
+
+        /* Unit Toggle Button */
+        .unit-toggle {
+            background: transparent; border: 1px solid var(--cad-accent); color: var(--cad-accent);
+            border-radius: 4px; padding: 2px 6px; font-size: 0.8em; cursor: pointer; float: right;
+        }
+        .unit-toggle:hover { background: var(--cad-accent); color: var(--cad-bg); }
+
+        /* ==========================================
+           4. RIGHT SIDE MAP & FLYOUT CONTROL
+           ========================================== */
+        #map { height: 750px; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
+
+        /* Horizontal stacking for zoom + custom controls */
+        .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; padding-top: 10px; padding-left: 10px; }
+        .leaflet-top.leaflet-left .leaflet-control { margin-top: 0; margin-left: 0; margin-right: 10px; }
+
+        /* Flyout Button & Container */
+        .align-map-control { position: relative; font-family: 'Segoe UI', sans-serif; }
+        .flyout-trigger {
+            background-color: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px;
+            padding: 5px 10px; font-weight: bold; font-size: 14px; color: var(--primary);
+            cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,0.65); transition: 0.2s; height: 34px;
+        }
+        .flyout-trigger:hover { background-color: #f4f4f4; }
+
+        .flyout-panel {
+            display: none; position: absolute; top: 40px; left: 0; width: 320px;
+            background: white; border: 1px solid #cbd5e0; border-radius: 6px; padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; cursor: default;
+        }
+        .align-map-control.open .flyout-panel { display: block; }
+        .align-map-control.open .flyout-trigger { background-color: var(--primary); color: white; }
+
+        /* Flyout Internal Tools */
+        .control-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 0.9em; }
+        .slider-container { display: flex; align-items: center; width: 100%; }
+        input[type="range"] { width: 100%; margin: 0 10px; }
+        .editable-angle { width: 50px; text-align: right; border: none; border-bottom: 1px dashed #aaa; font-weight: bold; }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .btn-export { background-color: var(--accent); color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; width: 100%; cursor: pointer; margin-bottom: 5px; }
+        textarea { width: 100%; height: 120px; padding: 8px; font-family: monospace; font-size: 0.85em; background: #1a202c; color: #a0aec0; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1 id="ui-title">Master Site Dashboard</h1>
+            <p style="color: #4a5568; margin: 0;">Interactive Planning &amp; AutoLISP Export Tool</p>
+        </div>
+        <a href="https://assr.parcelquest.com/Statewide?IndexViewModel=PQGov.Models.IndexViewModel" target="_blank" class="header-btn">Open ParcelQuest ↗</a>
+    </div>
+
+    <div class="property-banner">
+        <div class="banner-stat"><span class="banner-label">Address</span><span class="banner-value" id="ui-address"></span></div>
+        <div class="banner-stat"><span class="banner-label">APN</span><span class="banner-value" id="ui-apn"></span></div>
+        <div class="banner-stat"><span class="banner-label">Dimensions</span><span class="banner-value"><span id="ui-w"></span>' x <span id="ui-d"></span>'</span></div>
+        <div class="banner-stat"><span class="banner-label">Lot Size</span><span class="banner-value" id="ui-sqft"></span></div>
+        <div class="banner-stat"><span class="banner-label">Zoning</span><span class="banner-value" id="ui-zoning"></span></div>
+        <div class="banner-stat"><span class="banner-label">Base Density</span><span class="banner-value">1 DU / 600 SF</span></div>
+        <div class="banner-stat"><span class="banner-label">Max FAR</span><span class="banner-value">2.0 Base</span></div>
+        <div class="banner-stat"><span class="banner-label">Max Height</span><span class="banner-value">50 FT</span></div>
+        <div class="banner-stat"><span class="banner-label">Setbacks (F/B/S)</span><span class="banner-value">10' / 10' / 0'</span></div>
+    </div>
+
+    <div class="main-container">
+
+        <div class="sidebar">
+            <div class="sidebar-box">
+                <h2>Concept Design</h2>
+                <p style="font-size: 0.9em; color: #666; font-style: italic;">Turnaround and lot yield scripts will populate here...</p>
+            </div>
+
+            <details open>
+                <summary>PROJECT INFORMATION</summary>
+                <table class="cad-table">
+                    <tr><th>PROJECT ADDRESS:</th><td id="info-address"></td></tr>
+                    <tr><th>LEGAL DESCRIPTION:</th><td>--</td></tr>
+                    <tr><th>PARCEL#:</th><td id="info-apn"></td></tr>
+                    <tr><th>YEAR BUILT:</th><td>--</td></tr>
+                    <tr><th>BASE ZONE:</th><td id="info-zone"></td></tr>
+                    <tr><th>OCCUPANCY GROUP:</th><td>R-3</td></tr>
+                    <tr><th>AVERAGE ELEVATION:</th><td>--</td></tr>
+                    <tr><th>LOT WIDTH:</th><td id="info-w"></td></tr>
+                    <tr><th>HEIGHT RESTRICTION:</th><td>50.0</td></tr>
+                    <tr><th>STANDARD SETBACKS:</th><td>(F) 10-FT | (B) 10-FT | (S) 0-FT</td></tr>
+                </table>
+            </details>
+
+            <details open>
+                <summary>LAND COVERAGE</summary>
+                <table class="cad-table">
+                    <tr>
+                        <th>LOT SIZE: <button id="unitToggleBtn" class="unit-toggle">SF</button></th>
+                        <td id="info-lotsize"></td>
+                    </tr>
+                    <tr><th>EX. BLD:</th><td>--</td></tr>
+                    <tr><th>MIN LOT / DENSITY:</th><td id="info-density-lot"></td></tr>
+                    <tr><th>MAX FAR:</th><td>2.0</td></tr>
+                    <tr><th>BUILDABLE FAR:</th><td id="info-buildable-far"></td></tr>
+                    <tr><th>PROPOSED ADU(S):</th><td>--</td></tr>
+                    <tr><th>TOTAL FAR:</th><td>--</td></tr>
+                    <tr><th>FAR CHECK:</th><td>--</td></tr>
+                </table>
+            </details>
+        </div>
+
+        <div class="map-panel">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ENGINE 1: CONFIGURATION & STATE
+         */
+        const ConfigEngine = {
+            data: {
+                address: "4335 Euclid Ave, San Diego",
+                apn: "471-271-16-00",
+                zoning: "CUPD-CU-2-4",
+                width: 50,
+                depth: 125,
+                commercialDepth: 30
+            },
+            defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
+            cad: {
+                projection: "CA_VI_IF",
+                proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
+            },
+            state: { lat: 0, lng: 0, rotation: 0, isSnapping: false, unitMode: 'SF' },
+            init: function() {
+                this.state.lat = parseFloat(localStorage.getItem('site_lat')) || this.defaults.lat;
+                this.state.lng = parseFloat(localStorage.getItem('site_lng')) || this.defaults.lng;
+                this.state.rotation = parseFloat(localStorage.getItem('site_rot')) || this.defaults.rotation;
+            },
+            save: function() {
+                localStorage.setItem('site_lat', this.state.lat);
+                localStorage.setItem('site_lng', this.state.lng);
+                localStorage.setItem('site_rot', this.state.rotation);
+            }
+        };
+
+        /**
+         * ENGINE 2: USER INTERFACE
+         */
+        const UIEngine = {
+            init: function() {
+                const d = ConfigEngine.data;
+                const sqft = d.width * d.depth;
+
+                document.getElementById('ui-address').innerText = d.address;
+                document.getElementById('ui-apn').innerText = d.apn;
+                document.getElementById('ui-zoning').innerText = d.zoning;
+                document.getElementById('ui-w').innerText = d.width;
+                document.getElementById('ui-d').innerText = d.depth;
+                document.getElementById('ui-sqft').innerText = sqft.toLocaleString() + ' SF';
+
+                document.getElementById('info-address').innerText = d.address;
+                document.getElementById('info-apn').innerText = d.apn;
+                document.getElementById('info-zone').innerText = d.zoning;
+                document.getElementById('info-w').innerText = d.width.toFixed(1);
+
+                this.updateLotSizeDisplay();
+                document.getElementById('info-density-lot').innerText = sqft.toFixed(1) + " S.F.";
+                document.getElementById('info-buildable-far').innerText = (sqft * 2.0).toFixed(1) + " S.F.";
+
+                document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
+                    ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';
+                    e.target.innerText = ConfigEngine.state.unitMode;
+                    this.updateLotSizeDisplay();
+                });
+            },
+            updateLotSizeDisplay: function() {
+                const sqft = ConfigEngine.data.width * ConfigEngine.data.depth;
+                const el = document.getElementById('info-lotsize');
+                if (ConfigEngine.state.unitMode === 'SF') {
+                    el.innerText = sqft.toFixed(1) + " S.F.";
+                } else {
+                    el.innerText = (sqft / 43560).toFixed(3) + " AC";
+                }
+            }
+        };
+
+        /**
+         * ENGINE 3: MAP & GEOMETRY
+         */
+        const MapEngine = {
+            map: null, dragMarker: null, lotPoly: null, commPoly: null, gridLayer: null,
+
+            init: function() {
+                const osm  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, crossOrigin: true });
+                const sat  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 21, crossOrigin: true });
+                const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 16, maxZoom: 21, crossOrigin: true });
+
+                this.map = L.map('map', {
+                    center: [ConfigEngine.state.lat, ConfigEngine.state.lng], zoom: 19, layers: [osm],
+                    fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' }
+                });
+                L.control.layers({ "Street Map": osm, "Topography": topo, "Satellite": sat }).addTo(this.map);
+
+                const GridOverlay = L.GridLayer.extend({
+                    createTile: function () {
+                        var t = L.DomUtil.create('canvas', 'leaflet-tile');
+                        var s = this.getTileSize();
+                        t.width = s.x; t.height = s.y;
+                        var ctx = t.getContext('2d');
+                        ctx.strokeStyle = 'rgba(15, 76, 129, 0.15)';
+                        ctx.strokeRect(0, 0, s.x, s.y);
+                        return t;
+                    }
+                });
+                this.gridLayer = new GridOverlay();
+
+                this.buildFlyoutControl();
+
+                this.lotPoly  = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
+                this.commPoly = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
+                this.dragMarker = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
+
+                this.attachEvents();
+                this.render();
+            },
+
+            buildFlyoutControl: function() {
+                const FlyoutControl = L.Control.extend({
+                    options: { position: 'topleft' },
+                    onAdd: function () {
+                        var container = L.DomUtil.create('div', 'align-map-control');
+                        container.innerHTML = `
+                            <button class="flyout-trigger">[Align Map]</button>
+                            <div class="flyout-panel">
+                                <div class="control-group">
+                                    <strong>Snap to Grid:</strong>
+                                    <label class="switch"><input type="checkbox" id="snapToggle"><span class="slider"></span></label>
+                                </div>
+                                <div class="control-group">
+                                    <strong>Rotation:</strong>
+                                    <input type="number" id="degInput" class="editable-angle" value="${ConfigEngine.state.rotation.toFixed(1)}" step="0.1">°
+                                    <input type="range" id="rotationSlider" min="-90" max="90" value="${ConfigEngine.state.rotation}" step="0.1">
+                                </div>
+                                <button id="recordBtn" class="btn-export">Export LISP Script</button>
+                                <textarea id="outputCoords" readonly placeholder="LISP code..."></textarea>
+                            </div>
+                        `;
+                        L.DomEvent.disableClickPropagation(container);
+                        L.DomEvent.disableScrollPropagation(container);
+                        L.DomEvent.on(container.querySelector('.flyout-trigger'), 'click', function() {
+                            container.classList.toggle('open');
+                        });
+                        return container;
+                    }
+                });
+                this.map.addControl(new FlyoutControl());
+            },
+
+            render: function() {
+                const w = ConfigEngine.data.width;
+                const h = ConfigEngine.data.depth;
+                const cD = ConfigEngine.data.commercialDepth;
+                const baseLot  = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+                const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
+
+                const rad = ConfigEngine.state.rotation * Math.PI / 180;
+                const cos = Math.cos(rad); const sin = Math.sin(rad);
+                const F_LAT = 364566;
+                const F_LNG = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
+
+                const transform = (pt) => {
+                    let rx = pt.x * cos - pt.y * sin;
+                    let ry = pt.x * sin + pt.y * cos;
+                    return [ConfigEngine.state.lat + (ry / F_LAT), ConfigEngine.state.lng + (rx / F_LNG)];
+                };
+
+                this.lotPoly.setLatLngs(baseLot.map(transform));
+                this.commPoly.setLatLngs(baseComm.map(transform));
+                ConfigEngine.save();
+            },
+
+            attachEvents: function() {
+                this.dragMarker.on('drag', (e) => {
+                    let raw = this.dragMarker.getLatLng();
+                    if (ConfigEngine.state.isSnapping) {
+                        let step = 0.00005;
+                        ConfigEngine.state.lat = Math.round(raw.lat / step) * step;
+                        ConfigEngine.state.lng = Math.round(raw.lng / step) * step;
+                    } else {
+                        ConfigEngine.state.lat = raw.lat;
+                        ConfigEngine.state.lng = raw.lng;
+                    }
+                    this.render();
+                });
+                this.dragMarker.on('dragend', () => {
+                    if (ConfigEngine.state.isSnapping) {
+                        this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+                    }
+                });
+
+                const sldr = document.getElementById('rotationSlider');
+                const inp  = document.getElementById('degInput');
+                sldr.addEventListener('input', (e) => {
+                    ConfigEngine.state.rotation = parseFloat(e.target.value);
+                    inp.value = ConfigEngine.state.rotation.toFixed(1);
+                    this.render();
+                });
+                inp.addEventListener('change', (e) => {
+                    let v = parseFloat(e.target.value);
+                    if (isNaN(v)) v = 0;
+                    v = Math.max(-90, Math.min(90, v));
+                    ConfigEngine.state.rotation = v;
+                    inp.value = v.toFixed(1);
+                    sldr.value = v;
+                    this.render();
+                });
+                document.getElementById('snapToggle').addEventListener('change', (e) => {
+                    ConfigEngine.state.isSnapping = e.target.checked;
+                    if (ConfigEngine.state.isSnapping) {
+                        this.map.addLayer(this.gridLayer);
+                        sldr.step = "5";
+                        let step = 0.00005;
+                        ConfigEngine.state.lat = Math.round(ConfigEngine.state.lat / step) * step;
+                        ConfigEngine.state.lng = Math.round(ConfigEngine.state.lng / step) * step;
+                        this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+                        ConfigEngine.state.rotation = Math.round(ConfigEngine.state.rotation / 5) * 5;
+                        sldr.value = ConfigEngine.state.rotation;
+                        inp.value = ConfigEngine.state.rotation.toFixed(1);
+                        this.render();
+                    } else {
+                        this.map.removeLayer(this.gridLayer);
+                        sldr.step = "0.1";
+                    }
+                });
+
+                document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
+            }
+        };
+
+        /**
+         * ENGINE 4: EXPORT TOOLS
+         */
+        const ExportEngine = {
+            generateLISP: function() {
+                const latlngs = MapEngine.lotPoly.getLatLngs()[0];
+                proj4.defs(ConfigEngine.cad.projection, ConfigEngine.cad.proj4Def);
+
+                let out = ";; ==========================================\n";
+                out += ";; AUTOLISP BOUNDARY SCRIPT - " + ConfigEngine.data.apn + "\n";
+                out += ";; Rotation Angle: " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
+                out += ";; System: CA State Plane Zone 6 (Intl Ft)\n";
+                out += ";; ==========================================\n\n(command \"_pline\"\n";
+
+                const ptNames = ["Pt 1 (Front Left)", "Pt 2 (Back Left)", "Pt 3 (Back Right)", "Pt 4 (Front Right)"];
+                latlngs.forEach((pt, i) => {
+                    let ca = proj4("WGS84", ConfigEngine.cad.projection, [pt.lng, pt.lat]);
+                    out += "  \"" + ca[0].toFixed(4) + "," + ca[1].toFixed(4) + "\"   ;; " + ptNames[i] + "\n";
+                });
+                out += "  \"c\"\n)\n(command \"_zoom\" \"e\")\n(princ \"\\nLot Plotted.\")\n(princ)";
+                document.getElementById('outputCoords').value = out;
+            }
+        };
+
+        // ==========================================
+        // BOOTSTRAP
+        // ==========================================
+        window.onload = function() {
+            ConfigEngine.init();
+            UIEngine.init();
+            MapEngine.init();
+        };
+    </script>
+</body>
+</html>
 
