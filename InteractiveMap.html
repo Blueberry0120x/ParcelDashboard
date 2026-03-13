@@ -74,7 +74,7 @@
         /* ==========================================
            3. MAIN LAYOUT — Resizable Flex Split
            ========================================== */
-        .main-container { display: flex; gap: 0; align-items: stretch; }
+        .main-container { display: flex; gap: 0; align-items: stretch; height: 600px; }
 
         .sidebar {
             width: 400px; min-width: 240px; flex-shrink: 0;
@@ -193,7 +193,7 @@
         /* ==========================================
            4. MAP & CONTROLS
            ========================================== */
-        #map { flex: 1; min-height: 420px; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
+        #map { flex: 1; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
 
         /* Horizontal control row at top-left */
         .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; padding-top: 10px; padding-left: 10px; }
@@ -229,11 +229,30 @@
             filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
         }
 
+        /* Banner merge / split */
+        .banner-stat.merge-ready {
+            background: rgba(255,255,255,0.18) !important;
+            border: 2px dashed rgba(255,255,255,0.85) !important;
+            transform: scale(1.03);
+        }
+        .banner-stat.merged {
+            flex: 2 1 280px; flex-direction: row; align-items: stretch; gap: 0;
+        }
+        .banner-stat.merged .merge-half {
+            flex: 1; display: flex; flex-direction: column;
+        }
+        .banner-stat.merged .merge-sep {
+            width: 1px; background: rgba(255,255,255,0.22);
+            margin: 6px 8px; flex-shrink: 0; align-self: stretch;
+        }
+
         /* ==========================================
-           5. INFO GRID (below main split)
+           5. INFO BOTTOM — aligns with sidebar/map split
            ========================================== */
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-        .info-col { display: flex; flex-direction: column; }
+        .info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
+        .info-col-left  { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+        .info-col-gap   { width: 18px;  flex-shrink: 0; }
+        .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     </style>
 </head>
 <body>
@@ -369,9 +388,9 @@
 
     </div><!-- end main-container -->
 
-    <!-- INFO GRID -->
-    <div class="info-grid">
-        <div class="info-col">
+    <!-- INFO BOTTOM — columns aligned to sidebar / map split -->
+    <div class="info-bottom" id="infoBottom">
+        <div class="info-col-left" id="infoColLeft">
             <details>
                 <summary>ZONING PARAMETERS (CUPD-CU-2-4)</summary>
                 <table class="cad-table">
@@ -395,7 +414,8 @@
                 </table>
             </details>
         </div>
-        <div class="info-col">
+        <div class="info-col-gap" id="infoColGap"></div>
+        <div class="info-col-right" id="infoColRight">
             <details>
                 <summary>PLANNING &amp; TRANSIT AREAS</summary>
                 <table class="cad-table">
@@ -516,34 +536,124 @@
         },
 
         initBannerDrag: function() {
-            const banner  = document.getElementById('propertyBanner');
-            let   dragSrc = null;
-            banner.querySelectorAll('.banner-stat').forEach(el => {
+            const banner = document.getElementById('propertyBanner');
+            let dragSrc    = null;
+            let mergeTimer = null;
+            let mergePending = null;
+            const self = this;
+
+            function clearMergeState() {
+                clearTimeout(mergeTimer);
+                mergeTimer = null;
+                mergePending = null;
+                banner.querySelectorAll('.banner-stat').forEach(s => {
+                    s.classList.remove('drag-over');
+                    s.classList.remove('merge-ready');
+                });
+            }
+
+            function attachHandlers(el) {
+                if (el.dataset.dragInit) return;
+                el.dataset.dragInit = '1';
+
                 el.addEventListener('dragstart', function(e) {
-                    dragSrc = this; this.classList.add('dragging');
+                    dragSrc = this;
+                    this.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                 });
                 el.addEventListener('dragend', function() {
                     this.classList.remove('dragging');
-                    banner.querySelectorAll('.banner-stat').forEach(s => s.classList.remove('drag-over'));
+                    clearMergeState();
                 });
                 el.addEventListener('dragover', function(e) {
-                    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-                    banner.querySelectorAll('.banner-stat').forEach(s => s.classList.remove('drag-over'));
-                    if (this !== dragSrc) this.classList.add('drag-over');
+                    e.preventDefault();
+                    if (this === dragSrc) return;
+                    e.dataTransfer.dropEffect = 'move';
+                    // New target — reset timer
+                    if (mergePending !== this) {
+                        clearMergeState();
+                        mergePending = this;
+                        this.classList.add('drag-over');
+                        // After 700 ms hover = merge mode
+                        mergeTimer = setTimeout(() => {
+                            if (mergePending === this) {
+                                this.classList.remove('drag-over');
+                                this.classList.add('merge-ready');
+                            }
+                        }, 700);
+                    }
                 });
                 el.addEventListener('drop', function(e) {
                     e.stopPropagation();
-                    if (dragSrc && dragSrc !== this) {
+                    if (!dragSrc || dragSrc === this) { clearMergeState(); return; }
+
+                    if (this.classList.contains('merge-ready')) {
+                        self.mergeCells(dragSrc, this);
+                    } else {
                         const all = [...banner.querySelectorAll('.banner-stat')];
                         if (all.indexOf(dragSrc) < all.indexOf(this))
                             banner.insertBefore(dragSrc, this.nextSibling);
                         else
                             banner.insertBefore(dragSrc, this);
                     }
-                    this.classList.remove('drag-over');
+                    clearMergeState();
                 });
+            }
+
+            banner.querySelectorAll('.banner-stat').forEach(attachHandlers);
+
+            // Double-click a merged cell to split it
+            banner.addEventListener('dblclick', function(e) {
+                const merged = e.target.closest('.banner-stat.merged');
+                if (merged) self.splitCell(merged);
             });
+        },
+
+        mergeCells: function(src, target) {
+            const banner = document.getElementById('propertyBanner');
+
+            const merged = document.createElement('div');
+            merged.className = 'banner-stat merged';
+            merged.draggable = true;
+
+            const half1 = document.createElement('div');
+            half1.className = 'merge-half';
+            while (src.firstChild) half1.appendChild(src.firstChild);
+
+            const sep = document.createElement('div');
+            sep.className = 'merge-sep';
+
+            const half2 = document.createElement('div');
+            half2.className = 'merge-half';
+            while (target.firstChild) half2.appendChild(target.firstChild);
+
+            merged.appendChild(half1);
+            merged.appendChild(sep);
+            merged.appendChild(half2);
+
+            banner.insertBefore(merged, src);
+            banner.removeChild(src);
+            banner.removeChild(target);
+
+            // Re-init to attach handlers to the new merged cell
+            delete merged.dataset.dragInit;
+            this.initBannerDrag();
+        },
+
+        splitCell: function(merged) {
+            const banner = document.getElementById('propertyBanner');
+            const halves = [...merged.querySelectorAll('.merge-half')];
+
+            halves.forEach(half => {
+                const stat = document.createElement('div');
+                stat.className = 'banner-stat';
+                stat.draggable = true;
+                while (half.firstChild) stat.appendChild(half.firstChild);
+                banner.insertBefore(stat, merged);
+            });
+
+            banner.removeChild(merged);
+            this.initBannerDrag();
         }
     };
 
@@ -841,9 +951,14 @@
        ========================================== */
     const ResizeEngine = {
         init: function() {
-            const divider  = document.getElementById('colDivider');
-            const sidebar  = document.getElementById('sidebarPanel');
+            const divider    = document.getElementById('colDivider');
+            const sidebar    = document.getElementById('sidebarPanel');
+            const infoLeft   = document.getElementById('infoColLeft');
             let isResizing = false, startX, startW;
+
+            // Sync info-bottom left column to current sidebar width
+            function syncInfo(w) { if (infoLeft) infoLeft.style.width = w + 'px'; }
+            syncInfo(sidebar.offsetWidth);
 
             divider.addEventListener('mousedown', function(e) {
                 isResizing = true; startX = e.clientX; startW = sidebar.offsetWidth;
@@ -856,6 +971,7 @@
                 if (!isResizing) return;
                 const newW = Math.max(240, Math.min(700, startW + (e.clientX - startX)));
                 sidebar.style.width = newW + 'px';
+                syncInfo(newW);
                 if (MapEngine.map) MapEngine.map.invalidateSize();
             });
             document.addEventListener('mouseup', function() {
