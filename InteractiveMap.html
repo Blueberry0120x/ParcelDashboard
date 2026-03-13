@@ -45,30 +45,33 @@
         }
         .header-btn:hover { background-color: var(--primary); color: white; }
 
-        /* Draggable Property Banner — wrapping flex, legible text */
+        /* Draggable Property Banner — single row, scrollable, legible */
         .property-banner {
             background: var(--primary); color: white; border-radius: 8px;
-            padding: 6px 8px; display: flex; flex-wrap: wrap; gap: 1px;
+            padding: 0; display: flex; flex-wrap: nowrap; overflow-x: auto;
             margin-bottom: 18px; box-shadow: 0 4px 6px rgba(15,76,129,.18);
             user-select: none;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent;
         }
+        .property-banner::-webkit-scrollbar { height: 4px; }
+        .property-banner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
         .banner-stat {
-            display: flex; flex-direction: column; padding: 7px 14px;
-            cursor: grab; flex: 1 1 140px;
+            display: flex; flex-direction: column; padding: 9px 16px;
+            cursor: grab; flex: 1 0 130px;
             transition: background 0.15s; border: 1px solid transparent;
-            border-right: 1px solid rgba(255,255,255,0.13);
+            border-right: 1px solid rgba(255,255,255,0.13); min-width: 0;
         }
         .banner-stat:last-child { border-right: 1px solid transparent; }
         .banner-stat:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
-        .banner-stat.dragging { opacity: 0.35; cursor: grabbing; }
-        .banner-stat.drag-over { background: rgba(255,255,255,0.18); border-color: white; }
+        .banner-stat.dragging { opacity: 0.4; cursor: grabbing; }
+        .banner-stat.drag-over { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); }
         .banner-label {
             font-size: 0.69em; text-transform: uppercase; letter-spacing: 0.6px;
-            opacity: 0.7; margin-bottom: 4px; font-weight: 600;
+            opacity: 0.7; margin-bottom: 4px; font-weight: 600; white-space: nowrap;
         }
         .banner-value {
-            font-size: 1.05em; font-weight: 700; line-height: 1.25;
-            color: #ffffff; letter-spacing: 0.1px;
+            font-size: 1.05em; font-weight: 700; line-height: 1.25; color: #ffffff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         /* ==========================================
@@ -560,6 +563,9 @@
                     dragSrc = this;
                     this.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
+                    const ghost = new Image();
+                    ghost.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+                    e.dataTransfer.setDragImage(ghost, 0, 0);
                 });
                 el.addEventListener('dragend', function() {
                     this.classList.remove('dragging');
