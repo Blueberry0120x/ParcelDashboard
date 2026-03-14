@@ -6,17 +6,17 @@ const MapEngine = {
     gridLayer: null, setbackPoly: null,
 
     init: function() {
-        const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',   { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
-        const sat       = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',       { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
-        const topo      = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',             { maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS' });
-        const topoImg   = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}',      { maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS' });
+        const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
+        const sat       = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',    { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
+        const topoEsri  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',   { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
+        const topoUSGS  = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',         { maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS' });
 
         this.map = L.map('map', {
             center: [ConfigEngine.state.lat, ConfigEngine.state.lng],
-            zoom: 19, maxZoom: 23, layers: [street],
+            zoom: 19, maxZoom: 23, layers: [sat],
             fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' }
         });
-        L.control.layers({ "Street Map": street, "Satellite": sat, "USGS Topo": topo, "USGS Imagery Topo": topoImg }).addTo(this.map);
+        L.control.layers({ "Satellite": sat, "Street Map": street, "Topo (Esri)": topoEsri, "Topo (USGS)": topoUSGS }).addTo(this.map);
 
         const GridOverlay = L.GridLayer.extend({
             createTile: function() {
