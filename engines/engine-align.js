@@ -51,6 +51,8 @@ const SetbackEngine = {
         document.getElementById('bldgOrientSlider').value = bldg.orientation;
         document.getElementById('bldgWidth').value        = bldg.width;
         document.getElementById('bldgHeight').value       = bldg.height;
+        document.getElementById('bldgOffsetX').value      = (bldg.offsetX || 0).toFixed(1);
+        document.getElementById('bldgOffsetY').value      = (bldg.offsetY || 0).toFixed(1);
 
         // Save Setbacks button
         document.getElementById('saveSetbackBtn').addEventListener('click', () => this.saveSetbacks());
@@ -82,6 +84,15 @@ const SetbackEngine = {
             });
         });
 
+        // Offset inputs live redraw
+        ['bldgOffsetX', 'bldgOffsetY'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                ConfigEngine.state.buildingConfig.offsetX = parseFloat(document.getElementById('bldgOffsetX').value) || 0;
+                ConfigEngine.state.buildingConfig.offsetY = parseFloat(document.getElementById('bldgOffsetY').value) || 0;
+                this.drawBuilding();
+            });
+        });
+
         // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
 
@@ -91,37 +102,35 @@ const SetbackEngine = {
 
     saveConfig: function() {
         const btn = document.getElementById('saveConfigBtn');
-        const orientation = parseFloat(document.getElementById('bldgOrientInput').value) || 0;
-        const width       = parseFloat(document.getElementById('bldgWidth').value)       || 30;
-        const height      = parseFloat(document.getElementById('bldgHeight').value)      || 60;
-        ConfigEngine.state.buildingConfig = { orientation, width, height };
-        localStorage.setItem('building_config', JSON.stringify(ConfigEngine.state.buildingConfig));
+        const cfg = ConfigEngine.state.buildingConfig;
+        cfg.orientation = parseFloat(document.getElementById('bldgOrientInput').value) || 0;
+        cfg.width       = parseFloat(document.getElementById('bldgWidth').value)       || 30;
+        cfg.height      = parseFloat(document.getElementById('bldgHeight').value)      || 60;
+        cfg.offsetX     = parseFloat(document.getElementById('bldgOffsetX').value)     || 0;
+        cfg.offsetY     = parseFloat(document.getElementById('bldgOffsetY').value)     || 0;
+        localStorage.setItem('building_config', JSON.stringify(cfg));
         this.drawBuilding();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },
 
-    drawBuilding: function() {
+    drawBuilding: function(skipMarker) {
         if (!MapEngine.buildingPoly) return;
         const state = ConfigEngine.state;
         const bldg  = state.buildingConfig;
         const { front, rear, sideL, sideR } = state.setbacks;
-        const { depth: lotH, width: lotW }  = ConfigEngine.data;
 
-        // Center of buildable area relative to lot center
-        const cx = (front - rear) / 2;
-        const cy = (sideR - sideL) / 2;
+        // Building center = buildable area center + user offset (lot-local coords)
+        const cx = (front - rear) / 2 + (bldg.offsetX || 0);
+        const cy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
 
-        // Building half-dims
         const hw = bldg.width / 2, hh = bldg.height / 2;
-
-        // Corners centered at building center (cx, cy)
         const raw = [
             { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
             { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
         ];
 
-        // Apply building orientation rotation around its own center
+        // Rotate corners around building center by building orientation
         const bRad = bldg.orientation * Math.PI / 180;
         const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
         const oriented = raw.map(pt => {
@@ -129,19 +138,23 @@ const SetbackEngine = {
             return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
         });
 
-        // Apply lot rotation to map lat/lng
+        // Apply lot rotation → lat/lng
         const lRad  = state.rotation * Math.PI / 180;
         const lCos  = Math.cos(lRad), lSin = Math.sin(lRad);
         const F_LAT = 364566;
         const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
-
-        const latLngs = oriented.map(pt => {
+        const toLatLng = pt => {
             const rx = pt.x * lCos - pt.y * lSin;
             const ry = pt.x * lSin + pt.y * lCos;
             return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
-        });
+        };
 
-        MapEngine.buildingPoly.setLatLngs(latLngs);
+        MapEngine.buildingPoly.setLatLngs(oriented.map(toLatLng));
+
+        // Reposition drag marker to building center (unless dragging)
+        if (!skipMarker && MapEngine.buildingMarker) {
+            MapEngine.buildingMarker.setLatLng(toLatLng({ x: cx, y: cy }));
+        }
     },
 
     drawSetbacks: function() {

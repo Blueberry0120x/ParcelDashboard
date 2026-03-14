@@ -207,17 +207,22 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 /* Building Config section */
 .building-config-wrap { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
 .building-grid {
-    display: grid; grid-template-columns: auto 1fr;
+    display: grid; grid-template-columns: auto 68px 1fr;
     gap: 8px 10px; align-items: center; font-size: 0.88em;
 }
 .building-grid strong { color: #4a5568; white-space: nowrap; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
-    display: flex; align-items: center; gap: 5px;
+    display: flex; align-items: center; gap: 5px; grid-column: 2 / -1;
 }
 .footprint-inputs label { font-size: 0.78em; font-weight: 700; color: #4a5568; }
 .footprint-inputs .ft-label { font-size: 0.78em; color: #4a5568; }
 .footprint-inputs .align-angle-input { width: 52px; }
+.bldg-drag-pin {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #e67e22; border: 2px solid #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,.45); cursor: grab;
+}
 
 /* CAD Accordions (sidebar) */
 details {
@@ -462,6 +467,14 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <input type="number" id="bldgHeight" class="align-angle-input" value="60" min="1" step="1">
                             <span class="ft-label">ft</span>
                         </div>
+                        <strong>Offset:</strong>
+                        <div class="footprint-inputs">
+                            <label>X</label>
+                            <input type="number" id="bldgOffsetX" class="align-angle-input" value="0" step="1">
+                            <label>Y</label>
+                            <input type="number" id="bldgOffsetY" class="align-angle-input" value="0" step="1">
+                            <span class="ft-label">ft</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -598,7 +611,7 @@ const ConfigEngine = {
         isSnapping: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildingConfig: { orientation: 0, width: 30, height: 60 }
+        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1 }
     },
     init: function() {
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
@@ -628,7 +641,7 @@ const ConfigEngine = {
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildingConfig = { orientation: 0, width: 30, height: 60 };
+        this.state.buildingConfig = { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1 };
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');
     }
@@ -809,7 +822,7 @@ const UIEngine = {
    ========================================== */
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
-    gridLayer: null, setbackPoly: null, buildingPoly: null,
+    gridLayer: null, setbackPoly: null, buildingPoly: null, buildingMarker: null,
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -842,8 +855,12 @@ const MapEngine = {
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
-        this.setbackPoly  = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
-        this.buildingPoly = L.polygon([], { color: '#e67e22', weight: 2, fillColor: '#e67e22', fillOpacity: 0.18, dashArray: '5 3', noClip: true }).addTo(this.map);
+        this.setbackPoly   = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
+        this.buildingPoly  = L.polygon([], { color: '#e67e22', weight: 2, fillColor: '#e67e22', fillOpacity: 0.18, dashArray: '5 3', noClip: true }).addTo(this.map);
+        this.buildingMarker = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], {
+            draggable: true,
+            icon: L.divIcon({ className: '', html: '<div class="bldg-drag-pin"></div>', iconAnchor: [7, 7] })
+        }).addTo(this.map);
         this.dragMarker  = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
 
         this.attachEvents();
@@ -1003,6 +1020,28 @@ const MapEngine = {
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
+
+        // Building drag pin — inverse-rotate dragged lat/lng back to lot-local coords
+        this.buildingMarker.on('drag', () => {
+            const raw   = this.buildingMarker.getLatLng();
+            const state = ConfigEngine.state;
+            const F_LAT = 364566;
+            const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+            const ry    = (raw.lat - state.lat) * F_LAT;
+            const rx    = (raw.lng - state.lng) * F_LNG;
+            const rad   = state.rotation * Math.PI / 180;
+            const cos   = Math.cos(rad), sin = Math.sin(rad);
+            const lx    = rx * cos + ry * sin;
+            const ly    = -rx * sin + ry * cos;
+            const { front, rear, sideL, sideR } = state.setbacks;
+            state.buildingConfig.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
+            state.buildingConfig.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
+            const ox = document.getElementById('bldgOffsetX');
+            const oy = document.getElementById('bldgOffsetY');
+            if (ox) ox.value = state.buildingConfig.offsetX.toFixed(1);
+            if (oy) oy.value = state.buildingConfig.offsetY.toFixed(1);
+            SetbackEngine.drawBuilding(true);
+        });
     }
 };
 
@@ -1159,6 +1198,8 @@ const SetbackEngine = {
         document.getElementById('bldgOrientSlider').value = bldg.orientation;
         document.getElementById('bldgWidth').value        = bldg.width;
         document.getElementById('bldgHeight').value       = bldg.height;
+        document.getElementById('bldgOffsetX').value      = (bldg.offsetX || 0).toFixed(1);
+        document.getElementById('bldgOffsetY').value      = (bldg.offsetY || 0).toFixed(1);
 
         // Save Setbacks button
         document.getElementById('saveSetbackBtn').addEventListener('click', () => this.saveSetbacks());
@@ -1190,6 +1231,15 @@ const SetbackEngine = {
             });
         });
 
+        // Offset inputs live redraw
+        ['bldgOffsetX', 'bldgOffsetY'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                ConfigEngine.state.buildingConfig.offsetX = parseFloat(document.getElementById('bldgOffsetX').value) || 0;
+                ConfigEngine.state.buildingConfig.offsetY = parseFloat(document.getElementById('bldgOffsetY').value) || 0;
+                this.drawBuilding();
+            });
+        });
+
         // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
 
@@ -1199,37 +1249,35 @@ const SetbackEngine = {
 
     saveConfig: function() {
         const btn = document.getElementById('saveConfigBtn');
-        const orientation = parseFloat(document.getElementById('bldgOrientInput').value) || 0;
-        const width       = parseFloat(document.getElementById('bldgWidth').value)       || 30;
-        const height      = parseFloat(document.getElementById('bldgHeight').value)      || 60;
-        ConfigEngine.state.buildingConfig = { orientation, width, height };
-        localStorage.setItem('building_config', JSON.stringify(ConfigEngine.state.buildingConfig));
+        const cfg = ConfigEngine.state.buildingConfig;
+        cfg.orientation = parseFloat(document.getElementById('bldgOrientInput').value) || 0;
+        cfg.width       = parseFloat(document.getElementById('bldgWidth').value)       || 30;
+        cfg.height      = parseFloat(document.getElementById('bldgHeight').value)      || 60;
+        cfg.offsetX     = parseFloat(document.getElementById('bldgOffsetX').value)     || 0;
+        cfg.offsetY     = parseFloat(document.getElementById('bldgOffsetY').value)     || 0;
+        localStorage.setItem('building_config', JSON.stringify(cfg));
         this.drawBuilding();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },
 
-    drawBuilding: function() {
+    drawBuilding: function(skipMarker) {
         if (!MapEngine.buildingPoly) return;
         const state = ConfigEngine.state;
         const bldg  = state.buildingConfig;
         const { front, rear, sideL, sideR } = state.setbacks;
-        const { depth: lotH, width: lotW }  = ConfigEngine.data;
 
-        // Center of buildable area relative to lot center
-        const cx = (front - rear) / 2;
-        const cy = (sideR - sideL) / 2;
+        // Building center = buildable area center + user offset (lot-local coords)
+        const cx = (front - rear) / 2 + (bldg.offsetX || 0);
+        const cy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
 
-        // Building half-dims
         const hw = bldg.width / 2, hh = bldg.height / 2;
-
-        // Corners centered at building center (cx, cy)
         const raw = [
             { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
             { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
         ];
 
-        // Apply building orientation rotation around its own center
+        // Rotate corners around building center by building orientation
         const bRad = bldg.orientation * Math.PI / 180;
         const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
         const oriented = raw.map(pt => {
@@ -1237,19 +1285,23 @@ const SetbackEngine = {
             return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
         });
 
-        // Apply lot rotation to map lat/lng
+        // Apply lot rotation → lat/lng
         const lRad  = state.rotation * Math.PI / 180;
         const lCos  = Math.cos(lRad), lSin = Math.sin(lRad);
         const F_LAT = 364566;
         const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
-
-        const latLngs = oriented.map(pt => {
+        const toLatLng = pt => {
             const rx = pt.x * lCos - pt.y * lSin;
             const ry = pt.x * lSin + pt.y * lCos;
             return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
-        });
+        };
 
-        MapEngine.buildingPoly.setLatLngs(latLngs);
+        MapEngine.buildingPoly.setLatLngs(oriented.map(toLatLng));
+
+        // Reposition drag marker to building center (unless dragging)
+        if (!skipMarker && MapEngine.buildingMarker) {
+            MapEngine.buildingMarker.setLatLng(toLatLng({ x: cx, y: cy }));
+        }
     },
 
     drawSetbacks: function() {

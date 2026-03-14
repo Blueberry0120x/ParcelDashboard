@@ -3,7 +3,7 @@
    ========================================== */
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
-    gridLayer: null, setbackPoly: null, buildingPoly: null,
+    gridLayer: null, setbackPoly: null, buildingPoly: null, buildingMarker: null,
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -36,8 +36,12 @@ const MapEngine = {
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
-        this.setbackPoly  = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
-        this.buildingPoly = L.polygon([], { color: '#e67e22', weight: 2, fillColor: '#e67e22', fillOpacity: 0.18, dashArray: '5 3', noClip: true }).addTo(this.map);
+        this.setbackPoly   = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
+        this.buildingPoly  = L.polygon([], { color: '#e67e22', weight: 2, fillColor: '#e67e22', fillOpacity: 0.18, dashArray: '5 3', noClip: true }).addTo(this.map);
+        this.buildingMarker = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], {
+            draggable: true,
+            icon: L.divIcon({ className: '', html: '<div class="bldg-drag-pin"></div>', iconAnchor: [7, 7] })
+        }).addTo(this.map);
         this.dragMarker  = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
 
         this.attachEvents();
@@ -197,6 +201,28 @@ const MapEngine = {
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
+
+        // Building drag pin — inverse-rotate dragged lat/lng back to lot-local coords
+        this.buildingMarker.on('drag', () => {
+            const raw   = this.buildingMarker.getLatLng();
+            const state = ConfigEngine.state;
+            const F_LAT = 364566;
+            const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+            const ry    = (raw.lat - state.lat) * F_LAT;
+            const rx    = (raw.lng - state.lng) * F_LNG;
+            const rad   = state.rotation * Math.PI / 180;
+            const cos   = Math.cos(rad), sin = Math.sin(rad);
+            const lx    = rx * cos + ry * sin;
+            const ly    = -rx * sin + ry * cos;
+            const { front, rear, sideL, sideR } = state.setbacks;
+            state.buildingConfig.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
+            state.buildingConfig.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
+            const ox = document.getElementById('bldgOffsetX');
+            const oy = document.getElementById('bldgOffsetY');
+            if (ox) ox.value = state.buildingConfig.offsetX.toFixed(1);
+            if (oy) oy.value = state.buildingConfig.offsetY.toFixed(1);
+            SetbackEngine.drawBuilding(true);
+        });
     }
 };
 

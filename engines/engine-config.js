@@ -18,7 +18,7 @@ const ConfigEngine = {
         isSnapping: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildingConfig: { orientation: 0, width: 30, height: 60 }
+        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1 }
     },
     init: function() {
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
@@ -48,7 +48,7 @@ const ConfigEngine = {
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildingConfig = { orientation: 0, width: 30, height: 60 };
+        this.state.buildingConfig = { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1 };
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');
     }

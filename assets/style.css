@@ -190,17 +190,22 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 /* Building Config section */
 .building-config-wrap { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
 .building-grid {
-    display: grid; grid-template-columns: auto 1fr;
+    display: grid; grid-template-columns: auto 68px 1fr;
     gap: 8px 10px; align-items: center; font-size: 0.88em;
 }
 .building-grid strong { color: #4a5568; white-space: nowrap; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
-    display: flex; align-items: center; gap: 5px;
+    display: flex; align-items: center; gap: 5px; grid-column: 2 / -1;
 }
 .footprint-inputs label { font-size: 0.78em; font-weight: 700; color: #4a5568; }
 .footprint-inputs .ft-label { font-size: 0.78em; color: #4a5568; }
 .footprint-inputs .align-angle-input { width: 52px; }
+.bldg-drag-pin {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #e67e22; border: 2px solid #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,.45); cursor: grab;
+}
 
 /* CAD Accordions (sidebar) */
 details {
