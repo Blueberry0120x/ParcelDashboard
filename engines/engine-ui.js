@@ -7,7 +7,6 @@ const UIEngine = {
         const sqft = d.width * d.depth;
 
         document.getElementById('ui-address').innerText      = d.address;
-        document.getElementById('ui-apn').innerText          = d.apn;
         document.getElementById('header-ui-apn').innerText   = d.apn;
         document.getElementById('ui-zoning').innerText  = d.zoning;
         document.getElementById('ui-w').innerText       = d.width;

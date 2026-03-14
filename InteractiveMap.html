@@ -46,15 +46,17 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 }
 .header-btn:hover { background-color: var(--primary); color: white; }
 
-/* Title row — h1 inline with address + apn cells */
-.header-title-row { display: flex; align-items: flex-start; gap: 28px; margin-bottom: 3px; }
-.header-title-row h1 { margin: 0; }
+/* Title row — title stack inline with address + apn cells */
+.header-title-row { display: flex; align-items: center; gap: 40px; }
+.header-title-stack { display: flex; flex-direction: column; gap: 2px; }
+.header-title-stack h1 { margin: 0; white-space: nowrap; }
+.header-title-stack p  { margin: 0; color: #4a5568; }
 
-/* Address cell in header — same padding/style as banner-stat, shifted down to sit below h1 baseline */
+/* Address / APN cells in header */
 .header-address {
     display: flex; flex-direction: column; padding: 9px 16px;
     background: var(--primary); color: white; border-radius: 8px;
-    flex-shrink: 0; margin-top: 22px;
+    flex-shrink: 0;
     box-shadow: 0 4px 6px rgba(15,76,129,.18);
 }
 .header-address .banner-value { white-space: normal; overflow: visible; text-overflow: clip; }
@@ -296,18 +298,19 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="header">
         <div class="header-left">
             <div class="header-title-row">
-                <h1>Master Site Dashboard</h1>
+                <div class="header-title-stack">
+                    <h1>Master Site Dashboard</h1>
+                    <p>Interactive Planning &amp; AutoLISP Export Tool</p>
+                </div>
                 <div class="header-address"><span class="banner-label">Address</span><span class="banner-value" id="ui-address"></span></div>
                 <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
             </div>
-            <p style="color:#4a5568;margin:0;">Interactive Planning &amp; AutoLISP Export Tool</p>
         </div>
         <a href="https://assr.parcelquest.com/Statewide?IndexViewModel=PQGov.Models.IndexViewModel" target="_blank" class="header-btn">Open ParcelQuest &#x2197;</a>
     </div>
 
     <!-- DRAGGABLE PROPERTY BANNER -->
     <div class="property-banner" id="propertyBanner">
-        <div class="banner-stat" draggable="true"><span class="banner-label">APN</span><span class="banner-value" id="ui-apn"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Dimensions</span><span class="banner-value"><span id="ui-w"></span>' &times; <span id="ui-d"></span>'</span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Lot Size</span><span class="banner-value" id="ui-sqft"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Zoning</span><span class="banner-value" id="ui-zoning"></span></div>
@@ -514,9 +517,14 @@ const ConfigEngine = {
         setbacks: { front: 10, rear: 10, sideL: 0, sideR: 0 }
     },
     init: function() {
-        this.state.lat      = parseFloat(localStorage.getItem('site_lat')) || this.defaults.lat;
-        this.state.lng      = parseFloat(localStorage.getItem('site_lng')) || this.defaults.lng;
-        this.state.rotation = parseFloat(localStorage.getItem('site_rot')) || this.defaults.rotation;
+        const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
+        const sLat  = localStorage.getItem('site_lat');
+        const sLng  = localStorage.getItem('site_lng');
+        const sRot  = localStorage.getItem('site_rot');
+        this.state.lat      = saved ? saved.lat      : (sLat !== null ? parseFloat(sLat) : this.defaults.lat);
+        this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
+        this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
+        if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
     },
     save: function() {
         localStorage.setItem('site_lat', this.state.lat);
@@ -527,9 +535,11 @@ const ConfigEngine = {
         localStorage.removeItem('site_lat');
         localStorage.removeItem('site_lng');
         localStorage.removeItem('site_rot');
+        localStorage.removeItem('boundary_location');
         this.state.lat      = this.defaults.lat;
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
+        this.state.setbacks = { front: 10, rear: 10, sideL: 0, sideR: 0 };
     }
 };
 
@@ -544,7 +554,6 @@ const UIEngine = {
         const sqft = d.width * d.depth;
 
         document.getElementById('ui-address').innerText      = d.address;
-        document.getElementById('ui-apn').innerText          = d.apn;
         document.getElementById('header-ui-apn').innerText   = d.apn;
         document.getElementById('ui-zoning').innerText  = d.zoning;
         document.getElementById('ui-w').innerText       = d.width;
@@ -712,18 +721,17 @@ const MapEngine = {
     gridLayer: null, setbackPoly: null,
 
     init: function() {
-        const osm  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true });
-        const sat  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true });
-        const topo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
-            maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS The National Map'
-        });
+        const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',   { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
+        const sat       = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',       { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
+        const topo      = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',             { maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS' });
+        const topoImg   = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}',      { maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS' });
 
         this.map = L.map('map', {
             center: [ConfigEngine.state.lat, ConfigEngine.state.lng],
-            zoom: 19, maxZoom: 23, layers: [osm],
+            zoom: 19, maxZoom: 23, layers: [street],
             fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' }
         });
-        L.control.layers({ "Street Map": osm, "USGS Topo": topo, "Satellite": sat }).addTo(this.map);
+        L.control.layers({ "Street Map": street, "Satellite": sat, "USGS Topo": topo, "USGS Imagery Topo": topoImg }).addTo(this.map);
 
         const GridOverlay = L.GridLayer.extend({
             createTile: function() {

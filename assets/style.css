@@ -29,15 +29,17 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 }
 .header-btn:hover { background-color: var(--primary); color: white; }
 
-/* Title row — h1 inline with address + apn cells */
-.header-title-row { display: flex; align-items: flex-start; gap: 40px; margin-bottom: 3px; }
-.header-title-row h1 { margin: 0; }
+/* Title row — title stack inline with address + apn cells */
+.header-title-row { display: flex; align-items: center; gap: 40px; }
+.header-title-stack { display: flex; flex-direction: column; gap: 2px; }
+.header-title-stack h1 { margin: 0; white-space: nowrap; }
+.header-title-stack p  { margin: 0; color: #4a5568; }
 
-/* Address cell in header — same padding/style as banner-stat, shifted down to sit below h1 baseline */
+/* Address / APN cells in header */
 .header-address {
     display: flex; flex-direction: column; padding: 9px 16px;
     background: var(--primary); color: white; border-radius: 8px;
-    flex-shrink: 0; margin-top: 34px;
+    flex-shrink: 0;
     box-shadow: 0 4px 6px rgba(15,76,129,.18);
 }
 .header-address .banner-value { white-space: normal; overflow: visible; text-overflow: clip; }
