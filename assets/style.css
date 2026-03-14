@@ -162,7 +162,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .align-angle-input {
     width: 100%; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
     font-weight: bold; background: transparent; color: var(--text); outline: none;
-    font-size: 0.9em;
+    font-size: 0.9em; padding: 0 1px 0 0; height: 1.25em; line-height: 1.25;
+    box-sizing: content-box;
 }
 .align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
 .btn-align {
