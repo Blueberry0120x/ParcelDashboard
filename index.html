@@ -61,7 +61,10 @@
                     <!-- Row 1: Snap to Grid + Save Boundary -->
                     <strong>Snap to Grid:</strong>
                     <label class="switch"><input type="checkbox" id="snapToggle"><span class="slider"></span></label>
-                    <button id="saveBoundaryBtn" class="btn-save-boundary">Save Boundary Location</button>
+                    <div style="display:flex; gap:4px;">
+                        <button id="saveBoundaryBtn" class="btn-save-boundary">Save Boundary</button>
+                        <button id="lockPositionBtn" class="btn-lock-position">Lock Position</button>
+                    </div>
                     <!-- Row 2: Rotation -->
                     <strong>Rotation:</strong>
                     <div class="deg-input-wrap">

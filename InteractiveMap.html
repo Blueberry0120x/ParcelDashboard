@@ -162,6 +162,14 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     background: #805ad5; transition: 0.2s; white-space: nowrap;
 }
 .btn-save-boundary:hover { background: #6b46c1; }
+.btn-lock-position {
+    flex: 1; padding: 4px 8px; border: none; border-radius: 4px;
+    font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
+    background: #2b6cb0; transition: 0.2s; white-space: nowrap;
+}
+.btn-lock-position:hover  { background: #2c5282; }
+.btn-lock-position.locked { background: #c53030; }
+.btn-lock-position.locked:hover { background: #9b2c2c; }
 .btn-save-config {
     flex: 0 0 auto; padding: 4px 12px; border: none; border-radius: 4px;
     font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
@@ -437,7 +445,10 @@ input:checked + .slider:before { transform: translateX(20px); }
                     <!-- Row 1: Snap to Grid + Save Boundary -->
                     <strong>Snap to Grid:</strong>
                     <label class="switch"><input type="checkbox" id="snapToggle"><span class="slider"></span></label>
-                    <button id="saveBoundaryBtn" class="btn-save-boundary">Save Boundary Location</button>
+                    <div style="display:flex; gap:4px;">
+                        <button id="saveBoundaryBtn" class="btn-save-boundary">Save Boundary</button>
+                        <button id="lockPositionBtn" class="btn-lock-position">Lock Position</button>
+                    </div>
                     <!-- Row 2: Rotation -->
                     <strong>Rotation:</strong>
                     <div class="deg-input-wrap">
@@ -705,7 +716,7 @@ const ConfigEngine = {
     },
     state: {
         lat: 0, lng: 0, rotation: 0,
-        isSnapping: false, unitMode: 'SF', mode: 'complex',
+        isSnapping: false, locked: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
         buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }],
@@ -753,6 +764,7 @@ const ConfigEngine = {
         this.state.lat      = this.defaults.lat;
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
+        this.state.locked   = false;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
         this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }];
         this.state.activeBuilding = 0;
@@ -1179,6 +1191,23 @@ const MapEngine = {
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
+
+        document.getElementById('lockPositionBtn').addEventListener('click', () => {
+            ConfigEngine.state.locked = !ConfigEngine.state.locked;
+            const locked = ConfigEngine.state.locked;
+            const btn = document.getElementById('lockPositionBtn');
+            btn.textContent = locked ? 'Locked' : 'Lock Position';
+            btn.classList.toggle('locked', locked);
+            if (locked) {
+                this.dragMarker.dragging.disable();
+                this.dragMarker.setOpacity(0.35);
+            } else {
+                this.dragMarker.dragging.enable();
+                this.dragMarker.setOpacity(1);
+            }
+            sldr.disabled = locked;
+            inp.disabled  = locked;
+        });
     }
 };
 

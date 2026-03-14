@@ -15,7 +15,7 @@ const ConfigEngine = {
     },
     state: {
         lat: 0, lng: 0, rotation: 0,
-        isSnapping: false, unitMode: 'SF', mode: 'complex',
+        isSnapping: false, locked: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
         buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }],
@@ -63,6 +63,7 @@ const ConfigEngine = {
         this.state.lat      = this.defaults.lat;
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
+        this.state.locked   = false;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
         this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }];
         this.state.activeBuilding = 0;

@@ -244,6 +244,23 @@ const MapEngine = {
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
+
+        document.getElementById('lockPositionBtn').addEventListener('click', () => {
+            ConfigEngine.state.locked = !ConfigEngine.state.locked;
+            const locked = ConfigEngine.state.locked;
+            const btn = document.getElementById('lockPositionBtn');
+            btn.textContent = locked ? 'Locked' : 'Lock Position';
+            btn.classList.toggle('locked', locked);
+            if (locked) {
+                this.dragMarker.dragging.disable();
+                this.dragMarker.setOpacity(0.35);
+            } else {
+                this.dragMarker.dragging.enable();
+                this.dragMarker.setOpacity(1);
+            }
+            sldr.disabled = locked;
+            inp.disabled  = locked;
+        });
     }
 };
 
