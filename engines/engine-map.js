@@ -202,6 +202,9 @@ const MapEngine = {
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
 
         // Building drag pin — inverse-rotate dragged lat/lng back to lot-local coords
+        this.buildingMarker.on('dragend', () => {
+            SetbackEngine.drawBuilding();  // reposition marker to clamped offset
+        });
         this.buildingMarker.on('drag', () => {
             const raw   = this.buildingMarker.getLatLng();
             const state = ConfigEngine.state;

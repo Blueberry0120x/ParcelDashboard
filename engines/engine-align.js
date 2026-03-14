@@ -36,6 +36,40 @@ const SetbackEngine = {
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
 
+    // Returns the building's axis-aligned bounding half-extents at a given orientation
+    _buildingExtents: function(bldg) {
+        const hw   = bldg.width  / 2, hh = bldg.height / 2;
+        const bRad = bldg.orientation * Math.PI / 180;
+        const aC   = Math.abs(Math.cos(bRad)), aS = Math.abs(Math.sin(bRad));
+        return {
+            halfDepth: hh * aC + hw * aS,   // extent along lot depth (x) axis
+            halfWidth: hh * aS + hw * aC    // extent along lot width (y) axis
+        };
+    },
+
+    // Clamp baseCx / cy so every building stays within the lot boundary
+    _clampToLot: function(baseCx, cy, bldg) {
+        const { width: lotW, depth: lotD } = ConfigEngine.data;
+        const count   = Math.max(1, bldg.count   || 1);
+        const spacing = bldg.spacing || 0;
+        const anchor  = bldg.anchor  || 'center';
+        const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+        const step    = halfDepth * 2 + spacing;
+        const aOff    = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+
+        // x bounds: first building front to last building rear must stay in [-lotD/2, lotD/2]
+        const xMin = -lotD / 2 + aOff * step + halfDepth;
+        const xMax =  lotD / 2 - (count - 1 - aOff) * step - halfDepth;
+        // y bounds
+        const yMin = -lotW / 2 + halfWidth;
+        const yMax =  lotW / 2 - halfWidth;
+
+        return {
+            cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, baseCx)) : 0,
+            cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy))     : 0
+        };
+    },
+
     initBuildingConfig: function() {
         const bldg = ConfigEngine.state.buildingConfig;
         const sb   = ConfigEngine.state.setbacks;
@@ -57,6 +91,8 @@ const SetbackEngine = {
         document.getElementById('bldgStories').value       = bldg.stories   || 1;
         document.getElementById('bldgSpacingInput').value  = (bldg.spacing  || 0).toFixed(1);
         document.getElementById('bldgSpacingSlider').value = bldg.spacing   || 0;
+        const chk = document.getElementById('commFrontCheck');
+        if (chk) chk.checked = bldg.commFront || false;
 
         // Auto-restore setback lines if saved
         if (localStorage.getItem('saved_setbacks')) {
@@ -132,7 +168,7 @@ const SetbackEngine = {
         });
 
         // Anchor buttons
-        const anchors = ['anchorFront', 'anchorCenter', 'anchorRear'];
+        const anchors   = ['anchorFront', 'anchorCenter', 'anchorRear'];
         const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
         const setAnchor = (id) => {
             anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === id));
@@ -140,9 +176,14 @@ const SetbackEngine = {
             this.drawBuilding();
         };
         anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
-        // Restore saved anchor button state
         const savedAnchor = Object.keys(anchorMap).find(k => anchorMap[k] === (bldg.anchor || 'center')) || 'anchorCenter';
         anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === savedAnchor));
+
+        // Commercial at Front toggle
+        if (chk) chk.addEventListener('change', () => {
+            ConfigEngine.state.buildingConfig.commFront = chk.checked;
+            this.updateFAR();
+        });
 
         // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
@@ -162,7 +203,8 @@ const SetbackEngine = {
         cfg.count       = parseInt(document.getElementById('bldgCount').value)          || 1;
         cfg.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
         cfg.spacing     = parseFloat(document.getElementById('bldgSpacingInput').value) || 0;
-        // anchor is managed directly on state by button clicks — just persist current value
+        cfg.commFront   = document.getElementById('commFrontCheck')?.checked || false;
+        // anchor is managed directly on state — already current
         localStorage.setItem('building_config', JSON.stringify(cfg));
         this.drawBuilding();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
@@ -174,12 +216,30 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotArea = lotW * lotD;
         if (!lotArea) return;
-        const totalArea = (bldg.count || 1) * bldg.width * bldg.height * (bldg.stories || 1);
-        const far       = totalArea / lotArea;
-        const elArea = document.getElementById('bldgTotalArea');
-        const elFAR  = document.getElementById('bldgFAR');
-        if (elArea) elArea.textContent = totalArea.toLocaleString() + ' sf';
-        if (elFAR)  elFAR.textContent  = far.toFixed(2);
+
+        const footprintSF = bldg.width * bldg.height;
+        const totalArea   = (bldg.count || 1) * footprintSF * (bldg.stories || 1);
+        const actualFAR   = totalArea / lotArea;
+        const commFront   = bldg.commFront || false;
+        const maxFAR      = commFront ? 6.5 : 2.0;
+        const buildable   = Math.round(lotArea * maxFAR);
+
+        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+
+        set('bldgFootprintArea', Math.round(footprintSF).toLocaleString() + ' sf');
+        set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
+        set('bldgFAR',           actualFAR.toFixed(2));
+        set('bldgBuildable',     buildable.toLocaleString()               + ' sf  (max ' + maxFAR + ' FAR)');
+        set('maxFARLabel',       commFront ? 'Comm. Front: 6.5 FAR' : 'Base: 2.0 FAR');
+
+        const chkEl = document.getElementById('bldgFARCheck');
+        if (chkEl) {
+            const ok = actualFAR <= maxFAR + 0.005;
+            chkEl.textContent = ok
+                ? '\u2713 Within limit (' + actualFAR.toFixed(2) + ' \u2264 ' + maxFAR + ')'
+                : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
+            chkEl.style.color = ok ? '#2f855a' : '#c53030';
+        }
     },
 
     drawBuilding: function(skipMarker) {
@@ -202,14 +262,32 @@ const SetbackEngine = {
             MapEngine.map.removeLayer(MapEngine.buildingPolys.pop());
         }
 
-        // Base center in lot-local coords
-        const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
-        const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-
-        const hw = bldg.width / 2, hh = bldg.height / 2;
-
+        const hw   = bldg.width  / 2, hh = bldg.height / 2;
         const bRad = bldg.orientation * Math.PI / 180;
         const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
+
+        // Effective bounding-box half-depth along the stacking (x) axis
+        const halfDepth = Math.abs(hh * bCos) + Math.abs(hw * bSin);
+        const step      = halfDepth * 2 + spacing;   // tight-pack step, no phantom gaps
+
+        // Base center (unclamped)
+        const rawBaseCx = (front - rear) / 2 + (bldg.offsetX || 0);
+        const rawCy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+
+        // Clamp to lot boundary
+        const { cx: baseCx, cy } = this._clampToLot(rawBaseCx, rawCy, bldg);
+
+        // Update offset inputs + state only if clamping actually changed values
+        const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
+        const newOY = parseFloat((cy     - (sideR - sideL) / 2).toFixed(1));
+        if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
+            bldg.offsetX = newOX; bldg.offsetY = newOY;
+            const ox = document.getElementById('bldgOffsetX');
+            const oy = document.getElementById('bldgOffsetY');
+            if (ox) ox.value = newOX.toFixed(1);
+            if (oy) oy.value = newOY.toFixed(1);
+        }
+
         const lRad = state.rotation * Math.PI / 180;
         const lCos = Math.cos(lRad), lSin = Math.sin(lRad);
         const F_LAT = 364566;
@@ -222,10 +300,10 @@ const SetbackEngine = {
         };
 
         // Stack buildings along depth axis using anchor
-        const anchor = bldg.anchor || 'center';
+        const anchor      = bldg.anchor || 'center';
         const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
         for (let i = 0; i < count; i++) {
-            const cx = baseCx + (i - anchorOffset) * (bldg.height + spacing);
+            const cx  = baseCx + (i - anchorOffset) * step;
             const raw = [
                 { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
                 { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }

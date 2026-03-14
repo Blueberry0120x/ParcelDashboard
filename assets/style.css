@@ -203,7 +203,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
     display: grid;
-    grid-template-columns: 14px 56px 14px 56px 24px;
+    grid-template-columns: 14px 56px 14px 56px 1fr;
     align-items: center; column-gap: 5px; grid-column: 2 / -1;
 }
 .footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }

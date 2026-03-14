@@ -220,7 +220,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
     display: grid;
-    grid-template-columns: 14px 56px 14px 56px 24px;
+    grid-template-columns: 14px 56px 14px 56px 1fr;
     align-items: center; column-gap: 5px; grid-column: 2 / -1;
 }
 .footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
@@ -485,7 +485,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <input type="number" id="bldgWidth"  class="align-angle-input" value="30.0" min="1" step="0.5">
                             <label>H</label>
                             <input type="number" id="bldgHeight" class="align-angle-input" value="60.0" min="1" step="0.5">
-                            <span class="ft-label">ft</span>
+                            <span id="bldgFootprintArea" class="ft-label">—</span>
                         </div>
                         <strong>Offset:</strong>
                         <div class="footprint-inputs">
@@ -513,6 +513,17 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <span id="bldgTotalArea" style="grid-column: 2 / -1; font-weight: 700; color: #2d3748;">—</span>
                         <strong>FAR:</strong>
                         <span id="bldgFAR" style="grid-column: 2 / -1; font-weight: 700; color: #0f4c81;">—</span>
+                        <strong>Zone:</strong>
+                        <div style="grid-column: 2 / -1; display: flex; align-items: center; justify-content: space-between;">
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-weight:600;">
+                                <input type="checkbox" id="commFrontCheck"> Comm. Front
+                            </label>
+                            <span id="maxFARLabel" style="color:#0f4c81; font-weight:700; font-size:0.85em;">Base: 2.0 FAR</span>
+                        </div>
+                        <strong>Buildable:</strong>
+                        <span id="bldgBuildable" style="grid-column: 2 / -1; font-weight: 600; color: #2d3748;">—</span>
+                        <strong>FAR Check:</strong>
+                        <span id="bldgFARCheck" style="grid-column: 2 / -1; font-weight: 700;">—</span>
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
                             <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
@@ -655,7 +666,7 @@ const ConfigEngine = {
         isSnapping: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1, anchor: 'center' }
+        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1, anchor: 'center', commFront: false }
     },
     init: function() {
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
@@ -1065,6 +1076,9 @@ const MapEngine = {
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
 
         // Building drag pin — inverse-rotate dragged lat/lng back to lot-local coords
+        this.buildingMarker.on('dragend', () => {
+            SetbackEngine.drawBuilding();  // reposition marker to clamped offset
+        });
         this.buildingMarker.on('drag', () => {
             const raw   = this.buildingMarker.getLatLng();
             const state = ConfigEngine.state;
@@ -1226,6 +1240,40 @@ const SetbackEngine = {
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
 
+    // Returns the building's axis-aligned bounding half-extents at a given orientation
+    _buildingExtents: function(bldg) {
+        const hw   = bldg.width  / 2, hh = bldg.height / 2;
+        const bRad = bldg.orientation * Math.PI / 180;
+        const aC   = Math.abs(Math.cos(bRad)), aS = Math.abs(Math.sin(bRad));
+        return {
+            halfDepth: hh * aC + hw * aS,   // extent along lot depth (x) axis
+            halfWidth: hh * aS + hw * aC    // extent along lot width (y) axis
+        };
+    },
+
+    // Clamp baseCx / cy so every building stays within the lot boundary
+    _clampToLot: function(baseCx, cy, bldg) {
+        const { width: lotW, depth: lotD } = ConfigEngine.data;
+        const count   = Math.max(1, bldg.count   || 1);
+        const spacing = bldg.spacing || 0;
+        const anchor  = bldg.anchor  || 'center';
+        const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+        const step    = halfDepth * 2 + spacing;
+        const aOff    = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+
+        // x bounds: first building front to last building rear must stay in [-lotD/2, lotD/2]
+        const xMin = -lotD / 2 + aOff * step + halfDepth;
+        const xMax =  lotD / 2 - (count - 1 - aOff) * step - halfDepth;
+        // y bounds
+        const yMin = -lotW / 2 + halfWidth;
+        const yMax =  lotW / 2 - halfWidth;
+
+        return {
+            cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, baseCx)) : 0,
+            cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy))     : 0
+        };
+    },
+
     initBuildingConfig: function() {
         const bldg = ConfigEngine.state.buildingConfig;
         const sb   = ConfigEngine.state.setbacks;
@@ -1247,6 +1295,8 @@ const SetbackEngine = {
         document.getElementById('bldgStories').value       = bldg.stories   || 1;
         document.getElementById('bldgSpacingInput').value  = (bldg.spacing  || 0).toFixed(1);
         document.getElementById('bldgSpacingSlider').value = bldg.spacing   || 0;
+        const chk = document.getElementById('commFrontCheck');
+        if (chk) chk.checked = bldg.commFront || false;
 
         // Auto-restore setback lines if saved
         if (localStorage.getItem('saved_setbacks')) {
@@ -1322,7 +1372,7 @@ const SetbackEngine = {
         });
 
         // Anchor buttons
-        const anchors = ['anchorFront', 'anchorCenter', 'anchorRear'];
+        const anchors   = ['anchorFront', 'anchorCenter', 'anchorRear'];
         const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
         const setAnchor = (id) => {
             anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === id));
@@ -1330,9 +1380,14 @@ const SetbackEngine = {
             this.drawBuilding();
         };
         anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
-        // Restore saved anchor button state
         const savedAnchor = Object.keys(anchorMap).find(k => anchorMap[k] === (bldg.anchor || 'center')) || 'anchorCenter';
         anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === savedAnchor));
+
+        // Commercial at Front toggle
+        if (chk) chk.addEventListener('change', () => {
+            ConfigEngine.state.buildingConfig.commFront = chk.checked;
+            this.updateFAR();
+        });
 
         // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
@@ -1352,7 +1407,8 @@ const SetbackEngine = {
         cfg.count       = parseInt(document.getElementById('bldgCount').value)          || 1;
         cfg.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
         cfg.spacing     = parseFloat(document.getElementById('bldgSpacingInput').value) || 0;
-        // anchor is managed directly on state by button clicks — just persist current value
+        cfg.commFront   = document.getElementById('commFrontCheck')?.checked || false;
+        // anchor is managed directly on state — already current
         localStorage.setItem('building_config', JSON.stringify(cfg));
         this.drawBuilding();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
@@ -1364,12 +1420,30 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotArea = lotW * lotD;
         if (!lotArea) return;
-        const totalArea = (bldg.count || 1) * bldg.width * bldg.height * (bldg.stories || 1);
-        const far       = totalArea / lotArea;
-        const elArea = document.getElementById('bldgTotalArea');
-        const elFAR  = document.getElementById('bldgFAR');
-        if (elArea) elArea.textContent = totalArea.toLocaleString() + ' sf';
-        if (elFAR)  elFAR.textContent  = far.toFixed(2);
+
+        const footprintSF = bldg.width * bldg.height;
+        const totalArea   = (bldg.count || 1) * footprintSF * (bldg.stories || 1);
+        const actualFAR   = totalArea / lotArea;
+        const commFront   = bldg.commFront || false;
+        const maxFAR      = commFront ? 6.5 : 2.0;
+        const buildable   = Math.round(lotArea * maxFAR);
+
+        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+
+        set('bldgFootprintArea', Math.round(footprintSF).toLocaleString() + ' sf');
+        set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
+        set('bldgFAR',           actualFAR.toFixed(2));
+        set('bldgBuildable',     buildable.toLocaleString()               + ' sf  (max ' + maxFAR + ' FAR)');
+        set('maxFARLabel',       commFront ? 'Comm. Front: 6.5 FAR' : 'Base: 2.0 FAR');
+
+        const chkEl = document.getElementById('bldgFARCheck');
+        if (chkEl) {
+            const ok = actualFAR <= maxFAR + 0.005;
+            chkEl.textContent = ok
+                ? '\u2713 Within limit (' + actualFAR.toFixed(2) + ' \u2264 ' + maxFAR + ')'
+                : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
+            chkEl.style.color = ok ? '#2f855a' : '#c53030';
+        }
     },
 
     drawBuilding: function(skipMarker) {
@@ -1392,14 +1466,32 @@ const SetbackEngine = {
             MapEngine.map.removeLayer(MapEngine.buildingPolys.pop());
         }
 
-        // Base center in lot-local coords
-        const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
-        const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-
-        const hw = bldg.width / 2, hh = bldg.height / 2;
-
+        const hw   = bldg.width  / 2, hh = bldg.height / 2;
         const bRad = bldg.orientation * Math.PI / 180;
         const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
+
+        // Effective bounding-box half-depth along the stacking (x) axis
+        const halfDepth = Math.abs(hh * bCos) + Math.abs(hw * bSin);
+        const step      = halfDepth * 2 + spacing;   // tight-pack step, no phantom gaps
+
+        // Base center (unclamped)
+        const rawBaseCx = (front - rear) / 2 + (bldg.offsetX || 0);
+        const rawCy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+
+        // Clamp to lot boundary
+        const { cx: baseCx, cy } = this._clampToLot(rawBaseCx, rawCy, bldg);
+
+        // Update offset inputs + state only if clamping actually changed values
+        const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
+        const newOY = parseFloat((cy     - (sideR - sideL) / 2).toFixed(1));
+        if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
+            bldg.offsetX = newOX; bldg.offsetY = newOY;
+            const ox = document.getElementById('bldgOffsetX');
+            const oy = document.getElementById('bldgOffsetY');
+            if (ox) ox.value = newOX.toFixed(1);
+            if (oy) oy.value = newOY.toFixed(1);
+        }
+
         const lRad = state.rotation * Math.PI / 180;
         const lCos = Math.cos(lRad), lSin = Math.sin(lRad);
         const F_LAT = 364566;
@@ -1412,10 +1504,10 @@ const SetbackEngine = {
         };
 
         // Stack buildings along depth axis using anchor
-        const anchor = bldg.anchor || 'center';
+        const anchor      = bldg.anchor || 'center';
         const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
         for (let i = 0; i < count; i++) {
-            const cx = baseCx + (i - anchorOffset) * (bldg.height + spacing);
+            const cx  = baseCx + (i - anchorOffset) * step;
             const raw = [
                 { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
                 { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
