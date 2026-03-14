@@ -206,8 +206,14 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     grid-template-columns: 12px 48px 20px 12px 48px 20px 1fr;
     align-items: center; column-gap: 4px; grid-column: 2 / -1;
 }
-.footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
-.footprint-inputs .ft-label { font-size: 0.82em; color: #718096; }
+.offset-inputs {
+    display: grid;
+    grid-template-columns: 10px 40px 15px 10px 40px 15px 10px 40px 15px;
+    align-items: center; column-gap: 3px; grid-column: 2 / -1;
+}
+.footprint-inputs label, .offset-inputs label { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
+.footprint-inputs .ft-label, .offset-inputs .ft-label { font-size: 0.82em; color: #718096; }
+.offset-inputs input:disabled { color: #a0aec0; }
 .fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
 .fp-area-badge::before { content: '['; margin-right: 1px; }
 .fp-area-badge::after  { content: ']'; margin-left: 1px; }

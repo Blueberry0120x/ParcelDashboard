@@ -70,11 +70,20 @@ const MapEngine = {
             const { front, rear, sideL, sideR } = state.setbacks;
             bldg.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
             bldg.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
+            // Back-compute spacing from new offsetX
+            if (idx > 0) {
+                const prev    = state.buildings[idx - 1];
+                const prevExt = SetbackEngine._buildingExtents(prev);
+                const thisExt = SetbackEngine._buildingExtents(bldg);
+                bldg.spacing  = parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
+            }
             if (state.activeBuilding === idx) {
-                const ox = document.getElementById('bldgOffsetX');
-                const oy = document.getElementById('bldgOffsetY');
-                if (ox) ox.value = bldg.offsetX.toFixed(1);
-                if (oy) oy.value = bldg.offsetY.toFixed(1);
+                const ox   = document.getElementById('bldgOffsetX');
+                const oy   = document.getElementById('bldgOffsetY');
+                const spEl = document.getElementById('bldgSpacing');
+                if (ox)   ox.value   = bldg.offsetX.toFixed(1);
+                if (oy)   oy.value   = bldg.offsetY.toFixed(1);
+                if (spEl && idx > 0) spEl.value = bldg.spacing.toFixed(1);
             }
             SetbackEngine.drawBuilding(true);
         });

@@ -143,12 +143,15 @@
                             <span id="bldgFootprintArea" class="fp-area-badge">—</span>
                         </div>
                         <strong>Offset:</strong>
-                        <div class="footprint-inputs">
+                        <div class="offset-inputs">
                             <label>X</label>
                             <input type="number" id="bldgOffsetX" class="align-angle-input" value="0" step="0.5">
                             <span class="ft-label">ft</span>
                             <label>Y</label>
                             <input type="number" id="bldgOffsetY" class="align-angle-input" value="0" step="0.5">
+                            <span class="ft-label">ft</span>
+                            <label title="Gap from previous building">S</label>
+                            <input type="number" id="bldgSpacing" class="align-angle-input" value="0" step="0.5" disabled>
                             <span class="ft-label">ft</span>
                         </div>
                         <strong>Buildings:</strong>
@@ -161,11 +164,6 @@
                             <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">
                             <span style="font-weight:bold;">flr</span>
                         </div>
-                        <strong>Total Area:</strong>
-                        <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
-                            <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748; font-size: 1.05em;">—</span>
-                            <span id="bldgBuildable" style="font-weight: 600; color: #2f855a; white-space: nowrap; font-size: 1em;">—</span>
-                        </div>
                         <strong>FAR:</strong>
                         <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
                             <span id="bldgFAR" style="font-weight: 700; color: #0f4c81; font-size: 1.05em;">—</span>
@@ -177,6 +175,11 @@
                                 <input type="checkbox" id="commFrontCheck"> Comm. Front
                             </label>
                             <span id="maxFARLabel" style="color:#0f4c81; font-weight:700; font-size:0.85em;">Base: 2.0 FAR</span>
+                        </div>
+                        <strong>Total Area:</strong>
+                        <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
+                            <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748; font-size: 1.05em;">—</span>
+                            <span id="bldgBuildable" style="font-weight: 600; color: #2f855a; white-space: nowrap; font-size: 1em;">—</span>
                         </div>
                     </div>
                 </div>

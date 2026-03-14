@@ -59,6 +59,33 @@ const SetbackEngine = {
         };
     },
 
+    // ── Spacing helpers ───────────────────────────────────────────────────────
+
+    // Gap in ft between building[idx] and building[idx-1] along the X axis
+    _computeGap: function(idx) {
+        const state = ConfigEngine.state;
+        if (idx <= 0 || idx >= state.buildings.length) return null;
+        const prev    = state.buildings[idx - 1];
+        const bldg    = state.buildings[idx];
+        const prevExt = this._buildingExtents(prev);
+        const thisExt = this._buildingExtents(bldg);
+        return parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
+    },
+
+    // Set building[idx].offsetX to achieve gap from building[idx-1]
+    _applyGap: function(idx, gap) {
+        const state = ConfigEngine.state;
+        if (idx <= 0) return;
+        const prev    = state.buildings[idx - 1];
+        const bldg    = state.buildings[idx];
+        const prevExt = this._buildingExtents(prev);
+        const thisExt = this._buildingExtents(bldg);
+        bldg.offsetX = parseFloat((prev.offsetX + prevExt.halfDepth + thisExt.halfDepth + gap).toFixed(1));
+        bldg.spacing = gap;
+        const ox = document.getElementById('bldgOffsetX');
+        if (ox && ConfigEngine.state.activeBuilding === idx) ox.value = bldg.offsetX.toFixed(1);
+    },
+
     // ── Building selector UI ──────────────────────────────────────────────────
 
     rebuildSelector: function() {
@@ -99,19 +126,37 @@ const SetbackEngine = {
         document.getElementById('bldgHeight').value       = (bldg.height  || 60).toFixed(1);
         document.getElementById('bldgOffsetX').value      = (bldg.offsetX || 0).toFixed(1);
         document.getElementById('bldgOffsetY').value      = (bldg.offsetY || 0).toFixed(1);
+        const spEl = document.getElementById('bldgSpacing');
+        if (spEl) {
+            if (idx > 0) {
+                const gap = this._computeGap(idx);
+                spEl.value    = gap !== null ? gap.toFixed(1) : '0.0';
+                spEl.disabled = false;
+            } else {
+                spEl.value    = '—';
+                spEl.disabled = true;
+            }
+        }
         this.updateFAR();
     },
 
     addBuilding: function() {
         const state = ConfigEngine.state;
         const src   = state.buildings[state.activeBuilding] || state.buildings[0];
-        state.buildings.push({
+        const last  = state.buildings[state.buildings.length - 1];
+        const lastExt = this._buildingExtents(last);
+        const newBldg = {
             orientation: src.orientation,
             width:       src.width,
             height:      src.height,
             offsetX:     0,
-            offsetY:     0
-        });
+            offsetY:     last.offsetY || 0,
+            spacing:     0
+        };
+        // Auto-position adjacent to last building (0-gap touch)
+        const newExt    = this._buildingExtents(newBldg);
+        newBldg.offsetX = parseFloat((last.offsetX + lastExt.halfDepth + newExt.halfDepth).toFixed(1));
+        state.buildings.push(newBldg);
         state.activeBuilding = state.buildings.length - 1;
         this.rebuildSelector();
         this._seedInputsFromBuilding(state.activeBuilding);
@@ -316,16 +361,36 @@ const SetbackEngine = {
             });
         });
 
-        // Offset inputs
+        // Offset inputs — back-compute spacing when X changes
         ['bldgOffsetX', 'bldgOffsetY'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => {
-                const bldg = state.buildings[state.activeBuilding];
+                const idx  = state.activeBuilding;
+                const bldg = state.buildings[idx];
                 if (!bldg) return;
                 bldg.offsetX = parseFloat(document.getElementById('bldgOffsetX').value) || 0;
                 bldg.offsetY = parseFloat(document.getElementById('bldgOffsetY').value) || 0;
+                if (idx > 0) {
+                    const gap = this._computeGap(idx);
+                    bldg.spacing = gap !== null ? gap : 0;
+                    const spEl = document.getElementById('bldgSpacing');
+                    if (spEl) spEl.value = bldg.spacing.toFixed(1);
+                }
                 this.drawBuilding();
             });
         });
+
+        // Spacing input — reposition building to achieve the requested gap
+        const spInp = document.getElementById('bldgSpacing');
+        if (spInp) {
+            spInp.addEventListener('change', () => {
+                const idx = state.activeBuilding;
+                if (idx <= 0) return;
+                const gap = parseFloat(spInp.value);
+                if (isNaN(gap)) return;
+                this._applyGap(idx, gap);
+                this.drawBuilding();
+            });
+        }
 
         // Stories (global)
         document.getElementById('bldgStories').addEventListener('change', () => {
