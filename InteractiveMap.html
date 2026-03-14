@@ -228,24 +228,32 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
 .fp-area-badge::before { content: '['; margin-right: 1px; }
 .fp-area-badge::after  { content: ']'; margin-left: 1px; }
-.anchor-track {
-    display: flex; background: #eef2f7; border-radius: 20px;
-    padding: 2px; gap: 0; grid-column: 2 / -1;
-    border: 1px solid #d4dce8;
-}
-.anchor-btn {
-    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
-    background: transparent; color: #6b7280; font-weight: 800;
-    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
-    cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
-}
-.anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
 .footprint-inputs .align-angle-input { width: 100%; }
+/* Building selector tabs */
+.bldg-selector { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.bldg-tab {
+    padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e0;
+    background: #eef2f7; color: #4a5568; font-weight: 700; font-size: 0.72em;
+    cursor: pointer; transition: all 0.15s;
+}
+.bldg-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+.bldg-tab-add {
+    padding: 2px 7px; border-radius: 4px; border: 1px dashed #38a169;
+    background: transparent; color: #38a169; font-weight: 700; font-size: 0.72em; cursor: pointer;
+}
+.bldg-tab-del {
+    padding: 2px 7px; border-radius: 4px; border: 1px dashed #e53e3e;
+    background: transparent; color: #e53e3e; font-weight: 700; font-size: 0.72em; cursor: pointer;
+}
 .bldg-drag-pin {
-    width: 14px; height: 14px; border-radius: 50%;
+    width: 18px; height: 18px; border-radius: 50%;
     background: #e67e22; border: 2px solid #fff;
     box-shadow: 0 1px 5px rgba(0,0,0,.45); cursor: grab;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; color: white; line-height: 1;
 }
+.bldg-drag-pin.active { background: #0f4c81; }
 
 /* CAD Accordions (sidebar) */
 details {
@@ -501,21 +509,16 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <input type="number" id="bldgOffsetY" class="align-angle-input" value="0" step="0.5">
                             <span class="ft-label">ft</span>
                         </div>
-                        <strong>Count / Stories:</strong>
-                        <div class="footprint-inputs">
-                            <label>N</label>
-                            <input type="number" id="bldgCount"   class="align-angle-input" value="1" min="1" step="1">
-                            <span class="ft-label">ea</span>
-                            <label>S</label>
-                            <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">
-                            <span class="ft-label">flr</span>
+                        <strong>Buildings:</strong>
+                        <div id="bldgSelector" class="bldg-selector" style="grid-column: 2 / -1;">
+                            <button id="bldgAddBtn" class="bldg-tab-add">+ Add</button>
+                            <button id="bldgDelBtn" class="bldg-tab-del">&#xD7; Del</button>
                         </div>
-                        <strong>Spacing:</strong>
+                        <strong>Stories:</strong>
                         <div class="deg-input-wrap">
-                            <input type="number" id="bldgSpacingInput" class="align-angle-input" value="0" step="0.5">
-                            <span style="font-weight:bold;">ft</span>
+                            <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">
+                            <span style="font-weight:bold;">flr</span>
                         </div>
-                        <input type="range" id="bldgSpacingSlider" min="0" max="50" value="0" step="0.5" style="width:calc(100% - 14px); max-width:110px; margin-left:14px;">
                         <strong>Total Area:</strong>
                         <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
                             <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748; font-size: 1.05em;">—</span>
@@ -532,12 +535,6 @@ input:checked + .slider:before { transform: translateX(20px); }
                                 <input type="checkbox" id="commFrontCheck"> Comm. Front
                             </label>
                             <span id="maxFARLabel" style="color:#0f4c81; font-weight:700; font-size:0.85em;">Base: 2.0 FAR</span>
-                        </div>
-                        <strong>Anchor:</strong>
-                        <div class="anchor-track">
-                            <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
-                            <button id="anchorCenter" class="anchor-btn active">Center</button>
-                            <button id="anchorRear"   class="anchor-btn">Rear &#8594;</button>
                         </div>
                     </div>
                 </div>
@@ -675,7 +672,10 @@ const ConfigEngine = {
         isSnapping: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1, anchor: 'center', commFront: false }
+        buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0 }],
+        activeBuilding: 0,
+        stories:        1,
+        commFront:      false
     },
     init: function() {
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
@@ -686,10 +686,23 @@ const ConfigEngine = {
         this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
         this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
         if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
-        const sb   = JSON.parse(localStorage.getItem('saved_setbacks')   || 'null');
-        const bldg = JSON.parse(localStorage.getItem('building_config')  || 'null');
-        if (sb)   this.state.setbacks       = sb;
-        if (bldg) this.state.buildingConfig = bldg;
+        const sb   = JSON.parse(localStorage.getItem('saved_setbacks')  || 'null');
+        const bldg = JSON.parse(localStorage.getItem('building_config') || 'null');
+        if (sb) this.state.setbacks = sb;
+        if (bldg) {
+            if (bldg.buildings) {
+                // New format
+                this.state.buildings      = bldg.buildings;
+                this.state.activeBuilding = bldg.activeBuilding || 0;
+                this.state.stories        = bldg.stories  || 1;
+                this.state.commFront      = bldg.commFront || false;
+            } else if (bldg.width) {
+                // Migrate old single-object format
+                this.state.buildings  = [{ orientation: bldg.orientation || 0, width: bldg.width, height: bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0 }];
+                this.state.stories    = bldg.stories   || 1;
+                this.state.commFront  = bldg.commFront || false;
+            }
+        }
     },
     save: function() {
         localStorage.setItem('site_lat', this.state.lat);
@@ -705,7 +718,10 @@ const ConfigEngine = {
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildingConfig = { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1, anchor: 'center' };
+        this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0 }];
+        this.state.activeBuilding = 0;
+        this.state.stories        = 1;
+        this.state.commFront      = false;
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');
     }
@@ -886,7 +902,7 @@ const UIEngine = {
    ========================================== */
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
-    gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarker: null,
+    gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -919,16 +935,52 @@ const MapEngine = {
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
-        this.setbackPoly   = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
-        this.buildingMarker = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], {
-            draggable: true,
-            icon: L.divIcon({ className: '', html: '<div class="bldg-drag-pin"></div>', iconAnchor: [7, 7] })
-        }).addTo(this.map);
+        this.setbackPoly = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
         this.dragMarker  = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
 
         this.attachEvents();
         this.render();
         L.Util.requestAnimFrame(() => this.map.invalidateSize());
+    },
+
+    createBuildingMarker: function(idx) {
+        const m = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], {
+            draggable: true,
+            icon: L.divIcon({
+                className: '',
+                html: '<div class="bldg-drag-pin">' + (idx + 1) + '</div>',
+                iconAnchor: [9, 9]
+            })
+        }).addTo(this.map);
+
+        m.on('drag', () => {
+            const raw   = m.getLatLng();
+            const state = ConfigEngine.state;
+            const bldg  = state.buildings[idx];
+            if (!bldg) return;
+            const F_LAT = 364566;
+            const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+            const ry    = (raw.lat - state.lat) * F_LAT;
+            const rx    = (raw.lng - state.lng) * F_LNG;
+            const rad   = state.rotation * Math.PI / 180;
+            const cos   = Math.cos(rad), sin = Math.sin(rad);
+            const lx    = rx * cos + ry * sin;
+            const ly    = -rx * sin + ry * cos;
+            const { front, rear, sideL, sideR } = state.setbacks;
+            bldg.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
+            bldg.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
+            if (state.activeBuilding === idx) {
+                const ox = document.getElementById('bldgOffsetX');
+                const oy = document.getElementById('bldgOffsetY');
+                if (ox) ox.value = bldg.offsetX.toFixed(1);
+                if (oy) oy.value = bldg.offsetY.toFixed(1);
+            }
+            SetbackEngine.drawBuilding(true);
+        });
+        m.on('dragend', () => {
+            SetbackEngine.drawBuilding();
+        });
+        return m;
     },
 
     buildNorthArrow: function() {
@@ -1039,7 +1091,6 @@ const MapEngine = {
         const sldr = document.getElementById('rotationSlider');
         const inp  = document.getElementById('degInput');
 
-        // Seed inputs from restored state (localStorage may differ from HTML defaults)
         sldr.value = ConfigEngine.state.rotation;
         inp.value  = ConfigEngine.state.rotation.toFixed(1);
 
@@ -1083,31 +1134,6 @@ const MapEngine = {
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
         document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
-
-        // Building drag pin — inverse-rotate dragged lat/lng back to lot-local coords
-        this.buildingMarker.on('dragend', () => {
-            SetbackEngine.drawBuilding();  // reposition marker to clamped offset
-        });
-        this.buildingMarker.on('drag', () => {
-            const raw   = this.buildingMarker.getLatLng();
-            const state = ConfigEngine.state;
-            const F_LAT = 364566;
-            const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
-            const ry    = (raw.lat - state.lat) * F_LAT;
-            const rx    = (raw.lng - state.lng) * F_LNG;
-            const rad   = state.rotation * Math.PI / 180;
-            const cos   = Math.cos(rad), sin = Math.sin(rad);
-            const lx    = rx * cos + ry * sin;
-            const ly    = -rx * sin + ry * cos;
-            const { front, rear, sideL, sideR } = state.setbacks;
-            state.buildingConfig.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
-            state.buildingConfig.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
-            const ox = document.getElementById('bldgOffsetX');
-            const oy = document.getElementById('bldgOffsetY');
-            if (ox) ox.value = state.buildingConfig.offsetX.toFixed(1);
-            if (oy) oy.value = state.buildingConfig.offsetY.toFixed(1);
-            SetbackEngine.drawBuilding(true);
-        });
     }
 };
 
@@ -1255,187 +1281,200 @@ const SetbackEngine = {
         const bRad = bldg.orientation * Math.PI / 180;
         const aC   = Math.abs(Math.cos(bRad)), aS = Math.abs(Math.sin(bRad));
         return {
-            halfDepth: hh * aC + hw * aS,   // extent along lot depth (x) axis
-            halfWidth: hh * aS + hw * aC    // extent along lot width (y) axis
+            halfDepth: hh * aC + hw * aS,
+            halfWidth: hh * aS + hw * aC
         };
     },
 
-    // Clamp baseCx / cy so every building stays within the lot boundary
-    _clampToLot: function(baseCx, cy, bldg) {
+    // Clamp a single building's center to stay within the lot boundary
+    _clampToLot: function(cx, cy, bldg) {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
-        const count   = Math.max(1, bldg.count   || 1);
-        const spacing = bldg.spacing || 0;
-        const anchor  = bldg.anchor  || 'center';
         const { halfDepth, halfWidth } = this._buildingExtents(bldg);
-        const step    = halfDepth * 2 + spacing;
-        const aOff    = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
-
-        // x bounds: first building front to last building rear must stay in [-lotD/2, lotD/2]
-        const xMin = -lotD / 2 + aOff * step + halfDepth;
-        const xMax =  lotD / 2 - (count - 1 - aOff) * step - halfDepth;
-        // y bounds
-        const yMin = -lotW / 2 + halfWidth;
-        const yMax =  lotW / 2 - halfWidth;
-
+        const xMin = -lotD / 2 + halfDepth, xMax = lotD / 2 - halfDepth;
+        const yMin = -lotW / 2 + halfWidth, yMax = lotW / 2 - halfWidth;
         return {
-            cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, baseCx)) : 0,
-            cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy))     : 0
+            cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, cx)) : 0,
+            cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy)) : 0
         };
     },
 
-    initBuildingConfig: function() {
-        const bldg = ConfigEngine.state.buildingConfig;
-        const sb   = ConfigEngine.state.setbacks;
+    // ── Building selector UI ──────────────────────────────────────────────────
 
-        // Restore setback inputs from saved state
-        document.getElementById('sb-front').value   = sb.front;
-        document.getElementById('sb-rear').value    = sb.rear;
-        document.getElementById('sb-side-l').value  = sb.sideL;
-        document.getElementById('sb-side-r').value  = sb.sideR;
+    rebuildSelector: function() {
+        const state = ConfigEngine.state;
+        const sel   = document.getElementById('bldgSelector');
+        if (!sel) return;
+        [...sel.querySelectorAll('.bldg-tab')].forEach(b => b.remove());
+        const addBtn = sel.querySelector('.bldg-tab-add');
+        state.buildings.forEach((_, i) => {
+            const btn = document.createElement('button');
+            btn.className   = 'bldg-tab' + (i === state.activeBuilding ? ' active' : '');
+            btn.textContent = 'B' + (i + 1);
+            btn.addEventListener('click', () => this.setActiveBuilding(i));
+            sel.insertBefore(btn, addBtn);
+        });
+    },
 
-        // Seed building config inputs
-        document.getElementById('bldgOrientInput').value   = bldg.orientation.toFixed(1);
-        document.getElementById('bldgOrientSlider').value  = bldg.orientation;
-        document.getElementById('bldgWidth').value         = (bldg.width  || 30).toFixed(1);
-        document.getElementById('bldgHeight').value        = (bldg.height || 60).toFixed(1);
-        document.getElementById('bldgOffsetX').value       = (bldg.offsetX  || 0).toFixed(1);
-        document.getElementById('bldgOffsetY').value       = (bldg.offsetY  || 0).toFixed(1);
-        document.getElementById('bldgCount').value         = bldg.count     || 1;
-        document.getElementById('bldgStories').value       = bldg.stories   || 1;
-        document.getElementById('bldgSpacingInput').value  = (bldg.spacing  || 0).toFixed(1);
-        document.getElementById('bldgSpacingSlider').value = bldg.spacing   || 0;
-        const chk = document.getElementById('commFrontCheck');
-        if (chk) chk.checked = bldg.commFront || false;
+    setActiveBuilding: function(idx) {
+        const state = ConfigEngine.state;
+        if (idx < 0 || idx >= state.buildings.length) return;
+        state.activeBuilding = idx;
+        this._seedInputsFromBuilding(idx);
+        this.rebuildSelector();
+        // Highlight the active marker
+        MapEngine.buildingMarkers.forEach((m, i) => {
+            if (!m._icon) return;
+            const pin = m._icon.querySelector('.bldg-drag-pin');
+            if (pin) pin.classList.toggle('active', i === idx);
+        });
+    },
 
-        // Auto-restore setback lines if saved
-        if (localStorage.getItem('saved_setbacks')) {
-            ConfigEngine.state.setbacksApplied = true;
-            this.drawSetbacks();
+    _seedInputsFromBuilding: function(idx) {
+        const bldg = ConfigEngine.state.buildings[idx];
+        if (!bldg) return;
+        document.getElementById('bldgOrientInput').value  = bldg.orientation.toFixed(1);
+        document.getElementById('bldgOrientSlider').value = bldg.orientation;
+        document.getElementById('bldgWidth').value        = (bldg.width   || 30).toFixed(1);
+        document.getElementById('bldgHeight').value       = (bldg.height  || 60).toFixed(1);
+        document.getElementById('bldgOffsetX').value      = (bldg.offsetX || 0).toFixed(1);
+        document.getElementById('bldgOffsetY').value      = (bldg.offsetY || 0).toFixed(1);
+        this.updateFAR();
+    },
+
+    addBuilding: function() {
+        const state = ConfigEngine.state;
+        const src   = state.buildings[state.activeBuilding] || state.buildings[0];
+        state.buildings.push({
+            orientation: src.orientation,
+            width:       src.width,
+            height:      src.height,
+            offsetX:     0,
+            offsetY:     0
+        });
+        state.activeBuilding = state.buildings.length - 1;
+        this.rebuildSelector();
+        this._seedInputsFromBuilding(state.activeBuilding);
+        this.drawBuilding();
+    },
+
+    removeLastBuilding: function() {
+        const state = ConfigEngine.state;
+        if (state.buildings.length <= 1) return;
+        state.buildings.pop();
+        if (state.activeBuilding >= state.buildings.length) {
+            state.activeBuilding = state.buildings.length - 1;
+        }
+        this.rebuildSelector();
+        this._seedInputsFromBuilding(state.activeBuilding);
+        this.drawBuilding();
+    },
+
+    // ── Core draw ─────────────────────────────────────────────────────────────
+
+    drawBuilding: function(skipMarker) {
+        if (!MapEngine.map) return;
+        const state    = ConfigEngine.state;
+        const buildings = state.buildings;
+        const count    = buildings.length;
+
+        // Sync polygon array
+        while (MapEngine.buildingPolys.length < count) {
+            const p = L.polygon([], {
+                color: '#e67e22', weight: 2, fillColor: '#e67e22',
+                fillOpacity: 0.18, dashArray: '5 3', noClip: true
+            }).addTo(MapEngine.map);
+            MapEngine.buildingPolys.push(p);
+        }
+        while (MapEngine.buildingPolys.length > count) {
+            MapEngine.map.removeLayer(MapEngine.buildingPolys.pop());
         }
 
-        // Save Setbacks button
-        document.getElementById('saveSetbackBtn').addEventListener('click', () => this.saveSetbacks());
+        // Sync marker array
+        while (MapEngine.buildingMarkers.length < count) {
+            MapEngine.buildingMarkers.push(MapEngine.createBuildingMarker(MapEngine.buildingMarkers.length));
+        }
+        while (MapEngine.buildingMarkers.length > count) {
+            MapEngine.map.removeLayer(MapEngine.buildingMarkers.pop());
+        }
 
-        // Orientation slider <-> input sync + live redraw
-        const sldr = document.getElementById('bldgOrientSlider');
-        const inp  = document.getElementById('bldgOrientInput');
-        sldr.addEventListener('input', (e) => {
-            const v = parseFloat(e.target.value);
-            inp.value = v.toFixed(1);
-            ConfigEngine.state.buildingConfig.orientation = v;
-            this.drawBuilding();
-        });
-        inp.addEventListener('change', (e) => {
-            let v = parseFloat(e.target.value);
-            if (isNaN(v)) v = 0;
-            v = Math.max(-90, Math.min(90, v));
-            inp.value = v.toFixed(1); sldr.value = v;
-            ConfigEngine.state.buildingConfig.orientation = v;
-            this.drawBuilding();
-        });
+        const { front, rear, sideL, sideR } = state.setbacks;
+        const lRad  = state.rotation * Math.PI / 180;
+        const lCos  = Math.cos(lRad), lSin = Math.sin(lRad);
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
 
-        // Footprint inputs live redraw
-        ['bldgWidth', 'bldgHeight'].forEach(id => {
-            document.getElementById(id).addEventListener('change', () => {
-                ConfigEngine.state.buildingConfig.width  = parseFloat(document.getElementById('bldgWidth').value)  || 30;
-                ConfigEngine.state.buildingConfig.height = parseFloat(document.getElementById('bldgHeight').value) || 60;
-                this.drawBuilding();
-            });
-        });
-
-        // Offset inputs live redraw
-        ['bldgOffsetX', 'bldgOffsetY'].forEach(id => {
-            document.getElementById(id).addEventListener('change', () => {
-                ConfigEngine.state.buildingConfig.offsetX = parseFloat(document.getElementById('bldgOffsetX').value) || 0;
-                ConfigEngine.state.buildingConfig.offsetY = parseFloat(document.getElementById('bldgOffsetY').value) || 0;
-                this.drawBuilding();
-            });
-        });
-
-        // Count and Stories inputs
-        document.getElementById('bldgCount').addEventListener('change', () => {
-            ConfigEngine.state.buildingConfig.count = parseInt(document.getElementById('bldgCount').value) || 1;
-            this.drawBuilding();
-        });
-        document.getElementById('bldgStories').addEventListener('change', () => {
-            ConfigEngine.state.buildingConfig.stories = parseInt(document.getElementById('bldgStories').value) || 1;
-            this.updateFAR();
-        });
-
-        // Spacing slider <-> input sync + live redraw
-        const spSldr = document.getElementById('bldgSpacingSlider');
-        const spInp  = document.getElementById('bldgSpacingInput');
-        spSldr.addEventListener('input', (e) => {
-            const v = parseFloat(e.target.value);
-            spInp.value = v.toFixed(1);
-            ConfigEngine.state.buildingConfig.spacing = v;
-            this.drawBuilding();
-        });
-        spInp.addEventListener('change', (e) => {
-            let v = parseFloat(e.target.value);
-            if (isNaN(v) || v < 0) v = 0;
-            v = Math.min(50, v);
-            spInp.value = v.toFixed(1); spSldr.value = v;
-            ConfigEngine.state.buildingConfig.spacing = v;
-            this.drawBuilding();
-        });
-
-        // Anchor buttons
-        const anchors   = ['anchorFront', 'anchorCenter', 'anchorRear'];
-        const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
-        const setAnchor = (id) => {
-            anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === id));
-            ConfigEngine.state.buildingConfig.anchor = anchorMap[id];
-            this.drawBuilding();
+        const toLatLng = pt => {
+            const rx = pt.x * lCos - pt.y * lSin;
+            const ry = pt.x * lSin + pt.y * lCos;
+            return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
         };
-        anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
-        const savedAnchor = Object.keys(anchorMap).find(k => anchorMap[k] === (bldg.anchor || 'center')) || 'anchorCenter';
-        anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === savedAnchor));
 
-        // Commercial at Front toggle
-        if (chk) chk.addEventListener('change', () => {
-            ConfigEngine.state.buildingConfig.commFront = chk.checked;
-            this.updateFAR();
+        buildings.forEach((bldg, i) => {
+            const hw   = bldg.width  / 2, hh = bldg.height / 2;
+            const bRad = bldg.orientation * Math.PI / 180;
+            const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
+
+            const rawCx = (front - rear) / 2 + (bldg.offsetX || 0);
+            const rawCy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+            const { cx, cy } = this._clampToLot(rawCx, rawCy, bldg);
+
+            // Update state if clamped
+            const newOX = parseFloat((cx - (front - rear) / 2).toFixed(1));
+            const newOY = parseFloat((cy - (sideR - sideL) / 2).toFixed(1));
+            if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
+                bldg.offsetX = newOX; bldg.offsetY = newOY;
+                if (state.activeBuilding === i) {
+                    const ox = document.getElementById('bldgOffsetX');
+                    const oy = document.getElementById('bldgOffsetY');
+                    if (ox) ox.value = newOX.toFixed(1);
+                    if (oy) oy.value = newOY.toFixed(1);
+                }
+            }
+
+            const raw = [
+                { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
+                { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
+            ];
+            const oriented = raw.map(pt => {
+                const dx = pt.x - cx, dy = pt.y - cy;
+                return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
+            });
+            MapEngine.buildingPolys[i].setLatLngs(oriented.map(toLatLng));
+
+            if (!skipMarker) {
+                MapEngine.buildingMarkers[i].setLatLng(toLatLng({ x: cx, y: cy }));
+            }
         });
 
-        // Save Config button
-        document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
+        // Highlight active marker
+        MapEngine.buildingMarkers.forEach((m, i) => {
+            if (!m._icon) return;
+            const pin = m._icon.querySelector('.bldg-drag-pin');
+            if (pin) pin.classList.toggle('active', i === state.activeBuilding);
+        });
 
-        // Draw on load if config exists
-        if (bldg.width && bldg.height) this.drawBuilding();
-    },
-
-    saveConfig: function() {
-        const btn = document.getElementById('saveConfigBtn');
-        const cfg = ConfigEngine.state.buildingConfig;
-        cfg.orientation = parseFloat(document.getElementById('bldgOrientInput').value)  || 0;
-        cfg.width       = parseFloat(document.getElementById('bldgWidth').value)        || 30;
-        cfg.height      = parseFloat(document.getElementById('bldgHeight').value)       || 60;
-        cfg.offsetX     = parseFloat(document.getElementById('bldgOffsetX').value)      || 0;
-        cfg.offsetY     = parseFloat(document.getElementById('bldgOffsetY').value)      || 0;
-        cfg.count       = parseInt(document.getElementById('bldgCount').value)          || 1;
-        cfg.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
-        cfg.spacing     = parseFloat(document.getElementById('bldgSpacingInput').value) || 0;
-        cfg.commFront   = document.getElementById('commFrontCheck')?.checked || false;
-        // anchor is managed directly on state — already current
-        localStorage.setItem('building_config', JSON.stringify(cfg));
-        this.drawBuilding();
-        btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
-        setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
+        this.updateFAR();
     },
 
     updateFAR: function() {
-        const bldg    = ConfigEngine.state.buildingConfig;
+        const state   = ConfigEngine.state;
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotArea = lotW * lotD;
         if (!lotArea) return;
 
-        const footprintSF = bldg.width * bldg.height;
-        const totalArea   = (bldg.count || 1) * footprintSF * (bldg.stories || 1);
-        const actualFAR   = totalArea / lotArea;
-        const commFront   = bldg.commFront || false;
-        const maxFAR      = commFront ? 6.5 : 2.0;
-        const buildable   = Math.round(lotArea * maxFAR);
+        const stories   = state.stories   || 1;
+        const commFront = state.commFront || false;
+        const maxFAR    = commFront ? 6.5 : 2.0;
+        const buildable = Math.round(lotArea * maxFAR);
+
+        // Active building footprint (for the badge in the Footprint row)
+        const active      = state.buildings[state.activeBuilding] || state.buildings[0];
+        const footprintSF = (active.width || 0) * (active.height || 0);
+
+        // Total area = sum of all buildings × stories
+        const totalFootprint = state.buildings.reduce((s, b) => s + (b.width || 0) * (b.height || 0), 0);
+        const totalArea      = totalFootprint * stories;
+        const actualFAR      = totalArea / lotArea;
 
         const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
@@ -1455,85 +1494,124 @@ const SetbackEngine = {
         }
     },
 
-    drawBuilding: function(skipMarker) {
-        if (!MapEngine.map) return;
-        const state   = ConfigEngine.state;
-        const bldg    = state.buildingConfig;
-        const { front, rear, sideL, sideR } = state.setbacks;
-        const count   = Math.max(1, bldg.count   || 1);
-        const spacing = bldg.spacing || 0;
+    // ── Init wiring ───────────────────────────────────────────────────────────
 
-        // Ensure correct number of polygons
-        while (MapEngine.buildingPolys.length < count) {
-            const p = L.polygon([], {
-                color: '#e67e22', weight: 2, fillColor: '#e67e22',
-                fillOpacity: 0.18, dashArray: '5 3', noClip: true
-            }).addTo(MapEngine.map);
-            MapEngine.buildingPolys.push(p);
-        }
-        while (MapEngine.buildingPolys.length > count) {
-            MapEngine.map.removeLayer(MapEngine.buildingPolys.pop());
-        }
+    initBuildingConfig: function() {
+        const state = ConfigEngine.state;
+        const sb    = state.setbacks;
 
-        const hw   = bldg.width  / 2, hh = bldg.height / 2;
-        const bRad = bldg.orientation * Math.PI / 180;
-        const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
+        // Restore setback inputs
+        document.getElementById('sb-front').value   = sb.front;
+        document.getElementById('sb-rear').value    = sb.rear;
+        document.getElementById('sb-side-l').value  = sb.sideL;
+        document.getElementById('sb-side-r').value  = sb.sideR;
 
-        // Effective bounding-box half-depth along the stacking (x) axis
-        const halfDepth = Math.abs(hh * bCos) + Math.abs(hw * bSin);
-        const step      = halfDepth * 2 + spacing;   // tight-pack step, no phantom gaps
+        // Seed building inputs from active building
+        this._seedInputsFromBuilding(state.activeBuilding);
 
-        // Base center (unclamped)
-        const rawBaseCx = (front - rear) / 2 + (bldg.offsetX || 0);
-        const rawCy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+        // Global inputs
+        document.getElementById('bldgStories').value = state.stories || 1;
+        const chk = document.getElementById('commFrontCheck');
+        if (chk) chk.checked = state.commFront || false;
 
-        // Clamp to lot boundary
-        const { cx: baseCx, cy } = this._clampToLot(rawBaseCx, rawCy, bldg);
-
-        // Update offset inputs + state only if clamping actually changed values
-        const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
-        const newOY = parseFloat((cy     - (sideR - sideL) / 2).toFixed(1));
-        if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
-            bldg.offsetX = newOX; bldg.offsetY = newOY;
-            const ox = document.getElementById('bldgOffsetX');
-            const oy = document.getElementById('bldgOffsetY');
-            if (ox) ox.value = newOX.toFixed(1);
-            if (oy) oy.value = newOY.toFixed(1);
+        // Auto-restore setback lines if saved
+        if (localStorage.getItem('saved_setbacks')) {
+            ConfigEngine.state.setbacksApplied = true;
+            this.drawSetbacks();
         }
 
-        const lRad = state.rotation * Math.PI / 180;
-        const lCos = Math.cos(lRad), lSin = Math.sin(lRad);
-        const F_LAT = 364566;
-        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+        // Build selector tabs
+        this.rebuildSelector();
 
-        const toLatLng = pt => {
-            const rx = pt.x * lCos - pt.y * lSin;
-            const ry = pt.x * lSin + pt.y * lCos;
-            return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
-        };
+        // Save Setbacks button
+        document.getElementById('saveSetbackBtn').addEventListener('click', () => this.saveSetbacks());
 
-        // Stack buildings along depth axis using anchor
-        const anchor      = bldg.anchor || 'center';
-        const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
-        for (let i = 0; i < count; i++) {
-            const cx  = baseCx + (i - anchorOffset) * step;
-            const raw = [
-                { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
-                { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
-            ];
-            const oriented = raw.map(pt => {
-                const dx = pt.x - cx, dy = pt.y - cy;
-                return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
+        // Orientation slider <-> input sync
+        const sldr = document.getElementById('bldgOrientSlider');
+        const inp  = document.getElementById('bldgOrientInput');
+        sldr.addEventListener('input', (e) => {
+            const v    = parseFloat(e.target.value);
+            inp.value  = v.toFixed(1);
+            const bldg = state.buildings[state.activeBuilding];
+            if (bldg) { bldg.orientation = v; this.drawBuilding(); }
+        });
+        inp.addEventListener('change', (e) => {
+            let v = parseFloat(e.target.value);
+            if (isNaN(v)) v = 0;
+            v = Math.max(-90, Math.min(90, v));
+            inp.value = v.toFixed(1); sldr.value = v;
+            const bldg = state.buildings[state.activeBuilding];
+            if (bldg) { bldg.orientation = v; this.drawBuilding(); }
+        });
+
+        // Footprint inputs
+        ['bldgWidth', 'bldgHeight'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                const bldg = state.buildings[state.activeBuilding];
+                if (!bldg) return;
+                bldg.width  = parseFloat(document.getElementById('bldgWidth').value)  || 30;
+                bldg.height = parseFloat(document.getElementById('bldgHeight').value) || 60;
+                this.drawBuilding();
             });
-            MapEngine.buildingPolys[i].setLatLngs(oriented.map(toLatLng));
-        }
+        });
 
-        // Drag marker stays at base center (offset origin)
-        if (!skipMarker && MapEngine.buildingMarker) {
-            MapEngine.buildingMarker.setLatLng(toLatLng({ x: baseCx, y: cy }));
-        }
+        // Offset inputs
+        ['bldgOffsetX', 'bldgOffsetY'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                const bldg = state.buildings[state.activeBuilding];
+                if (!bldg) return;
+                bldg.offsetX = parseFloat(document.getElementById('bldgOffsetX').value) || 0;
+                bldg.offsetY = parseFloat(document.getElementById('bldgOffsetY').value) || 0;
+                this.drawBuilding();
+            });
+        });
 
-        this.updateFAR();
+        // Stories (global)
+        document.getElementById('bldgStories').addEventListener('change', () => {
+            state.stories = parseInt(document.getElementById('bldgStories').value) || 1;
+            this.updateFAR();
+        });
+
+        // Comm. Front (global)
+        if (chk) chk.addEventListener('change', () => {
+            state.commFront = chk.checked;
+            this.updateFAR();
+        });
+
+        // Add / Remove building buttons
+        document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
+        document.getElementById('bldgDelBtn').addEventListener('click', () => this.removeLastBuilding());
+
+        // Save Config button
+        document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
+
+        // Draw on load if buildings exist
+        if (state.buildings.length > 0) this.drawBuilding();
+    },
+
+    saveConfig: function() {
+        const btn   = document.getElementById('saveConfigBtn');
+        const state = ConfigEngine.state;
+        // Flush active building's current input values into state
+        const bldg = state.buildings[state.activeBuilding];
+        if (bldg) {
+            bldg.orientation = parseFloat(document.getElementById('bldgOrientInput').value) || 0;
+            bldg.width       = parseFloat(document.getElementById('bldgWidth').value)       || 30;
+            bldg.height      = parseFloat(document.getElementById('bldgHeight').value)      || 60;
+            bldg.offsetX     = parseFloat(document.getElementById('bldgOffsetX').value)     || 0;
+            bldg.offsetY     = parseFloat(document.getElementById('bldgOffsetY').value)     || 0;
+        }
+        state.stories   = parseInt(document.getElementById('bldgStories').value) || 1;
+        state.commFront = document.getElementById('commFrontCheck')?.checked || false;
+        localStorage.setItem('building_config', JSON.stringify({
+            buildings:      state.buildings,
+            activeBuilding: state.activeBuilding,
+            stories:        state.stories,
+            commFront:      state.commFront
+        }));
+        this.drawBuilding();
+        btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
+        setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },
 
     drawSetbacks: function() {

@@ -211,24 +211,32 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
 .fp-area-badge::before { content: '['; margin-right: 1px; }
 .fp-area-badge::after  { content: ']'; margin-left: 1px; }
-.anchor-track {
-    display: flex; background: #eef2f7; border-radius: 20px;
-    padding: 2px; gap: 0; grid-column: 2 / -1;
-    border: 1px solid #d4dce8;
-}
-.anchor-btn {
-    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
-    background: transparent; color: #6b7280; font-weight: 800;
-    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
-    cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
-}
-.anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
 .footprint-inputs .align-angle-input { width: 100%; }
+/* Building selector tabs */
+.bldg-selector { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.bldg-tab {
+    padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e0;
+    background: #eef2f7; color: #4a5568; font-weight: 700; font-size: 0.72em;
+    cursor: pointer; transition: all 0.15s;
+}
+.bldg-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+.bldg-tab-add {
+    padding: 2px 7px; border-radius: 4px; border: 1px dashed #38a169;
+    background: transparent; color: #38a169; font-weight: 700; font-size: 0.72em; cursor: pointer;
+}
+.bldg-tab-del {
+    padding: 2px 7px; border-radius: 4px; border: 1px dashed #e53e3e;
+    background: transparent; color: #e53e3e; font-weight: 700; font-size: 0.72em; cursor: pointer;
+}
 .bldg-drag-pin {
-    width: 14px; height: 14px; border-radius: 50%;
+    width: 18px; height: 18px; border-radius: 50%;
     background: #e67e22; border: 2px solid #fff;
     box-shadow: 0 1px 5px rgba(0,0,0,.45); cursor: grab;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; color: white; line-height: 1;
 }
+.bldg-drag-pin.active { background: #0f4c81; }
 
 /* CAD Accordions (sidebar) */
 details {
