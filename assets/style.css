@@ -214,6 +214,18 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .footprint-inputs label, .offset-inputs label { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
 .footprint-inputs .ft-label, .offset-inputs .ft-label { font-size: 0.82em; color: #718096; }
 .offset-inputs input:disabled { color: #a0aec0; }
+.anchor-track {
+    display: flex; background: #eef2f7; border-radius: 20px;
+    padding: 2px; gap: 0; grid-column: 2 / -1;
+    border: 1px solid #d4dce8;
+}
+.anchor-btn {
+    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
+    background: transparent; color: #6b7280; font-weight: 800;
+    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
+    cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
+}
+.anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
 .fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
 .fp-area-badge::before { content: '['; margin-right: 1px; }
 .fp-area-badge::after  { content: ']'; margin-left: 1px; }

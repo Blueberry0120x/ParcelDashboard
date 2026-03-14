@@ -159,6 +159,21 @@
                             <button id="bldgAddBtn" class="bldg-tab-add">+ Add</button>
                             <button id="bldgDelBtn" class="bldg-tab-del">&#xD7; Del</button>
                         </div>
+                        <strong>Stack:</strong>
+                        <div class="footprint-inputs">
+                            <label>N</label>
+                            <input type="number" id="bldgCount" class="align-angle-input" value="1" min="1" step="1">
+                            <span class="ft-label">ea</span>
+                            <label>G</label>
+                            <input type="number" id="bldgStackSpacing" class="align-angle-input" value="0" step="0.5">
+                            <span class="ft-label">ft</span>
+                        </div>
+                        <strong>Anchor:</strong>
+                        <div class="anchor-track">
+                            <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
+                            <button id="anchorCenter" class="anchor-btn active">Center</button>
+                            <button id="anchorRear"   class="anchor-btn">Rear &#8594;</button>
+                        </div>
                         <strong>Stories:</strong>
                         <div class="deg-input-wrap">
                             <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">

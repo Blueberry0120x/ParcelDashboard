@@ -47,21 +47,27 @@ const SetbackEngine = {
         };
     },
 
-    // Clamp a single building's center to stay within the lot boundary
+    // Clamp a building's base center so its full stack stays within the lot
     _clampToLot: function(cx, cy, bldg) {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
+        const count        = bldg.count        || 1;
+        const stackSpacing = bldg.stackSpacing || 0;
+        const anchor       = bldg.anchor       || 'center';
         const { halfDepth, halfWidth } = this._buildingExtents(bldg);
-        const xMin = -lotD / 2 + halfDepth, xMax = lotD / 2 - halfDepth;
-        const yMin = -lotW / 2 + halfWidth, yMax = lotW / 2 - halfWidth;
+        const step  = halfDepth * 2 + stackSpacing;
+        const aOff  = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+        const xMin  = -lotD / 2 + aOff * step + halfDepth;
+        const xMax  =  lotD / 2 - (count - 1 - aOff) * step - halfDepth;
+        const yMin  = -lotW / 2 + halfWidth;
+        const yMax  =  lotW / 2 - halfWidth;
         return {
             cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, cx)) : 0,
             cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy)) : 0
         };
     },
 
-    // ── Spacing helpers ───────────────────────────────────────────────────────
+    // ── Inter-building spacing helpers ────────────────────────────────────────
 
-    // Gap in ft between building[idx] and building[idx-1] along the X axis
     _computeGap: function(idx) {
         const state = ConfigEngine.state;
         if (idx <= 0 || idx >= state.buildings.length) return null;
@@ -72,7 +78,6 @@ const SetbackEngine = {
         return parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
     },
 
-    // Set building[idx].offsetX to achieve gap from building[idx-1]
     _applyGap: function(idx, gap) {
         const state = ConfigEngine.state;
         if (idx <= 0) return;
@@ -109,7 +114,6 @@ const SetbackEngine = {
         state.activeBuilding = idx;
         this._seedInputsFromBuilding(idx);
         this.rebuildSelector();
-        // Highlight the active marker
         MapEngine.buildingMarkers.forEach((m, i) => {
             if (!m._icon) return;
             const pin = m._icon.querySelector('.bldg-drag-pin');
@@ -120,12 +124,16 @@ const SetbackEngine = {
     _seedInputsFromBuilding: function(idx) {
         const bldg = ConfigEngine.state.buildings[idx];
         if (!bldg) return;
-        document.getElementById('bldgOrientInput').value  = bldg.orientation.toFixed(1);
-        document.getElementById('bldgOrientSlider').value = bldg.orientation;
-        document.getElementById('bldgWidth').value        = (bldg.width   || 30).toFixed(1);
-        document.getElementById('bldgHeight').value       = (bldg.height  || 60).toFixed(1);
-        document.getElementById('bldgOffsetX').value      = (bldg.offsetX || 0).toFixed(1);
-        document.getElementById('bldgOffsetY').value      = (bldg.offsetY || 0).toFixed(1);
+        document.getElementById('bldgOrientInput').value    = bldg.orientation.toFixed(1);
+        document.getElementById('bldgOrientSlider').value   = bldg.orientation;
+        document.getElementById('bldgWidth').value          = (bldg.width        || 30).toFixed(1);
+        document.getElementById('bldgHeight').value         = (bldg.height       || 60).toFixed(1);
+        document.getElementById('bldgOffsetX').value        = (bldg.offsetX      || 0).toFixed(1);
+        document.getElementById('bldgOffsetY').value        = (bldg.offsetY      || 0).toFixed(1);
+        document.getElementById('bldgCount').value          = bldg.count         || 1;
+        document.getElementById('bldgStackSpacing').value   = (bldg.stackSpacing || 0).toFixed(1);
+
+        // Inter-building spacing (S) — disabled for B1
         const spEl = document.getElementById('bldgSpacing');
         if (spEl) {
             if (idx > 0) {
@@ -137,23 +145,34 @@ const SetbackEngine = {
                 spEl.disabled = true;
             }
         }
+
+        // Anchor buttons
+        const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
+        const bldgAnchor = bldg.anchor || 'center';
+        Object.keys(anchorMap).forEach(aId => {
+            const el = document.getElementById(aId);
+            if (el) el.classList.toggle('active', anchorMap[aId] === bldgAnchor);
+        });
+
         this.updateFAR();
     },
 
     addBuilding: function() {
-        const state = ConfigEngine.state;
-        const src   = state.buildings[state.activeBuilding] || state.buildings[0];
-        const last  = state.buildings[state.buildings.length - 1];
+        const state   = ConfigEngine.state;
+        const src     = state.buildings[state.activeBuilding] || state.buildings[0];
+        const last    = state.buildings[state.buildings.length - 1];
         const lastExt = this._buildingExtents(last);
         const newBldg = {
-            orientation: src.orientation,
-            width:       src.width,
-            height:      src.height,
-            offsetX:     0,
-            offsetY:     last.offsetY || 0,
-            spacing:     0
+            orientation:  src.orientation,
+            width:        src.width,
+            height:       src.height,
+            offsetX:      0,
+            offsetY:      last.offsetY || 0,
+            spacing:      0,
+            count:        1,
+            stackSpacing: 0,
+            anchor:       'center'
         };
-        // Auto-position adjacent to last building (0-gap touch)
         const newExt    = this._buildingExtents(newBldg);
         newBldg.offsetX = parseFloat((last.offsetX + lastExt.halfDepth + newExt.halfDepth).toFixed(1));
         state.buildings.push(newBldg);
@@ -179,27 +198,21 @@ const SetbackEngine = {
 
     drawBuilding: function(skipMarker) {
         if (!MapEngine.map) return;
-        const state    = ConfigEngine.state;
+        const state     = ConfigEngine.state;
         const buildings = state.buildings;
-        const count    = buildings.length;
+        const bCount    = buildings.length;
 
-        // Sync polygon array
-        while (MapEngine.buildingPolys.length < count) {
-            const p = L.polygon([], {
-                color: '#e67e22', weight: 2, fillColor: '#e67e22',
-                fillOpacity: 0.18, dashArray: '5 3', noClip: true
-            }).addTo(MapEngine.map);
-            MapEngine.buildingPolys.push(p);
-        }
-        while (MapEngine.buildingPolys.length > count) {
-            MapEngine.map.removeLayer(MapEngine.buildingPolys.pop());
+        // Sync outer poly array (one inner array per building entry)
+        while (MapEngine.buildingPolys.length < bCount) MapEngine.buildingPolys.push([]);
+        while (MapEngine.buildingPolys.length > bCount) {
+            MapEngine.buildingPolys.pop().forEach(p => MapEngine.map.removeLayer(p));
         }
 
-        // Sync marker array
-        while (MapEngine.buildingMarkers.length < count) {
+        // Sync marker array (one per building entry)
+        while (MapEngine.buildingMarkers.length < bCount) {
             MapEngine.buildingMarkers.push(MapEngine.createBuildingMarker(MapEngine.buildingMarkers.length));
         }
-        while (MapEngine.buildingMarkers.length > count) {
+        while (MapEngine.buildingMarkers.length > bCount) {
             MapEngine.map.removeLayer(MapEngine.buildingMarkers.pop());
         }
 
@@ -216,16 +229,19 @@ const SetbackEngine = {
         };
 
         buildings.forEach((bldg, i) => {
+            const count        = bldg.count        || 1;
+            const stackSpacing = bldg.stackSpacing || 0;
+            const anchor       = bldg.anchor       || 'center';
             const hw   = bldg.width  / 2, hh = bldg.height / 2;
             const bRad = bldg.orientation * Math.PI / 180;
             const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
 
             const rawCx = (front - rear) / 2 + (bldg.offsetX || 0);
             const rawCy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-            const { cx, cy } = this._clampToLot(rawCx, rawCy, bldg);
+            const { cx: baseCx, cy } = this._clampToLot(rawCx, rawCy, bldg);
 
             // Update state if clamped
-            const newOX = parseFloat((cx - (front - rear) / 2).toFixed(1));
+            const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
             const newOY = parseFloat((cy - (sideR - sideL) / 2).toFixed(1));
             if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
                 bldg.offsetX = newOX; bldg.offsetY = newOY;
@@ -237,18 +253,38 @@ const SetbackEngine = {
                 }
             }
 
-            const raw = [
-                { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
-                { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
-            ];
-            const oriented = raw.map(pt => {
-                const dx = pt.x - cx, dy = pt.y - cy;
-                return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
-            });
-            MapEngine.buildingPolys[i].setLatLngs(oriented.map(toLatLng));
+            // Sync inner polygon array for this building's stack
+            if (!MapEngine.buildingPolys[i]) MapEngine.buildingPolys[i] = [];
+            while (MapEngine.buildingPolys[i].length < count) {
+                const p = L.polygon([], {
+                    color: '#e67e22', weight: 2, fillColor: '#e67e22',
+                    fillOpacity: 0.18, dashArray: '5 3', noClip: true
+                }).addTo(MapEngine.map);
+                MapEngine.buildingPolys[i].push(p);
+            }
+            while (MapEngine.buildingPolys[i].length > count) {
+                MapEngine.map.removeLayer(MapEngine.buildingPolys[i].pop());
+            }
+
+            const halfDepth    = Math.abs(hh * bCos) + Math.abs(hw * bSin);
+            const step         = halfDepth * 2 + stackSpacing;
+            const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+
+            for (let j = 0; j < count; j++) {
+                const cx  = baseCx + (j - anchorOffset) * step;
+                const raw = [
+                    { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
+                    { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
+                ];
+                const oriented = raw.map(pt => {
+                    const dx = pt.x - cx, dy = pt.y - cy;
+                    return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
+                });
+                MapEngine.buildingPolys[i][j].setLatLngs(oriented.map(toLatLng));
+            }
 
             if (!skipMarker) {
-                MapEngine.buildingMarkers[i].setLatLng(toLatLng({ x: cx, y: cy }));
+                MapEngine.buildingMarkers[i].setLatLng(toLatLng({ x: baseCx, y: cy }));
             }
         });
 
@@ -273,12 +309,11 @@ const SetbackEngine = {
         const maxFAR    = commFront ? 6.5 : 2.0;
         const buildable = Math.round(lotArea * maxFAR);
 
-        // Active building footprint (for the badge in the Footprint row)
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
         const footprintSF = (active.width || 0) * (active.height || 0);
 
-        // Total area = sum of all buildings × stories
-        const totalFootprint = state.buildings.reduce((s, b) => s + (b.width || 0) * (b.height || 0), 0);
+        // Total: sum of (footprint × count) across all buildings × stories
+        const totalFootprint = state.buildings.reduce((s, b) => s + (b.width || 0) * (b.height || 0) * (b.count || 1), 0);
         const totalArea      = totalFootprint * stories;
         const actualFAR      = totalArea / lotArea;
 
@@ -306,38 +341,32 @@ const SetbackEngine = {
         const state = ConfigEngine.state;
         const sb    = state.setbacks;
 
-        // Restore setback inputs
         document.getElementById('sb-front').value   = sb.front;
         document.getElementById('sb-rear').value    = sb.rear;
         document.getElementById('sb-side-l').value  = sb.sideL;
         document.getElementById('sb-side-r').value  = sb.sideR;
 
-        // Seed building inputs from active building
         this._seedInputsFromBuilding(state.activeBuilding);
 
-        // Global inputs
         document.getElementById('bldgStories').value = state.stories || 1;
         const chk = document.getElementById('commFrontCheck');
         if (chk) chk.checked = state.commFront || false;
 
-        // Auto-restore setback lines if saved
         if (localStorage.getItem('saved_setbacks')) {
             ConfigEngine.state.setbacksApplied = true;
             this.drawSetbacks();
         }
 
-        // Build selector tabs
         this.rebuildSelector();
 
-        // Save Setbacks button
         document.getElementById('saveSetbackBtn').addEventListener('click', () => this.saveSetbacks());
 
-        // Orientation slider <-> input sync
+        // Orientation
         const sldr = document.getElementById('bldgOrientSlider');
         const inp  = document.getElementById('bldgOrientInput');
         sldr.addEventListener('input', (e) => {
-            const v    = parseFloat(e.target.value);
-            inp.value  = v.toFixed(1);
+            const v = parseFloat(e.target.value);
+            inp.value = v.toFixed(1);
             const bldg = state.buildings[state.activeBuilding];
             if (bldg) { bldg.orientation = v; this.drawBuilding(); }
         });
@@ -350,7 +379,7 @@ const SetbackEngine = {
             if (bldg) { bldg.orientation = v; this.drawBuilding(); }
         });
 
-        // Footprint inputs
+        // Footprint
         ['bldgWidth', 'bldgHeight'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => {
                 const bldg = state.buildings[state.activeBuilding];
@@ -361,7 +390,7 @@ const SetbackEngine = {
             });
         });
 
-        // Offset inputs — back-compute spacing when X changes
+        // Offset — back-compute inter-building gap when X changes
         ['bldgOffsetX', 'bldgOffsetY'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => {
                 const idx  = state.activeBuilding;
@@ -379,7 +408,7 @@ const SetbackEngine = {
             });
         });
 
-        // Spacing input — reposition building to achieve the requested gap
+        // Inter-building spacing (S field)
         const spInp = document.getElementById('bldgSpacing');
         if (spInp) {
             spInp.addEventListener('change', () => {
@@ -391,6 +420,30 @@ const SetbackEngine = {
                 this.drawBuilding();
             });
         }
+
+        // Count (per-building stack copies)
+        document.getElementById('bldgCount').addEventListener('change', () => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (bldg) { bldg.count = parseInt(document.getElementById('bldgCount').value) || 1; this.drawBuilding(); }
+        });
+
+        // Stack spacing (within-building gap between copies)
+        document.getElementById('bldgStackSpacing').addEventListener('change', () => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (bldg) { bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0; this.drawBuilding(); }
+        });
+
+        // Anchor buttons (per-building)
+        const anchors   = ['anchorFront', 'anchorCenter', 'anchorRear'];
+        const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
+        const setAnchor = (id) => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === id));
+            bldg.anchor = anchorMap[id];
+            this.drawBuilding();
+        };
+        anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
 
         // Stories (global)
         document.getElementById('bldgStories').addEventListener('change', () => {
@@ -404,28 +457,25 @@ const SetbackEngine = {
             this.updateFAR();
         });
 
-        // Add / Remove building buttons
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
         document.getElementById('bldgDelBtn').addEventListener('click', () => this.removeLastBuilding());
-
-        // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
 
-        // Draw on load if buildings exist
         if (state.buildings.length > 0) this.drawBuilding();
     },
 
     saveConfig: function() {
         const btn   = document.getElementById('saveConfigBtn');
         const state = ConfigEngine.state;
-        // Flush active building's current input values into state
-        const bldg = state.buildings[state.activeBuilding];
+        const bldg  = state.buildings[state.activeBuilding];
         if (bldg) {
-            bldg.orientation = parseFloat(document.getElementById('bldgOrientInput').value) || 0;
-            bldg.width       = parseFloat(document.getElementById('bldgWidth').value)       || 30;
-            bldg.height      = parseFloat(document.getElementById('bldgHeight').value)      || 60;
-            bldg.offsetX     = parseFloat(document.getElementById('bldgOffsetX').value)     || 0;
-            bldg.offsetY     = parseFloat(document.getElementById('bldgOffsetY').value)     || 0;
+            bldg.orientation  = parseFloat(document.getElementById('bldgOrientInput').value)  || 0;
+            bldg.width        = parseFloat(document.getElementById('bldgWidth').value)        || 30;
+            bldg.height       = parseFloat(document.getElementById('bldgHeight').value)       || 60;
+            bldg.offsetX      = parseFloat(document.getElementById('bldgOffsetX').value)      || 0;
+            bldg.offsetY      = parseFloat(document.getElementById('bldgOffsetY').value)      || 0;
+            bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
+            bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
         }
         state.stories   = parseInt(document.getElementById('bldgStories').value) || 1;
         state.commFront = document.getElementById('commFrontCheck')?.checked || false;
