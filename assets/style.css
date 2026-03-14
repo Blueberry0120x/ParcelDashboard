@@ -247,10 +247,10 @@ details[open] summary { border-bottom: 1px solid var(--cad-border); }
 
 .cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
 .cad-table th, .cad-table td {
-    padding: 5px 10px 5px 6px; border-bottom: 1px solid var(--cad-border);
+    padding: 4px 6px 4px 4px; border-bottom: 1px solid var(--cad-border);
     border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
 }
-.cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; padding-left: 15px; }
+.cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; padding-left: 12px; }
 .cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
 .cad-table td:last-child { border-right: none; }
 
