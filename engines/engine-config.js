@@ -3,7 +3,7 @@
    ========================================== */
 const ConfigEngine = {
     data: {
-        address: "4335 Euclid Avenue, City Heights, San Diego, CA 92105",
+        address: "4335 Euclid Avenue, San Diego, CA 92105",
         apn: "471-271-16-00",
         zoning: "CUPD-CU-2-4",
         width: 50, depth: 125, commercialDepth: 30
@@ -20,9 +20,14 @@ const ConfigEngine = {
         setbacks: { front: 10, rear: 10, sideL: 0, sideR: 0 }
     },
     init: function() {
-        this.state.lat      = parseFloat(localStorage.getItem('site_lat')) || this.defaults.lat;
-        this.state.lng      = parseFloat(localStorage.getItem('site_lng')) || this.defaults.lng;
-        this.state.rotation = parseFloat(localStorage.getItem('site_rot')) || this.defaults.rotation;
+        const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
+        const sLat  = localStorage.getItem('site_lat');
+        const sLng  = localStorage.getItem('site_lng');
+        const sRot  = localStorage.getItem('site_rot');
+        this.state.lat      = saved ? saved.lat      : (sLat !== null ? parseFloat(sLat) : this.defaults.lat);
+        this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
+        this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
+        if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
     },
     save: function() {
         localStorage.setItem('site_lat', this.state.lat);
@@ -33,8 +38,10 @@ const ConfigEngine = {
         localStorage.removeItem('site_lat');
         localStorage.removeItem('site_lng');
         localStorage.removeItem('site_rot');
+        localStorage.removeItem('boundary_location');
         this.state.lat      = this.defaults.lat;
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
+        this.state.setbacks = { front: 10, rear: 10, sideL: 0, sideR: 0 };
     }
 };

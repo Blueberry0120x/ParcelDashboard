@@ -6,15 +6,15 @@ const MapEngine = {
     gridLayer: null, setbackPoly: null,
 
     init: function() {
-        const osm  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, crossOrigin: true });
-        const sat  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 21, crossOrigin: true });
+        const osm  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true });
+        const sat  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true });
         const topo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
-            maxNativeZoom: 16, maxZoom: 21, crossOrigin: true, attribution: 'USGS The National Map'
+            maxNativeZoom: 16, maxZoom: 23, crossOrigin: true, attribution: 'USGS The National Map'
         });
 
         this.map = L.map('map', {
             center: [ConfigEngine.state.lat, ConfigEngine.state.lng],
-            zoom: 19, layers: [osm],
+            zoom: 19, maxZoom: 23, layers: [osm],
             fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' }
         });
         L.control.layers({ "Street Map": osm, "USGS Topo": topo, "Satellite": sat }).addTo(this.map);
@@ -195,5 +195,6 @@ const MapEngine = {
         });
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
+        document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
     }
 };
