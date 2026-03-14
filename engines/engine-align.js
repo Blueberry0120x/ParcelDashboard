@@ -49,8 +49,8 @@ const SetbackEngine = {
         // Seed building config inputs
         document.getElementById('bldgOrientInput').value   = bldg.orientation.toFixed(1);
         document.getElementById('bldgOrientSlider').value  = bldg.orientation;
-        document.getElementById('bldgWidth').value         = bldg.width;
-        document.getElementById('bldgHeight').value        = bldg.height;
+        document.getElementById('bldgWidth').value         = (bldg.width  || 30).toFixed(1);
+        document.getElementById('bldgHeight').value        = (bldg.height || 60).toFixed(1);
         document.getElementById('bldgOffsetX').value       = (bldg.offsetX  || 0).toFixed(1);
         document.getElementById('bldgOffsetY').value       = (bldg.offsetY  || 0).toFixed(1);
         document.getElementById('bldgCount').value         = bldg.count     || 1;
@@ -131,6 +131,19 @@ const SetbackEngine = {
             this.drawBuilding();
         });
 
+        // Anchor buttons
+        const anchors = ['anchorFront', 'anchorCenter', 'anchorRear'];
+        const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
+        const setAnchor = (id) => {
+            anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === id));
+            ConfigEngine.state.buildingConfig.anchor = anchorMap[id];
+            this.drawBuilding();
+        };
+        anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
+        // Restore saved anchor button state
+        const savedAnchor = Object.keys(anchorMap).find(k => anchorMap[k] === (bldg.anchor || 'center')) || 'anchorCenter';
+        anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === savedAnchor));
+
         // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
 
@@ -149,6 +162,7 @@ const SetbackEngine = {
         cfg.count       = parseInt(document.getElementById('bldgCount').value)          || 1;
         cfg.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
         cfg.spacing     = parseFloat(document.getElementById('bldgSpacingInput').value) || 0;
+        // anchor is managed directly on state by button clicks — just persist current value
         localStorage.setItem('building_config', JSON.stringify(cfg));
         this.drawBuilding();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
@@ -160,9 +174,12 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotArea = lotW * lotD;
         if (!lotArea) return;
-        const far = ((bldg.count || 1) * bldg.width * bldg.height * (bldg.stories || 1)) / lotArea;
-        const el = document.getElementById('bldgFAR');
-        if (el) el.textContent = far.toFixed(2);
+        const totalArea = (bldg.count || 1) * bldg.width * bldg.height * (bldg.stories || 1);
+        const far       = totalArea / lotArea;
+        const elArea = document.getElementById('bldgTotalArea');
+        const elFAR  = document.getElementById('bldgFAR');
+        if (elArea) elArea.textContent = totalArea.toLocaleString() + ' sf';
+        if (elFAR)  elFAR.textContent  = far.toFixed(2);
     },
 
     drawBuilding: function(skipMarker) {
@@ -204,9 +221,11 @@ const SetbackEngine = {
             return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
         };
 
-        // Stack buildings along depth axis, centered on baseCx
+        // Stack buildings along depth axis using anchor
+        const anchor = bldg.anchor || 'center';
+        const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
         for (let i = 0; i < count; i++) {
-            const cx = baseCx + (i - (count - 1) / 2) * (bldg.height + spacing);
+            const cx = baseCx + (i - anchorOffset) * (bldg.height + spacing);
             const raw = [
                 { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
                 { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }

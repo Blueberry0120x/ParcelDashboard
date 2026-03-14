@@ -223,8 +223,20 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     grid-template-columns: 14px 56px 14px 56px 24px;
     align-items: center; column-gap: 5px; grid-column: 2 / -1;
 }
-.footprint-inputs label    { font-size: 0.78em; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
-.footprint-inputs .ft-label { font-size: 0.78em; color: #4a5568; }
+.footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
+.footprint-inputs .ft-label { font-size: inherit; color: #718096; }
+.anchor-track {
+    display: flex; background: #eef2f7; border-radius: 20px;
+    padding: 2px; gap: 0; grid-column: 2 / -1;
+    border: 1px solid #d4dce8;
+}
+.anchor-btn {
+    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
+    background: transparent; color: #6b7280; font-weight: 800;
+    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
+    cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
+}
+.anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
 .footprint-inputs .align-angle-input { width: 100%; }
 .bldg-drag-pin {
     width: 14px; height: 14px; border-radius: 50%;
@@ -470,9 +482,9 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <strong>Footprint:</strong>
                         <div class="footprint-inputs">
                             <label>W</label>
-                            <input type="number" id="bldgWidth"  class="align-angle-input" value="30" min="1" step="1">
+                            <input type="number" id="bldgWidth"  class="align-angle-input" value="30.0" min="1" step="0.5">
                             <label>H</label>
-                            <input type="number" id="bldgHeight" class="align-angle-input" value="60" min="1" step="1">
+                            <input type="number" id="bldgHeight" class="align-angle-input" value="60.0" min="1" step="0.5">
                             <span class="ft-label">ft</span>
                         </div>
                         <strong>Offset:</strong>
@@ -497,8 +509,16 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <span style="font-weight:bold;">ft</span>
                         </div>
                         <input type="range" id="bldgSpacingSlider" min="0" max="50" value="0" step="0.5" style="width:100%; margin:0;">
+                        <strong>Total Area:</strong>
+                        <span id="bldgTotalArea" style="grid-column: 2 / -1; font-weight: 700; color: #2d3748;">—</span>
                         <strong>FAR:</strong>
                         <span id="bldgFAR" style="grid-column: 2 / -1; font-weight: 700; color: #0f4c81;">—</span>
+                        <strong>Anchor:</strong>
+                        <div class="anchor-track">
+                            <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
+                            <button id="anchorCenter" class="anchor-btn active">Center</button>
+                            <button id="anchorRear"   class="anchor-btn">Rear &#8594;</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -635,7 +655,7 @@ const ConfigEngine = {
         isSnapping: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1 }
+        buildingConfig: { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1, anchor: 'center' }
     },
     init: function() {
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
@@ -665,7 +685,7 @@ const ConfigEngine = {
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildingConfig = { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1 };
+        this.state.buildingConfig = { orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, count: 1, spacing: 0, stories: 1, anchor: 'center' };
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');
     }
@@ -1219,8 +1239,8 @@ const SetbackEngine = {
         // Seed building config inputs
         document.getElementById('bldgOrientInput').value   = bldg.orientation.toFixed(1);
         document.getElementById('bldgOrientSlider').value  = bldg.orientation;
-        document.getElementById('bldgWidth').value         = bldg.width;
-        document.getElementById('bldgHeight').value        = bldg.height;
+        document.getElementById('bldgWidth').value         = (bldg.width  || 30).toFixed(1);
+        document.getElementById('bldgHeight').value        = (bldg.height || 60).toFixed(1);
         document.getElementById('bldgOffsetX').value       = (bldg.offsetX  || 0).toFixed(1);
         document.getElementById('bldgOffsetY').value       = (bldg.offsetY  || 0).toFixed(1);
         document.getElementById('bldgCount').value         = bldg.count     || 1;
@@ -1301,6 +1321,19 @@ const SetbackEngine = {
             this.drawBuilding();
         });
 
+        // Anchor buttons
+        const anchors = ['anchorFront', 'anchorCenter', 'anchorRear'];
+        const anchorMap = { anchorFront: 'front', anchorCenter: 'center', anchorRear: 'rear' };
+        const setAnchor = (id) => {
+            anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === id));
+            ConfigEngine.state.buildingConfig.anchor = anchorMap[id];
+            this.drawBuilding();
+        };
+        anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
+        // Restore saved anchor button state
+        const savedAnchor = Object.keys(anchorMap).find(k => anchorMap[k] === (bldg.anchor || 'center')) || 'anchorCenter';
+        anchors.forEach(a => document.getElementById(a).classList.toggle('active', a === savedAnchor));
+
         // Save Config button
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
 
@@ -1319,6 +1352,7 @@ const SetbackEngine = {
         cfg.count       = parseInt(document.getElementById('bldgCount').value)          || 1;
         cfg.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
         cfg.spacing     = parseFloat(document.getElementById('bldgSpacingInput').value) || 0;
+        // anchor is managed directly on state by button clicks — just persist current value
         localStorage.setItem('building_config', JSON.stringify(cfg));
         this.drawBuilding();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
@@ -1330,9 +1364,12 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotArea = lotW * lotD;
         if (!lotArea) return;
-        const far = ((bldg.count || 1) * bldg.width * bldg.height * (bldg.stories || 1)) / lotArea;
-        const el = document.getElementById('bldgFAR');
-        if (el) el.textContent = far.toFixed(2);
+        const totalArea = (bldg.count || 1) * bldg.width * bldg.height * (bldg.stories || 1);
+        const far       = totalArea / lotArea;
+        const elArea = document.getElementById('bldgTotalArea');
+        const elFAR  = document.getElementById('bldgFAR');
+        if (elArea) elArea.textContent = totalArea.toLocaleString() + ' sf';
+        if (elFAR)  elFAR.textContent  = far.toFixed(2);
     },
 
     drawBuilding: function(skipMarker) {
@@ -1374,9 +1411,11 @@ const SetbackEngine = {
             return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
         };
 
-        // Stack buildings along depth axis, centered on baseCx
+        // Stack buildings along depth axis using anchor
+        const anchor = bldg.anchor || 'center';
+        const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
         for (let i = 0; i < count; i++) {
-            const cx = baseCx + (i - (count - 1) / 2) * (bldg.height + spacing);
+            const cx = baseCx + (i - anchorOffset) * (bldg.height + spacing);
             const raw = [
                 { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
                 { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }

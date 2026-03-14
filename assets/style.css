@@ -31,7 +31,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 
 /* Title row — title stack inline with address+apn pair */
 .header-title-row { display: flex; align-items: center; gap: 0; }
-.header-address-pair { display: flex; align-items: center; gap: 10px; margin-left: 60px; }
+.header-address-pair { display: flex; align-items: center; gap: 10px; margin-left: 55px; }
 .header-title-stack { display: flex; flex-direction: column; gap: 2px; }
 .header-title-stack h1 { margin: 0; white-space: nowrap; }
 .header-title-stack p  { margin: 0; color: #4a5568; }
@@ -145,6 +145,12 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     background: #805ad5; transition: 0.2s; white-space: nowrap;
 }
 .btn-save-boundary:hover { background: #6b46c1; }
+.btn-save-config {
+    flex: 0 0 auto; padding: 4px 12px; border: none; border-radius: 4px;
+    font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
+    background: #805ad5; transition: 0.2s; white-space: nowrap;
+}
+.btn-save-config:hover { background: #6b46c1; }
 .align-angle-input {
     width: 100%; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
     font-weight: bold; background: transparent; color: var(--text); outline: none;
@@ -196,11 +202,25 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-grid strong { color: #4a5568; white-space: nowrap; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
-    display: flex; align-items: center; gap: 5px; grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: 14px 56px 14px 56px 24px;
+    align-items: center; column-gap: 5px; grid-column: 2 / -1;
 }
-.footprint-inputs label { font-size: 0.78em; font-weight: 700; color: #4a5568; }
-.footprint-inputs .ft-label { font-size: 0.78em; color: #4a5568; }
-.footprint-inputs .align-angle-input { width: 52px; }
+.footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
+.footprint-inputs .ft-label { font-size: inherit; color: #718096; }
+.anchor-track {
+    display: flex; background: #eef2f7; border-radius: 20px;
+    padding: 2px; gap: 0; grid-column: 2 / -1;
+    border: 1px solid #d4dce8;
+}
+.anchor-btn {
+    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
+    background: transparent; color: #6b7280; font-weight: 800;
+    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
+    cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
+}
+.anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+.footprint-inputs .align-angle-input { width: 100%; }
 .bldg-drag-pin {
     width: 14px; height: 14px; border-radius: 50%;
     background: #e67e22; border: 2px solid #fff;
