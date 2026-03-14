@@ -77,6 +77,15 @@
                     <button id="resetBtn"       class="btn-align btn-align-reset">Reset</button>
                 </div>
                 <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
+
+                <!-- ELEVATION TOOL -->
+                <div class="elev-wrap">
+                    <button id="elevToggleBtn" class="btn-align btn-elev-toggle">&#x25B3; Elevation</button>
+                    <div id="elevTools" class="elev-tools">
+                        <button id="elevSampleBtn" class="btn-align btn-elev-sample">&#x25CE; Sample</button>
+                        <button id="elevClearBtn"  class="btn-align btn-elev-clear">Clear</button>
+                    </div>
+                </div>
             </div>
 
             <!-- CONCEPT DESIGN -->
@@ -235,6 +244,7 @@
         ConfigEngine.init();
         UIEngine.init();
         MapEngine.init();
+        ElevationTool.init();
         ResizeEngine.init();
     };
 </script>
