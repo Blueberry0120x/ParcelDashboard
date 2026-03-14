@@ -171,7 +171,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .align-angle-input {
     width: 100%; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
     font-weight: bold; background: transparent; color: var(--text); outline: none;
-    font-size: 1em;
+    font-size: 0.9em;
 }
 .align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
 .btn-align {
@@ -220,11 +220,14 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
     display: grid;
-    grid-template-columns: 14px 56px 14px 56px 1fr;
-    align-items: center; column-gap: 5px; grid-column: 2 / -1;
+    grid-template-columns: 12px 48px 20px 12px 48px 20px 1fr;
+    align-items: center; column-gap: 4px; grid-column: 2 / -1;
 }
 .footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
-.footprint-inputs .ft-label { font-size: inherit; color: #718096; }
+.footprint-inputs .ft-label { font-size: 0.82em; color: #718096; }
+.fp-area-badge { font-size: 0.78em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
+.fp-area-badge::before { content: '['; color: #a0aec0; margin-right: 1px; }
+.fp-area-badge::after  { content: ']'; color: #a0aec0; margin-left: 1px; }
 .anchor-track {
     display: flex; background: #eef2f7; border-radius: 20px;
     padding: 2px; gap: 0; grid-column: 2 / -1;
@@ -483,14 +486,17 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <div class="footprint-inputs">
                             <label>W</label>
                             <input type="number" id="bldgWidth"  class="align-angle-input" value="30.0" min="1" step="0.5">
+                            <span class="ft-label">ft</span>
                             <label>H</label>
                             <input type="number" id="bldgHeight" class="align-angle-input" value="60.0" min="1" step="0.5">
-                            <span id="bldgFootprintArea" class="ft-label">—</span>
+                            <span class="ft-label">ft</span>
+                            <span id="bldgFootprintArea" class="fp-area-badge">—</span>
                         </div>
                         <strong>Offset:</strong>
                         <div class="footprint-inputs">
                             <label>X</label>
                             <input type="number" id="bldgOffsetX" class="align-angle-input" value="0" step="0.5">
+                            <span class="ft-label">ft</span>
                             <label>Y</label>
                             <input type="number" id="bldgOffsetY" class="align-angle-input" value="0" step="0.5">
                             <span class="ft-label">ft</span>
@@ -499,6 +505,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <div class="footprint-inputs">
                             <label>N</label>
                             <input type="number" id="bldgCount"   class="align-angle-input" value="1" min="1" step="1">
+                            <span class="ft-label">ea</span>
                             <label>S</label>
                             <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">
                             <span class="ft-label">flr</span>
@@ -510,7 +517,10 @@ input:checked + .slider:before { transform: translateX(20px); }
                         </div>
                         <input type="range" id="bldgSpacingSlider" min="0" max="50" value="0" step="0.5" style="width:100%; margin:0;">
                         <strong>Total Area:</strong>
-                        <span id="bldgTotalArea" style="grid-column: 2 / -1; font-weight: 700; color: #2d3748;">—</span>
+                        <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
+                            <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748;">—</span>
+                            <span id="bldgBuildable" style="font-size: 0.82em; font-weight: 600; color: #718096; white-space: nowrap;">—</span>
+                        </div>
                         <strong>FAR:</strong>
                         <span id="bldgFAR" style="grid-column: 2 / -1; font-weight: 700; color: #0f4c81;">—</span>
                         <strong>Zone:</strong>
@@ -520,8 +530,6 @@ input:checked + .slider:before { transform: translateX(20px); }
                             </label>
                             <span id="maxFARLabel" style="color:#0f4c81; font-weight:700; font-size:0.85em;">Base: 2.0 FAR</span>
                         </div>
-                        <strong>Buildable:</strong>
-                        <span id="bldgBuildable" style="grid-column: 2 / -1; font-weight: 600; color: #2d3748;">—</span>
                         <strong>FAR Check:</strong>
                         <span id="bldgFARCheck" style="grid-column: 2 / -1; font-weight: 700;">—</span>
                         <strong>Anchor:</strong>
@@ -1433,7 +1441,7 @@ const SetbackEngine = {
         set('bldgFootprintArea', Math.round(footprintSF).toLocaleString() + ' sf');
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
         set('bldgFAR',           actualFAR.toFixed(2));
-        set('bldgBuildable',     buildable.toLocaleString()               + ' sf  (max ' + maxFAR + ' FAR)');
+        set('bldgBuildable',     'max ' + buildable.toLocaleString() + ' sf');
         set('maxFARLabel',       commFront ? 'Comm. Front: 6.5 FAR' : 'Base: 2.0 FAR');
 
         const chkEl = document.getElementById('bldgFARCheck');

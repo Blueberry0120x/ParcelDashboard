@@ -154,7 +154,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .align-angle-input {
     width: 100%; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
     font-weight: bold; background: transparent; color: var(--text); outline: none;
-    font-size: 1em;
+    font-size: 0.9em;
 }
 .align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
 .btn-align {
@@ -203,11 +203,14 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-grid input[type="range"] { width: 100%; margin: 0; }
 .footprint-inputs {
     display: grid;
-    grid-template-columns: 14px 56px 14px 56px 1fr;
-    align-items: center; column-gap: 5px; grid-column: 2 / -1;
+    grid-template-columns: 12px 48px 20px 12px 48px 20px 1fr;
+    align-items: center; column-gap: 4px; grid-column: 2 / -1;
 }
 .footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
-.footprint-inputs .ft-label { font-size: inherit; color: #718096; }
+.footprint-inputs .ft-label { font-size: 0.82em; color: #718096; }
+.fp-area-badge { font-size: 0.78em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
+.fp-area-badge::before { content: '['; color: #a0aec0; margin-right: 1px; }
+.fp-area-badge::after  { content: ']'; color: #a0aec0; margin-left: 1px; }
 .anchor-track {
     display: flex; background: #eef2f7; border-radius: 20px;
     padding: 2px; gap: 0; grid-column: 2 / -1;
