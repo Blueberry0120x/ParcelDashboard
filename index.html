@@ -168,11 +168,14 @@
                         <input type="range" id="bldgSpacingSlider" min="0" max="50" value="0" step="0.5" style="width:100%; margin:0;">
                         <strong>Total Area:</strong>
                         <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
-                            <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748;">—</span>
-                            <span id="bldgBuildable" style="font-size: 0.82em; font-weight: 600; color: #718096; white-space: nowrap;">—</span>
+                            <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748; font-size: 1.05em;">—</span>
+                            <span id="bldgBuildable" style="font-weight: 600; color: #718096; white-space: nowrap; font-size: 1em;">—</span>
                         </div>
                         <strong>FAR:</strong>
-                        <span id="bldgFAR" style="grid-column: 2 / -1; font-weight: 700; color: #0f4c81;">—</span>
+                        <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
+                            <span id="bldgFAR" style="font-weight: 700; color: #0f4c81; font-size: 1.05em;">—</span>
+                            <span id="bldgFARCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
+                        </div>
                         <strong>Zone:</strong>
                         <div style="grid-column: 2 / -1; display: flex; align-items: center; justify-content: space-between;">
                             <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-weight:600;">
@@ -180,8 +183,6 @@
                             </label>
                             <span id="maxFARLabel" style="color:#0f4c81; font-weight:700; font-size:0.85em;">Base: 2.0 FAR</span>
                         </div>
-                        <strong>FAR Check:</strong>
-                        <span id="bldgFARCheck" style="grid-column: 2 / -1; font-weight: 700;">—</span>
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
                             <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
