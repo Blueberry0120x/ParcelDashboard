@@ -3,7 +3,7 @@
    ========================================== */
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
-    gridLayer: null, setbackPoly: null,
+    gridLayer: null, setbackPoly: null, buildingPoly: null,
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -36,7 +36,8 @@ const MapEngine = {
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
-        this.setbackPoly = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0, dashArray: '7 4', noClip: true }).addTo(this.map);
+        this.setbackPoly  = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0,   dashArray: '7 4', noClip: true }).addTo(this.map);
+        this.buildingPoly = L.polygon([], { color: '#e67e22', weight: 2, fillColor: '#e67e22', fillOpacity: 0.18, dashArray: '5 3', noClip: true }).addTo(this.map);
         this.dragMarker  = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
 
         this.attachEvents();
@@ -126,6 +127,7 @@ const MapEngine = {
         this.updateNorthArrow();
 
         if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
+        SetbackEngine.drawBuilding();
 
         ConfigEngine.save();
     },

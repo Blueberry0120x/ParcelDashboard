@@ -117,6 +117,31 @@
                     </div>
                 </div>
                 <button class="btn-accept" onclick="SetbackEngine.applySetbacks()">&#x2714; Accept &#x2014; Draw Setback Lines</button>
+                <button id="saveSetbackBtn" class="btn-save-setback">Save Setbacks</button>
+
+                <!-- BUILDING CONFIG -->
+                <div class="building-config-wrap">
+                    <div class="box-header" style="margin-bottom:8px;">
+                        <h3 style="margin:0;">Building Config</h3>
+                        <button id="saveConfigBtn" class="btn-save-boundary">Save Config</button>
+                    </div>
+                    <div class="building-grid">
+                        <strong>Orientation:</strong>
+                        <div class="deg-input-wrap">
+                            <input type="number" id="bldgOrientInput" class="align-angle-input" value="0.0" step="0.1">
+                            <span>&#176;</span>
+                        </div>
+                        <input type="range" id="bldgOrientSlider" min="-90" max="90" value="0" step="0.1">
+                        <strong>Footprint:</strong>
+                        <div class="footprint-inputs">
+                            <label>W</label>
+                            <input type="number" id="bldgWidth"  class="align-angle-input" value="30" min="1" step="1">
+                            <label>H</label>
+                            <input type="number" id="bldgHeight" class="align-angle-input" value="60" min="1" step="1">
+                            <span class="ft-label">ft</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- PROJECT INFORMATION -->
@@ -244,6 +269,7 @@
         ConfigEngine.init();
         UIEngine.init();
         MapEngine.init();
+        SetbackEngine.initBuildingConfig();
         ElevationTool.init();
         ResizeEngine.init();
     };

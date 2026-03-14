@@ -17,7 +17,8 @@ const ConfigEngine = {
         lat: 0, lng: 0, rotation: 0,
         isSnapping: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
-        setbacks: { front: 10, rear: 10, sideL: 0, sideR: 0 }
+        setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
+        buildingConfig: { orientation: 0, width: 30, height: 60 }
     },
     init: function() {
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
@@ -28,6 +29,10 @@ const ConfigEngine = {
         this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
         this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
         if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
+        const sb   = JSON.parse(localStorage.getItem('saved_setbacks')   || 'null');
+        const bldg = JSON.parse(localStorage.getItem('building_config')  || 'null');
+        if (sb)   this.state.setbacks       = sb;
+        if (bldg) this.state.buildingConfig = bldg;
     },
     save: function() {
         localStorage.setItem('site_lat', this.state.lat);
@@ -42,6 +47,9 @@ const ConfigEngine = {
         this.state.lat      = this.defaults.lat;
         this.state.lng      = this.defaults.lng;
         this.state.rotation = this.defaults.rotation;
-        this.state.setbacks = { front: 10, rear: 10, sideL: 0, sideR: 0 };
+        this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
+        this.state.buildingConfig = { orientation: 0, width: 30, height: 60 };
+        localStorage.removeItem('saved_setbacks');
+        localStorage.removeItem('building_config');
     }
 };
