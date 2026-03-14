@@ -229,7 +229,7 @@ const SetbackEngine = {
         set('bldgFootprintArea', Math.round(footprintSF).toLocaleString() + ' sf');
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
         set('bldgFAR',           actualFAR.toFixed(2));
-        set('bldgBuildable',     'max ' + buildable.toLocaleString() + ' sf');
+        set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
         set('maxFARLabel',       commFront ? 'Comm. Front: 6.5 FAR' : 'Base: 2.0 FAR');
 
         const chkEl = document.getElementById('bldgFARCheck');
