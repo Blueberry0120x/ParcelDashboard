@@ -11,7 +11,7 @@ const UIEngine = {
         document.getElementById('ui-zoning').innerText  = d.zoning;
         document.getElementById('ui-w').innerText       = d.width;
         document.getElementById('ui-d').innerText       = d.depth;
-        document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF';
+        document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF  [' + (sqft / 43560).toFixed(2) + ' AC]';
 
         document.getElementById('info-address').innerText = d.address;
         document.getElementById('info-apn').innerText     = d.apn;

@@ -56,8 +56,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .property-banner::-webkit-scrollbar { height: 4px; }
 .property-banner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
 .banner-stat {
-    display: flex; flex-direction: column; padding: 9px 16px;
-    cursor: grab; flex: 1 0 130px;
+    display: flex; flex-direction: column; padding: 8px 12px;
+    cursor: grab; flex: 0 0 auto;
     transition: background 0.15s; border: 1px solid transparent;
     border-right: 1px solid rgba(255,255,255,0.13); min-width: 0;
 }
@@ -209,8 +209,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
 .footprint-inputs .ft-label { font-size: 0.82em; color: #718096; }
 .fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
-.fp-area-badge::before { content: '['; color: #a0aec0; margin-right: 1px; }
-.fp-area-badge::after  { content: ']'; color: #a0aec0; margin-left: 1px; }
+.fp-area-badge::before { content: '['; margin-right: 1px; }
+.fp-area-badge::after  { content: ']'; margin-left: 1px; }
 .anchor-track {
     display: flex; background: #eef2f7; border-radius: 20px;
     padding: 2px; gap: 0; grid-column: 2 / -1;

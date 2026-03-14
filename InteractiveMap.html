@@ -73,8 +73,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .property-banner::-webkit-scrollbar { height: 4px; }
 .property-banner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
 .banner-stat {
-    display: flex; flex-direction: column; padding: 9px 16px;
-    cursor: grab; flex: 1 0 130px;
+    display: flex; flex-direction: column; padding: 8px 12px;
+    cursor: grab; flex: 0 0 auto;
     transition: background 0.15s; border: 1px solid transparent;
     border-right: 1px solid rgba(255,255,255,0.13); min-width: 0;
 }
@@ -226,8 +226,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .footprint-inputs label    { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
 .footprint-inputs .ft-label { font-size: 0.82em; color: #718096; }
 .fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
-.fp-area-badge::before { content: '['; color: #a0aec0; margin-right: 1px; }
-.fp-area-badge::after  { content: ']'; color: #a0aec0; margin-left: 1px; }
+.fp-area-badge::before { content: '['; margin-right: 1px; }
+.fp-area-badge::after  { content: ']'; margin-left: 1px; }
 .anchor-track {
     display: flex; background: #eef2f7; border-radius: 20px;
     padding: 2px; gap: 0; grid-column: 2 / -1;
@@ -392,7 +392,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <div class="banner-stat" draggable="true"><span class="banner-label">Lot Size</span><span class="banner-value" id="ui-sqft"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Zoning</span><span class="banner-value" id="ui-zoning"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Base Density</span><span class="banner-value">1 DU / 600 SF</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Max FAR</span><span class="banner-value">2.0 Base</span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Max FAR [Base / Comm]</span><span class="banner-value">2.0 / 6.5</span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Max Height</span><span class="banner-value">50 FT</span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Setbacks (F/S/R)</span><span class="banner-value">10' / 0' / 10'</span></div>
     </div>
@@ -519,7 +519,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <strong>Total Area:</strong>
                         <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
                             <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748; font-size: 1.05em;">—</span>
-                            <span id="bldgBuildable" style="font-weight: 600; color: #718096; white-space: nowrap; font-size: 1em;">—</span>
+                            <span id="bldgBuildable" style="font-weight: 600; color: #2f855a; white-space: nowrap; font-size: 1em;">—</span>
                         </div>
                         <strong>FAR:</strong>
                         <div style="grid-column: 2 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
@@ -726,7 +726,7 @@ const UIEngine = {
         document.getElementById('ui-zoning').innerText  = d.zoning;
         document.getElementById('ui-w').innerText       = d.width;
         document.getElementById('ui-d').innerText       = d.depth;
-        document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF';
+        document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF  [' + (sqft / 43560).toFixed(2) + ' AC]';
 
         document.getElementById('info-address').innerText = d.address;
         document.getElementById('info-apn').innerText     = d.apn;
