@@ -1,1 +1,242 @@
-﻿/* Global Styles */
+/* ==========================================
+   1. CORE VARIABLES & BASE
+   ========================================== */
+:root {
+    --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
+    --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
+    --line: #dbe3ee; --cad-bg: #1a1a1a; --cad-text: #e0e0e0;
+    --cad-border: #444; --cad-accent: #d670d6;
+}
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin: 0; padding: 20px;
+    background-color: var(--bg); color: var(--text);
+}
+.page-wrapper { max-width: 90%; margin: 0 auto; }
+
+/* ==========================================
+   2. HEADER & BANNER
+   ========================================== */
+.header {
+    border-bottom: 3px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 28px; }
+.header-btn {
+    background-color: white; color: var(--primary); border: 2px solid var(--primary);
+    padding: 8px 16px; border-radius: 6px; text-decoration: none;
+    font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.header-btn:hover { background-color: var(--primary); color: white; }
+
+/* Draggable Property Banner — single row, scrollable, legible */
+.property-banner {
+    background: var(--primary); color: white; border-radius: 8px;
+    padding: 0; display: flex; flex-wrap: nowrap; overflow-x: auto;
+    margin-bottom: 18px; box-shadow: 0 4px 6px rgba(15,76,129,.18);
+    user-select: none;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent;
+}
+.property-banner::-webkit-scrollbar { height: 4px; }
+.property-banner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
+.banner-stat {
+    display: flex; flex-direction: column; padding: 9px 16px;
+    cursor: grab; flex: 1 0 130px;
+    transition: background 0.15s; border: 1px solid transparent;
+    border-right: 1px solid rgba(255,255,255,0.13); min-width: 0;
+}
+.banner-stat:last-child { border-right: 1px solid transparent; }
+.banner-stat:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
+.banner-stat.dragging { opacity: 0.4; cursor: grabbing; }
+.banner-stat.drag-over { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); }
+.banner-label {
+    font-size: 0.69em; text-transform: uppercase; letter-spacing: 0.6px;
+    opacity: 0.7; margin-bottom: 4px; font-weight: 600; white-space: nowrap;
+}
+.banner-value {
+    font-size: 1.05em; font-weight: 700; line-height: 1.25; color: #ffffff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ==========================================
+   3. MAIN LAYOUT — Resizable Flex Split
+   ========================================== */
+.main-container { display: flex; gap: 0; align-items: stretch; height: 600px; }
+
+.sidebar {
+    width: 400px; min-width: 240px; flex-shrink: 0;
+    overflow-y: auto; padding-right: 4px;
+}
+.col-divider {
+    width: 8px; min-width: 8px; flex-shrink: 0;
+    cursor: col-resize; margin: 0 5px; align-self: stretch;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; background: var(--line); transition: background 0.2s;
+}
+.col-divider:hover, .col-divider.resizing { background: var(--primary); }
+.col-divider::after { content: '⋮'; font-size: 14px; color: #888; }
+.col-divider.resizing::after { color: white; }
+.map-panel { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
+
+/* Sidebar Boxes */
+.sidebar-box {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(17,24,39,.03);
+}
+.sidebar-box h2 { margin: 0; font-size: 1.1em; color: var(--primary); }
+.sidebar-box h3 { margin: 8px 0 6px 0; font-size: 0.74em; color: #111; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+
+/* Box header row — h2 + inline toggle */
+.box-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; border-bottom: 2px solid var(--secondary); padding-bottom: 6px;
+}
+
+/* Complex / Single Toggle — compact, inline with header */
+.mode-track {
+    display: flex; background: #eef2f7; border-radius: 20px;
+    padding: 2px; gap: 0; width: 116px; flex-shrink: 0;
+    border: 1px solid #d4dce8;
+}
+.mode-btn {
+    flex: 1; padding: 2px 6px; border-radius: 18px; border: none;
+    background: transparent; color: #6b7280; font-weight: 800;
+    font-size: 0.70em; text-transform: uppercase; letter-spacing: 0.3px;
+    cursor: pointer; transition: all 0.18s; line-height: 1.5;
+}
+.mode-btn.active { background: white; color: #22a861; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+/* Align Map sidebar controls */
+.align-control-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; font-size: 0.88em; gap: 8px;
+}
+.align-control-row strong { color: #4a5568; white-space: nowrap; }
+.align-control-row input[type="range"] { flex: 1; margin: 0 6px; }
+.align-angle-input {
+    width: 50px; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
+    font-weight: bold; background: transparent; color: var(--text); outline: none;
+    font-size: 1em;
+}
+.align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.btn-align {
+    flex: 1; padding: 7px 4px; border: none; border-radius: 4px;
+    font-weight: bold; font-size: 0.78em; cursor: pointer; color: white; transition: 0.2s;
+}
+.btn-align-lisp  { background: var(--accent); }
+.btn-align-lisp:hover  { background: #b92b15; }
+.btn-align-img   { background: #38a169; }
+.btn-align-img:hover   { background: #2f855a; }
+.btn-align-reset { background: #718096; }
+.btn-align-reset:hover { background: #4a5568; }
+.lisp-output { width: 100%; height: 110px; padding: 8px; font-family: monospace; font-size: 0.8em; background: #1a202c; color: #a0aec0; box-sizing: border-box; resize: vertical; border: none; border-radius: 3px; }
+
+/* Setback Config */
+.setback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.setback-field { display: flex; flex-direction: column; gap: 3px; }
+.setback-field label { font-size: 0.74em; color: #111; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
+.setback-field input {
+    width: 100%; padding: 5px 8px; border: 1px solid #cbd5e0; border-radius: 4px;
+    font-size: 0.92em; background: white; box-sizing: border-box; color: var(--text);
+}
+.setback-field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(15,76,129,0.15); }
+.btn-accept {
+    width: 100%; padding: 8px; background: var(--primary); color: white;
+    border: none; border-radius: 5px; font-weight: bold; font-size: 0.9em;
+    cursor: pointer; transition: 0.2s;
+}
+.btn-accept:hover { background: #0a3a6e; }
+
+/* CAD Accordions (sidebar) */
+details {
+    background: var(--cad-bg); color: var(--cad-text); border: 1px solid var(--cad-border);
+    border-radius: 6px; margin-bottom: 8px; overflow: hidden;
+}
+summary {
+    padding: 9px 14px; font-weight: bold; font-size: 0.92em; color: var(--cad-accent);
+    background: #222; cursor: pointer; list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font-size: 1.1em; color: white; }
+details[open] summary::after { content: "−"; }
+details[open] summary { border-bottom: 1px solid var(--cad-border); }
+
+.cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+.cad-table th, .cad-table td {
+    padding: 5px 10px; border-bottom: 1px solid var(--cad-border);
+    border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
+}
+.cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; }
+.cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
+.cad-table td:last-child { border-right: none; }
+
+.unit-toggle {
+    background: transparent; border: 1px solid var(--cad-accent); color: var(--cad-accent);
+    border-radius: 4px; padding: 2px 6px; font-size: 0.78em; cursor: pointer; float: right;
+}
+.unit-toggle:hover { background: var(--cad-accent); color: var(--cad-bg); }
+
+/* ==========================================
+   4. MAP & CONTROLS
+   ========================================== */
+#map { flex: 1; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
+
+/* Horizontal control row at top-left */
+.leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; padding-top: 10px; padding-left: 10px; }
+.leaflet-top.leaflet-left .leaflet-control { margin-top: 0; margin-left: 0; margin-right: 10px; }
+
+/* Toggle switch (snap-to-grid) */
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+/* Help button (top-right of map) */
+.leaflet-control-helper {
+    background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px;
+    width: 34px; height: 34px; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; font-size: 18px; color: var(--primary); cursor: pointer; position: relative;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+.helper-popup {
+    display: none; position: absolute; top: 0; right: 40px;
+    width: 280px; background: white; border: 1px solid #cbd5e0;
+    border-radius: 6px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    font-size: 13px; color: #333; line-height: 1.5; cursor: default; text-align: left;
+}
+.leaflet-control-helper:hover .helper-popup { display: block; }
+.helper-popup ul { padding-left: 15px; margin: 5px 0 0 0; }
+
+/* North compass */
+.north-compass-wrap {
+    background: transparent; cursor: default; pointer-events: none;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+}
+
+/* Banner merge / split */
+.banner-stat.merge-ready {
+    background: rgba(255,255,255,0.18) !important;
+    border: 2px dashed rgba(255,255,255,0.85) !important;
+    transform: scale(1.03);
+}
+.banner-stat.merged {
+    flex: 2 1 280px; flex-direction: row; align-items: stretch; gap: 0;
+}
+.banner-stat.merged .merge-half {
+    flex: 1; display: flex; flex-direction: column;
+}
+.banner-stat.merged .merge-sep {
+    width: 1px; background: rgba(255,255,255,0.22);
+    margin: 6px 8px; flex-shrink: 0; align-self: stretch;
+}
+
+/* ==========================================
+   5. INFO BOTTOM — aligns with sidebar/map split
+   ========================================== */
+.info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
+.info-col-left  { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.info-col-gap   { width: 18px;  flex-shrink: 0; }
+.info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }

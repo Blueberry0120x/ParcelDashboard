@@ -1,5 +1,6 @@
-<!DOCTYPE html>
-<!-- InteractiveMap.html — Merged Best Build -->
+﻿<!DOCTYPE html>
+<!-- Master Site Dashboard — Compiled Build -->
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,249 +15,250 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        /* ==========================================
-           1. CORE VARIABLES & BASE
-           ========================================== */
-        :root {
-            --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
-            --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
-            --line: #dbe3ee; --cad-bg: #1a1a1a; --cad-text: #e0e0e0;
-            --cad-border: #444; --cad-accent: #d670d6;
-        }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            margin: 0; padding: 20px;
-            background-color: var(--bg); color: var(--text);
-        }
-        .page-wrapper { max-width: 90%; margin: 0 auto; }
+/* ==========================================
+   1. CORE VARIABLES & BASE
+   ========================================== */
+:root {
+    --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
+    --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
+    --line: #dbe3ee; --cad-bg: #1a1a1a; --cad-text: #e0e0e0;
+    --cad-border: #444; --cad-accent: #d670d6;
+}
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin: 0; padding: 20px;
+    background-color: var(--bg); color: var(--text);
+}
+.page-wrapper { max-width: 90%; margin: 0 auto; }
 
-        /* ==========================================
-           2. HEADER & BANNER
-           ========================================== */
-        .header {
-            border-bottom: 3px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 28px; }
-        .header-btn {
-            background-color: white; color: var(--primary); border: 2px solid var(--primary);
-            padding: 8px 16px; border-radius: 6px; text-decoration: none;
-            font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .header-btn:hover { background-color: var(--primary); color: white; }
+/* ==========================================
+   2. HEADER & BANNER
+   ========================================== */
+.header {
+    border-bottom: 3px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 28px; }
+.header-btn {
+    background-color: white; color: var(--primary); border: 2px solid var(--primary);
+    padding: 8px 16px; border-radius: 6px; text-decoration: none;
+    font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.header-btn:hover { background-color: var(--primary); color: white; }
 
-        /* Draggable Property Banner — single row, scrollable, legible */
-        .property-banner {
-            background: var(--primary); color: white; border-radius: 8px;
-            padding: 0; display: flex; flex-wrap: nowrap; overflow-x: auto;
-            margin-bottom: 18px; box-shadow: 0 4px 6px rgba(15,76,129,.18);
-            user-select: none;
-            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent;
-        }
-        .property-banner::-webkit-scrollbar { height: 4px; }
-        .property-banner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
-        .banner-stat {
-            display: flex; flex-direction: column; padding: 9px 16px;
-            cursor: grab; flex: 1 0 130px;
-            transition: background 0.15s; border: 1px solid transparent;
-            border-right: 1px solid rgba(255,255,255,0.13); min-width: 0;
-        }
-        .banner-stat:last-child { border-right: 1px solid transparent; }
-        .banner-stat:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
-        .banner-stat.dragging { opacity: 0.4; cursor: grabbing; }
-        .banner-stat.drag-over { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); }
-        .banner-label {
-            font-size: 0.69em; text-transform: uppercase; letter-spacing: 0.6px;
-            opacity: 0.7; margin-bottom: 4px; font-weight: 600; white-space: nowrap;
-        }
-        .banner-value {
-            font-size: 1.05em; font-weight: 700; line-height: 1.25; color: #ffffff;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+/* Draggable Property Banner — single row, scrollable, legible */
+.property-banner {
+    background: var(--primary); color: white; border-radius: 8px;
+    padding: 0; display: flex; flex-wrap: nowrap; overflow-x: auto;
+    margin-bottom: 18px; box-shadow: 0 4px 6px rgba(15,76,129,.18);
+    user-select: none;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent;
+}
+.property-banner::-webkit-scrollbar { height: 4px; }
+.property-banner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
+.banner-stat {
+    display: flex; flex-direction: column; padding: 9px 16px;
+    cursor: grab; flex: 1 0 130px;
+    transition: background 0.15s; border: 1px solid transparent;
+    border-right: 1px solid rgba(255,255,255,0.13); min-width: 0;
+}
+.banner-stat:last-child { border-right: 1px solid transparent; }
+.banner-stat:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
+.banner-stat.dragging { opacity: 0.4; cursor: grabbing; }
+.banner-stat.drag-over { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); }
+.banner-label {
+    font-size: 0.69em; text-transform: uppercase; letter-spacing: 0.6px;
+    opacity: 0.7; margin-bottom: 4px; font-weight: 600; white-space: nowrap;
+}
+.banner-value {
+    font-size: 1.05em; font-weight: 700; line-height: 1.25; color: #ffffff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
-        /* ==========================================
-           3. MAIN LAYOUT — Resizable Flex Split
-           ========================================== */
-        .main-container { display: flex; gap: 0; align-items: stretch; height: 600px; }
+/* ==========================================
+   3. MAIN LAYOUT — Resizable Flex Split
+   ========================================== */
+.main-container { display: flex; gap: 0; align-items: stretch; height: 600px; }
 
-        .sidebar {
-            width: 400px; min-width: 240px; flex-shrink: 0;
-            overflow-y: auto; padding-right: 4px;
-        }
-        .col-divider {
-            width: 8px; min-width: 8px; flex-shrink: 0;
-            cursor: col-resize; margin: 0 5px; align-self: stretch;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 4px; background: var(--line); transition: background 0.2s;
-        }
-        .col-divider:hover, .col-divider.resizing { background: var(--primary); }
-        .col-divider::after { content: '⋮'; font-size: 14px; color: #888; }
-        .col-divider.resizing::after { color: white; }
-        .map-panel { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
+.sidebar {
+    width: 400px; min-width: 240px; flex-shrink: 0;
+    overflow-y: auto; padding-right: 4px;
+}
+.col-divider {
+    width: 8px; min-width: 8px; flex-shrink: 0;
+    cursor: col-resize; margin: 0 5px; align-self: stretch;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; background: var(--line); transition: background 0.2s;
+}
+.col-divider:hover, .col-divider.resizing { background: var(--primary); }
+.col-divider::after { content: '⋮'; font-size: 14px; color: #888; }
+.col-divider.resizing::after { color: white; }
+.map-panel { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
 
-        /* Sidebar Boxes */
-        .sidebar-box {
-            background: var(--card); border: 1px solid var(--line); border-radius: 8px;
-            padding: 14px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(17,24,39,.03);
-        }
-        .sidebar-box h2 { margin: 0; font-size: 1.1em; color: var(--primary); }
-        .sidebar-box h3 { margin: 8px 0 6px 0; font-size: 0.74em; color: #111; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+/* Sidebar Boxes */
+.sidebar-box {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(17,24,39,.03);
+}
+.sidebar-box h2 { margin: 0; font-size: 1.1em; color: var(--primary); }
+.sidebar-box h3 { margin: 8px 0 6px 0; font-size: 0.74em; color: #111; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
 
-        /* Box header row — h2 + inline toggle */
-        .box-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 10px; border-bottom: 2px solid var(--secondary); padding-bottom: 6px;
-        }
+/* Box header row — h2 + inline toggle */
+.box-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; border-bottom: 2px solid var(--secondary); padding-bottom: 6px;
+}
 
-        /* Complex / Single Toggle — compact, inline with header */
-        .mode-track {
-            display: flex; background: #eef2f7; border-radius: 20px;
-            padding: 2px; gap: 0; width: 116px; flex-shrink: 0;
-            border: 1px solid #d4dce8;
-        }
-        .mode-btn {
-            flex: 1; padding: 2px 6px; border-radius: 18px; border: none;
-            background: transparent; color: #6b7280; font-weight: 800;
-            font-size: 0.70em; text-transform: uppercase; letter-spacing: 0.3px;
-            cursor: pointer; transition: all 0.18s; line-height: 1.5;
-        }
-        .mode-btn.active { background: white; color: #22a861; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+/* Complex / Single Toggle — compact, inline with header */
+.mode-track {
+    display: flex; background: #eef2f7; border-radius: 20px;
+    padding: 2px; gap: 0; width: 116px; flex-shrink: 0;
+    border: 1px solid #d4dce8;
+}
+.mode-btn {
+    flex: 1; padding: 2px 6px; border-radius: 18px; border: none;
+    background: transparent; color: #6b7280; font-weight: 800;
+    font-size: 0.70em; text-transform: uppercase; letter-spacing: 0.3px;
+    cursor: pointer; transition: all 0.18s; line-height: 1.5;
+}
+.mode-btn.active { background: white; color: #22a861; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
 
-        /* Align Map sidebar controls */
-        .align-control-row {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 10px; font-size: 0.88em; gap: 8px;
-        }
-        .align-control-row strong { color: #4a5568; white-space: nowrap; }
-        .align-control-row input[type="range"] { flex: 1; margin: 0 6px; }
-        .align-angle-input {
-            width: 50px; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
-            font-weight: bold; background: transparent; color: var(--text); outline: none;
-            font-size: 1em;
-        }
-        .align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
-        .btn-align {
-            flex: 1; padding: 7px 4px; border: none; border-radius: 4px;
-            font-weight: bold; font-size: 0.78em; cursor: pointer; color: white; transition: 0.2s;
-        }
-        .btn-align-lisp  { background: var(--accent); }
-        .btn-align-lisp:hover  { background: #b92b15; }
-        .btn-align-img   { background: #38a169; }
-        .btn-align-img:hover   { background: #2f855a; }
-        .btn-align-reset { background: #718096; }
-        .btn-align-reset:hover { background: #4a5568; }
-        .lisp-output { width: 100%; height: 110px; padding: 8px; font-family: monospace; font-size: 0.8em; background: #1a202c; color: #a0aec0; box-sizing: border-box; resize: vertical; border: none; border-radius: 3px; }
+/* Align Map sidebar controls */
+.align-control-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; font-size: 0.88em; gap: 8px;
+}
+.align-control-row strong { color: #4a5568; white-space: nowrap; }
+.align-control-row input[type="range"] { flex: 1; margin: 0 6px; }
+.align-angle-input {
+    width: 50px; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
+    font-weight: bold; background: transparent; color: var(--text); outline: none;
+    font-size: 1em;
+}
+.align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.btn-align {
+    flex: 1; padding: 7px 4px; border: none; border-radius: 4px;
+    font-weight: bold; font-size: 0.78em; cursor: pointer; color: white; transition: 0.2s;
+}
+.btn-align-lisp  { background: var(--accent); }
+.btn-align-lisp:hover  { background: #b92b15; }
+.btn-align-img   { background: #38a169; }
+.btn-align-img:hover   { background: #2f855a; }
+.btn-align-reset { background: #718096; }
+.btn-align-reset:hover { background: #4a5568; }
+.lisp-output { width: 100%; height: 110px; padding: 8px; font-family: monospace; font-size: 0.8em; background: #1a202c; color: #a0aec0; box-sizing: border-box; resize: vertical; border: none; border-radius: 3px; }
 
-        /* Setback Config */
-        .setback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .setback-field { display: flex; flex-direction: column; gap: 3px; }
-        .setback-field label { font-size: 0.74em; color: #111; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
-        .setback-field input {
-            width: 100%; padding: 5px 8px; border: 1px solid #cbd5e0; border-radius: 4px;
-            font-size: 0.92em; background: white; box-sizing: border-box; color: var(--text);
-        }
-        .setback-field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(15,76,129,0.15); }
-        .btn-accept {
-            width: 100%; padding: 8px; background: var(--primary); color: white;
-            border: none; border-radius: 5px; font-weight: bold; font-size: 0.9em;
-            cursor: pointer; transition: 0.2s;
-        }
-        .btn-accept:hover { background: #0a3a6e; }
+/* Setback Config */
+.setback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.setback-field { display: flex; flex-direction: column; gap: 3px; }
+.setback-field label { font-size: 0.74em; color: #111; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
+.setback-field input {
+    width: 100%; padding: 5px 8px; border: 1px solid #cbd5e0; border-radius: 4px;
+    font-size: 0.92em; background: white; box-sizing: border-box; color: var(--text);
+}
+.setback-field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(15,76,129,0.15); }
+.btn-accept {
+    width: 100%; padding: 8px; background: var(--primary); color: white;
+    border: none; border-radius: 5px; font-weight: bold; font-size: 0.9em;
+    cursor: pointer; transition: 0.2s;
+}
+.btn-accept:hover { background: #0a3a6e; }
 
-        /* CAD Accordions (sidebar) */
-        details {
-            background: var(--cad-bg); color: var(--cad-text); border: 1px solid var(--cad-border);
-            border-radius: 6px; margin-bottom: 8px; overflow: hidden;
-        }
-        summary {
-            padding: 9px 14px; font-weight: bold; font-size: 0.92em; color: var(--cad-accent);
-            background: #222; cursor: pointer; list-style: none;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: "+"; font-size: 1.1em; color: white; }
-        details[open] summary::after { content: "−"; }
-        details[open] summary { border-bottom: 1px solid var(--cad-border); }
+/* CAD Accordions (sidebar) */
+details {
+    background: var(--cad-bg); color: var(--cad-text); border: 1px solid var(--cad-border);
+    border-radius: 6px; margin-bottom: 8px; overflow: hidden;
+}
+summary {
+    padding: 9px 14px; font-weight: bold; font-size: 0.92em; color: var(--cad-accent);
+    background: #222; cursor: pointer; list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font-size: 1.1em; color: white; }
+details[open] summary::after { content: "−"; }
+details[open] summary { border-bottom: 1px solid var(--cad-border); }
 
-        .cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
-        .cad-table th, .cad-table td {
-            padding: 5px 10px; border-bottom: 1px solid var(--cad-border);
-            border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
-        }
-        .cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; }
-        .cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
-        .cad-table td:last-child { border-right: none; }
+.cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+.cad-table th, .cad-table td {
+    padding: 5px 10px; border-bottom: 1px solid var(--cad-border);
+    border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
+}
+.cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; }
+.cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
+.cad-table td:last-child { border-right: none; }
 
-        .unit-toggle {
-            background: transparent; border: 1px solid var(--cad-accent); color: var(--cad-accent);
-            border-radius: 4px; padding: 2px 6px; font-size: 0.78em; cursor: pointer; float: right;
-        }
-        .unit-toggle:hover { background: var(--cad-accent); color: var(--cad-bg); }
+.unit-toggle {
+    background: transparent; border: 1px solid var(--cad-accent); color: var(--cad-accent);
+    border-radius: 4px; padding: 2px 6px; font-size: 0.78em; cursor: pointer; float: right;
+}
+.unit-toggle:hover { background: var(--cad-accent); color: var(--cad-bg); }
 
-        /* ==========================================
-           4. MAP & CONTROLS
-           ========================================== */
-        #map { flex: 1; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
+/* ==========================================
+   4. MAP & CONTROLS
+   ========================================== */
+#map { flex: 1; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
 
-        /* Horizontal control row at top-left */
-        .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; padding-top: 10px; padding-left: 10px; }
-        .leaflet-top.leaflet-left .leaflet-control { margin-top: 0; margin-left: 0; margin-right: 10px; }
+/* Horizontal control row at top-left */
+.leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; padding-top: 10px; padding-left: 10px; }
+.leaflet-top.leaflet-left .leaflet-control { margin-top: 0; margin-left: 0; margin-right: 10px; }
 
-        /* Toggle switch (snap-to-grid) */
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(20px); }
+/* Toggle switch (snap-to-grid) */
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Help button (top-right of map) */
-        .leaflet-control-helper {
-            background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px;
-            width: 34px; height: 34px; display: flex; justify-content: center; align-items: center;
-            font-weight: bold; font-size: 18px; color: var(--primary); cursor: pointer; position: relative;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-        }
-        .helper-popup {
-            display: none; position: absolute; top: 0; right: 40px;
-            width: 280px; background: white; border: 1px solid #cbd5e0;
-            border-radius: 6px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-            font-size: 13px; color: #333; line-height: 1.5; cursor: default; text-align: left;
-        }
-        .leaflet-control-helper:hover .helper-popup { display: block; }
-        .helper-popup ul { padding-left: 15px; margin: 5px 0 0 0; }
+/* Help button (top-right of map) */
+.leaflet-control-helper {
+    background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px;
+    width: 34px; height: 34px; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; font-size: 18px; color: var(--primary); cursor: pointer; position: relative;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+.helper-popup {
+    display: none; position: absolute; top: 0; right: 40px;
+    width: 280px; background: white; border: 1px solid #cbd5e0;
+    border-radius: 6px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    font-size: 13px; color: #333; line-height: 1.5; cursor: default; text-align: left;
+}
+.leaflet-control-helper:hover .helper-popup { display: block; }
+.helper-popup ul { padding-left: 15px; margin: 5px 0 0 0; }
 
-        /* North compass */
-        .north-compass-wrap {
-            background: transparent; cursor: default; pointer-events: none;
-            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
-        }
+/* North compass */
+.north-compass-wrap {
+    background: transparent; cursor: default; pointer-events: none;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+}
 
-        /* Banner merge / split */
-        .banner-stat.merge-ready {
-            background: rgba(255,255,255,0.18) !important;
-            border: 2px dashed rgba(255,255,255,0.85) !important;
-            transform: scale(1.03);
-        }
-        .banner-stat.merged {
-            flex: 2 1 280px; flex-direction: row; align-items: stretch; gap: 0;
-        }
-        .banner-stat.merged .merge-half {
-            flex: 1; display: flex; flex-direction: column;
-        }
-        .banner-stat.merged .merge-sep {
-            width: 1px; background: rgba(255,255,255,0.22);
-            margin: 6px 8px; flex-shrink: 0; align-self: stretch;
-        }
+/* Banner merge / split */
+.banner-stat.merge-ready {
+    background: rgba(255,255,255,0.18) !important;
+    border: 2px dashed rgba(255,255,255,0.85) !important;
+    transform: scale(1.03);
+}
+.banner-stat.merged {
+    flex: 2 1 280px; flex-direction: row; align-items: stretch; gap: 0;
+}
+.banner-stat.merged .merge-half {
+    flex: 1; display: flex; flex-direction: column;
+}
+.banner-stat.merged .merge-sep {
+    width: 1px; background: rgba(255,255,255,0.22);
+    margin: 6px 8px; flex-shrink: 0; align-self: stretch;
+}
 
-        /* ==========================================
-           5. INFO BOTTOM — aligns with sidebar/map split
-           ========================================== */
-        .info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
-        .info-col-left  { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
-        .info-col-gap   { width: 18px;  flex-shrink: 0; }
-        .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-    </style>
+/* ==========================================
+   5. INFO BOTTOM — aligns with sidebar/map split
+   ========================================== */
+.info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
+.info-col-left  { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.info-col-gap   { width: 18px;  flex-shrink: 0; }
+.info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+</style>
 </head>
 <body>
 <div class="page-wrapper">
@@ -267,14 +269,14 @@
             <h1>Master Site Dashboard</h1>
             <p style="color:#4a5568;margin:0;">Interactive Planning &amp; AutoLISP Export Tool</p>
         </div>
-        <a href="https://assr.parcelquest.com/Statewide?IndexViewModel=PQGov.Models.IndexViewModel" target="_blank" class="header-btn">Open ParcelQuest ↗</a>
+        <a href="https://assr.parcelquest.com/Statewide?IndexViewModel=PQGov.Models.IndexViewModel" target="_blank" class="header-btn">Open ParcelQuest &#x2197;</a>
     </div>
 
     <!-- DRAGGABLE PROPERTY BANNER -->
     <div class="property-banner" id="propertyBanner">
         <div class="banner-stat" draggable="true"><span class="banner-label">Address</span><span class="banner-value" id="ui-address"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">APN</span><span class="banner-value" id="ui-apn"></span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Dimensions</span><span class="banner-value"><span id="ui-w"></span>' × <span id="ui-d"></span>'</span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Dimensions</span><span class="banner-value"><span id="ui-w"></span>' &times; <span id="ui-d"></span>'</span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Lot Size</span><span class="banner-value" id="ui-sqft"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Zoning</span><span class="banner-value" id="ui-zoning"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Base Density</span><span class="banner-value">1 DU / 600 SF</span></div>
@@ -301,7 +303,7 @@
                 <div class="align-control-row">
                     <strong>Rotation:</strong>
                     <input type="number" id="degInput" class="align-angle-input" value="0.0" step="0.1">
-                    <span style="font-weight:bold; margin-right:4px;">°</span>
+                    <span style="font-weight:bold; margin-right:4px;">&#176;</span>
                     <input type="range" id="rotationSlider" min="-90" max="90" value="0" step="0.1" style="flex:1; margin:0;">
                 </div>
 
@@ -310,7 +312,7 @@
                     <button id="imageExportBtn" class="btn-align btn-align-img">Export Image</button>
                     <button id="resetBtn"       class="btn-align btn-align-reset">Reset</button>
                 </div>
-                <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here…"></textarea>
+                <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
             </div>
 
             <!-- CONCEPT DESIGN -->
@@ -341,7 +343,7 @@
                         <input type="number" id="sb-side-r" value="0"  min="0" step="0.5">
                     </div>
                 </div>
-                <button class="btn-accept" onclick="SetbackEngine.applySetbacks()">✔ Accept — Draw Setback Lines</button>
+                <button class="btn-accept" onclick="SetbackEngine.applySetbacks()">&#x2714; Accept &#x2014; Draw Setback Lines</button>
             </div>
 
             <!-- PROJECT INFORMATION -->
@@ -424,10 +426,10 @@
                 <table class="cad-table">
                     <tr><th>COMMUNITY PLAN AREA:</th><td>MID-CITY: CITY HEIGHTS</td></tr>
                     <tr><th>LAND USE DESIGNATION:</th><td>Commercial / Mixed Use A (73 du/ac)</td></tr>
-                    <tr><th>CCHS (HOUSING SOLUTIONS):</th><td>Yes — FAR Tier 3: 6.5 FAR</td></tr>
+                    <tr><th>CCHS (HOUSING SOLUTIONS):</th><td>Yes &#x2014; FAR Tier 3: 6.5 FAR</td></tr>
                     <tr><th>TRANSIT PRIORITY AREA (TPA):</th><td>Yes</td></tr>
                     <tr><th>PARKING STANDARDS (PSTPA):</th><td>Yes (0 Parking Required)</td></tr>
-                    <tr><th>MOBILITY CHOICES:</th><td>Yes — Mobility Zone 2</td></tr>
+                    <tr><th>MOBILITY CHOICES:</th><td>Yes &#x2014; Mobility Zone 2</td></tr>
                 </table>
             </details>
             <details>
@@ -456,541 +458,553 @@
 </div><!-- end page-wrapper -->
 
 <script>
-    /* ==========================================
-       ENGINE 1: CONFIGURATION & STATE
-       ========================================== */
-    const ConfigEngine = {
-        data: {
-            address: "4335 Euclid Avenue, City Heights, San Diego, CA 92105",
-            apn: "471-271-16-00",
-            zoning: "CUPD-CU-2-4",
-            width: 50, depth: 125, commercialDepth: 30
-        },
-        defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
-        cad: {
-            projection: "CA_VI_IF",
-            proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
-        },
-        state: {
-            lat: 0, lng: 0, rotation: 0,
-            isSnapping: false, unitMode: 'SF', mode: 'complex',
-            setbacksApplied: false,
-            setbacks: { front: 10, rear: 10, sideL: 0, sideR: 0 }
-        },
-        init: function() {
-            this.state.lat      = parseFloat(localStorage.getItem('site_lat')) || this.defaults.lat;
-            this.state.lng      = parseFloat(localStorage.getItem('site_lng')) || this.defaults.lng;
-            this.state.rotation = parseFloat(localStorage.getItem('site_rot')) || this.defaults.rotation;
-        },
-        save: function() {
-            localStorage.setItem('site_lat', this.state.lat);
-            localStorage.setItem('site_lng', this.state.lng);
-            localStorage.setItem('site_rot', this.state.rotation);
-        },
-        reset: function() {
-            localStorage.removeItem('site_lat');
-            localStorage.removeItem('site_lng');
-            localStorage.removeItem('site_rot');
-            this.state.lat      = this.defaults.lat;
-            this.state.lng      = this.defaults.lng;
-            this.state.rotation = this.defaults.rotation;
-        }
-    };
+/* ==========================================
+   ENGINE 1: CONFIGURATION & STATE
+   ========================================== */
+const ConfigEngine = {
+    data: {
+        address: "4335 Euclid Avenue, City Heights, San Diego, CA 92105",
+        apn: "471-271-16-00",
+        zoning: "CUPD-CU-2-4",
+        width: 50, depth: 125, commercialDepth: 30
+    },
+    defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
+    cad: {
+        projection: "CA_VI_IF",
+        proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
+    },
+    state: {
+        lat: 0, lng: 0, rotation: 0,
+        isSnapping: false, unitMode: 'SF', mode: 'complex',
+        setbacksApplied: false,
+        setbacks: { front: 10, rear: 10, sideL: 0, sideR: 0 }
+    },
+    init: function() {
+        this.state.lat      = parseFloat(localStorage.getItem('site_lat')) || this.defaults.lat;
+        this.state.lng      = parseFloat(localStorage.getItem('site_lng')) || this.defaults.lng;
+        this.state.rotation = parseFloat(localStorage.getItem('site_rot')) || this.defaults.rotation;
+    },
+    save: function() {
+        localStorage.setItem('site_lat', this.state.lat);
+        localStorage.setItem('site_lng', this.state.lng);
+        localStorage.setItem('site_rot', this.state.rotation);
+    },
+    reset: function() {
+        localStorage.removeItem('site_lat');
+        localStorage.removeItem('site_lng');
+        localStorage.removeItem('site_rot');
+        this.state.lat      = this.defaults.lat;
+        this.state.lng      = this.defaults.lng;
+        this.state.rotation = this.defaults.rotation;
+    }
+};
 
-    /* ==========================================
-       ENGINE 2: USER INTERFACE
-       ========================================== */
-    const UIEngine = {
-        init: function() {
-            const d    = ConfigEngine.data;
-            const sqft = d.width * d.depth;
+</script>
+<script>
+/* ==========================================
+   ENGINE 2: USER INTERFACE
+   ========================================== */
+const UIEngine = {
+    init: function() {
+        const d    = ConfigEngine.data;
+        const sqft = d.width * d.depth;
 
-            document.getElementById('ui-address').innerText = d.address;
-            document.getElementById('ui-apn').innerText     = d.apn;
-            document.getElementById('ui-zoning').innerText  = d.zoning;
-            document.getElementById('ui-w').innerText       = d.width;
-            document.getElementById('ui-d').innerText       = d.depth;
-            document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF';
+        document.getElementById('ui-address').innerText = d.address;
+        document.getElementById('ui-apn').innerText     = d.apn;
+        document.getElementById('ui-zoning').innerText  = d.zoning;
+        document.getElementById('ui-w').innerText       = d.width;
+        document.getElementById('ui-d').innerText       = d.depth;
+        document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF';
 
-            document.getElementById('info-address').innerText = d.address;
-            document.getElementById('info-apn').innerText     = d.apn;
-            document.getElementById('info-zone').innerText    = d.zoning;
-            document.getElementById('info-w').innerText       = d.width.toFixed(1) + ' FT';
+        document.getElementById('info-address').innerText = d.address;
+        document.getElementById('info-apn').innerText     = d.apn;
+        document.getElementById('info-zone').innerText    = d.zoning;
+        document.getElementById('info-w').innerText       = d.width.toFixed(1) + ' FT';
 
+        this.updateLotSizeDisplay();
+        document.getElementById('info-density-lot').innerText   = sqft.toFixed(1) + " S.F.";
+        document.getElementById('info-buildable-far').innerText = (sqft * 2.0).toFixed(1) + " S.F.";
+
+        document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
+            ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';
+            e.target.innerText = ConfigEngine.state.unitMode;
             this.updateLotSizeDisplay();
-            document.getElementById('info-density-lot').innerText   = sqft.toFixed(1) + " S.F.";
-            document.getElementById('info-buildable-far').innerText = (sqft * 2.0).toFixed(1) + " S.F.";
+        });
 
-            document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
-                ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';
-                e.target.innerText = ConfigEngine.state.unitMode;
-                this.updateLotSizeDisplay();
+        this.initBannerDrag();
+    },
+
+    updateLotSizeDisplay: function() {
+        const sqft = ConfigEngine.data.width * ConfigEngine.data.depth;
+        const el   = document.getElementById('info-lotsize');
+        el.innerText = ConfigEngine.state.unitMode === 'SF'
+            ? sqft.toFixed(1) + " S.F."
+            : (sqft / 43560).toFixed(3) + " AC";
+    },
+
+    initBannerDrag: function() {
+        const banner = document.getElementById('propertyBanner');
+        let dragSrc    = null;
+        let mergeTimer = null;
+        let mergePending = null;
+        const self = this;
+
+        function clearMergeState() {
+            clearTimeout(mergeTimer);
+            mergeTimer = null;
+            mergePending = null;
+            banner.querySelectorAll('.banner-stat').forEach(s => {
+                s.classList.remove('drag-over');
+                s.classList.remove('merge-ready');
             });
-
-            this.initBannerDrag();
-        },
-
-        updateLotSizeDisplay: function() {
-            const sqft = ConfigEngine.data.width * ConfigEngine.data.depth;
-            const el   = document.getElementById('info-lotsize');
-            el.innerText = ConfigEngine.state.unitMode === 'SF'
-                ? sqft.toFixed(1) + " S.F."
-                : (sqft / 43560).toFixed(3) + " AC";
-        },
-
-        initBannerDrag: function() {
-            const banner = document.getElementById('propertyBanner');
-            let dragSrc    = null;
-            let mergeTimer = null;
-            let mergePending = null;
-            const self = this;
-
-            function clearMergeState() {
-                clearTimeout(mergeTimer);
-                mergeTimer = null;
-                mergePending = null;
-                banner.querySelectorAll('.banner-stat').forEach(s => {
-                    s.classList.remove('drag-over');
-                    s.classList.remove('merge-ready');
-                });
-            }
-
-            function attachHandlers(el) {
-                if (el.dataset.dragInit) return;
-                el.dataset.dragInit = '1';
-
-                el.addEventListener('dragstart', function(e) {
-                    dragSrc = this;
-                    this.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                    const ghost = new Image();
-                    ghost.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-                    e.dataTransfer.setDragImage(ghost, 0, 0);
-                });
-                el.addEventListener('dragend', function() {
-                    this.classList.remove('dragging');
-                    clearMergeState();
-                });
-                el.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    if (this === dragSrc) return;
-                    e.dataTransfer.dropEffect = 'move';
-                    // New target — reset timer
-                    if (mergePending !== this) {
-                        clearMergeState();
-                        mergePending = this;
-                        this.classList.add('drag-over');
-                        // After 700 ms hover = merge mode
-                        mergeTimer = setTimeout(() => {
-                            if (mergePending === this) {
-                                this.classList.remove('drag-over');
-                                this.classList.add('merge-ready');
-                            }
-                        }, 700);
-                    }
-                });
-                el.addEventListener('drop', function(e) {
-                    e.stopPropagation();
-                    if (!dragSrc || dragSrc === this) { clearMergeState(); return; }
-
-                    if (this.classList.contains('merge-ready')) {
-                        self.mergeCells(dragSrc, this);
-                    } else {
-                        const all = [...banner.querySelectorAll('.banner-stat')];
-                        if (all.indexOf(dragSrc) < all.indexOf(this))
-                            banner.insertBefore(dragSrc, this.nextSibling);
-                        else
-                            banner.insertBefore(dragSrc, this);
-                    }
-                    clearMergeState();
-                });
-            }
-
-            banner.querySelectorAll('.banner-stat').forEach(attachHandlers);
-
-            // Double-click a merged cell to split it
-            banner.addEventListener('dblclick', function(e) {
-                const merged = e.target.closest('.banner-stat.merged');
-                if (merged) self.splitCell(merged);
-            });
-        },
-
-        mergeCells: function(src, target) {
-            const banner = document.getElementById('propertyBanner');
-
-            const merged = document.createElement('div');
-            merged.className = 'banner-stat merged';
-            merged.draggable = true;
-
-            const half1 = document.createElement('div');
-            half1.className = 'merge-half';
-            while (src.firstChild) half1.appendChild(src.firstChild);
-
-            const sep = document.createElement('div');
-            sep.className = 'merge-sep';
-
-            const half2 = document.createElement('div');
-            half2.className = 'merge-half';
-            while (target.firstChild) half2.appendChild(target.firstChild);
-
-            merged.appendChild(half1);
-            merged.appendChild(sep);
-            merged.appendChild(half2);
-
-            banner.insertBefore(merged, src);
-            banner.removeChild(src);
-            banner.removeChild(target);
-
-            // Re-init to attach handlers to the new merged cell
-            delete merged.dataset.dragInit;
-            this.initBannerDrag();
-        },
-
-        splitCell: function(merged) {
-            const banner = document.getElementById('propertyBanner');
-            const halves = [...merged.querySelectorAll('.merge-half')];
-
-            halves.forEach(half => {
-                const stat = document.createElement('div');
-                stat.className = 'banner-stat';
-                stat.draggable = true;
-                while (half.firstChild) stat.appendChild(half.firstChild);
-                banner.insertBefore(stat, merged);
-            });
-
-            banner.removeChild(merged);
-            this.initBannerDrag();
         }
-    };
 
-    /* ==========================================
-       ENGINE 3: MAP & GEOMETRY
-       ========================================== */
-    const MapEngine = {
-        map: null, dragMarker: null, lotPoly: null, commPoly: null,
-        gridLayer: null, setbackPoly: null,
+        function attachHandlers(el) {
+            if (el.dataset.dragInit) return;
+            el.dataset.dragInit = '1';
 
-        init: function() {
-            const osm  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, crossOrigin: true });
-            const sat  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 21, crossOrigin: true });
-            const topo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
-                maxNativeZoom: 16, maxZoom: 21, crossOrigin: true, attribution: 'USGS The National Map'
+            el.addEventListener('dragstart', function(e) {
+                dragSrc = this;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                const ghost = new Image();
+                ghost.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+                e.dataTransfer.setDragImage(ghost, 0, 0);
             });
-
-            this.map = L.map('map', {
-                center: [ConfigEngine.state.lat, ConfigEngine.state.lng],
-                zoom: 19, layers: [osm],
-                fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' }
+            el.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+                clearMergeState();
             });
-            L.control.layers({ "Street Map": osm, "USGS Topo": topo, "Satellite": sat }).addTo(this.map);
-
-            const GridOverlay = L.GridLayer.extend({
-                createTile: function() {
-                    var t = L.DomUtil.create('canvas', 'leaflet-tile');
-                    var s = this.getTileSize();
-                    t.width = s.x; t.height = s.y;
-                    var ctx = t.getContext('2d');
-                    ctx.strokeStyle = 'rgba(15,76,129,0.15)';
-                    ctx.strokeRect(0, 0, s.x, s.y);
-                    return t;
+            el.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                if (this === dragSrc) return;
+                e.dataTransfer.dropEffect = 'move';
+                // New target — reset timer
+                if (mergePending !== this) {
+                    clearMergeState();
+                    mergePending = this;
+                    this.classList.add('drag-over');
+                    // After 700 ms hover = merge mode
+                    mergeTimer = setTimeout(() => {
+                        if (mergePending === this) {
+                            this.classList.remove('drag-over');
+                            this.classList.add('merge-ready');
+                        }
+                    }, 700);
                 }
             });
-            this.gridLayer = new GridOverlay();
+            el.addEventListener('drop', function(e) {
+                e.stopPropagation();
+                if (!dragSrc || dragSrc === this) { clearMergeState(); return; }
 
-            this.buildNorthArrow();
-            this.buildHelpControl();
+                if (this.classList.contains('merge-ready')) {
+                    self.mergeCells(dragSrc, this);
+                } else {
+                    const all = [...banner.querySelectorAll('.banner-stat')];
+                    if (all.indexOf(dragSrc) < all.indexOf(this))
+                        banner.insertBefore(dragSrc, this.nextSibling);
+                    else
+                        banner.insertBefore(dragSrc, this);
+                }
+                clearMergeState();
+            });
+        }
 
-            this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
-            this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
-            this.setbackPoly = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0, dashArray: '7 4', noClip: true }).addTo(this.map);
-            this.dragMarker  = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
+        banner.querySelectorAll('.banner-stat').forEach(attachHandlers);
 
-            this.attachEvents();
+        // Double-click a merged cell to split it
+        banner.addEventListener('dblclick', function(e) {
+            const merged = e.target.closest('.banner-stat.merged');
+            if (merged) self.splitCell(merged);
+        });
+    },
+
+    mergeCells: function(src, target) {
+        const banner = document.getElementById('propertyBanner');
+
+        const merged = document.createElement('div');
+        merged.className = 'banner-stat merged';
+        merged.draggable = true;
+
+        const half1 = document.createElement('div');
+        half1.className = 'merge-half';
+        while (src.firstChild) half1.appendChild(src.firstChild);
+
+        const sep = document.createElement('div');
+        sep.className = 'merge-sep';
+
+        const half2 = document.createElement('div');
+        half2.className = 'merge-half';
+        while (target.firstChild) half2.appendChild(target.firstChild);
+
+        merged.appendChild(half1);
+        merged.appendChild(sep);
+        merged.appendChild(half2);
+
+        banner.insertBefore(merged, src);
+        banner.removeChild(src);
+        banner.removeChild(target);
+
+        // Re-init to attach handlers to the new merged cell
+        delete merged.dataset.dragInit;
+        this.initBannerDrag();
+    },
+
+    splitCell: function(merged) {
+        const banner = document.getElementById('propertyBanner');
+        const halves = [...merged.querySelectorAll('.merge-half')];
+
+        halves.forEach(half => {
+            const stat = document.createElement('div');
+            stat.className = 'banner-stat';
+            stat.draggable = true;
+            while (half.firstChild) stat.appendChild(half.firstChild);
+            banner.insertBefore(stat, merged);
+        });
+
+        banner.removeChild(merged);
+        this.initBannerDrag();
+    }
+};
+
+</script>
+<script>
+/* ==========================================
+   ENGINE 3: MAP & GEOMETRY
+   ========================================== */
+const MapEngine = {
+    map: null, dragMarker: null, lotPoly: null, commPoly: null,
+    gridLayer: null, setbackPoly: null,
+
+    init: function() {
+        const osm  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, crossOrigin: true });
+        const sat  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 21, crossOrigin: true });
+        const topo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
+            maxNativeZoom: 16, maxZoom: 21, crossOrigin: true, attribution: 'USGS The National Map'
+        });
+
+        this.map = L.map('map', {
+            center: [ConfigEngine.state.lat, ConfigEngine.state.lng],
+            zoom: 19, layers: [osm],
+            fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' }
+        });
+        L.control.layers({ "Street Map": osm, "USGS Topo": topo, "Satellite": sat }).addTo(this.map);
+
+        const GridOverlay = L.GridLayer.extend({
+            createTile: function() {
+                var t = L.DomUtil.create('canvas', 'leaflet-tile');
+                var s = this.getTileSize();
+                t.width = s.x; t.height = s.y;
+                var ctx = t.getContext('2d');
+                ctx.strokeStyle = 'rgba(15,76,129,0.15)';
+                ctx.strokeRect(0, 0, s.x, s.y);
+                return t;
+            }
+        });
+        this.gridLayer = new GridOverlay();
+
+        this.buildNorthArrow();
+        this.buildHelpControl();
+
+        this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
+        this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
+        this.setbackPoly = L.polygon([], { color: '#f6c90e', weight: 2, fillOpacity: 0, dashArray: '7 4', noClip: true }).addTo(this.map);
+        this.dragMarker  = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], { draggable: true }).addTo(this.map);
+
+        this.attachEvents();
+        this.render();
+        L.Util.requestAnimFrame(() => this.map.invalidateSize());
+    },
+
+    buildNorthArrow: function() {
+        const NorthControl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function() {
+                var div = L.DomUtil.create('div', 'north-compass-wrap');
+                div.innerHTML = `
+                  <svg id="compassSvg" viewBox="0 0 40 54" width="40" height="54">
+                    <defs>
+                      <filter id="nshadow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.25"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#nshadow)">
+                      <polygon points="20,5 17,25 20,23 23,25" fill="#0f4c81"/>
+                      <polygon points="20,45 17,25 20,27 23,25" fill="rgba(15,76,129,0.2)"/>
+                    </g>
+                    <text x="20" y="52" text-anchor="middle" font-size="7" font-weight="800"
+                          fill="#0f4c81" font-family="Segoe UI,sans-serif" letter-spacing="0.3">N</text>
+                    <g id="siteNorthArm" transform="rotate(0 20 25)">
+                      <polygon points="20,8 18.2,15 21.8,15" fill="#d9381e" opacity="0.92"/>
+                      <line x1="20" y1="8" x2="20" y2="25" stroke="#d9381e" stroke-width="1.6" stroke-dasharray="3,2.2"/>
+                      <text x="20" y="5.5" text-anchor="middle" font-size="6" font-weight="800"
+                            fill="#d9381e" font-family="Segoe UI,sans-serif">F</text>
+                    </g>
+                    <circle cx="20" cy="25" r="2.5" fill="#1a1a1a" opacity="0.75"/>
+                  </svg>`;
+                L.DomEvent.disableClickPropagation(div);
+                return div;
+            }
+        });
+        this.map.addControl(new NorthControl());
+    },
+
+    buildHelpControl: function() {
+        const HelpControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-helper');
+                c.innerHTML = `?<div class="helper-popup"><strong>How to Align:</strong><ul>
+                    <li>Drag the blue pin to reposition the lot.</li>
+                    <li>Toggle <em>Snap to Grid</em> to lock to a 5 m coordinate grid.</li>
+                    <li>Use the slider or type an angle to match the street right-of-way.</li>
+                    <li>Click <em>Export LISP</em> to generate AutoCAD boundary code in CA Zone VI coords.</li>
+                    <li>Click <em>Export Image</em> to save a PNG of the map view.</li>
+                    <li>Click <em>Reset</em> to restore the default position and rotation.</li>
+                </ul></div>`;
+                L.DomEvent.disableClickPropagation(c);
+                return c;
+            }
+        });
+        this.map.addControl(new HelpControl());
+    },
+
+    updateNorthArrow: function() {
+        const arm = document.getElementById('siteNorthArm');
+        if (!arm) return;
+        const rad   = ConfigEngine.state.rotation * Math.PI / 180;
+        const angle = Math.atan2(-Math.cos(rad), -Math.sin(rad)) * 180 / Math.PI;
+        arm.setAttribute('transform', `rotate(${angle.toFixed(2)} 20 25)`);
+    },
+
+    render: function() {
+        const { width: w, depth: h, commercialDepth: cD } = ConfigEngine.data;
+        const baseLot  = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
+
+        const rad    = ConfigEngine.state.rotation * Math.PI / 180;
+        const cos    = Math.cos(rad), sin = Math.sin(rad);
+        const F_LAT  = 364566;
+        const F_LNG  = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
+
+        const transform = (pt) => {
+            let rx = pt.x * cos - pt.y * sin;
+            let ry = pt.x * sin + pt.y * cos;
+            return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
+        };
+
+        this.lotPoly.setLatLngs(baseLot.map(transform));
+        this.commPoly.setLatLngs(baseComm.map(transform));
+        this.updateNorthArrow();
+
+        if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
+
+        ConfigEngine.save();
+    },
+
+    attachEvents: function() {
+        this.dragMarker.on('drag', () => {
+            const raw = this.dragMarker.getLatLng();
+            if (ConfigEngine.state.isSnapping) {
+                const step = 0.00005;
+                ConfigEngine.state.lat = Math.round(raw.lat / step) * step;
+                ConfigEngine.state.lng = Math.round(raw.lng / step) * step;
+            } else {
+                ConfigEngine.state.lat = raw.lat;
+                ConfigEngine.state.lng = raw.lng;
+            }
             this.render();
-            L.Util.requestAnimFrame(() => this.map.invalidateSize());
-        },
-
-        buildNorthArrow: function() {
-            const NorthControl = L.Control.extend({
-                options: { position: 'topleft' },
-                onAdd: function() {
-                    var div = L.DomUtil.create('div', 'north-compass-wrap');
-                    div.innerHTML = `
-                      <svg id="compassSvg" viewBox="0 0 40 54" width="40" height="54">
-                        <defs>
-                          <filter id="nshadow" x="-30%" y="-30%" width="160%" height="160%">
-                            <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.25"/>
-                          </filter>
-                        </defs>
-                        <g filter="url(#nshadow)">
-                          <polygon points="20,5 17,25 20,23 23,25" fill="#0f4c81"/>
-                          <polygon points="20,45 17,25 20,27 23,25" fill="rgba(15,76,129,0.2)"/>
-                        </g>
-                        <text x="20" y="52" text-anchor="middle" font-size="7" font-weight="800"
-                              fill="#0f4c81" font-family="Segoe UI,sans-serif" letter-spacing="0.3">N</text>
-                        <g id="siteNorthArm" transform="rotate(0 20 25)">
-                          <polygon points="20,8 18.2,15 21.8,15" fill="#d9381e" opacity="0.92"/>
-                          <line x1="20" y1="8" x2="20" y2="25" stroke="#d9381e" stroke-width="1.6" stroke-dasharray="3,2.2"/>
-                          <text x="20" y="5.5" text-anchor="middle" font-size="6" font-weight="800"
-                                fill="#d9381e" font-family="Segoe UI,sans-serif">F</text>
-                        </g>
-                        <circle cx="20" cy="25" r="2.5" fill="#1a1a1a" opacity="0.75"/>
-                      </svg>`;
-                    L.DomEvent.disableClickPropagation(div);
-                    return div;
-                }
-            });
-            this.map.addControl(new NorthControl());
-        },
-
-        buildHelpControl: function() {
-            const HelpControl = L.Control.extend({
-                options: { position: 'topright' },
-                onAdd: function() {
-                    var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-helper');
-                    c.innerHTML = `?<div class="helper-popup"><strong>How to Align:</strong><ul>
-                        <li>Drag the blue pin to reposition the lot.</li>
-                        <li>Toggle <em>Snap to Grid</em> to lock to a 5 m coordinate grid.</li>
-                        <li>Use the slider or type an angle to match the street right-of-way.</li>
-                        <li>Click <em>Export LISP</em> to generate AutoCAD boundary code in CA Zone VI coords.</li>
-                        <li>Click <em>Export Image</em> to save a PNG of the map view.</li>
-                        <li>Click <em>Reset</em> to restore the default position and rotation.</li>
-                    </ul></div>`;
-                    L.DomEvent.disableClickPropagation(c);
-                    return c;
-                }
-            });
-            this.map.addControl(new HelpControl());
-        },
-
-        updateNorthArrow: function() {
-            const arm = document.getElementById('siteNorthArm');
-            if (!arm) return;
-            const rad   = ConfigEngine.state.rotation * Math.PI / 180;
-            const angle = Math.atan2(-Math.cos(rad), -Math.sin(rad)) * 180 / Math.PI;
-            arm.setAttribute('transform', `rotate(${angle.toFixed(2)} 20 25)`);
-        },
-
-        render: function() {
-            const { width: w, depth: h, commercialDepth: cD } = ConfigEngine.data;
-            const baseLot  = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
-            const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
-
-            const rad    = ConfigEngine.state.rotation * Math.PI / 180;
-            const cos    = Math.cos(rad), sin = Math.sin(rad);
-            const F_LAT  = 364566;
-            const F_LNG  = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
-
-            const transform = (pt) => {
-                let rx = pt.x * cos - pt.y * sin;
-                let ry = pt.x * sin + pt.y * cos;
-                return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
-            };
-
-            this.lotPoly.setLatLngs(baseLot.map(transform));
-            this.commPoly.setLatLngs(baseComm.map(transform));
-            this.updateNorthArrow();
-
-            if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
-
-            ConfigEngine.save();
-        },
-
-        attachEvents: function() {
-            this.dragMarker.on('drag', () => {
-                const raw = this.dragMarker.getLatLng();
-                if (ConfigEngine.state.isSnapping) {
-                    const step = 0.00005;
-                    ConfigEngine.state.lat = Math.round(raw.lat / step) * step;
-                    ConfigEngine.state.lng = Math.round(raw.lng / step) * step;
-                } else {
-                    ConfigEngine.state.lat = raw.lat;
-                    ConfigEngine.state.lng = raw.lng;
-                }
-                this.render();
-            });
-            this.dragMarker.on('dragend', () => {
-                if (ConfigEngine.state.isSnapping)
-                    this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
-            });
-
-            const sldr = document.getElementById('rotationSlider');
-            const inp  = document.getElementById('degInput');
-
-            // Seed inputs from restored state (localStorage may differ from HTML defaults)
-            sldr.value = ConfigEngine.state.rotation;
-            inp.value  = ConfigEngine.state.rotation.toFixed(1);
-
-            sldr.addEventListener('input', (e) => {
-                ConfigEngine.state.rotation = parseFloat(e.target.value);
-                inp.value = ConfigEngine.state.rotation.toFixed(1);
-                this.render();
-            });
-            inp.addEventListener('change', (e) => {
-                let v = parseFloat(e.target.value);
-                if (isNaN(v)) v = 0;
-                v = Math.max(-90, Math.min(90, v));
-                ConfigEngine.state.rotation = v;
-                inp.value = v.toFixed(1); sldr.value = v;
-                this.render();
-            });
-            document.getElementById('snapToggle').addEventListener('change', (e) => {
-                ConfigEngine.state.isSnapping = e.target.checked;
-                if (ConfigEngine.state.isSnapping) {
-                    this.map.addLayer(this.gridLayer); sldr.step = "5";
-                    const step = 0.00005;
-                    ConfigEngine.state.lat = Math.round(ConfigEngine.state.lat / step) * step;
-                    ConfigEngine.state.lng = Math.round(ConfigEngine.state.lng / step) * step;
-                    this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
-                    ConfigEngine.state.rotation = Math.round(ConfigEngine.state.rotation / 5) * 5;
-                    sldr.value = ConfigEngine.state.rotation;
-                    inp.value  = ConfigEngine.state.rotation.toFixed(1);
-                    this.render();
-                } else {
-                    this.map.removeLayer(this.gridLayer); sldr.step = "0.1";
-                }
-            });
-            document.getElementById('resetBtn').addEventListener('click', () => {
-                ConfigEngine.reset();
+        });
+        this.dragMarker.on('dragend', () => {
+            if (ConfigEngine.state.isSnapping)
                 this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
-                this.map.setView([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+        });
+
+        const sldr = document.getElementById('rotationSlider');
+        const inp  = document.getElementById('degInput');
+
+        // Seed inputs from restored state (localStorage may differ from HTML defaults)
+        sldr.value = ConfigEngine.state.rotation;
+        inp.value  = ConfigEngine.state.rotation.toFixed(1);
+
+        sldr.addEventListener('input', (e) => {
+            ConfigEngine.state.rotation = parseFloat(e.target.value);
+            inp.value = ConfigEngine.state.rotation.toFixed(1);
+            this.render();
+        });
+        inp.addEventListener('change', (e) => {
+            let v = parseFloat(e.target.value);
+            if (isNaN(v)) v = 0;
+            v = Math.max(-90, Math.min(90, v));
+            ConfigEngine.state.rotation = v;
+            inp.value = v.toFixed(1); sldr.value = v;
+            this.render();
+        });
+        document.getElementById('snapToggle').addEventListener('change', (e) => {
+            ConfigEngine.state.isSnapping = e.target.checked;
+            if (ConfigEngine.state.isSnapping) {
+                this.map.addLayer(this.gridLayer); sldr.step = "5";
+                const step = 0.00005;
+                ConfigEngine.state.lat = Math.round(ConfigEngine.state.lat / step) * step;
+                ConfigEngine.state.lng = Math.round(ConfigEngine.state.lng / step) * step;
+                this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+                ConfigEngine.state.rotation = Math.round(ConfigEngine.state.rotation / 5) * 5;
                 sldr.value = ConfigEngine.state.rotation;
                 inp.value  = ConfigEngine.state.rotation.toFixed(1);
                 this.render();
-            });
-            document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
-            document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
-        }
-    };
-
-    /* ==========================================
-       ENGINE 4: SETBACK & CONCEPT MODE
-       ========================================== */
-    const SetbackEngine = {
-        setMode: function(mode) {
-            ConfigEngine.state.mode = mode;
-            document.getElementById('modeComplex').classList.toggle('active', mode === 'complex');
-            document.getElementById('modeSingle').classList.toggle('active', mode === 'single');
-        },
-
-        applySetbacks: function() {
-            const front = parseFloat(document.getElementById('sb-front').value)  || 0;
-            const rear  = parseFloat(document.getElementById('sb-rear').value)   || 0;
-            const sideL = parseFloat(document.getElementById('sb-side-l').value) || 0;
-            const sideR = parseFloat(document.getElementById('sb-side-r').value) || 0;
-
-            const { width: w, depth: h } = ConfigEngine.data;
-            if (front + rear >= h || sideL + sideR >= w) {
-                alert("Setbacks exceed lot dimensions — please reduce values.");
-                return;
+            } else {
+                this.map.removeLayer(this.gridLayer); sldr.step = "0.1";
             }
-            ConfigEngine.state.setbacks        = { front, rear, sideL, sideR };
-            ConfigEngine.state.setbacksApplied = true;
-            this.drawSetbacks();
-        },
+        });
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            ConfigEngine.reset();
+            this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+            this.map.setView([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+            sldr.value = ConfigEngine.state.rotation;
+            inp.value  = ConfigEngine.state.rotation.toFixed(1);
+            this.render();
+        });
+        document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
+        document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
+    }
+};
 
-        drawSetbacks: function() {
-            const { front, rear, sideL, sideR } = ConfigEngine.state.setbacks;
-            const { width: w, depth: h }         = ConfigEngine.data;
+</script>
+<script>
+/* ==========================================
+   ENGINE 4: SETBACK & CONCEPT MODE
+   ========================================== */
+const SetbackEngine = {
+    setMode: function(mode) {
+        ConfigEngine.state.mode = mode;
+        document.getElementById('modeComplex').classList.toggle('active', mode === 'complex');
+        document.getElementById('modeSingle').classList.toggle('active', mode === 'single');
+    },
 
-            const setbackRect = [
-                { x: -h/2 + front, y:  w/2 - sideR },
-                { x:  h/2 - rear,  y:  w/2 - sideR },
-                { x:  h/2 - rear,  y: -w/2 + sideL },
-                { x: -h/2 + front, y: -w/2 + sideL }
-            ];
+    applySetbacks: function() {
+        const front = parseFloat(document.getElementById('sb-front').value)  || 0;
+        const rear  = parseFloat(document.getElementById('sb-rear').value)   || 0;
+        const sideL = parseFloat(document.getElementById('sb-side-l').value) || 0;
+        const sideR = parseFloat(document.getElementById('sb-side-r').value) || 0;
 
-            const rad   = ConfigEngine.state.rotation * Math.PI / 180;
-            const cos   = Math.cos(rad), sin = Math.sin(rad);
-            const F_LAT = 364566;
-            const F_LNG = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
-
-            const transform = (pt) => {
-                let rx = pt.x * cos - pt.y * sin;
-                let ry = pt.x * sin + pt.y * cos;
-                return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
-            };
-
-            MapEngine.setbackPoly.setLatLngs(setbackRect.map(transform));
+        const { width: w, depth: h } = ConfigEngine.data;
+        if (front + rear >= h || sideL + sideR >= w) {
+            alert("Setbacks exceed lot dimensions — please reduce values.");
+            return;
         }
-    };
+        ConfigEngine.state.setbacks        = { front, rear, sideL, sideR };
+        ConfigEngine.state.setbacksApplied = true;
+        this.drawSetbacks();
+    },
 
-    /* ==========================================
-       ENGINE 5: EXPORT
-       ========================================== */
-    const ExportEngine = {
-        generateLISP: function() {
-            const latlngs = MapEngine.lotPoly.getLatLngs()[0];
-            proj4.defs(ConfigEngine.cad.projection, ConfigEngine.cad.proj4Def);
+    drawSetbacks: function() {
+        const { front, rear, sideL, sideR } = ConfigEngine.state.setbacks;
+        const { width: w, depth: h }         = ConfigEngine.data;
 
-            let out = ";; ==========================================\n";
-            out += ";; AUTOLISP BOUNDARY SCRIPT - " + ConfigEngine.data.apn + "\n";
-            out += ";; Rotation Angle: " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
-            out += ";; System: CA State Plane Zone 6 (Intl Ft)\n";
-            out += ";; ==========================================\n\n(command \"_pline\"\n";
+        const setbackRect = [
+            { x: -h/2 + front, y:  w/2 - sideR },
+            { x:  h/2 - rear,  y:  w/2 - sideR },
+            { x:  h/2 - rear,  y: -w/2 + sideL },
+            { x: -h/2 + front, y: -w/2 + sideL }
+        ];
 
-            const ptNames = ["Pt 1 (Front Left)", "Pt 2 (Back Left)", "Pt 3 (Back Right)", "Pt 4 (Front Right)"];
-            latlngs.forEach((pt, i) => {
-                const ca = proj4("WGS84", ConfigEngine.cad.projection, [pt.lng, pt.lat]);
-                out += "  \"" + ca[0].toFixed(4) + "," + ca[1].toFixed(4) + "\"   ;; " + ptNames[i] + "\n";
+        const rad   = ConfigEngine.state.rotation * Math.PI / 180;
+        const cos   = Math.cos(rad), sin = Math.sin(rad);
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
+
+        const transform = (pt) => {
+            let rx = pt.x * cos - pt.y * sin;
+            let ry = pt.x * sin + pt.y * cos;
+            return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
+        };
+
+        MapEngine.setbackPoly.setLatLngs(setbackRect.map(transform));
+    }
+};
+
+</script>
+<script>
+/* ==========================================
+   ENGINE 5: EXPORT
+   ========================================== */
+const ExportEngine = {
+    generateLISP: function() {
+        const latlngs = MapEngine.lotPoly.getLatLngs()[0];
+        proj4.defs(ConfigEngine.cad.projection, ConfigEngine.cad.proj4Def);
+
+        let out = ";; ==========================================\n";
+        out += ";; AUTOLISP BOUNDARY SCRIPT - " + ConfigEngine.data.apn + "\n";
+        out += ";; Rotation Angle: " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
+        out += ";; System: CA State Plane Zone 6 (Intl Ft)\n";
+        out += ";; ==========================================\n\n(command \"_pline\"\n";
+
+        const ptNames = ["Pt 1 (Front Left)", "Pt 2 (Back Left)", "Pt 3 (Back Right)", "Pt 4 (Front Right)"];
+        latlngs.forEach((pt, i) => {
+            const ca = proj4("WGS84", ConfigEngine.cad.projection, [pt.lng, pt.lat]);
+            out += "  \"" + ca[0].toFixed(4) + "," + ca[1].toFixed(4) + "\"   ;; " + ptNames[i] + "\n";
+        });
+        out += "  \"c\"\n)\n(command \"_zoom\" \"e\")\n(princ \"\\nLot Plotted.\")\n(princ)";
+        document.getElementById('outputCoords').value = out;
+    },
+
+    exportImage: function() {
+        html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, backgroundColor: null })
+            .then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Vicinity_Map_${ConfigEngine.data.apn}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            })
+            .catch(() => {
+                alert("Image export blocked by tile server security. Use the Fullscreen button and take a screenshot instead.");
             });
-            out += "  \"c\"\n)\n(command \"_zoom\" \"e\")\n(princ \"\\nLot Plotted.\")\n(princ)";
-            document.getElementById('outputCoords').value = out;
-        },
+    }
+};
 
-        exportImage: function() {
-            html2canvas(document.getElementById('map'), { useCORS: true, allowTaint: false, backgroundColor: null })
-                .then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `Vicinity_Map_${ConfigEngine.data.apn}.png`;
-                    link.href = canvas.toDataURL("image/png");
-                    link.click();
-                })
-                .catch(() => {
-                    alert("Image export blocked by tile server security. Use the Fullscreen button and take a screenshot instead.");
-                });
-        }
-    };
+</script>
+<script>
+/* ==========================================
+   ENGINE 6: COLUMN RESIZE
+   ========================================== */
+const ResizeEngine = {
+    init: function() {
+        const divider    = document.getElementById('colDivider');
+        const sidebar    = document.getElementById('sidebarPanel');
+        const infoLeft   = document.getElementById('infoColLeft');
+        let isResizing = false, startX, startW;
 
-    /* ==========================================
-       ENGINE 6: COLUMN RESIZE
-       ========================================== */
-    const ResizeEngine = {
-        init: function() {
-            const divider    = document.getElementById('colDivider');
-            const sidebar    = document.getElementById('sidebarPanel');
-            const infoLeft   = document.getElementById('infoColLeft');
-            let isResizing = false, startX, startW;
+        // Sync info-bottom left column to current sidebar width
+        function syncInfo(w) { if (infoLeft) infoLeft.style.width = w + 'px'; }
+        syncInfo(sidebar.offsetWidth);
 
-            // Sync info-bottom left column to current sidebar width
-            function syncInfo(w) { if (infoLeft) infoLeft.style.width = w + 'px'; }
-            syncInfo(sidebar.offsetWidth);
+        divider.addEventListener('mousedown', function(e) {
+            isResizing = true; startX = e.clientX; startW = sidebar.offsetWidth;
+            divider.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            const newW = Math.max(240, Math.min(700, startW + (e.clientX - startX)));
+            sidebar.style.width = newW + 'px';
+            syncInfo(newW);
+            if (MapEngine.map) MapEngine.map.invalidateSize();
+        });
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+                divider.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+};
 
-            divider.addEventListener('mousedown', function(e) {
-                isResizing = true; startX = e.clientX; startW = sidebar.offsetWidth;
-                divider.classList.add('resizing');
-                document.body.style.cursor = 'col-resize';
-                document.body.style.userSelect = 'none';
-                e.preventDefault();
-            });
-            document.addEventListener('mousemove', function(e) {
-                if (!isResizing) return;
-                const newW = Math.max(240, Math.min(700, startW + (e.clientX - startX)));
-                sidebar.style.width = newW + 'px';
-                syncInfo(newW);
-                if (MapEngine.map) MapEngine.map.invalidateSize();
-            });
-            document.addEventListener('mouseup', function() {
-                if (isResizing) {
-                    isResizing = false;
-                    divider.classList.remove('resizing');
-                    document.body.style.cursor = '';
-                    document.body.style.userSelect = '';
-                }
-            });
-        }
-    };
-
+</script>
+<script>
     /* ==========================================
        BOOTSTRAP
        ========================================== */
@@ -1003,3 +1017,4 @@
 </script>
 </body>
 </html>
+
