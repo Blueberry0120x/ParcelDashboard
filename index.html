@@ -123,7 +123,7 @@
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 style="margin:0;">Building Config</h3>
-                        <button id="saveConfigBtn" class="btn-save-boundary">Save Config</button>
+                        <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
                     </div>
                     <div class="building-grid">
                         <strong>Orientation:</strong>
@@ -143,11 +143,27 @@
                         <strong>Offset:</strong>
                         <div class="footprint-inputs">
                             <label>X</label>
-                            <input type="number" id="bldgOffsetX" class="align-angle-input" value="0" step="1">
+                            <input type="number" id="bldgOffsetX" class="align-angle-input" value="0" step="0.5">
                             <label>Y</label>
-                            <input type="number" id="bldgOffsetY" class="align-angle-input" value="0" step="1">
+                            <input type="number" id="bldgOffsetY" class="align-angle-input" value="0" step="0.5">
                             <span class="ft-label">ft</span>
                         </div>
+                        <strong>Count / Stories:</strong>
+                        <div class="footprint-inputs">
+                            <label>N</label>
+                            <input type="number" id="bldgCount"   class="align-angle-input" value="1" min="1" step="1">
+                            <label>S</label>
+                            <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">
+                            <span class="ft-label">flr</span>
+                        </div>
+                        <strong>Spacing:</strong>
+                        <div class="deg-input-wrap">
+                            <input type="number" id="bldgSpacingInput" class="align-angle-input" value="0" step="0.5">
+                            <span style="font-weight:bold;">ft</span>
+                        </div>
+                        <input type="range" id="bldgSpacingSlider" min="0" max="50" value="0" step="0.5" style="width:100%; margin:0;">
+                        <strong>FAR:</strong>
+                        <span id="bldgFAR" style="grid-column: 2 / -1; font-weight: 700; color: #0f4c81;">—</span>
                     </div>
                 </div>
             </div>
