@@ -441,64 +441,68 @@ const SetbackEngine = {
             }
         });
 
-        // ── CLEARANCE DIMS: building edges to lot boundary & setback ─────────
+        // ── CLEARANCE DIMS: building edges to lot boundary ─────────────────
+        // Full architectural dim line between two points along an axis
+        const dimLine = (p1, p2, perpX, perpY, rotDeg) => {
+            const dist = Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2);
+            if (dist < 0.05) return; // skip zero clearances
+            // Unit vector along dim direction
+            const ux = (p2.x - p1.x) / dist, uy = (p2.y - p1.y) / dist;
+            // Dim line offset from geometry (along perpendicular)
+            const o = EXT;
+            const d1 = { x: p1.x + o*perpX, y: p1.y + o*perpY };
+            const d2 = { x: p2.x + o*perpX, y: p2.y + o*perpY };
+            // Extension (witness) lines
+            line([p1, { x: p1.x + (o+EX2)*perpX, y: p1.y + (o+EX2)*perpY }]);
+            line([p2, { x: p2.x + (o+EX2)*perpX, y: p2.y + (o+EX2)*perpY }]);
+            // Dim line split around text
+            const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
+            line([d1, { x: mid.x - TO*ux, y: mid.y - TO*uy }]);
+            line([{ x: mid.x + TO*ux, y: mid.y + TO*uy }, d2]);
+            // 45-deg ticks
+            const tk45x = (ux + perpX) * 0.7071 * TK;
+            const tk45y = (uy + perpY) * 0.7071 * TK;
+            line([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
+            line([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
+            // Label
+            lbl(mid, dist.toFixed(1) + "'", rotDeg);
+        };
+
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotHD = lotD / 2, lotHW = lotW / 2;
-        const lotRot = state.rotation;
 
         state.buildings.forEach((bldg) => {
             const count  = bldg.count || 1;
             const ss     = bldg.stackSpacing || 0;
             const anchor = bldg.anchor || 'center';
-            const hw     = bldg.width / 2, hh = bldg.height / 2;
-            const bRad   = bldg.orientation * Math.PI / 180;
-            const bCos   = Math.cos(bRad), bSin = Math.sin(bRad);
-            const dAx = bCos, dAy = bSin;
-            const wAx = -bSin, wAy = bCos;
             const { halfDepth, halfWidth } = this._buildingExtents(bldg);
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
             const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
             const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-
-            // First and last copy centers
             const cxFirst = baseCx + (0 - aOff) * step;
             const cxLast  = baseCx + (count - 1 - aOff) * step;
 
-            // Distances from stack extremes to lot boundary (along depth axis, unrotated)
-            const distFront = (cxFirst - halfDepth) - (-lotHD);  // front building edge to front lot line
-            const distRear  = lotHD - (cxLast + halfDepth);       // rear building edge to rear lot line
-            const distLeft  = (cy - halfWidth) - (-lotHW);        // building edge to left lot line
-            const distRight = lotHW - (cy + halfWidth);            // building edge to right lot line
-
-            // Front clearance (along -depth from first copy front edge to lot front)
-            if (Math.abs(distFront) > 0.05) {
-                const edgePt = { x: cxFirst - halfDepth, y: cy };
-                const lotPt  = { x: -lotHD, y: cy };
-                const mid    = { x: (edgePt.x + lotPt.x) / 2, y: cy };
-                lbl(mid, Math.abs(distFront).toFixed(1) + "'", lotRot + 90);
-            }
-            // Rear clearance
-            if (Math.abs(distRear) > 0.05) {
-                const edgePt = { x: cxLast + halfDepth, y: cy };
-                const lotPt  = { x: lotHD, y: cy };
-                const mid    = { x: (edgePt.x + lotPt.x) / 2, y: cy };
-                lbl(mid, Math.abs(distRear).toFixed(1) + "'", lotRot + 90);
-            }
-            // Left clearance
-            if (Math.abs(distLeft) > 0.05) {
-                const edgePt = { x: baseCx, y: cy - halfWidth };
-                const lotPt  = { x: baseCx, y: -lotHW };
-                const mid    = { x: baseCx, y: (edgePt.y + lotPt.y) / 2 };
-                lbl(mid, Math.abs(distLeft).toFixed(1) + "'", lotRot);
-            }
-            // Right clearance
-            if (Math.abs(distRight) > 0.05) {
-                const edgePt = { x: baseCx, y: cy + halfWidth };
-                const lotPt  = { x: baseCx, y: lotHW };
-                const mid    = { x: baseCx, y: (edgePt.y + lotPt.y) / 2 };
-                lbl(mid, Math.abs(distRight).toFixed(1) + "'", lotRot);
-            }
+            // Front: building front edge → front lot line (along depth axis, perpendicular = width axis)
+            dimLine(
+                { x: -lotHD, y: cy }, { x: cxFirst - halfDepth, y: cy },
+                0, -1, state.rotation + 90
+            );
+            // Rear: building rear edge → rear lot line
+            dimLine(
+                { x: cxLast + halfDepth, y: cy }, { x: lotHD, y: cy },
+                0, 1, state.rotation + 90
+            );
+            // Left: building left edge → left lot line
+            dimLine(
+                { x: baseCx, y: -lotHW }, { x: baseCx, y: cy - halfWidth },
+                -1, 0, state.rotation
+            );
+            // Right: building right edge → right lot line
+            dimLine(
+                { x: baseCx, y: cy + halfWidth }, { x: baseCx, y: lotHW },
+                1, 0, state.rotation
+            );
         });
     },
 
