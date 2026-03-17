@@ -213,32 +213,69 @@ const MapEngine = {
             return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
         };
 
-        const OFF = 7; // ft outward offset from edge
-        const sides = ['lot_front','lot_rear','lot_right','lot_left'];
+        const OFF = 7;   // ft: dim line offset outward from lot edge
+        const EX2 = 2;   // ft: witness line overshoot past dim line
+        const TK  = 2.2; // ft: half-length of 45deg tick
+        // Annotative text gap
+        const mapZoom   = this.map.getZoom();
+        const mPerPx    = 40075016.686 * Math.cos(ConfigEngine.state.lat * Math.PI / 180) / Math.pow(2, mapZoom + 8);
+        const ftPerPx   = mPerPx * 3.28084;
+        const TO        = 10 * ftPerPx;
+
+        const push = layer => { this.dimLabels.push(layer); return layer; };
+        const line = (pts) => push(L.polyline(pts.map(toLL), {
+            color: '#1a202c', weight: 1.2, interactive: false, noClip: true
+        }).addTo(this.map));
+
+        // Lot corners: c0=front-left, c1=front-right, c2=rear-right, c3=rear-left
+        const c0 = {x: -h/2, y: -w/2}, c1 = {x: -h/2, y:  w/2};
+        const c2 = {x:  h/2, y:  w/2}, c3 = {x:  h/2, y: -w/2};
+
+        // Each edge: two corner points, outward perpendicular, axis unit vector, label text, rotation
         const edges = [
-            { mid: {x: -h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x:-1, y:0}, key: sides[0] },
-            { mid: {x:  h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x: 1, y:0}, key: sides[1] },
-            { mid: {x:  0,     y:  w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:1}, key: sides[2] },
-            { mid: {x:  0,     y: -w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:-1}, key: sides[3] },
+            { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: rot,    key:'lot_front' }, // front (depth= -h/2)
+            { p1: c3, p2: c2, px: 1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: rot,    key:'lot_rear'  }, // rear  (depth= +h/2)
+            { p1: c1, p2: c2, px: 0, py: 1, ux: 1, uy: 0, text: h+' FT', rotA: rot+90, key:'lot_right' }, // right (width= +w/2)
+            { p1: c0, p2: c3, px: 0, py:-1, ux: 1, uy: 0, text: h+' FT', rotA: rot+90, key:'lot_left'  }, // left  (width= -w/2)
         ];
 
         edges.forEach((e) => {
-            if (this.hiddenDimKeys.has(e.key)) return; // skip if user hid this
-            const pos = toLL({ x: e.mid.x + e.off.x * OFF, y: e.mid.y + e.off.y * OFF });
-            const m = L.marker(pos, {
+            if (this.hiddenDimKeys.has(e.key)) return;
+            const layers = [];
+            const pLine = pts => { const l = line(pts); layers.push(l); return l; };
+
+            // Dim line endpoints (offset outward from edge)
+            const d1 = { x: e.p1.x + OFF*e.px, y: e.p1.y + OFF*e.py };
+            const d2 = { x: e.p2.x + OFF*e.px, y: e.p2.y + OFF*e.py };
+            // Extension (witness) lines from corners past dim line
+            pLine([e.p1, { x: e.p1.x + (OFF+EX2)*e.px, y: e.p1.y + (OFF+EX2)*e.py }]);
+            pLine([e.p2, { x: e.p2.x + (OFF+EX2)*e.px, y: e.p2.y + (OFF+EX2)*e.py }]);
+            // Dim line split around text
+            const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
+            pLine([d1, { x: mid.x - TO*e.ux, y: mid.y - TO*e.uy }]);
+            pLine([{ x: mid.x + TO*e.ux, y: mid.y + TO*e.uy }, d2]);
+            // 45-deg ticks
+            const tkX = (e.ux + e.px) * 0.7071 * TK;
+            const tkY = (e.uy + e.py) * 0.7071 * TK;
+            pLine([{ x: d1.x - tkX, y: d1.y - tkY }, { x: d1.x + tkX, y: d1.y + tkY }]);
+            pLine([{ x: d2.x - tkX, y: d2.y - tkY }, { x: d2.x + tkX, y: d2.y + tkY }]);
+
+            // Clickable label
+            const pos = toLL({ x: mid.x + OFF*0.15*e.px, y: mid.y + OFF*0.15*e.py });
+            const m = L.marker(toLL(mid), {
                 icon: L.divIcon({
                     className: '',
-                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotAngle.toFixed(1) + 'deg)">' + e.text + '</div></div>',
+                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 }),
                 interactive: true
             }).addTo(this.map);
-            // Click to hide — persists across redraws
+            layers.push(m);
+            push(m);
+            // Click to hide entire dim group — persists across redraws
             m.on('click', () => {
                 this.hiddenDimKeys.add(e.key);
-                this.map.removeLayer(m);
-                const i = this.dimLabels.indexOf(m);
-                if (i !== -1) this.dimLabels.splice(i, 1);
+                layers.forEach(l => this.map.removeLayer(l));
             });
             this.dimLabels.push(m);
         });

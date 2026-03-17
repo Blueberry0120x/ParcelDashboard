@@ -381,7 +381,30 @@ const SetbackEngine = {
         const feetPerPx   = metersPerPx * 3.28084;
         const TO = 10 * feetPerPx;  // 10px gap, converted to feet at current zoom
 
-        state.buildings.forEach((bldg) => {
+        // Helper: draw a keyed dim group (lines + clickable label), hideable
+        const dimGroup = (dimKey, drawFn) => {
+            if (MapEngine.hiddenDimKeys.has(dimKey)) return;
+            const layers = [];
+            const gLine = pts => { const l = line(pts); layers.push(l); return l; };
+            const gLbl  = (pt, txt, rotDeg) => {
+                const m = push(L.marker(toLatLng(pt), {
+                    icon: L.divIcon({
+                        className: '',
+                        html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    }),
+                    interactive: true
+                }).addTo(MapEngine.map));
+                layers.push(m);
+                m.on('click', () => {
+                    MapEngine.hiddenDimKeys.add(dimKey);
+                    layers.forEach(l => MapEngine.map.removeLayer(l));
+                });
+            };
+            drawFn(gLine, gLbl);
+        };
+
+        state.buildings.forEach((bldg, bi) => {
             const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
             const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
             const count  = bldg.count || 1;
@@ -390,54 +413,47 @@ const SetbackEngine = {
             const hw     = bldg.width  / 2, hh = bldg.height / 2;
             const bRad   = bldg.orientation * Math.PI / 180;
             const bCos   = Math.cos(bRad), bSin = Math.sin(bRad);
-            // depth axis unit vector: (bCos, bSin)
-            // width axis unit vector: (-bSin, bCos)
             const dAx = bCos, dAy = bSin;
             const wAx = -bSin, wAy = bCos;
             const { halfDepth } = this._buildingExtents(bldg);
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
-            // Tick: 45deg diagonal between depth and width axes
             const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
             const labelRot = state.rotation + bldg.orientation;
 
             for (let j = 0; j < count; j++) {
                 const cx = baseCx + (j - aOff) * step;
-                // Corners (same rotation math as drawBuilding):
-                //   c0 (front, +w): cx - hh*dAx + hw*wAx, cy - hh*dAy + hw*wAy
-                //   c2 (rear,  -w): cx + hh*dAx - hw*wAx, cy + hh*dAy - hw*wAy
-                //   c3 (front, -w): cx - hh*dAx - hw*wAx, cy - hh*dAy - hw*wAy
                 const c0 = { x: cx - hh*dAx + hw*wAx, y: cy - hh*dAy + hw*wAy };
                 const c2 = { x: cx + hh*dAx - hw*wAx, y: cy + hh*dAy - hw*wAy };
                 const c3 = { x: cx - hh*dAx - hw*wAx, y: cy - hh*dAy - hw*wAy };
 
-                // ── WIDTH dimension (spans bldg.width, offset in -depth direction) ──
-                const wD1 = { x: c3.x - EXT*dAx, y: c3.y - EXT*dAy };
-                const wD2 = { x: c0.x - EXT*dAx, y: c0.y - EXT*dAy };
-                line([{ x: c3.x - dAx, y: c3.y - dAy }, { x: c3.x - (EXT+EX2)*dAx, y: c3.y - (EXT+EX2)*dAy }]);
-                line([{ x: c0.x - dAx, y: c0.y - dAy }, { x: c0.x - (EXT+EX2)*dAx, y: c0.y - (EXT+EX2)*dAy }]);
-                // Split line around text — gap at center
-                const wMid = { x: (wD1.x+wD2.x)/2, y: (wD1.y+wD2.y)/2 };
-                const wUx = wAx, wUy = wAy; // unit along width axis
-                line([wD1, { x: wMid.x - TO*wUx, y: wMid.y - TO*wUy }]);
-                line([{ x: wMid.x + TO*wUx, y: wMid.y + TO*wUy }, wD2]);
-                line([{ x: wD1.x - TK*tkX, y: wD1.y - TK*tkY }, { x: wD1.x + TK*tkX, y: wD1.y + TK*tkY }]);
-                line([{ x: wD2.x - TK*tkX, y: wD2.y - TK*tkY }, { x: wD2.x + TK*tkX, y: wD2.y + TK*tkY }]);
-                lbl(wMid, bldg.width.toFixed(1) + "'", labelRot + 90);
+                // ── WIDTH dim (clickable) ──
+                dimGroup('bldg_B'+(bi+1)+'_c'+j+'_w', (gLine, gLbl) => {
+                    const wD1 = { x: c3.x - EXT*dAx, y: c3.y - EXT*dAy };
+                    const wD2 = { x: c0.x - EXT*dAx, y: c0.y - EXT*dAy };
+                    gLine([{ x: c3.x - dAx, y: c3.y - dAy }, { x: c3.x - (EXT+EX2)*dAx, y: c3.y - (EXT+EX2)*dAy }]);
+                    gLine([{ x: c0.x - dAx, y: c0.y - dAy }, { x: c0.x - (EXT+EX2)*dAx, y: c0.y - (EXT+EX2)*dAy }]);
+                    const wMid = { x: (wD1.x+wD2.x)/2, y: (wD1.y+wD2.y)/2 };
+                    gLine([wD1, { x: wMid.x - TO*wAx, y: wMid.y - TO*wAy }]);
+                    gLine([{ x: wMid.x + TO*wAx, y: wMid.y + TO*wAy }, wD2]);
+                    gLine([{ x: wD1.x - TK*tkX, y: wD1.y - TK*tkY }, { x: wD1.x + TK*tkX, y: wD1.y + TK*tkY }]);
+                    gLine([{ x: wD2.x - TK*tkX, y: wD2.y - TK*tkY }, { x: wD2.x + TK*tkX, y: wD2.y + TK*tkY }]);
+                    gLbl(wMid, bldg.width.toFixed(1) + "'", labelRot + 90);
+                });
 
-                // ── HEIGHT dimension (spans bldg.height, offset in -width direction) ──
-                const hD1 = { x: c3.x - EXT*wAx, y: c3.y - EXT*wAy };
-                const hD2 = { x: c2.x - EXT*wAx, y: c2.y - EXT*wAy };
-                line([{ x: c3.x - wAx, y: c3.y - wAy }, { x: c3.x - (EXT+EX2)*wAx, y: c3.y - (EXT+EX2)*wAy }]);
-                line([{ x: c2.x - wAx, y: c2.y - wAy }, { x: c2.x - (EXT+EX2)*wAx, y: c2.y - (EXT+EX2)*wAy }]);
-                // Split line around text — gap at center
-                const hMid = { x: (hD1.x+hD2.x)/2, y: (hD1.y+hD2.y)/2 };
-                const hUx = dAx, hUy = dAy; // unit along depth axis
-                line([hD1, { x: hMid.x - TO*hUx, y: hMid.y - TO*hUy }]);
-                line([{ x: hMid.x + TO*hUx, y: hMid.y + TO*hUy }, hD2]);
-                line([{ x: hD1.x - TK*tkX, y: hD1.y - TK*tkY }, { x: hD1.x + TK*tkX, y: hD1.y + TK*tkY }]);
-                line([{ x: hD2.x - TK*tkX, y: hD2.y - TK*tkY }, { x: hD2.x + TK*tkX, y: hD2.y + TK*tkY }]);
-                lbl(hMid, bldg.height.toFixed(1) + "'", labelRot);
+                // ── HEIGHT dim (clickable) ──
+                dimGroup('bldg_B'+(bi+1)+'_c'+j+'_h', (gLine, gLbl) => {
+                    const hD1 = { x: c3.x - EXT*wAx, y: c3.y - EXT*wAy };
+                    const hD2 = { x: c2.x - EXT*wAx, y: c2.y - EXT*wAy };
+                    gLine([{ x: c3.x - wAx, y: c3.y - wAy }, { x: c3.x - (EXT+EX2)*wAx, y: c3.y - (EXT+EX2)*wAy }]);
+                    gLine([{ x: c2.x - wAx, y: c2.y - wAy }, { x: c2.x - (EXT+EX2)*wAx, y: c2.y - (EXT+EX2)*wAy }]);
+                    const hMid = { x: (hD1.x+hD2.x)/2, y: (hD1.y+hD2.y)/2 };
+                    gLine([hD1, { x: hMid.x - TO*dAx, y: hMid.y - TO*dAy }]);
+                    gLine([{ x: hMid.x + TO*dAx, y: hMid.y + TO*dAy }, hD2]);
+                    gLine([{ x: hD1.x - TK*tkX, y: hD1.y - TK*tkY }, { x: hD1.x + TK*tkX, y: hD1.y + TK*tkY }]);
+                    gLine([{ x: hD2.x - TK*tkX, y: hD2.y - TK*tkY }, { x: hD2.x + TK*tkX, y: hD2.y + TK*tkY }]);
+                    gLbl(hMid, bldg.height.toFixed(1) + "'", labelRot);
+                });
             }
         });
 
