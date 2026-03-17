@@ -419,9 +419,11 @@ const SetbackEngine = {
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
             const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
-            // Labels stay screen-aligned: horizontal=0, vertical=-90
-            const labelRotW = 0;   // width dim text = horizontal
-            const labelRotH = -90; // height dim text = vertical
+            // Label angle follows dim line on screen (lot rot + bldg rot), normalized upright
+            const norm = (a) => { while (a > 90) a -= 180; while (a < -90) a += 180; return a; };
+            const totalRot = state.rotation + bldg.orientation;
+            const labelRotW = norm(totalRot);      // width dim: along width axis
+            const labelRotH = norm(totalRot + 90); // height dim: along depth axis
 
             for (let j = 0; j < count; j++) {
                 const cx = baseCx + (j - aOff) * step;
@@ -518,25 +520,30 @@ const SetbackEngine = {
             const cxLast  = baseCx + (count - 1 - aOff) * step;
             const k = 'clr_B' + (bi+1);
 
-            // Front: building front edge → front lot line (vertical on screen)
+            // Clearance label angles follow lot rotation
+            const clrNorm = (a) => { while (a > 90) a -= 180; while (a < -90) a += 180; return a; };
+            const clrDepthAngle = clrNorm(state.rotation + 90); // along depth axis
+            const clrWidthAngle = clrNorm(state.rotation);       // along width axis
+
+            // Front: building front edge → front lot line (along depth axis)
             dimLine(
                 { x: -lotHD, y: cy }, { x: cxFirst - halfDepth, y: cy },
-                0, -1, -90, k + '_front'
+                0, -1, clrDepthAngle, k + '_front'
             );
-            // Rear: building rear edge → rear lot line (vertical on screen)
+            // Rear: building rear edge → rear lot line (along depth axis)
             dimLine(
                 { x: cxLast + halfDepth, y: cy }, { x: lotHD, y: cy },
-                0, 1, -90, k + '_rear'
+                0, 1, clrDepthAngle, k + '_rear'
             );
-            // Left: building left edge → left lot line (horizontal on screen)
+            // Left: building left edge → left lot line (along width axis)
             dimLine(
                 { x: baseCx, y: -lotHW }, { x: baseCx, y: cy - halfWidth },
-                -1, 0, 0, k + '_left'
+                -1, 0, clrWidthAngle, k + '_left'
             );
-            // Right: building right edge → right lot line (horizontal on screen)
+            // Right: building right edge → right lot line (along width axis)
             dimLine(
                 { x: baseCx, y: cy + halfWidth }, { x: baseCx, y: lotHW },
-                1, 0, 0, k + '_right'
+                1, 0, clrWidthAngle, k + '_right'
             );
         });
     },

@@ -232,11 +232,19 @@ const MapEngine = {
         const c2 = {x:  h/2, y:  w/2}, c3 = {x:  h/2, y: -w/2};
 
         // Each edge: two corner points, outward perpendicular, axis unit vector, label text, rotation
+        // Compute screen angle: after lot rotation, what angle does each edge make on screen?
+        // Width edges (along y-axis in local coords) → screen angle = rot (degrees)
+        // Depth edges (along x-axis in local coords) → screen angle = rot + 90
+        // Normalize to keep text upright: if angle > 90 or < -90, flip by 180
+        const norm = (a) => { while (a > 90) a -= 180; while (a < -90) a += 180; return a; };
+        const wAngle = norm(rot);      // width edge screen angle
+        const dAngle = norm(rot + 90); // depth edge screen angle
+
         const edges = [
-            { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: 0,   key:'lot_front' }, // front — horizontal text
-            { p1: c3, p2: c2, px: 1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: 0,   key:'lot_rear'  }, // rear  — horizontal text
-            { p1: c1, p2: c2, px: 0, py: 1, ux: 1, uy: 0, text: h+' FT', rotA: -90, key:'lot_right' }, // right — vertical text
-            { p1: c0, p2: c3, px: 0, py:-1, ux: 1, uy: 0, text: h+' FT', rotA: -90, key:'lot_left'  }, // left  — vertical text
+            { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: wAngle, key:'lot_front' },
+            { p1: c3, p2: c2, px: 1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: wAngle, key:'lot_rear'  },
+            { p1: c1, p2: c2, px: 0, py: 1, ux: 1, uy: 0, text: h+' FT', rotA: dAngle, key:'lot_right' },
+            { p1: c0, p2: c3, px: 0, py:-1, ux: 1, uy: 0, text: h+' FT', rotA: dAngle, key:'lot_left'  },
         ];
 
         edges.forEach((e) => {
