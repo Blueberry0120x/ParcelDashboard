@@ -443,9 +443,12 @@ const SetbackEngine = {
 
         // ── CLEARANCE DIMS: building edges to lot boundary ─────────────────
         // Full architectural dim line between two points along an axis
+        // Returns array of layers so caller can group them for click-to-hide
         const dimLine = (p1, p2, perpX, perpY, rotDeg) => {
             const dist = Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2);
-            if (dist < 0.05) return; // skip zero clearances
+            if (dist < 0.5) return; // skip zero/tiny clearances
+            const layers = [];
+            const pLine = pts => { const l = line(pts); layers.push(l); return l; };
             // Unit vector along dim direction
             const ux = (p2.x - p1.x) / dist, uy = (p2.y - p1.y) / dist;
             // Dim line offset from geometry (along perpendicular)
@@ -453,19 +456,30 @@ const SetbackEngine = {
             const d1 = { x: p1.x + o*perpX, y: p1.y + o*perpY };
             const d2 = { x: p2.x + o*perpX, y: p2.y + o*perpY };
             // Extension (witness) lines
-            line([p1, { x: p1.x + (o+EX2)*perpX, y: p1.y + (o+EX2)*perpY }]);
-            line([p2, { x: p2.x + (o+EX2)*perpX, y: p2.y + (o+EX2)*perpY }]);
+            pLine([p1, { x: p1.x + (o+EX2)*perpX, y: p1.y + (o+EX2)*perpY }]);
+            pLine([p2, { x: p2.x + (o+EX2)*perpX, y: p2.y + (o+EX2)*perpY }]);
             // Dim line split around text
             const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
-            line([d1, { x: mid.x - TO*ux, y: mid.y - TO*uy }]);
-            line([{ x: mid.x + TO*ux, y: mid.y + TO*uy }, d2]);
+            pLine([d1, { x: mid.x - TO*ux, y: mid.y - TO*uy }]);
+            pLine([{ x: mid.x + TO*ux, y: mid.y + TO*uy }, d2]);
             // 45-deg ticks
             const tk45x = (ux + perpX) * 0.7071 * TK;
             const tk45y = (uy + perpY) * 0.7071 * TK;
-            line([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
-            line([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
-            // Label
-            lbl(mid, dist.toFixed(1) + "'", rotDeg);
+            pLine([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
+            pLine([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
+            // Clickable label — click hides the entire dim group
+            const m = push(L.marker(toLatLng(mid), {
+                icon: L.divIcon({
+                    className: '',
+                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
+                    iconSize: [0, 0], iconAnchor: [0, 0]
+                }),
+                interactive: true
+            }).addTo(MapEngine.map));
+            layers.push(m);
+            m.on('click', () => {
+                layers.forEach(l => MapEngine.map.removeLayer(l));
+            });
         };
 
         const { width: lotW, depth: lotD } = ConfigEngine.data;

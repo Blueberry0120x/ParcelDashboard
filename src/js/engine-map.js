@@ -176,11 +176,14 @@ const MapEngine = {
         };
 
         this.lotPoly.setLatLngs(baseLot.map(transform));
+        // Always show 30ft commercial zone; style depends on comm checkbox
+        this.commPoly.setLatLngs(baseComm.map(transform));
         if (ConfigEngine.state.commFront) {
-            this.commPoly.setLatLngs(baseComm.map(transform));
-            this.commPoly.setStyle({ fillOpacity: 0, weight: 2, dashArray: '8 5' });
+            // Comm active: dashed line only, no fill
+            this.commPoly.setStyle({ fillOpacity: 0, fillColor: '#0f4c81', weight: 2, dashArray: '8 5', color: '#0f4c81' });
         } else {
-            this.commPoly.setLatLngs([]);
+            // Comm not active: show as hatch/fill (setback indicator)
+            this.commPoly.setStyle({ fillOpacity: 0.15, fillColor: '#0f4c81', weight: 1, dashArray: null, color: '#0f4c81' });
         }
         this.updateNorthArrow();
         this.updateDimLabels();
