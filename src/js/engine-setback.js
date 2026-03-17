@@ -419,11 +419,11 @@ const SetbackEngine = {
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
             const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
-            // Label angle follows dim line on screen (lot rot + bldg rot), normalized upright
-            const norm = (a) => { while (a > 90) a -= 180; while (a < -90) a += 180; return a; };
+            // Snap label to nearest screen axis: 0 (horizontal) or -90 (vertical)
+            const snap = (a) => { a = ((a % 360) + 360) % 360; return (a > 45 && a < 135) || (a > 225 && a < 315) ? -90 : 0; };
             const totalRot = state.rotation + bldg.orientation;
-            const labelRotW = norm(totalRot);      // width dim: along width axis
-            const labelRotH = norm(totalRot + 90); // height dim: along depth axis
+            const labelRotW = snap(totalRot);      // width dim
+            const labelRotH = snap(totalRot + 90); // height dim
 
             for (let j = 0; j < count; j++) {
                 const cx = baseCx + (j - aOff) * step;
@@ -520,10 +520,10 @@ const SetbackEngine = {
             const cxLast  = baseCx + (count - 1 - aOff) * step;
             const k = 'clr_B' + (bi+1);
 
-            // Clearance label angles follow lot rotation
-            const clrNorm = (a) => { while (a > 90) a -= 180; while (a < -90) a += 180; return a; };
-            const clrDepthAngle = clrNorm(state.rotation + 90); // along depth axis
-            const clrWidthAngle = clrNorm(state.rotation);       // along width axis
+            // Clearance label angles snapped to screen axis
+            const clrSnap = (a) => { a = ((a % 360) + 360) % 360; return (a > 45 && a < 135) || (a > 225 && a < 315) ? -90 : 0; };
+            const clrDepthAngle = clrSnap(state.rotation + 90);
+            const clrWidthAngle = clrSnap(state.rotation);
 
             // Front: building front edge → front lot line (along depth axis)
             dimLine(

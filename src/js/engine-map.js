@@ -232,13 +232,10 @@ const MapEngine = {
         const c2 = {x:  h/2, y:  w/2}, c3 = {x:  h/2, y: -w/2};
 
         // Each edge: two corner points, outward perpendicular, axis unit vector, label text, rotation
-        // Compute screen angle: after lot rotation, what angle does each edge make on screen?
-        // Width edges (along y-axis in local coords) → screen angle = rot (degrees)
-        // Depth edges (along x-axis in local coords) → screen angle = rot + 90
-        // Normalize to keep text upright: if angle > 90 or < -90, flip by 180
-        const norm = (a) => { while (a > 90) a -= 180; while (a < -90) a += 180; return a; };
-        const wAngle = norm(rot);      // width edge screen angle
-        const dAngle = norm(rot + 90); // depth edge screen angle
+        // Snap label to nearest screen axis: 0 (horizontal) or -90 (vertical)
+        const snap = (a) => { a = ((a % 360) + 360) % 360; return (a > 45 && a < 135) || (a > 225 && a < 315) ? -90 : 0; };
+        const wAngle = snap(rot);      // width edge → horizontal or vertical
+        const dAngle = snap(rot + 90); // depth edge → horizontal or vertical
 
         const edges = [
             { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: wAngle, key:'lot_front' },
