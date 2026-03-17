@@ -205,10 +205,6 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .btn-align-reset:hover { background: #4a5568; }
 .btn-align-file  { background: #805ad5; }
 .btn-align-file:hover  { background: #6b46c1; }
-.btn-align-dim        { background: #2b6cb0; }
-.btn-align-dim:hover  { background: #2c5282; }
-.btn-align-dim.active { background: #f6ad55; color: #1a202c; }
-.btn-align-dim.active:hover { background: #ed8936; color: #1a202c; }
 
 /* Building dim toggle button */
 .btn-dim-bldg        { background: #38a169 !important; color: white !important; }
@@ -499,7 +495,6 @@ input:checked + .slider:before { transform: translateX(20px); }
                     <button id="resetBtn"       class="btn-align btn-align-reset">Reset</button>
                 </div>
                 <div class="align-btn-row">
-                    <button id="dimToggleBtn"    class="btn-align btn-align-dim">&#x25a1; Dim Labels</button>
                     <button id="saveSettingsBtn" class="btn-align btn-align-file" onclick="ExportEngine.saveToFile()">Save to File</button>
                 </div>
                 <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
@@ -550,7 +545,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 style="margin:0;">Building Config</h3>
                         <div style="display:flex;gap:5px;">
-                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Dim</button>
+                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
                             <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
                         </div>
                     </div>
@@ -1346,19 +1341,6 @@ const MapEngine = {
             localStorage.setItem('site_locked', locked ? '1' : '0');
         });
 
-        document.getElementById('dimToggleBtn').addEventListener('click', () => {
-            this.showDims = !this.showDims;
-            document.getElementById('dimToggleBtn').classList.toggle('active', this.showDims);
-            localStorage.setItem('lot_showDims', this.showDims ? '1' : '0');
-            this.updateDimLabels();
-        });
-        // Restore lot dims state
-        if (localStorage.getItem('lot_showDims') === '1') {
-            this.showDims = true;
-            document.getElementById('dimToggleBtn').classList.add('active');
-            // Will render on next render() call
-        }
-
         // Restore lock visual state on load
         if (ConfigEngine.state.locked) {
             const btn = document.getElementById('lockPositionBtn');
@@ -2119,14 +2101,23 @@ const SetbackEngine = {
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
 
         document.getElementById('bldgDimBtn').addEventListener('click', () => {
-            MapEngine.showBldgDims = !MapEngine.showBldgDims;
-            document.getElementById('bldgDimBtn').classList.toggle('active', MapEngine.showBldgDims);
+            const on = !MapEngine.showBldgDims;
+            MapEngine.showBldgDims = on;
+            MapEngine.showDims     = on;
+            const btn = document.getElementById('bldgDimBtn');
+            btn.classList.toggle('active', on);
+            btn.textContent = on ? 'Hide Dims' : 'Show Dims';
             this.updateBldgDimLabels();
+            MapEngine.updateDimLabels();
         });
 
         // Restore dim toggle from saved config
-        MapEngine.showBldgDims = state.showBldgDims || false;
-        document.getElementById('bldgDimBtn').classList.toggle('active', MapEngine.showBldgDims);
+        const dimsOn = state.showBldgDims || false;
+        MapEngine.showBldgDims = dimsOn;
+        MapEngine.showDims     = dimsOn;
+        const dimBtn = document.getElementById('bldgDimBtn');
+        dimBtn.classList.toggle('active', dimsOn);
+        if (dimsOn) dimBtn.textContent = 'Hide Dims';
 
         if (state.buildings.length > 0) this.drawBuilding();
     },
