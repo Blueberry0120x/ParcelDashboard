@@ -798,6 +798,7 @@ const ConfigEngine = {
                 this.state.floorHeight    = bldg.floorHeight || 9;
                 this.state.commFront      = bldg.commFront   || false;
                 this.state.showBldgDims   = bldg.showBldgDims || false;
+                this.state.hiddenDimKeys  = bldg.hiddenDimKeys || [];
                 // Migrate older builds lacking per-building stories/floorHeight
                 this.state.buildings.forEach(b => {
                     if (!('stories'     in b)) b.stories     = this.state.stories;
@@ -1027,6 +1028,7 @@ const MapEngine = {
     gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
     dimLabels: [], showDims: false,
     bldgDimLabels: [], showBldgDims: false,
+    hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -1234,14 +1236,16 @@ const MapEngine = {
         };
 
         const OFF = 7; // ft outward offset from edge
+        const sides = ['lot_front','lot_rear','lot_right','lot_left'];
         const edges = [
-            { mid: {x: -h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x:-1, y:0} },
-            { mid: {x:  h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x: 1, y:0} },
-            { mid: {x:  0,     y:  w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:1} },
-            { mid: {x:  0,     y: -w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:-1} },
+            { mid: {x: -h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x:-1, y:0}, key: sides[0] },
+            { mid: {x:  h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x: 1, y:0}, key: sides[1] },
+            { mid: {x:  0,     y:  w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:1}, key: sides[2] },
+            { mid: {x:  0,     y: -w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:-1}, key: sides[3] },
         ];
 
-        edges.forEach((e, idx) => {
+        edges.forEach((e) => {
+            if (this.hiddenDimKeys.has(e.key)) return; // skip if user hid this
             const pos = toLL({ x: e.mid.x + e.off.x * OFF, y: e.mid.y + e.off.y * OFF });
             const m = L.marker(pos, {
                 icon: L.divIcon({
@@ -1251,8 +1255,9 @@ const MapEngine = {
                 }),
                 interactive: true
             }).addTo(this.map);
-            // Click to hide individual lot dim label
+            // Click to hide — persists across redraws
             m.on('click', () => {
+                this.hiddenDimKeys.add(e.key);
                 this.map.removeLayer(m);
                 const i = this.dimLabels.indexOf(m);
                 if (i !== -1) this.dimLabels.splice(i, 1);
@@ -1909,9 +1914,10 @@ const SetbackEngine = {
         // ── CLEARANCE DIMS: building edges to lot boundary ─────────────────
         // Full architectural dim line between two points along an axis
         // Returns array of layers so caller can group them for click-to-hide
-        const dimLine = (p1, p2, perpX, perpY, rotDeg) => {
+        const dimLine = (p1, p2, perpX, perpY, rotDeg, dimKey) => {
             const dist = Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2);
             if (dist < 0.5) return; // skip zero/tiny clearances
+            if (MapEngine.hiddenDimKeys.has(dimKey)) return; // user hid this
             const layers = [];
             const pLine = pts => { const l = line(pts); layers.push(l); return l; };
             // Unit vector along dim direction
@@ -1932,7 +1938,7 @@ const SetbackEngine = {
             const tk45y = (uy + perpY) * 0.7071 * TK;
             pLine([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
             pLine([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
-            // Clickable label — click hides the entire dim group
+            // Clickable label — click hides entire dim group, persists across redraws
             const m = push(L.marker(toLatLng(mid), {
                 icon: L.divIcon({
                     className: '',
@@ -1943,6 +1949,7 @@ const SetbackEngine = {
             }).addTo(MapEngine.map));
             layers.push(m);
             m.on('click', () => {
+                MapEngine.hiddenDimKeys.add(dimKey);
                 layers.forEach(l => MapEngine.map.removeLayer(l));
             });
         };
@@ -1950,7 +1957,7 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotHD = lotD / 2, lotHW = lotW / 2;
 
-        state.buildings.forEach((bldg) => {
+        state.buildings.forEach((bldg, bi) => {
             const count  = bldg.count || 1;
             const ss     = bldg.stackSpacing || 0;
             const anchor = bldg.anchor || 'center';
@@ -1961,26 +1968,27 @@ const SetbackEngine = {
             const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
             const cxFirst = baseCx + (0 - aOff) * step;
             const cxLast  = baseCx + (count - 1 - aOff) * step;
+            const k = 'clr_B' + (bi+1);
 
-            // Front: building front edge → front lot line (along depth axis, perpendicular = width axis)
+            // Front: building front edge → front lot line
             dimLine(
                 { x: -lotHD, y: cy }, { x: cxFirst - halfDepth, y: cy },
-                0, -1, state.rotation + 90
+                0, -1, state.rotation + 90, k + '_front'
             );
             // Rear: building rear edge → rear lot line
             dimLine(
                 { x: cxLast + halfDepth, y: cy }, { x: lotHD, y: cy },
-                0, 1, state.rotation + 90
+                0, 1, state.rotation + 90, k + '_rear'
             );
             // Left: building left edge → left lot line
             dimLine(
                 { x: baseCx, y: -lotHW }, { x: baseCx, y: cy - halfWidth },
-                -1, 0, state.rotation
+                -1, 0, state.rotation, k + '_left'
             );
             // Right: building right edge → right lot line
             dimLine(
                 { x: baseCx, y: cy + halfWidth }, { x: baseCx, y: lotHW },
-                1, 0, state.rotation
+                1, 0, state.rotation, k + '_right'
             );
         });
     },
@@ -2197,6 +2205,8 @@ const SetbackEngine = {
             const on = !MapEngine.showBldgDims;
             MapEngine.showBldgDims = on;
             MapEngine.showDims     = on;
+            // Reset hidden dims when toggling — fresh slate each toggle cycle
+            MapEngine.hiddenDimKeys.clear();
             const btn = document.getElementById('bldgDimBtn');
             btn.classList.toggle('active', on);
             btn.textContent = on ? 'Hide Dims' : 'Show Dims';
@@ -2204,10 +2214,11 @@ const SetbackEngine = {
             MapEngine.updateDimLabels();
         });
 
-        // Restore dim toggle from saved config
+        // Restore dim toggle + hidden keys from saved config
         const dimsOn = state.showBldgDims || false;
         MapEngine.showBldgDims = dimsOn;
         MapEngine.showDims     = dimsOn;
+        if (state.hiddenDimKeys) state.hiddenDimKeys.forEach(k => MapEngine.hiddenDimKeys.add(k));
         const dimBtn = document.getElementById('bldgDimBtn');
         dimBtn.classList.toggle('active', dimsOn);
         if (dimsOn) dimBtn.textContent = 'Hide Dims';
@@ -2240,7 +2251,8 @@ const SetbackEngine = {
             buildings:      state.buildings,
             activeBuilding: state.activeBuilding,
             commFront:      state.commFront,
-            showBldgDims:   state.showBldgDims
+            showBldgDims:   state.showBldgDims,
+            hiddenDimKeys:  [...MapEngine.hiddenDimKeys]
         }));
         this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';

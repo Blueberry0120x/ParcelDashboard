@@ -6,6 +6,7 @@ const MapEngine = {
     gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
     dimLabels: [], showDims: false,
     bldgDimLabels: [], showBldgDims: false,
+    hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -213,14 +214,16 @@ const MapEngine = {
         };
 
         const OFF = 7; // ft outward offset from edge
+        const sides = ['lot_front','lot_rear','lot_right','lot_left'];
         const edges = [
-            { mid: {x: -h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x:-1, y:0} },
-            { mid: {x:  h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x: 1, y:0} },
-            { mid: {x:  0,     y:  w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:1} },
-            { mid: {x:  0,     y: -w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:-1} },
+            { mid: {x: -h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x:-1, y:0}, key: sides[0] },
+            { mid: {x:  h/2,   y: 0    }, text: h + ' FT', rotAngle: rot + 90, off: {x: 1, y:0}, key: sides[1] },
+            { mid: {x:  0,     y:  w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:1}, key: sides[2] },
+            { mid: {x:  0,     y: -w/2 }, text: w + ' FT', rotAngle: rot,      off: {x:0,  y:-1}, key: sides[3] },
         ];
 
-        edges.forEach((e, idx) => {
+        edges.forEach((e) => {
+            if (this.hiddenDimKeys.has(e.key)) return; // skip if user hid this
             const pos = toLL({ x: e.mid.x + e.off.x * OFF, y: e.mid.y + e.off.y * OFF });
             const m = L.marker(pos, {
                 icon: L.divIcon({
@@ -230,8 +233,9 @@ const MapEngine = {
                 }),
                 interactive: true
             }).addTo(this.map);
-            // Click to hide individual lot dim label
+            // Click to hide — persists across redraws
             m.on('click', () => {
+                this.hiddenDimKeys.add(e.key);
                 this.map.removeLayer(m);
                 const i = this.dimLabels.indexOf(m);
                 if (i !== -1) this.dimLabels.splice(i, 1);

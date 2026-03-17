@@ -51,6 +51,7 @@ const ConfigEngine = {
                 this.state.floorHeight    = bldg.floorHeight || 9;
                 this.state.commFront      = bldg.commFront   || false;
                 this.state.showBldgDims   = bldg.showBldgDims || false;
+                this.state.hiddenDimKeys  = bldg.hiddenDimKeys || [];
                 // Migrate older builds lacking per-building stories/floorHeight
                 this.state.buildings.forEach(b => {
                     if (!('stories'     in b)) b.stories     = this.state.stories;
