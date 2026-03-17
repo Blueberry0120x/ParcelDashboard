@@ -68,15 +68,18 @@ const MapEngine = {
             const lx    = rx * cos + ry * sin;
             const ly    = -rx * sin + ry * cos;
             const { front, rear, sideL, sideR } = state.setbacks;
-            bldg.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
-            bldg.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
-            // Back-compute spacing from new offsetX
+            let newOffsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
+            bldg.offsetY   = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
+            // Enforce non-overlap: cannot drag past previous building (min gap = 0)
             if (idx > 0) {
-                const prev    = state.buildings[idx - 1];
-                const prevExt = SetbackEngine._buildingExtents(prev);
-                const thisExt = SetbackEngine._buildingExtents(bldg);
-                bldg.spacing  = parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
+                const prev       = state.buildings[idx - 1];
+                const prevExt    = SetbackEngine._buildingExtents(prev);
+                const thisExt    = SetbackEngine._buildingExtents(bldg);
+                const minOffsetX = prev.offsetX + prevExt.halfDepth + thisExt.halfDepth;
+                newOffsetX       = Math.max(minOffsetX, newOffsetX);
+                bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
+            bldg.offsetX = newOffsetX;
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -260,7 +263,19 @@ const MapEngine = {
             }
             sldr.disabled = locked;
             inp.disabled  = locked;
+            localStorage.setItem('site_locked', locked ? '1' : '0');
         });
+
+        // Restore lock visual state on load
+        if (ConfigEngine.state.locked) {
+            const btn = document.getElementById('lockPositionBtn');
+            btn.textContent = 'Locked';
+            btn.classList.add('locked');
+            this.dragMarker.dragging.disable();
+            this.dragMarker.setOpacity(0.35);
+            sldr.disabled = true;
+            inp.disabled  = true;
+        }
     }
 };
 

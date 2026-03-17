@@ -61,8 +61,8 @@ const SetbackEngine = {
         const yMin  = -lotW / 2 + halfWidth;
         const yMax  =  lotW / 2 - halfWidth;
         return {
-            cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, cx)) : 0,
-            cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy)) : 0
+            cx: Math.max(xMin <= xMax ? xMin : -lotD/2, Math.min(xMin <= xMax ? xMax : lotD/2, cx)),
+            cy: Math.max(yMin <= yMax ? yMin : -lotW/2, Math.min(yMin <= yMax ? yMax : lotW/2, cy))
         };
     },
 
@@ -76,6 +76,25 @@ const SetbackEngine = {
         const prevExt = this._buildingExtents(prev);
         const thisExt = this._buildingExtents(bldg);
         return parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
+    },
+
+    _maxGap: function(idx) {
+        const state = ConfigEngine.state;
+        if (idx <= 0 || idx >= state.buildings.length) return null;
+        const { depth: lotD } = ConfigEngine.data;
+        const { front, rear } = state.setbacks;
+        const prev    = state.buildings[idx - 1];
+        const bldg    = state.buildings[idx];
+        const prevExt = this._buildingExtents(prev);
+        const thisExt = this._buildingExtents(bldg);
+        const count   = bldg.count        || 1;
+        const sS      = bldg.stackSpacing || 0;
+        const anchor  = bldg.anchor       || 'center';
+        const step    = thisExt.halfDepth * 2 + sS;
+        const aOff    = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+        const xMax       = lotD / 2 - (count - 1 - aOff) * step - thisExt.halfDepth;
+        const maxOffsetX = xMax - (front - rear) / 2;
+        return parseFloat((maxOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
     },
 
     _applyGap: function(idx, gap) {
@@ -134,15 +153,22 @@ const SetbackEngine = {
         document.getElementById('bldgStackSpacing').value   = (bldg.stackSpacing || 0).toFixed(1);
 
         // Inter-building spacing (S) — disabled for B1
-        const spEl = document.getElementById('bldgSpacing');
+        const spEl   = document.getElementById('bldgSpacing');
+        const sHint  = document.getElementById('spacingHint');
         if (spEl) {
             if (idx > 0) {
-                const gap = this._computeGap(idx);
+                const gap    = this._computeGap(idx);
+                const maxGap = this._maxGap(idx);
                 spEl.value    = gap !== null ? gap.toFixed(1) : '0.0';
                 spEl.disabled = false;
+                if (sHint && maxGap !== null) {
+                    sHint.title = 'Max: ' + maxGap.toFixed(1) + ' ft';
+                    sHint.style.display = '';
+                }
             } else {
                 spEl.value    = '—';
                 spEl.disabled = true;
+                if (sHint) sHint.style.display = 'none';
             }
         }
 
@@ -238,18 +264,31 @@ const SetbackEngine = {
 
             const rawCx = (front - rear) / 2 + (bldg.offsetX || 0);
             const rawCy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-            const { cx: baseCx, cy } = this._clampToLot(rawCx, rawCy, bldg);
 
-            // Update state if clamped
+            // Non-overlap first: push preCx past previous building if needed
+            let preCx = rawCx;
+            if (i > 0) {
+                const prev       = buildings[i - 1];
+                const prevExt    = this._buildingExtents(prev);
+                const thisExt    = this._buildingExtents(bldg);
+                const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
+                preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
+            }
+            // Lot boundary is always the final constraint — clamp wins over non-overlap
+            let { cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg);
+
+            // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
             const newOY = parseFloat((cy - (sideR - sideL) / 2).toFixed(1));
             if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
                 bldg.offsetX = newOX; bldg.offsetY = newOY;
                 if (state.activeBuilding === i) {
-                    const ox = document.getElementById('bldgOffsetX');
-                    const oy = document.getElementById('bldgOffsetY');
+                    const ox   = document.getElementById('bldgOffsetX');
+                    const oy   = document.getElementById('bldgOffsetY');
+                    const spEl = document.getElementById('bldgSpacing');
                     if (ox) ox.value = newOX.toFixed(1);
                     if (oy) oy.value = newOY.toFixed(1);
+                    if (i > 0 && spEl && !spEl.disabled) spEl.value = this._computeGap(i).toFixed(1);
                 }
             }
 
@@ -317,9 +356,9 @@ const SetbackEngine = {
         const totalArea      = totalFootprint * stories;
         const actualFAR      = totalArea / lotArea;
 
-        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+        const set = (id, txt) => { const el = document.getElementById(id); if (!el) return; if (el.tagName === 'INPUT') el.value = txt; else el.textContent = txt; };
 
-        set('bldgFootprintArea', Math.round(footprintSF).toLocaleString() + ' sf');
+        set('bldgFootprintArea', Math.round(footprintSF).toLocaleString());
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
         set('bldgFAR',           actualFAR.toFixed(2));
         set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
@@ -333,6 +372,10 @@ const SetbackEngine = {
                 : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
             chkEl.style.color = ok ? '#2f855a' : '#c53030';
         }
+
+        const floorH      = state.floorHeight || 9;
+        const totalHeight = stories === 1 ? floorH : stories * (floorH + 1);
+        set('bldgTotalHeight', totalHeight.toFixed(0));
     },
 
     // ── Init wiring ───────────────────────────────────────────────────────────
@@ -348,7 +391,8 @@ const SetbackEngine = {
 
         this._seedInputsFromBuilding(state.activeBuilding);
 
-        document.getElementById('bldgStories').value = state.stories || 1;
+        document.getElementById('bldgStories').value     = state.stories     || 1;
+        document.getElementById('bldgFloorHeight').value = state.floorHeight || 9;
         const chk = document.getElementById('commFrontCheck');
         if (chk) chk.checked = state.commFront || false;
 
@@ -414,23 +458,54 @@ const SetbackEngine = {
             spInp.addEventListener('change', () => {
                 const idx = state.activeBuilding;
                 if (idx <= 0) return;
-                const gap = parseFloat(spInp.value);
+                let gap = parseFloat(spInp.value);
                 if (isNaN(gap)) return;
+                gap = Math.max(0, gap);
+                const maxGap = this._maxGap(idx);
+                if (maxGap !== null) gap = Math.min(gap, maxGap);
+                spInp.value = gap.toFixed(1);
                 this._applyGap(idx, gap);
                 this.drawBuilding();
             });
         }
 
-        // Count (per-building stack copies)
+        // Count (per-building stack copies) — capped so stack fits in lot
         document.getElementById('bldgCount').addEventListener('change', () => {
             const bldg = state.buildings[state.activeBuilding];
-            if (bldg) { bldg.count = parseInt(document.getElementById('bldgCount').value) || 1; this.drawBuilding(); }
+            if (!bldg) return;
+            const { depth: lotD } = ConfigEngine.data;
+            const ext  = this._buildingExtents(bldg);
+            const sS   = bldg.stackSpacing || 0;
+            const step = ext.halfDepth * 2 + sS;
+            const maxN = Math.max(1, Math.floor((lotD + sS) / step));
+            let n = Math.max(1, Math.min(parseInt(document.getElementById('bldgCount').value) || 1, maxN));
+            document.getElementById('bldgCount').value = n;
+            bldg.count = n;
+            this.drawBuilding();
         });
 
-        // Stack spacing (within-building gap between copies)
+        // Stack spacing — capped so full stack stays within lot; re-caps count if needed
         document.getElementById('bldgStackSpacing').addEventListener('change', () => {
             const bldg = state.buildings[state.activeBuilding];
-            if (bldg) { bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0; this.drawBuilding(); }
+            if (!bldg) return;
+            const { depth: lotD } = ConfigEngine.data;
+            const ext   = this._buildingExtents(bldg);
+            const count = bldg.count || 1;
+            let g = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
+            if (count > 1) {
+                const maxG = Math.max(0, parseFloat(((lotD - 2 * ext.halfDepth * count) / (count - 1)).toFixed(1)));
+                g = Math.min(g, maxG);
+                document.getElementById('bldgStackSpacing').value = g.toFixed(1);
+            }
+            bldg.stackSpacing = g;
+            // Re-cap count in case new spacing reduces how many fit
+            const newStep = ext.halfDepth * 2 + g;
+            const newMaxN = Math.max(1, Math.floor((lotD + g) / newStep));
+            if (count > newMaxN) {
+                bldg.count = newMaxN;
+                document.getElementById('bldgCount').value = newMaxN;
+            }
+            this.drawBuilding();
         });
 
         // Anchor buttons (per-building)
@@ -448,6 +523,12 @@ const SetbackEngine = {
         // Stories (global)
         document.getElementById('bldgStories').addEventListener('change', () => {
             state.stories = parseInt(document.getElementById('bldgStories').value) || 1;
+            this.updateFAR();
+        });
+
+        // Floor height (global)
+        document.getElementById('bldgFloorHeight').addEventListener('change', () => {
+            state.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
             this.updateFAR();
         });
 
@@ -477,15 +558,17 @@ const SetbackEngine = {
             bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
             bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
         }
-        state.stories   = parseInt(document.getElementById('bldgStories').value) || 1;
-        state.commFront = document.getElementById('commFrontCheck')?.checked || false;
+        state.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
+        state.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
+        state.commFront   = document.getElementById('commFrontCheck')?.checked           || false;
         localStorage.setItem('building_config', JSON.stringify({
             buildings:      state.buildings,
             activeBuilding: state.activeBuilding,
             stories:        state.stories,
+            floorHeight:    state.floorHeight,
             commFront:      state.commFront
         }));
-        this.drawBuilding();
+        this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },

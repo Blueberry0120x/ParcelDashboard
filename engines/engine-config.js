@@ -21,6 +21,7 @@ const ConfigEngine = {
         buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }],
         activeBuilding: 0,
         stories:        1,
+        floorHeight:    9,
         commFront:      false
     },
     init: function() {
@@ -32,6 +33,7 @@ const ConfigEngine = {
         this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
         this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
         if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
+        if (localStorage.getItem('site_locked') === '1') this.state.locked = true;
         const sb   = JSON.parse(localStorage.getItem('saved_setbacks')  || 'null');
         const bldg = JSON.parse(localStorage.getItem('building_config') || 'null');
         if (sb) this.state.setbacks = sb;
@@ -40,8 +42,9 @@ const ConfigEngine = {
                 // New format
                 this.state.buildings      = bldg.buildings;
                 this.state.activeBuilding = bldg.activeBuilding || 0;
-                this.state.stories        = bldg.stories  || 1;
-                this.state.commFront      = bldg.commFront || false;
+                this.state.stories        = bldg.stories     || 1;
+                this.state.floorHeight    = bldg.floorHeight || 9;
+                this.state.commFront      = bldg.commFront   || false;
             } else if (bldg.width) {
                 // Migrate old single-object format
                 this.state.buildings  = [{ orientation: bldg.orientation || 0, width: bldg.width, height: bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0 }];
@@ -68,6 +71,7 @@ const ConfigEngine = {
         this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }];
         this.state.activeBuilding = 0;
         this.state.stories        = 1;
+        this.state.floorHeight    = 9;
         this.state.commFront      = false;
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');

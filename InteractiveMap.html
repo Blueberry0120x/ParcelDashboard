@@ -23,6 +23,18 @@
     --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
     --line: #dbe3ee; --cad-bg: #1a1a1a; --cad-text: #e0e0e0;
     --cad-border: #444; --cad-accent: #d670d6;
+
+    /* ── DIMENSION CALLOUT SETTINGS ── */
+    --dim-color: #000;           /* line + text color        */
+    --dim-line-w: 1.5;             /* dim line weight (px)     */
+    --dim-tick-w: 1.5;           /* tick slash weight (px)   */
+    --dim-tick-size: 1.5;        /* tick slash length (ft)   */
+    --dim-ext-w: 1;              /* extension line weight    */
+    --dim-font: 900 14px/1 'Segoe UI', system-ui, sans-serif;
+    --dim-pad: 2px 8px;          /* text background padding  */
+    --dim-gap-lot: 30;            /* line break gap - lot (px) */
+    --dim-gap-chain: 30;         /* line break gap - chain (px)*/
+    --dim-offset: 6;             /* distance from geometry   */
 }
 body {
     font-family: 'Segoe UI', system-ui, sans-serif;
@@ -177,10 +189,20 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 }
 .btn-save-config:hover { background: #6b46c1; }
 .align-angle-input {
-    width: 100%; text-align: right; border: none; border-bottom: 1px dashed #a0aec0;
-    font-weight: bold; background: transparent; color: var(--text); outline: none;
-    font-size: 0.9em; padding: 0 1px 0 0; height: 1.25em; line-height: 1.25;
-    box-sizing: content-box;
+    width: 100%; text-align: right;
+    border: 1px solid #cbd5e0; border-radius: 3px;
+    background: white; color: var(--text); outline: none;
+    font-size: 0.85em; font-weight: 600;
+    padding: 2px 4px; box-sizing: border-box;
+}
+.align-angle-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(15,76,129,0.15); }
+.align-angle-input:disabled { background: #f0f2f5; color: #a0aec0; border-color: #e2e8f0; cursor: default; }
+.align-angle-input[readonly] { background: #f0f2f5; color: #0f4c81; border-color: #e2e8f0; cursor: default; font-weight: 700; }
+#bldgFootprintArea { border: 2px solid #0f4c81; }
+.s-hint {
+    cursor: help; color: #0f4c81; font-weight: 800; font-size: 0.78em;
+    border: 1px solid #0f4c81; border-radius: 50%; padding: 0 2px;
+    line-height: 1; display: inline-block; vertical-align: middle;
 }
 .align-btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
 .btn-align {
@@ -226,16 +248,12 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     gap: 8px 10px; align-items: center; font-size: 0.88em;
 }
 .building-grid > strong { color: #4a5568; white-space: nowrap; grid-column: 1; }
-.building-grid input[type="range"] { width: 100%; margin: 0; }
-.footprint-inputs {
-    display: grid;
-    grid-template-columns: 12px 48px 20px 12px 48px 20px 1fr;
-    align-items: center; column-gap: 4px; grid-column: 2 / -1;
-}
+.building-grid input[type="range"] { width: calc(100% - 10px); margin: 0 0 0 10px; }
+.footprint-inputs,
 .offset-inputs {
     display: grid;
-    grid-template-columns: 10px 40px 15px 10px 40px 15px 10px 40px 15px;
-    align-items: center; column-gap: 3px; grid-column: 2 / -1;
+    grid-template-columns: 10px 1fr 18px 10px 1fr 18px 10px 1fr 18px;
+    align-items: center; column-gap: 4px; grid-column: 2 / -1;
 }
 .footprint-inputs label, .offset-inputs label { font-size: inherit; font-weight: 700; color: #4a5568; text-transform: uppercase; text-align: right; }
 .footprint-inputs .ft-label, .offset-inputs .ft-label { font-size: 0.82em; color: #718096; }
@@ -398,6 +416,9 @@ input:checked + .slider:before { transform: translateX(20px); }
 .elev-label { background: #fff !important; border: 2px solid #0f4c81 !important;
     color: #0f4c81 !important; font-weight: 700 !important; font-size: 0.78em !important;
     padding: 2px 6px !important; border-radius: 4px !important; white-space: nowrap !important; }
+/* Dimension labels — no pill, no box, just text */
+.dim-txt{background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0!important}
+.dim-txt::before{display:none!important}
 
 </style>
 </head>
@@ -511,7 +532,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 style="margin:0;">Building Config</h3>
-                        <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                        <div style="display:flex;gap:4px;"><button id="showDimsBtn" style="flex:0 0 auto;padding:4px 12px;border:none;border-radius:4px;font-weight:bold;font-size:0.76em;cursor:pointer;color:white;background:#2b6cb0;transition:0.2s;white-space:nowrap">Show Dims</button><button id="saveConfigBtn" class="btn-save-config">Save Config</button></div>
                     </div>
                     <div class="building-grid">
                         <strong>Orientation:</strong>
@@ -525,10 +546,12 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <label>W</label>
                             <input type="number" id="bldgWidth"  class="align-angle-input" value="30.0" min="1" step="0.5">
                             <span class="ft-label">ft</span>
-                            <label>H</label>
+                            <label>L</label>
                             <input type="number" id="bldgHeight" class="align-angle-input" value="60.0" min="1" step="0.5">
                             <span class="ft-label">ft</span>
-                            <span id="bldgFootprintArea" class="fp-area-badge">—</span>
+                            <label>A</label>
+                            <input type="text" id="bldgFootprintArea" class="align-angle-input" readonly tabindex="-1">
+                            <span class="ft-label">sf</span>
                         </div>
                         <strong>Offset:</strong>
                         <div class="offset-inputs">
@@ -540,7 +563,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <span class="ft-label">ft</span>
                             <label title="Gap from previous building">S</label>
                             <input type="number" id="bldgSpacing" class="align-angle-input" value="0" step="0.5" disabled>
-                            <span class="ft-label">ft</span>
+                            <span class="ft-label">ft <span id="spacingHint" class="s-hint" title="Max: —">?</span></span>
                         </div>
                         <strong>Buildings:</strong>
                         <div id="bldgSelector" class="bldg-selector" style="grid-column: 2 / -1;">
@@ -563,14 +586,16 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <button id="anchorRear"   class="anchor-btn">Rear &#8594;</button>
                         </div>
                         <strong>Stories:</strong>
-                        <div class="deg-input-wrap">
+                        <div class="footprint-inputs">
+                            <label>N</label>
                             <input type="number" id="bldgStories" class="align-angle-input" value="1" min="1" step="1">
-                            <span style="font-weight:bold;">flr</span>
-                        </div>
-                        <strong>FAR:</strong>
-                        <div style="grid-column: 2 / -1; padding-left: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
-                            <span id="bldgFAR" style="font-weight: 700; color: #0f4c81; font-size: 1.05em;">—</span>
-                            <span id="bldgFARCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
+                            <span class="ft-label">flr</span>
+                            <label>H</label>
+                            <input type="number" id="bldgFloorHeight" class="align-angle-input" value="9" min="1" step="0.5">
+                            <span class="ft-label">ft</span>
+                            <label>=</label>
+                            <input type="text" id="bldgTotalHeight" class="align-angle-input" readonly tabindex="-1">
+                            <span class="ft-label">ft</span>
                         </div>
                         <strong>Zone:</strong>
                         <div style="grid-column: 2 / -1; padding-left: 12px; display: flex; align-items: center; justify-content: space-between;">
@@ -583,6 +608,11 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <div style="grid-column: 2 / -1; padding-left: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
                             <span id="bldgTotalArea" style="font-weight: 700; color: #2d3748; font-size: 1.05em;">—</span>
                             <span id="bldgBuildable" style="font-weight: 600; color: #2f855a; white-space: nowrap; font-size: 1em;">—</span>
+                        </div>
+                        <strong>FAR:</strong>
+                        <div style="grid-column: 2 / -1; padding-left: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
+                            <span id="bldgFAR" style="font-weight: 700; color: #0f4c81; font-size: 1.05em;">—</span>
+                            <span id="bldgFARCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
                         </div>
                     </div>
                 </div>
@@ -723,6 +753,7 @@ const ConfigEngine = {
         buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }],
         activeBuilding: 0,
         stories:        1,
+        floorHeight:    9,
         commFront:      false
     },
     init: function() {
@@ -734,6 +765,7 @@ const ConfigEngine = {
         this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
         this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
         if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
+        if (localStorage.getItem('site_locked') === '1') this.state.locked = true;
         const sb   = JSON.parse(localStorage.getItem('saved_setbacks')  || 'null');
         const bldg = JSON.parse(localStorage.getItem('building_config') || 'null');
         if (sb) this.state.setbacks = sb;
@@ -742,8 +774,9 @@ const ConfigEngine = {
                 // New format
                 this.state.buildings      = bldg.buildings;
                 this.state.activeBuilding = bldg.activeBuilding || 0;
-                this.state.stories        = bldg.stories  || 1;
-                this.state.commFront      = bldg.commFront || false;
+                this.state.stories        = bldg.stories     || 1;
+                this.state.floorHeight    = bldg.floorHeight || 9;
+                this.state.commFront      = bldg.commFront   || false;
             } else if (bldg.width) {
                 // Migrate old single-object format
                 this.state.buildings  = [{ orientation: bldg.orientation || 0, width: bldg.width, height: bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0 }];
@@ -770,6 +803,7 @@ const ConfigEngine = {
         this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }];
         this.state.activeBuilding = 0;
         this.state.stories        = 1;
+        this.state.floorHeight    = 9;
         this.state.commFront      = false;
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');
@@ -1016,15 +1050,18 @@ const MapEngine = {
             const lx    = rx * cos + ry * sin;
             const ly    = -rx * sin + ry * cos;
             const { front, rear, sideL, sideR } = state.setbacks;
-            bldg.offsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
-            bldg.offsetY = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
-            // Back-compute spacing from new offsetX
+            let newOffsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
+            bldg.offsetY   = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
+            // Enforce non-overlap: cannot drag past previous building (min gap = 0)
             if (idx > 0) {
-                const prev    = state.buildings[idx - 1];
-                const prevExt = SetbackEngine._buildingExtents(prev);
-                const thisExt = SetbackEngine._buildingExtents(bldg);
-                bldg.spacing  = parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
+                const prev       = state.buildings[idx - 1];
+                const prevExt    = SetbackEngine._buildingExtents(prev);
+                const thisExt    = SetbackEngine._buildingExtents(bldg);
+                const minOffsetX = prev.offsetX + prevExt.halfDepth + thisExt.halfDepth;
+                newOffsetX       = Math.max(minOffsetX, newOffsetX);
+                bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
+            bldg.offsetX = newOffsetX;
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -1094,6 +1131,16 @@ const MapEngine = {
         this.map.addControl(new HelpControl());
     },
 
+    updateCommStyle: function() {
+        var cp = this.commPoly;
+        if (!cp) return;
+        if (ConfigEngine.state.commFront) {
+            cp.setStyle({ fillOpacity: 0, weight: 2, dashArray: '6 4', color: '#0f4c81' });
+        } else {
+            cp.setStyle({ fillOpacity: 0.12, weight: 1, dashArray: null, color: '#0f4c81' });
+        }
+    },
+
     updateNorthArrow: function() {
         const arm = document.getElementById('siteNorthArm');
         if (!arm) return;
@@ -1120,6 +1167,7 @@ const MapEngine = {
 
         this.lotPoly.setLatLngs(baseLot.map(transform));
         this.commPoly.setLatLngs(baseComm.map(transform));
+        this.updateCommStyle();
         this.updateNorthArrow();
 
         if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
@@ -1208,7 +1256,19 @@ const MapEngine = {
             }
             sldr.disabled = locked;
             inp.disabled  = locked;
+            localStorage.setItem('site_locked', locked ? '1' : '0');
         });
+
+        // Restore lock visual state on load
+        if (ConfigEngine.state.locked) {
+            const btn = document.getElementById('lockPositionBtn');
+            btn.textContent = 'Locked';
+            btn.classList.add('locked');
+            this.dragMarker.dragging.disable();
+            this.dragMarker.setOpacity(0.35);
+            sldr.disabled = true;
+            inp.disabled  = true;
+        }
     }
 };
 
@@ -1375,8 +1435,8 @@ const SetbackEngine = {
         const yMin  = -lotW / 2 + halfWidth;
         const yMax  =  lotW / 2 - halfWidth;
         return {
-            cx: (xMin <= xMax) ? Math.max(xMin, Math.min(xMax, cx)) : 0,
-            cy: (yMin <= yMax) ? Math.max(yMin, Math.min(yMax, cy)) : 0
+            cx: Math.max(xMin <= xMax ? xMin : -lotD/2, Math.min(xMin <= xMax ? xMax : lotD/2, cx)),
+            cy: Math.max(yMin <= yMax ? yMin : -lotW/2, Math.min(yMin <= yMax ? yMax : lotW/2, cy))
         };
     },
 
@@ -1390,6 +1450,25 @@ const SetbackEngine = {
         const prevExt = this._buildingExtents(prev);
         const thisExt = this._buildingExtents(bldg);
         return parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
+    },
+
+    _maxGap: function(idx) {
+        const state = ConfigEngine.state;
+        if (idx <= 0 || idx >= state.buildings.length) return null;
+        const { depth: lotD } = ConfigEngine.data;
+        const { front, rear } = state.setbacks;
+        const prev    = state.buildings[idx - 1];
+        const bldg    = state.buildings[idx];
+        const prevExt = this._buildingExtents(prev);
+        const thisExt = this._buildingExtents(bldg);
+        const count   = bldg.count        || 1;
+        const sS      = bldg.stackSpacing || 0;
+        const anchor  = bldg.anchor       || 'center';
+        const step    = thisExt.halfDepth * 2 + sS;
+        const aOff    = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+        const xMax       = lotD / 2 - (count - 1 - aOff) * step - thisExt.halfDepth;
+        const maxOffsetX = xMax - (front - rear) / 2;
+        return parseFloat((maxOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
     },
 
     _applyGap: function(idx, gap) {
@@ -1448,15 +1527,22 @@ const SetbackEngine = {
         document.getElementById('bldgStackSpacing').value   = (bldg.stackSpacing || 0).toFixed(1);
 
         // Inter-building spacing (S) — disabled for B1
-        const spEl = document.getElementById('bldgSpacing');
+        const spEl   = document.getElementById('bldgSpacing');
+        const sHint  = document.getElementById('spacingHint');
         if (spEl) {
             if (idx > 0) {
-                const gap = this._computeGap(idx);
+                const gap    = this._computeGap(idx);
+                const maxGap = this._maxGap(idx);
                 spEl.value    = gap !== null ? gap.toFixed(1) : '0.0';
                 spEl.disabled = false;
+                if (sHint && maxGap !== null) {
+                    sHint.title = 'Max: ' + maxGap.toFixed(1) + ' ft';
+                    sHint.style.display = '';
+                }
             } else {
                 spEl.value    = '—';
                 spEl.disabled = true;
+                if (sHint) sHint.style.display = 'none';
             }
         }
 
@@ -1552,18 +1638,31 @@ const SetbackEngine = {
 
             const rawCx = (front - rear) / 2 + (bldg.offsetX || 0);
             const rawCy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-            const { cx: baseCx, cy } = this._clampToLot(rawCx, rawCy, bldg);
 
-            // Update state if clamped
+            // Non-overlap first: push preCx past previous building if needed
+            let preCx = rawCx;
+            if (i > 0) {
+                const prev       = buildings[i - 1];
+                const prevExt    = this._buildingExtents(prev);
+                const thisExt    = this._buildingExtents(bldg);
+                const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
+                preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
+            }
+            // Lot boundary is always the final constraint — clamp wins over non-overlap
+            let { cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg);
+
+            // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
             const newOY = parseFloat((cy - (sideR - sideL) / 2).toFixed(1));
             if (newOX !== bldg.offsetX || newOY !== bldg.offsetY) {
                 bldg.offsetX = newOX; bldg.offsetY = newOY;
                 if (state.activeBuilding === i) {
-                    const ox = document.getElementById('bldgOffsetX');
-                    const oy = document.getElementById('bldgOffsetY');
+                    const ox   = document.getElementById('bldgOffsetX');
+                    const oy   = document.getElementById('bldgOffsetY');
+                    const spEl = document.getElementById('bldgSpacing');
                     if (ox) ox.value = newOX.toFixed(1);
                     if (oy) oy.value = newOY.toFixed(1);
+                    if (i > 0 && spEl && !spEl.disabled) spEl.value = this._computeGap(i).toFixed(1);
                 }
             }
 
@@ -1610,6 +1709,7 @@ const SetbackEngine = {
         });
 
         this.updateFAR();
+        if (typeof DimensionEngine!=='undefined'&&DimensionEngine._visible) DimensionEngine.draw();
     },
 
     updateFAR: function() {
@@ -1631,9 +1731,9 @@ const SetbackEngine = {
         const totalArea      = totalFootprint * stories;
         const actualFAR      = totalArea / lotArea;
 
-        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+        const set = (id, txt) => { const el = document.getElementById(id); if (!el) return; if (el.tagName === 'INPUT') el.value = txt; else el.textContent = txt; };
 
-        set('bldgFootprintArea', Math.round(footprintSF).toLocaleString() + ' sf');
+        set('bldgFootprintArea', Math.round(footprintSF).toLocaleString());
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
         set('bldgFAR',           actualFAR.toFixed(2));
         set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
@@ -1647,6 +1747,10 @@ const SetbackEngine = {
                 : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
             chkEl.style.color = ok ? '#2f855a' : '#c53030';
         }
+
+        const floorH      = state.floorHeight || 9;
+        const totalHeight = stories === 1 ? floorH : stories * (floorH + 1);
+        set('bldgTotalHeight', totalHeight.toFixed(0));
     },
 
     // ── Init wiring ───────────────────────────────────────────────────────────
@@ -1662,7 +1766,8 @@ const SetbackEngine = {
 
         this._seedInputsFromBuilding(state.activeBuilding);
 
-        document.getElementById('bldgStories').value = state.stories || 1;
+        document.getElementById('bldgStories').value     = state.stories     || 1;
+        document.getElementById('bldgFloorHeight').value = state.floorHeight || 9;
         const chk = document.getElementById('commFrontCheck');
         if (chk) chk.checked = state.commFront || false;
 
@@ -1728,23 +1833,54 @@ const SetbackEngine = {
             spInp.addEventListener('change', () => {
                 const idx = state.activeBuilding;
                 if (idx <= 0) return;
-                const gap = parseFloat(spInp.value);
+                let gap = parseFloat(spInp.value);
                 if (isNaN(gap)) return;
+                gap = Math.max(0, gap);
+                const maxGap = this._maxGap(idx);
+                if (maxGap !== null) gap = Math.min(gap, maxGap);
+                spInp.value = gap.toFixed(1);
                 this._applyGap(idx, gap);
                 this.drawBuilding();
             });
         }
 
-        // Count (per-building stack copies)
+        // Count (per-building stack copies) — capped so stack fits in lot
         document.getElementById('bldgCount').addEventListener('change', () => {
             const bldg = state.buildings[state.activeBuilding];
-            if (bldg) { bldg.count = parseInt(document.getElementById('bldgCount').value) || 1; this.drawBuilding(); }
+            if (!bldg) return;
+            const { depth: lotD } = ConfigEngine.data;
+            const ext  = this._buildingExtents(bldg);
+            const sS   = bldg.stackSpacing || 0;
+            const step = ext.halfDepth * 2 + sS;
+            const maxN = Math.max(1, Math.floor((lotD + sS) / step));
+            let n = Math.max(1, Math.min(parseInt(document.getElementById('bldgCount').value) || 1, maxN));
+            document.getElementById('bldgCount').value = n;
+            bldg.count = n;
+            this.drawBuilding();
         });
 
-        // Stack spacing (within-building gap between copies)
+        // Stack spacing — capped so full stack stays within lot; re-caps count if needed
         document.getElementById('bldgStackSpacing').addEventListener('change', () => {
             const bldg = state.buildings[state.activeBuilding];
-            if (bldg) { bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0; this.drawBuilding(); }
+            if (!bldg) return;
+            const { depth: lotD } = ConfigEngine.data;
+            const ext   = this._buildingExtents(bldg);
+            const count = bldg.count || 1;
+            let g = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
+            if (count > 1) {
+                const maxG = Math.max(0, parseFloat(((lotD - 2 * ext.halfDepth * count) / (count - 1)).toFixed(1)));
+                g = Math.min(g, maxG);
+                document.getElementById('bldgStackSpacing').value = g.toFixed(1);
+            }
+            bldg.stackSpacing = g;
+            // Re-cap count in case new spacing reduces how many fit
+            const newStep = ext.halfDepth * 2 + g;
+            const newMaxN = Math.max(1, Math.floor((lotD + g) / newStep));
+            if (count > newMaxN) {
+                bldg.count = newMaxN;
+                document.getElementById('bldgCount').value = newMaxN;
+            }
+            this.drawBuilding();
         });
 
         // Anchor buttons (per-building)
@@ -1765,12 +1901,21 @@ const SetbackEngine = {
             this.updateFAR();
         });
 
-        // Comm. Front (global)
-        if (chk) chk.addEventListener('change', () => {
-            state.commFront = chk.checked;
+        // Floor height (global)
+        document.getElementById('bldgFloorHeight').addEventListener('change', () => {
+            state.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
             this.updateFAR();
         });
 
+        // Comm. Front (global) — toggles commercial zone from filled box to dashed line
+        if (chk) chk.addEventListener('change', () => {
+            state.commFront = chk.checked;
+            MapEngine.updateCommStyle();
+            this.updateFAR();
+        });
+
+        document.getElementById('showDimsBtn').addEventListener('click',()=>DimensionEngine.toggle());
+        DimensionEngine.restore();
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
         document.getElementById('bldgDelBtn').addEventListener('click', () => this.removeLastBuilding());
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
@@ -1791,15 +1936,17 @@ const SetbackEngine = {
             bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
             bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
         }
-        state.stories   = parseInt(document.getElementById('bldgStories').value) || 1;
-        state.commFront = document.getElementById('commFrontCheck')?.checked || false;
+        state.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
+        state.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
+        state.commFront   = document.getElementById('commFrontCheck')?.checked           || false;
         localStorage.setItem('building_config', JSON.stringify({
             buildings:      state.buildings,
             activeBuilding: state.activeBuilding,
             stories:        state.stories,
+            floorHeight:    state.floorHeight,
             commFront:      state.commFront
         }));
-        this.drawBuilding();
+        this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },
@@ -1830,6 +1977,147 @@ const SetbackEngine = {
     }
 };
 
+</script>
+<script>
+/* ==========================================
+   ENGINE 7: DIMENSION OVERLAY — Architectural Style
+   ========================================== */
+const DimensionEngine={_layer:null,_visible:false,
+// Read all settings from :root CSS variables
+_css:function(k){return getComputedStyle(document.documentElement).getPropertyValue(k).trim()},
+get C(){return this._css('--dim-color')||'#000'},
+get W(){return parseFloat(this._css('--dim-line-w'))||2},
+get TW(){return parseFloat(this._css('--dim-tick-w'))||2.5},
+get TS(){return parseFloat(this._css('--dim-tick-size'))||1.8},
+get EW(){return parseFloat(this._css('--dim-ext-w'))||1},
+get GAP_LOT(){return parseFloat(this._css('--dim-gap-lot'))||50},
+get GAP_CHAIN(){return parseFloat(this._css('--dim-gap-chain'))||40},
+get OFF(){return parseFloat(this._css('--dim-offset'))||6},
+toggle:function(){this._visible=!this._visible;var b=document.getElementById('showDimsBtn');
+if(this._visible){b.textContent='Hide Dims';b.style.background='#c53030';this._hidden={};this.draw();this._bindZoom()}
+else{b.textContent='Show Dims';b.style.background='#2b6cb0';this._hidden={};this.clear();this._unbindZoom()}
+localStorage.setItem('dims_visible',this._visible?'1':'0')},
+restore:function(){if(localStorage.getItem('dims_visible')==='1'){this._visible=true;var b=document.getElementById('showDimsBtn');b.textContent='Hide Dims';b.style.background='#c53030';this.draw();this._bindZoom()}},
+_bindZoom:function(){if(!this._zoomFn){this._zoomFn=this.draw.bind(this);MapEngine.map.on('zoomend',this._zoomFn)}},
+_unbindZoom:function(){if(this._zoomFn){MapEngine.map.off('zoomend',this._zoomFn);this._zoomFn=null}},
+// Convert pixels to feet at current zoom
+_px2ft:function(px){var map=MapEngine.map;var c=map.getCenter();var p1=map.latLngToContainerPoint(c);var p2=L.point(p1.x+px,p1.y);var ll2=map.containerPointToLatLng(p2);var dLng=Math.abs(ll2.lng-c.lng);var FN=365228*Math.cos(c.lat*Math.PI/180);return dLng*FN},
+clear:function(){if(this._layer){MapEngine.map.removeLayer(this._layer);this._layer=null}},
+draw:function(){this.clear();if(!MapEngine.map)return;this._layer=L.layerGroup().addTo(MapEngine.map);
+var s=ConfigEngine.state,lotW=ConfigEngine.data.width,lotD=ConfigEngine.data.depth;
+var fr=s.setbacks.front,re=s.setbacks.rear,sL=s.setbacks.sideL,sR=s.setbacks.sideR;
+var hw=lotW/2,hd=lotD/2;
+var lR=s.rotation*Math.PI/180,lC=Math.cos(lR),lS=Math.sin(lR);
+var FL=364566,FN=365228*Math.cos(s.lat*Math.PI/180);
+var toLL=function(p){var rx=p.x*lC-p.y*lS,ry=p.x*lS+p.y*lC;return[s.lat+ry/FL,s.lng+rx/FN]};
+var O=this.OFF;
+// Collect building geometry first (need it to decide which lot dims to show)
+var bldgs=s.buildings,geom=[];
+bldgs.forEach(function(bl,i){
+  var bHW=bl.width/2,bHH=bl.height/2,bR=bl.orientation*Math.PI/180;
+  var bC=Math.cos(bR),bS=Math.sin(bR);
+  var halfD=Math.abs(bHH*bC)+Math.abs(bHW*bS);
+  var halfW=Math.abs(bHH*bS)+Math.abs(bHW*bC);
+  var cnt=bl.count||1,stSp=bl.stackSpacing||0,anc=bl.anchor||'center';
+  var step=halfD*2+stSp;
+  var aOff=anc==='front'?0:anc==='rear'?cnt-1:(cnt-1)/2;
+  var rawCx=(fr-re)/2+(bl.offsetX||0);
+  var cy=(sR-sL)/2+(bl.offsetY||0);
+  // Clamp like drawBuilding does
+  var xMin=-hd+aOff*step+halfD,xMax=hd-(cnt-1-aOff)*step-halfD;
+  var yMin=-hw+halfW,yMax=hw-halfW;
+  var baseCx=Math.max(xMin<=xMax?xMin:-hd,Math.min(xMin<=xMax?xMax:hd,rawCx));
+  cy=Math.max(yMin<=yMax?yMin:-hw,Math.min(yMin<=yMax?yMax:hw,cy));
+  geom.push({baseCx:baseCx,cy:cy,halfD:halfD,halfW:halfW,cnt:cnt,step:step,aOff:aOff});
+});
+// Depth chain (right side = top when rotated)
+var xB=[];xB.push(-hd);if(fr>0.05)xB.push(-hd+fr);if(re>0.05)xB.push(hd-re);xB.push(hd);
+geom.forEach(function(g){for(var j=0;j<g.cnt;j++){var cx=g.baseCx+(j-g.aOff)*g.step;xB.push(cx-g.halfD);xB.push(cx+g.halfD)}});
+var xD=this._dedup(xB);var hasDepthChain=xD.length>2;
+this._chain(xD,hw+O+5,'x',toLL);
+// Width chain (front side = left when rotated)
+var yB=[];yB.push(-hw);if(sL>0.05)yB.push(-hw+sL);if(sR>0.05)yB.push(hw-sR);yB.push(hw);
+geom.forEach(function(g){yB.push(g.cy-g.halfW);yB.push(g.cy+g.halfW)});
+var yD=this._dedup(yB);var hasWidthChain=yD.length>2;
+this._chain(yD,-hd-O-5,'y',toLL);
+// Lot perimeter — skip same side as chain, show opposite side
+// Click any lot dim label to hide it (stored in _hidden)
+if(!this._hidden) this._hidden={};
+var self=this,h=this._hidden;
+var lotDim=function(id,p1,p2,dist,ext1a,ext1b,ext2a,ext2b){
+  if(h[id])return; // user hid this one
+  self._seg(p1,p2,dist,toLL,id);
+  self._ext(ext1a.x,ext1a.y,ext1b.x,ext1b.y,toLL);
+  self._ext(ext2a.x,ext2a.y,ext2b.x,ext2b.y,toLL);
+};
+// Width chain is on front side → skip front, keep rear. No chain → show both.
+if(!hasWidthChain) lotDim('front',{x:-hd-O,y:-hw},{x:-hd-O,y:hw},lotW,{x:-hd,y:-hw},{x:-hd-O,y:-hw},{x:-hd,y:hw},{x:-hd-O,y:hw});
+lotDim('rear',{x:hd+O,y:-hw},{x:hd+O,y:hw},lotW,{x:hd,y:-hw},{x:hd+O,y:-hw},{x:hd,y:hw},{x:hd+O,y:hw});
+// Depth chain is on right side → skip right, keep left. No chain → show both.
+lotDim('left',{x:-hd,y:-hw-O},{x:hd,y:-hw-O},lotD,{x:-hd,y:-hw},{x:-hd,y:-hw-O},{x:hd,y:-hw},{x:hd,y:-hw-O});
+if(!hasDepthChain) lotDim('right',{x:-hd,y:hw+O},{x:hd,y:hw+O},lotD,{x:-hd,y:hw},{x:-hd,y:hw+O},{x:hd,y:hw},{x:hd,y:hw+O});
+},
+_dedup:function(a){a.sort(function(x,y){return x-y});var o=[a[0]];for(var i=1;i<a.length;i++)if(Math.abs(a[i]-o[o.length-1])>0.05)o.push(a[i]);return o},
+// Extension / witness line
+_ext:function(x1,y1,x2,y2,t){L.polyline([t({x:x1,y:y1}),t({x:x2,y:y2})],{color:this.C,weight:this.EW,opacity:0.5,dashArray:'3 2'}).addTo(this._layer)},
+// 45° slash tick at a point
+_tick:function(x,y,t){var T=this.TS;L.polyline([t({x:x-T*.7,y:y-T*.7}),t({x:x+T*.7,y:y+T*.7})],{color:this.C,weight:this.TW,opacity:1}).addTo(this._layer)},
+// Label — bold text on white pad that masks the line
+_lbl:function(x,y,txt,t){
+var f=this._css('--dim-font')||"900 14px/1 'Segoe UI',system-ui,sans-serif";
+var p=this._css('--dim-pad')||'2px 6px';
+var s="font:"+f+";color:"+this.C+";background:#fff;padding:"+p+";white-space:nowrap";
+L.circleMarker(t({x:x,y:y}),{radius:0,opacity:0,interactive:false}).bindTooltip("<span style='"+s+"'>"+txt+"</span>",{permanent:true,direction:'center',className:'dim-txt',offset:[0,0]}).addTo(this._layer)},
+// Split dim line into two halves — gap is in PIXELS (annotative), converted to feet at current zoom
+_splitLine:function(x1,y1,x2,y2,gapPx,toLL){
+var dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);if(len<0.2)return;
+var gapFt=this._px2ft(gapPx);
+var g=Math.min(gapFt,len*0.7),r=g/len/2;
+var mx=(x1+x2)/2,my=(y1+y2)/2;
+L.polyline([toLL({x:x1,y:y1}),toLL({x:mx-dx*r,y:my-dy*r})],{color:this.C,weight:this.W,opacity:0.9}).addTo(this._layer);
+L.polyline([toLL({x:mx+dx*r,y:my+dy*r}),toLL({x:x2,y:y2})],{color:this.C,weight:this.W,opacity:0.9}).addTo(this._layer);},
+// Single dim segment (lot perimeter) — id for click-to-hide
+_seg:function(p1,p2,dist,toLL,id){
+this._splitLine(p1.x,p1.y,p2.x,p2.y,this.GAP_LOT,toLL);
+this._tick(p1.x,p1.y,toLL);this._tick(p2.x,p2.y,toLL);
+var mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,self=this;
+var f=this._css('--dim-font')||"900 14px/1 'Segoe UI',system-ui,sans-serif";
+var p=this._css('--dim-pad')||'2px 6px';
+var s="font:"+f+";color:"+this.C+";background:#fff;padding:"+p+";white-space:nowrap;cursor:pointer";
+var m=L.circleMarker(toLL({x:mx,y:my}),{radius:8,opacity:0,fillOpacity:0,interactive:true})
+  .bindTooltip("<span style='"+s+"' title='Click to hide'>"+dist.toFixed(1)+"'</span>",{permanent:true,direction:'center',className:'dim-txt',offset:[0,0]}).addTo(this._layer);
+if(id){m.on('click',function(){self._hidden[id]=true;self.draw()})}},
+// Continuous chain with line breaks at text
+_chain:function(brk,fc,ax,toLL){var self=this;
+for(var i=0;i<brk.length-1;i++){var v1=brk[i],v2=brk[i+1],d=Math.abs(v2-v1);if(d<0.1)continue;
+var p1x,p1y,p2x,p2y,mx,my;
+if(ax==='x'){p1x=v1;p1y=fc;p2x=v2;p2y=fc;mx=(v1+v2)/2;my=fc}
+else{p1x=fc;p1y=v1;p2x=fc;p2y=v2;mx=fc;my=(v1+v2)/2}
+// Check if segment is wide enough in pixels for a label
+var segPx=d/self._px2ft(1);
+var txtFits=d>8||segPx>60;
+self._tick(p1x,p1y,toLL);self._tick(p2x,p2y,toLL);
+if(ax==='x'){self._ext(v1,fc>0?fc-4:fc+4,v1,fc,toLL);self._ext(v2,fc>0?fc-4:fc+4,v2,fc,toLL)}
+else{self._ext(fc>0?fc-4:fc+4,v1,fc,v1,toLL);self._ext(fc>0?fc-4:fc+4,v2,fc,v2,toLL)}
+if(txtFits){
+  // Normal: split line, text in the gap
+  self._splitLine(p1x,p1y,p2x,p2y,self.GAP_CHAIN,toLL);
+  self._lbl(mx,my,d.toFixed(1)+"'",toLL);
+} else {
+  // Narrow (<8ft): solid line inside, leader to text outside
+  L.polyline([toLL({x:p1x,y:p1y}),toLL({x:p2x,y:p2y})],{color:self.C,weight:self.W,opacity:0.9}).addTo(self._layer);
+  // Leader: short line from segment outward, gap, then text
+  var ldr=self._px2ft(20);
+  var gap=self._px2ft(8);
+  var useV2=Math.abs(v2)>=Math.abs(v1);var endV=useV2?v2:v1;var sign=endV>=0?1:-1;
+  var lx,ly,tx,ty;
+  if(ax==='x'){lx=endV+sign*ldr;ly=fc;tx=lx+sign*gap;ty=fc}
+  else{lx=fc;ly=endV+sign*ldr;tx=fc;ty=ly+sign*gap}
+  L.polyline([toLL({x:mx,y:my}),toLL({x:lx,y:ly})],{color:self.C,weight:self.W*0.6,opacity:1}).addTo(self._layer);
+  var sf="font:700 11px/1 'Segoe UI',system-ui,sans-serif;color:"+self.C+";background:#fff;padding:1px 3px;white-space:nowrap";
+  L.circleMarker(toLL({x:tx,y:ty}),{radius:0,opacity:0,interactive:false}).bindTooltip("<span style='"+sf+"'>"+d.toFixed(1)+"'</span>",{permanent:true,direction:'center',className:'dim-txt',offset:[0,0]}).addTo(self._layer);
+}
+}}};
 </script>
 <script>
 /* ==========================================
