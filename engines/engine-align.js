@@ -536,6 +536,7 @@ const SetbackEngine = {
         if (chk) chk.addEventListener('change', () => {
             state.commFront = chk.checked;
             this.updateFAR();
+            MapEngine.render();
         });
 
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());

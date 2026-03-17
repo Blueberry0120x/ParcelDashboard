@@ -174,7 +174,11 @@ const MapEngine = {
         };
 
         this.lotPoly.setLatLngs(baseLot.map(transform));
-        this.commPoly.setLatLngs(baseComm.map(transform));
+        if (ConfigEngine.state.commFront) {
+            this.commPoly.setLatLngs(baseComm.map(transform));
+        } else {
+            this.commPoly.setLatLngs([]);
+        }
         this.updateNorthArrow();
 
         if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
