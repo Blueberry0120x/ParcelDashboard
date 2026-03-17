@@ -73,5 +73,32 @@ const ExportEngine = {
             .catch(() => {
                 alert("Image export blocked by tile server security. Use the Fullscreen button and take a screenshot instead.");
             });
+    },
+
+    saveToFile: function() {
+        const s = ConfigEngine.state;
+        const payload = {
+            project: "Master Site Dashboard",
+            saved: {
+                lat:            s.lat,
+                lng:            s.lng,
+                rotation:       s.rotation,
+                locked:         s.locked,
+                setbacks:       s.setbacks,
+                buildings:      s.buildings,
+                activeBuilding: s.activeBuilding,
+                stories:        s.stories,
+                floorHeight:    s.floorHeight,
+                commFront:      s.commFront
+            }
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const a    = document.createElement('a');
+        a.href     = URL.createObjectURL(blob);
+        a.download = 'site-data.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        const btn = document.getElementById('saveSettingsBtn');
+        if (btn) { btn.textContent = 'Saved!'; btn.style.background = '#2f855a'; setTimeout(() => { btn.textContent = 'Save to File'; btn.style.background = ''; }, 1800); }
     }
 };

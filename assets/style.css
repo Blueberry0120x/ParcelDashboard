@@ -186,6 +186,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .btn-align-img:hover   { background: #2f855a; }
 .btn-align-reset { background: #718096; }
 .btn-align-reset:hover { background: #4a5568; }
+.btn-align-file  { background: #805ad5; }
+.btn-align-file:hover  { background: #6b46c1; }
 .lisp-output { width: 100%; height: 110px; padding: 8px; font-family: monospace; font-size: 0.8em; background: #1a202c; color: #a0aec0; box-sizing: border-box; resize: vertical; border: none; border-radius: 3px; }
 
 /* Setback Config */

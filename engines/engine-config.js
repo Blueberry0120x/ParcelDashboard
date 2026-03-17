@@ -25,18 +25,22 @@ const ConfigEngine = {
         commFront:      false
     },
     init: function() {
+        const sd    = window.__SITE_DEFAULTS__ || {};         // injected by PS1 from site-data.json
         const saved = JSON.parse(localStorage.getItem('boundary_location') || 'null');
         const sLat  = localStorage.getItem('site_lat');
         const sLng  = localStorage.getItem('site_lng');
         const sRot  = localStorage.getItem('site_rot');
-        this.state.lat      = saved ? saved.lat      : (sLat !== null ? parseFloat(sLat) : this.defaults.lat);
-        this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : this.defaults.lng);
-        this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : this.defaults.rotation);
+        // Priority: localStorage (live session) > site-data.json (PS1 build) > hardcoded defaults
+        this.state.lat      = saved ? saved.lat      : (sLat !== null ? parseFloat(sLat) : (sd.lat      ?? this.defaults.lat));
+        this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : (sd.lng      ?? this.defaults.lng));
+        this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : (sd.rotation ?? this.defaults.rotation));
         if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
-        if (localStorage.getItem('site_locked') === '1') this.state.locked = true;
+        if      (localStorage.getItem('site_locked') === '1')                     this.state.locked = true;
+        else if (localStorage.getItem('site_locked') === null && sd.locked)       this.state.locked = sd.locked;
         const sb   = JSON.parse(localStorage.getItem('saved_setbacks')  || 'null');
         const bldg = JSON.parse(localStorage.getItem('building_config') || 'null');
-        if (sb) this.state.setbacks = sb;
+        if (sb)             { this.state.setbacks = sb; }
+        else if (sd.setbacks) { this.state.setbacks = sd.setbacks; }
         if (bldg) {
             if (bldg.buildings) {
                 // New format
@@ -51,6 +55,12 @@ const ConfigEngine = {
                 this.state.stories    = bldg.stories   || 1;
                 this.state.commFront  = bldg.commFront || false;
             }
+        } else if (sd.buildings) {
+            this.state.buildings      = sd.buildings;
+            this.state.activeBuilding = sd.activeBuilding || 0;
+            this.state.stories        = sd.stories        || 1;
+            this.state.floorHeight    = sd.floorHeight    || 9;
+            this.state.commFront      = sd.commFront      || false;
         }
     },
     save: function() {

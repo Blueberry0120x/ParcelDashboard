@@ -61,6 +61,26 @@ foreach ($eng in $engines) {
 $html = $html.Replace("Development Shell -->", "Compiled Build -->")
 $html = $html.Replace("<!-- Open with Live Server (VS Code Go Live). Run build.cmd to compile to InteractiveMap.html -->", "")
 
+# --- Inject site-data.json settings ---
+$siteDataFile = Join-Path $base "data\site-data.json"
+if (Test-Path $siteDataFile) {
+    try {
+        $siteData = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($null -ne $siteData.saved) {
+            $savedJson   = $siteData.saved | ConvertTo-Json -Compress -Depth 10
+            $injectScript = "<script>window.__SITE_DEFAULTS__ = $savedJson;</script>"
+            $html = $html.Replace('</head>', "$injectScript`n</head>")
+            Write-Host "  [+] Injected settings from site-data.json" -ForegroundColor Green
+        } else {
+            Write-Host "  [i] site-data.json has no saved settings (using defaults)" -ForegroundColor DarkGray
+        }
+    } catch {
+        Write-Host "  [WARN] Could not parse site-data.json: $_" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  [i] No site-data.json found (using defaults)" -ForegroundColor DarkGray
+}
+
 # --- Write output ---
 Set-Content $output $html -Encoding UTF8
 Write-Host ""
