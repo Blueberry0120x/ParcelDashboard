@@ -4,6 +4,8 @@
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
     gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
+    dimLabels: [], showDims: false,
+    bldgDimLabels: [], showBldgDims: false,
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -174,17 +176,59 @@ const MapEngine = {
         };
 
         this.lotPoly.setLatLngs(baseLot.map(transform));
-        if (ConfigEngine.state.commFront) {
+        if (!ConfigEngine.state.commFront) {
             this.commPoly.setLatLngs(baseComm.map(transform));
         } else {
             this.commPoly.setLatLngs([]);
         }
         this.updateNorthArrow();
+        this.updateDimLabels();
 
         if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
         SetbackEngine.drawBuilding();
 
         ConfigEngine.save();
+    },
+
+    updateDimLabels: function() {
+        this.dimLabels.forEach(m => this.map.removeLayer(m));
+        this.dimLabels = [];
+        if (!this.showDims) return;
+
+        const { width: w, depth: h } = ConfigEngine.data;
+        const rot = ConfigEngine.state.rotation;
+        const rad = rot * Math.PI / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
+
+        const toLL = (pt) => {
+            const rx = pt.x * cos - pt.y * sin;
+            const ry = pt.x * sin + pt.y * cos;
+            return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
+        };
+
+        const OFF = 7; // ft outward offset from edge
+        const edges = [
+            { mid: {x: -h/2,   y: 0    }, text: w + ' FT', rotAngle: rot + 90, off: {x:-1, y:0} },
+            { mid: {x:  h/2,   y: 0    }, text: w + ' FT', rotAngle: rot + 90, off: {x: 1, y:0} },
+            { mid: {x:  0,     y:  w/2 }, text: h + ' FT', rotAngle: rot,      off: {x:0,  y:1} },
+            { mid: {x:  0,     y: -w/2 }, text: h + ' FT', rotAngle: rot,      off: {x:0,  y:-1} },
+        ];
+
+        edges.forEach(e => {
+            const pos = toLL({ x: e.mid.x + e.off.x * OFF, y: e.mid.y + e.off.y * OFF });
+            const m = L.marker(pos, {
+                icon: L.divIcon({
+                    className: '',
+                    html: '<div class="dim-label" style="transform:rotate(' + e.rotAngle.toFixed(1) + 'deg)">' + e.text + '</div>',
+                    iconSize:   [60, 22],
+                    iconAnchor: [30, 11]
+                }),
+                interactive: false
+            }).addTo(this.map);
+            this.dimLabels.push(m);
+        });
     },
 
     attachEvents: function() {
@@ -268,6 +312,12 @@ const MapEngine = {
             sldr.disabled = locked;
             inp.disabled  = locked;
             localStorage.setItem('site_locked', locked ? '1' : '0');
+        });
+
+        document.getElementById('dimToggleBtn').addEventListener('click', () => {
+            this.showDims = !this.showDims;
+            document.getElementById('dimToggleBtn').classList.toggle('active', this.showDims);
+            this.updateDimLabels();
         });
 
         // Restore lock visual state on load

@@ -77,8 +77,11 @@
                 <div class="align-btn-row">
                     <button id="recordBtn"      class="btn-align btn-align-lisp">Export LISP</button>
                     <button id="imageExportBtn" class="btn-align btn-align-img">Export Image</button>
-                    <button id="saveSettingsBtn" class="btn-align btn-align-file" onclick="ExportEngine.saveToFile()">Save to File</button>
                     <button id="resetBtn"       class="btn-align btn-align-reset">Reset</button>
+                </div>
+                <div class="align-btn-row">
+                    <button id="dimToggleBtn"    class="btn-align btn-align-dim">&#x25a1; Dim Labels</button>
+                    <button id="saveSettingsBtn" class="btn-align btn-align-file" onclick="ExportEngine.saveToFile()">Save to File</button>
                 </div>
                 <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
 
@@ -127,7 +130,10 @@
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 style="margin:0;">Building Config</h3>
-                        <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                        <div style="display:flex;gap:5px;">
+                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Dim</button>
+                            <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                        </div>
                     </div>
                     <div class="building-grid">
                         <strong>Orientation:</strong>

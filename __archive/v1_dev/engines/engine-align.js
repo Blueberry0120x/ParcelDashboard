@@ -151,6 +151,8 @@ const SetbackEngine = {
         document.getElementById('bldgOffsetY').value        = (bldg.offsetY      || 0).toFixed(1);
         document.getElementById('bldgCount').value          = bldg.count         || 1;
         document.getElementById('bldgStackSpacing').value   = (bldg.stackSpacing || 0).toFixed(1);
+        document.getElementById('bldgStories').value        = bldg.stories       || 1;
+        document.getElementById('bldgFloorHeight').value    = (bldg.floorHeight  || 9).toFixed(1);
 
         // Inter-building spacing (S) — disabled for B1
         const spEl   = document.getElementById('bldgSpacing');
@@ -197,7 +199,9 @@ const SetbackEngine = {
             spacing:      0,
             count:        1,
             stackSpacing: 0,
-            anchor:       'center'
+            anchor:       'center',
+            stories:      src.stories     || 1,
+            floorHeight:  src.floorHeight || 9
         };
         const newExt    = this._buildingExtents(newBldg);
         newBldg.offsetX = parseFloat((last.offsetX + lastExt.halfDepth + newExt.halfDepth).toFixed(1));
@@ -334,7 +338,98 @@ const SetbackEngine = {
             if (pin) pin.classList.toggle('active', i === state.activeBuilding);
         });
 
+        this.updateBldgDimLabels();
         this.updateFAR();
+    },
+
+    updateBldgDimLabels: function() {
+        MapEngine.bldgDimLabels.forEach(m => MapEngine.map.removeLayer(m));
+        MapEngine.bldgDimLabels = [];
+        if (!MapEngine.showBldgDims) return;
+
+        const state  = ConfigEngine.state;
+        const { front, rear, sideL, sideR } = state.setbacks;
+        const lRad  = state.rotation * Math.PI / 180;
+        const lCos  = Math.cos(lRad), lSin = Math.sin(lRad);
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+        const toLatLng = pt => {
+            const rx = pt.x * lCos - pt.y * lSin;
+            const ry = pt.x * lSin + pt.y * lCos;
+            return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
+        };
+
+        const push = layer => { MapEngine.bldgDimLabels.push(layer); return layer; };
+        const line = pts => push(L.polyline(pts.map(toLatLng), {
+            color: '#1a202c', weight: 1.2, interactive: false, noClip: true
+        }).addTo(MapEngine.map));
+        const lbl = (pt, txt, rotDeg) => push(L.marker(toLatLng(pt), {
+            icon: L.divIcon({
+                className: '',
+                html: '<div class="arch-dim-label" style="transform:rotate(' + rotDeg + 'deg)">' + txt + '</div>',
+                iconSize: [64, 16], iconAnchor: [32, 8]
+            }),
+            interactive: false
+        }).addTo(MapEngine.map));
+
+        const EXT = 5;    // ft: dim line offset from building edge
+        const EX2 = 2;    // ft: witness line overshoot beyond dim line
+        const TK  = 2.2;  // ft: half-length of 45deg tick mark
+        const TO  = 2.5;  // ft: text clearance from dim line
+
+        state.buildings.forEach((bldg) => {
+            const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
+            const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+            const count  = bldg.count || 1;
+            const ss     = bldg.stackSpacing || 0;
+            const anchor = bldg.anchor || 'center';
+            const hw     = bldg.width  / 2, hh = bldg.height / 2;
+            const bRad   = bldg.orientation * Math.PI / 180;
+            const bCos   = Math.cos(bRad), bSin = Math.sin(bRad);
+            // depth axis unit vector: (bCos, bSin)
+            // width axis unit vector: (-bSin, bCos)
+            const dAx = bCos, dAy = bSin;
+            const wAx = -bSin, wAy = bCos;
+            const { halfDepth } = this._buildingExtents(bldg);
+            const step = halfDepth * 2 + ss;
+            const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+            // Tick: 45deg diagonal between depth and width axes
+            const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
+            const labelRot = state.rotation + bldg.orientation;
+
+            for (let j = 0; j < count; j++) {
+                const cx = baseCx + (j - aOff) * step;
+                // Corners (same rotation math as drawBuilding):
+                //   c0 (front, +w): cx - hh*dAx + hw*wAx, cy - hh*dAy + hw*wAy
+                //   c2 (rear,  -w): cx + hh*dAx - hw*wAx, cy + hh*dAy - hw*wAy
+                //   c3 (front, -w): cx - hh*dAx - hw*wAx, cy - hh*dAy - hw*wAy
+                const c0 = { x: cx - hh*dAx + hw*wAx, y: cy - hh*dAy + hw*wAy };
+                const c2 = { x: cx + hh*dAx - hw*wAx, y: cy + hh*dAy - hw*wAy };
+                const c3 = { x: cx - hh*dAx - hw*wAx, y: cy - hh*dAy - hw*wAy };
+
+                // ── WIDTH dimension (spans bldg.width, offset in -depth direction) ──
+                const wD1 = { x: c3.x - EXT*dAx, y: c3.y - EXT*dAy };
+                const wD2 = { x: c0.x - EXT*dAx, y: c0.y - EXT*dAy };
+                line([{ x: c3.x - dAx, y: c3.y - dAy }, { x: c3.x - (EXT+EX2)*dAx, y: c3.y - (EXT+EX2)*dAy }]);
+                line([{ x: c0.x - dAx, y: c0.y - dAy }, { x: c0.x - (EXT+EX2)*dAx, y: c0.y - (EXT+EX2)*dAy }]);
+                line([wD1, wD2]);
+                line([{ x: wD1.x - TK*tkX, y: wD1.y - TK*tkY }, { x: wD1.x + TK*tkX, y: wD1.y + TK*tkY }]);
+                line([{ x: wD2.x - TK*tkX, y: wD2.y - TK*tkY }, { x: wD2.x + TK*tkX, y: wD2.y + TK*tkY }]);
+                lbl({ x: (wD1.x+wD2.x)/2 - TO*dAx, y: (wD1.y+wD2.y)/2 - TO*dAy },
+                    bldg.width.toFixed(1) + "'", labelRot + 90);
+
+                // ── HEIGHT dimension (spans bldg.height, offset in -width direction) ──
+                const hD1 = { x: c3.x - EXT*wAx, y: c3.y - EXT*wAy };
+                const hD2 = { x: c2.x - EXT*wAx, y: c2.y - EXT*wAy };
+                line([{ x: c3.x - wAx, y: c3.y - wAy }, { x: c3.x - (EXT+EX2)*wAx, y: c3.y - (EXT+EX2)*wAy }]);
+                line([{ x: c2.x - wAx, y: c2.y - wAy }, { x: c2.x - (EXT+EX2)*wAx, y: c2.y - (EXT+EX2)*wAy }]);
+                line([hD1, hD2]);
+                line([{ x: hD1.x - TK*tkX, y: hD1.y - TK*tkY }, { x: hD1.x + TK*tkX, y: hD1.y + TK*tkY }]);
+                line([{ x: hD2.x - TK*tkX, y: hD2.y - TK*tkY }, { x: hD2.x + TK*tkX, y: hD2.y + TK*tkY }]);
+                lbl({ x: (hD1.x+hD2.x)/2 - TO*wAx, y: (hD1.y+hD2.y)/2 - TO*wAy },
+                    bldg.height.toFixed(1) + "'", labelRot);
+            }
+        });
     },
 
     updateFAR: function() {
@@ -343,7 +438,6 @@ const SetbackEngine = {
         const lotArea = lotW * lotD;
         if (!lotArea) return;
 
-        const stories   = state.stories   || 1;
         const commFront = state.commFront || false;
         const maxFAR    = commFront ? 6.5 : 2.0;
         const buildable = Math.round(lotArea * maxFAR);
@@ -351,10 +445,10 @@ const SetbackEngine = {
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
         const footprintSF = (active.width || 0) * (active.height || 0);
 
-        // Total: sum of (footprint × count) across all buildings × stories
-        const totalFootprint = state.buildings.reduce((s, b) => s + (b.width || 0) * (b.height || 0) * (b.count || 1), 0);
-        const totalArea      = totalFootprint * stories;
-        const actualFAR      = totalArea / lotArea;
+        // Total: sum per-building (footprint × count × stories)
+        const totalArea = state.buildings.reduce((s, b) =>
+            s + (b.width||0) * (b.height||0) * (b.count||1) * (b.stories||1), 0);
+        const actualFAR = totalArea / lotArea;
 
         const set = (id, txt) => { const el = document.getElementById(id); if (!el) return; if (el.tagName === 'INPUT') el.value = txt; else el.textContent = txt; };
 
@@ -373,8 +467,9 @@ const SetbackEngine = {
             chkEl.style.color = ok ? '#2f855a' : '#c53030';
         }
 
-        const floorH      = state.floorHeight || 9;
-        const totalHeight = stories === 1 ? floorH : stories * (floorH + 1);
+        const floorH      = active.floorHeight || 9;
+        const activeStories = active.stories || 1;
+        const totalHeight = activeStories === 1 ? floorH : activeStories * (floorH + 1);
         set('bldgTotalHeight', totalHeight.toFixed(0));
     },
 
@@ -391,8 +486,6 @@ const SetbackEngine = {
 
         this._seedInputsFromBuilding(state.activeBuilding);
 
-        document.getElementById('bldgStories').value     = state.stories     || 1;
-        document.getElementById('bldgFloorHeight').value = state.floorHeight || 9;
         const chk = document.getElementById('commFrontCheck');
         if (chk) chk.checked = state.commFront || false;
 
@@ -520,15 +613,19 @@ const SetbackEngine = {
         };
         anchors.forEach(id => document.getElementById(id).addEventListener('click', () => setAnchor(id)));
 
-        // Stories (global)
+        // Stories (per-building)
         document.getElementById('bldgStories').addEventListener('change', () => {
-            state.stories = parseInt(document.getElementById('bldgStories').value) || 1;
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            bldg.stories = parseInt(document.getElementById('bldgStories').value) || 1;
             this.updateFAR();
         });
 
-        // Floor height (global)
+        // Floor height (per-building)
         document.getElementById('bldgFloorHeight').addEventListener('change', () => {
-            state.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            bldg.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
             this.updateFAR();
         });
 
@@ -542,6 +639,16 @@ const SetbackEngine = {
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
         document.getElementById('bldgDelBtn').addEventListener('click', () => this.removeLastBuilding());
         document.getElementById('saveConfigBtn').addEventListener('click', () => this.saveConfig());
+
+        document.getElementById('bldgDimBtn').addEventListener('click', () => {
+            MapEngine.showBldgDims = !MapEngine.showBldgDims;
+            document.getElementById('bldgDimBtn').classList.toggle('active', MapEngine.showBldgDims);
+            this.updateBldgDimLabels();
+        });
+
+        // Restore dim toggle from saved config
+        MapEngine.showBldgDims = state.showBldgDims || false;
+        document.getElementById('bldgDimBtn').classList.toggle('active', MapEngine.showBldgDims);
 
         if (state.buildings.length > 0) this.drawBuilding();
     },
@@ -558,16 +665,16 @@ const SetbackEngine = {
             bldg.offsetY      = parseFloat(document.getElementById('bldgOffsetY').value)      || 0;
             bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
             bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
+            bldg.stories      = parseInt(document.getElementById('bldgStories').value)        || 1;
+            bldg.floorHeight  = parseFloat(document.getElementById('bldgFloorHeight').value)  || 9;
         }
-        state.stories     = parseInt(document.getElementById('bldgStories').value)        || 1;
-        state.floorHeight = parseFloat(document.getElementById('bldgFloorHeight').value) || 9;
-        state.commFront   = document.getElementById('commFrontCheck')?.checked           || false;
+        state.commFront   = document.getElementById('commFrontCheck')?.checked || false;
+        state.showBldgDims = MapEngine.showBldgDims;
         localStorage.setItem('building_config', JSON.stringify({
             buildings:      state.buildings,
             activeBuilding: state.activeBuilding,
-            stories:        state.stories,
-            floorHeight:    state.floorHeight,
-            commFront:      state.commFront
+            commFront:      state.commFront,
+            showBldgDims:   state.showBldgDims
         }));
         this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';

@@ -18,11 +18,12 @@ const ConfigEngine = {
         isSnapping: false, locked: false, unitMode: 'SF', mode: 'complex',
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }],
+        buildings:      [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: 1, floorHeight: 9 }],
         activeBuilding: 0,
-        stories:        1,
-        floorHeight:    9,
-        commFront:      false
+        stories:        1,   // global fallback (migration only)
+        floorHeight:    9,   // global fallback (migration only)
+        commFront:      false,
+        showBldgDims:   false
     },
     init: function() {
         const sd    = window.__SITE_DEFAULTS__ || {};         // injected by PS1 from site-data.json
@@ -49,6 +50,12 @@ const ConfigEngine = {
                 this.state.stories        = bldg.stories     || 1;
                 this.state.floorHeight    = bldg.floorHeight || 9;
                 this.state.commFront      = bldg.commFront   || false;
+                this.state.showBldgDims   = bldg.showBldgDims || false;
+                // Migrate older builds lacking per-building stories/floorHeight
+                this.state.buildings.forEach(b => {
+                    if (!('stories'     in b)) b.stories     = this.state.stories;
+                    if (!('floorHeight' in b)) b.floorHeight = this.state.floorHeight;
+                });
             } else if (bldg.width) {
                 // Migrate old single-object format
                 this.state.buildings  = [{ orientation: bldg.orientation || 0, width: bldg.width, height: bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0 }];
@@ -61,6 +68,12 @@ const ConfigEngine = {
             this.state.stories        = sd.stories        || 1;
             this.state.floorHeight    = sd.floorHeight    || 9;
             this.state.commFront      = sd.commFront      || false;
+            this.state.showBldgDims   = sd.showBldgDims   || false;
+            // Migrate older site-data lacking per-building stories/floorHeight
+            this.state.buildings.forEach(b => {
+                if (!('stories'     in b)) b.stories     = this.state.stories;
+                if (!('floorHeight' in b)) b.floorHeight = this.state.floorHeight;
+            });
         }
     },
     save: function() {
@@ -78,12 +91,14 @@ const ConfigEngine = {
         this.state.rotation = this.defaults.rotation;
         this.state.locked   = false;
         this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center' }];
+        this.state.buildings      = [{ orientation: 0, width: 30, height: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: 1, floorHeight: 9 }];
         this.state.activeBuilding = 0;
         this.state.stories        = 1;
         this.state.floorHeight    = 9;
         this.state.commFront      = false;
+        this.state.showBldgDims   = false;
         localStorage.removeItem('saved_setbacks');
         localStorage.removeItem('building_config');
     }
 };
+

@@ -87,9 +87,8 @@ const ExportEngine = {
                 setbacks:       s.setbacks,
                 buildings:      s.buildings,
                 activeBuilding: s.activeBuilding,
-                stories:        s.stories,
-                floorHeight:    s.floorHeight,
-                commFront:      s.commFront
+                commFront:      s.commFront,
+                showBldgDims:   MapEngine.showBldgDims
             }
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
