@@ -8,17 +8,21 @@
 param([string]$Mode = "reload")
 
 $base    = Split-Path $MyInvocation.MyCommand.Path -Resolve
-$shell   = Join-Path $base "index.html"
+$src     = Join-Path $base "src"
+$shell   = Join-Path $src  "index.html"
 $output  = Join-Path $base "InteractiveMap.html"
-$cssFile = Join-Path $base "assets\style.css"
+$dist    = Join-Path $base "dist"
+$cssFile = Join-Path $src  "css\style.css"
 
 $engines = @(
-    "engines/engine-config.js",
-    "engines/engine-ui.js",
-    "engines/engine-map.js",
-    "engines/engine-align.js",
-    "engines/engine-export.js",
-    "engines/engine-resize.js"
+    "js/engine-config.js",
+    "js/engine-ui.js",
+    "js/engine-map.js",
+    "js/engine-elevation.js",
+    "js/engine-setback.js",
+    "js/engine-export.js",
+    "js/engine-resize.js",
+    "js/bootstrap.js"
 )
 
 Write-Host ""
@@ -40,18 +44,20 @@ if (-not (Test-Path $cssFile)) {
     exit 1
 }
 $cssContent = Get-Content $cssFile -Raw -Encoding UTF8
-$html = $html.Replace('<link rel="stylesheet" href="assets/style.css" />', "<style>`n$cssContent`n</style>")
-Write-Host "  [+] Inlined: assets/style.css" -ForegroundColor Green
+$html = $html.Replace('<link rel="stylesheet" href="css/style.css" />', "<style>`n$cssContent`n</style>")
+Write-Host "  [+] Inlined: css/style.css" -ForegroundColor Green
 
 # --- Inline each engine script ---
 foreach ($eng in $engines) {
-    $engPath = Join-Path $base ($eng -replace '/', '\')
+    $engPath = Join-Path $src ($eng -replace '/', '\')
     if (-not (Test-Path $engPath)) {
         Write-Host "  [WARN] Missing engine (skipped): $eng" -ForegroundColor Yellow
         continue
     }
     $jsContent = Get-Content $engPath -Raw -Encoding UTF8
     $srcTag    = "<script src=`"$eng`"></script>"
+    # Also try without js/ prefix for backwards compat
+
     $inlineTag = "<script>`n$jsContent`n</script>"
     $html = $html.Replace($srcTag, $inlineTag)
     Write-Host "  [+] Inlined: $eng" -ForegroundColor Green
@@ -82,10 +88,14 @@ if (Test-Path $siteDataFile) {
 }
 
 # --- Write output ---
-Set-Content $output $html -Encoding UTF8
+if (-not (Test-Path $dist)) { New-Item -ItemType Directory -Path $dist -Force | Out-Null }
+$distOut = Join-Path $dist "InteractiveMap.html"
+[System.IO.File]::WriteAllText($output, $html, [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($distOut, $html, [System.Text.UTF8Encoding]::new($false))
 Write-Host ""
 Write-Host "  [BUILD COMPLETE]" -ForegroundColor Green
 Write-Host "  Output: $output" -ForegroundColor White
+Write-Host "  Dist:   $distOut" -ForegroundColor White
 Write-Host ""
 
 # --- Debug: open in browser ---
