@@ -366,7 +366,7 @@ const SetbackEngine = {
         const lbl = (pt, txt, rotDeg) => push(L.marker(toLatLng(pt), {
             icon: L.divIcon({
                 className: '',
-                html: '<div class="arch-dim-label" style="transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div>',
+                html: '<div style="position:relative"><div class="arch-dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
                 iconSize: [0, 0], iconAnchor: [0, 0]
             }),
             interactive: false
@@ -438,6 +438,66 @@ const SetbackEngine = {
                 line([{ x: hD1.x - TK*tkX, y: hD1.y - TK*tkY }, { x: hD1.x + TK*tkX, y: hD1.y + TK*tkY }]);
                 line([{ x: hD2.x - TK*tkX, y: hD2.y - TK*tkY }, { x: hD2.x + TK*tkX, y: hD2.y + TK*tkY }]);
                 lbl(hMid, bldg.height.toFixed(1) + "'", labelRot);
+            }
+        });
+
+        // ── CLEARANCE DIMS: building edges to lot boundary & setback ─────────
+        const { width: lotW, depth: lotD } = ConfigEngine.data;
+        const lotHD = lotD / 2, lotHW = lotW / 2;
+        const lotRot = state.rotation;
+
+        state.buildings.forEach((bldg) => {
+            const count  = bldg.count || 1;
+            const ss     = bldg.stackSpacing || 0;
+            const anchor = bldg.anchor || 'center';
+            const hw     = bldg.width / 2, hh = bldg.height / 2;
+            const bRad   = bldg.orientation * Math.PI / 180;
+            const bCos   = Math.cos(bRad), bSin = Math.sin(bRad);
+            const dAx = bCos, dAy = bSin;
+            const wAx = -bSin, wAy = bCos;
+            const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+            const step = halfDepth * 2 + ss;
+            const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+            const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
+            const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+
+            // First and last copy centers
+            const cxFirst = baseCx + (0 - aOff) * step;
+            const cxLast  = baseCx + (count - 1 - aOff) * step;
+
+            // Distances from stack extremes to lot boundary (along depth axis, unrotated)
+            const distFront = (cxFirst - halfDepth) - (-lotHD);  // front building edge to front lot line
+            const distRear  = lotHD - (cxLast + halfDepth);       // rear building edge to rear lot line
+            const distLeft  = (cy - halfWidth) - (-lotHW);        // building edge to left lot line
+            const distRight = lotHW - (cy + halfWidth);            // building edge to right lot line
+
+            // Front clearance (along -depth from first copy front edge to lot front)
+            if (Math.abs(distFront) > 0.05) {
+                const edgePt = { x: cxFirst - halfDepth, y: cy };
+                const lotPt  = { x: -lotHD, y: cy };
+                const mid    = { x: (edgePt.x + lotPt.x) / 2, y: cy };
+                lbl(mid, Math.abs(distFront).toFixed(1) + "'", lotRot + 90);
+            }
+            // Rear clearance
+            if (Math.abs(distRear) > 0.05) {
+                const edgePt = { x: cxLast + halfDepth, y: cy };
+                const lotPt  = { x: lotHD, y: cy };
+                const mid    = { x: (edgePt.x + lotPt.x) / 2, y: cy };
+                lbl(mid, Math.abs(distRear).toFixed(1) + "'", lotRot + 90);
+            }
+            // Left clearance
+            if (Math.abs(distLeft) > 0.05) {
+                const edgePt = { x: baseCx, y: cy - halfWidth };
+                const lotPt  = { x: baseCx, y: -lotHW };
+                const mid    = { x: baseCx, y: (edgePt.y + lotPt.y) / 2 };
+                lbl(mid, Math.abs(distLeft).toFixed(1) + "'", lotRot);
+            }
+            // Right clearance
+            if (Math.abs(distRight) > 0.05) {
+                const edgePt = { x: baseCx, y: cy + halfWidth };
+                const lotPt  = { x: baseCx, y: lotHW };
+                const mid    = { x: baseCx, y: (edgePt.y + lotPt.y) / 2 };
+                lbl(mid, Math.abs(distRight).toFixed(1) + "'", lotRot);
             }
         });
     },

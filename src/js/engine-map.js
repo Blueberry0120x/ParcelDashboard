@@ -222,7 +222,7 @@ const MapEngine = {
             const m = L.marker(pos, {
                 icon: L.divIcon({
                     className: '',
-                    html: '<div class="dim-label" style="transform:translate(-50%,-50%) rotate(' + e.rotAngle.toFixed(1) + 'deg)">' + e.text + '</div>',
+                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotAngle.toFixed(1) + 'deg)">' + e.text + '</div></div>',
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 }),
                 interactive: true
