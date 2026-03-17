@@ -1255,10 +1255,10 @@ const MapEngine = {
 
         // Each edge: two corner points, outward perpendicular, axis unit vector, label text, rotation
         const edges = [
-            { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: rot,    key:'lot_front' }, // front (depth= -h/2)
-            { p1: c3, p2: c2, px: 1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: rot,    key:'lot_rear'  }, // rear  (depth= +h/2)
-            { p1: c1, p2: c2, px: 0, py: 1, ux: 1, uy: 0, text: h+' FT', rotA: rot+90, key:'lot_right' }, // right (width= +w/2)
-            { p1: c0, p2: c3, px: 0, py:-1, ux: 1, uy: 0, text: h+' FT', rotA: rot+90, key:'lot_left'  }, // left  (width= -w/2)
+            { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: 0,   key:'lot_front' }, // front — horizontal text
+            { p1: c3, p2: c2, px: 1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: 0,   key:'lot_rear'  }, // rear  — horizontal text
+            { p1: c1, p2: c2, px: 0, py: 1, ux: 1, uy: 0, text: h+' FT', rotA: -90, key:'lot_right' }, // right — vertical text
+            { p1: c0, p2: c3, px: 0, py:-1, ux: 1, uy: 0, text: h+' FT', rotA: -90, key:'lot_left'  }, // left  — vertical text
         ];
 
         edges.forEach((e) => {
@@ -1926,7 +1926,9 @@ const SetbackEngine = {
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
             const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
-            const labelRot = state.rotation + bldg.orientation;
+            // Labels stay screen-aligned: horizontal=0, vertical=-90
+            const labelRotW = 0;   // width dim text = horizontal
+            const labelRotH = -90; // height dim text = vertical
 
             for (let j = 0; j < count; j++) {
                 const cx = baseCx + (j - aOff) * step;
@@ -1945,7 +1947,7 @@ const SetbackEngine = {
                     gLine([{ x: wMid.x + TO*wAx, y: wMid.y + TO*wAy }, wD2]);
                     gLine([{ x: wD1.x - TK*tkX, y: wD1.y - TK*tkY }, { x: wD1.x + TK*tkX, y: wD1.y + TK*tkY }]);
                     gLine([{ x: wD2.x - TK*tkX, y: wD2.y - TK*tkY }, { x: wD2.x + TK*tkX, y: wD2.y + TK*tkY }]);
-                    gLbl(wMid, bldg.width.toFixed(1) + "'", labelRot + 90);
+                    gLbl(wMid, bldg.width.toFixed(1) + "'", labelRotW);
                 });
 
                 // ── HEIGHT dim (clickable) ──
@@ -1959,7 +1961,7 @@ const SetbackEngine = {
                     gLine([{ x: hMid.x + TO*dAx, y: hMid.y + TO*dAy }, hD2]);
                     gLine([{ x: hD1.x - TK*tkX, y: hD1.y - TK*tkY }, { x: hD1.x + TK*tkX, y: hD1.y + TK*tkY }]);
                     gLine([{ x: hD2.x - TK*tkX, y: hD2.y - TK*tkY }, { x: hD2.x + TK*tkX, y: hD2.y + TK*tkY }]);
-                    gLbl(hMid, bldg.height.toFixed(1) + "'", labelRot);
+                    gLbl(hMid, bldg.height.toFixed(1) + "'", labelRotH);
                 });
             }
         });
@@ -2023,25 +2025,25 @@ const SetbackEngine = {
             const cxLast  = baseCx + (count - 1 - aOff) * step;
             const k = 'clr_B' + (bi+1);
 
-            // Front: building front edge → front lot line
+            // Front: building front edge → front lot line (vertical on screen)
             dimLine(
                 { x: -lotHD, y: cy }, { x: cxFirst - halfDepth, y: cy },
-                0, -1, state.rotation + 90, k + '_front'
+                0, -1, -90, k + '_front'
             );
-            // Rear: building rear edge → rear lot line
+            // Rear: building rear edge → rear lot line (vertical on screen)
             dimLine(
                 { x: cxLast + halfDepth, y: cy }, { x: lotHD, y: cy },
-                0, 1, state.rotation + 90, k + '_rear'
+                0, 1, -90, k + '_rear'
             );
-            // Left: building left edge → left lot line
+            // Left: building left edge → left lot line (horizontal on screen)
             dimLine(
                 { x: baseCx, y: -lotHW }, { x: baseCx, y: cy - halfWidth },
-                -1, 0, state.rotation, k + '_left'
+                -1, 0, 0, k + '_left'
             );
-            // Right: building right edge → right lot line
+            // Right: building right edge → right lot line (horizontal on screen)
             dimLine(
                 { x: baseCx, y: cy + halfWidth }, { x: baseCx, y: lotHW },
-                1, 0, state.rotation, k + '_right'
+                1, 0, 0, k + '_right'
             );
         });
     },
