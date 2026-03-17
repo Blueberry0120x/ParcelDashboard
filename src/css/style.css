@@ -203,6 +203,9 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     cursor: pointer; user-select: none;
 }
 .dim-label:hover { opacity: 0.5; }
+/* Chain dim lines — draggable to reposition */
+.chain-dim-line { cursor: grab; }
+.chain-dim-line:active { cursor: grabbing; }
 /* Architectural dimension text labels on map — plain text, centered */
 .arch-dim-label {
     font-size: 0.68em; font-weight: 800; font-family: 'Segoe UI', sans-serif;

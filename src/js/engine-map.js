@@ -7,6 +7,7 @@ const MapEngine = {
     dimLabels: [], showDims: false,
     bldgDimLabels: [], showBldgDims: false,
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
+    chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -232,10 +233,10 @@ const MapEngine = {
         const c2 = {x:  h/2, y:  w/2}, c3 = {x:  h/2, y: -w/2};
 
         // Each edge: two corner points, outward perpendicular, axis unit vector, label text, rotation
-        // Snap label to nearest screen axis: 0 (horizontal) or -90 (vertical)
-        const snap = (a) => { a = ((a % 360) + 360) % 360; return (a > 45 && a < 135) || (a > 225 && a < 315) ? -90 : 0; };
-        const wAngle = snap(rot);      // width edge → horizontal or vertical
-        const dAngle = snap(rot + 90); // depth edge → horizontal or vertical
+        // Label rotation follows the dimension line direction, normalized upright [-90, 90)
+        const normalize = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
+        const wAngle = normalize(-rot - 90); // width edge → follows line
+        const dAngle = normalize(-rot);      // depth edge → follows line
 
         const edges = [
             { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: wAngle, key:'lot_front' },

@@ -419,95 +419,33 @@ const SetbackEngine = {
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
             const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
-            // Snap label to nearest screen axis: 0 (horizontal) or -90 (vertical)
-            const snap = (a) => { a = ((a % 360) + 360) % 360; return (a > 45 && a < 135) || (a > 225 && a < 315) ? -90 : 0; };
+            // Label rotation follows the dimension line direction, normalized upright [-90, 90)
+            const normalize = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
             const totalRot = state.rotation + bldg.orientation;
-            const labelRotW = snap(totalRot);      // width dim
-            const labelRotH = snap(totalRot + 90); // height dim
+            const labelRotW = normalize(-totalRot - 90); // width dim
+            const labelRotH = normalize(-totalRot);       // height dim
 
-            for (let j = 0; j < count; j++) {
-                const cx = baseCx + (j - aOff) * step;
-                const c0 = { x: cx - hh*dAx + hw*wAx, y: cy - hh*dAy + hw*wAy };
-                const c2 = { x: cx + hh*dAx - hw*wAx, y: cy + hh*dAy - hw*wAy };
-                const c3 = { x: cx - hh*dAx - hw*wAx, y: cy - hh*dAy - hw*wAy };
-
-                // ── WIDTH dim (clickable) ──
-                dimGroup('bldg_B'+(bi+1)+'_c'+j+'_w', (gLine, gLbl) => {
-                    const wD1 = { x: c3.x - EXT*dAx, y: c3.y - EXT*dAy };
-                    const wD2 = { x: c0.x - EXT*dAx, y: c0.y - EXT*dAy };
-                    gLine([{ x: c3.x - dAx, y: c3.y - dAy }, { x: c3.x - (EXT+EX2)*dAx, y: c3.y - (EXT+EX2)*dAy }]);
-                    gLine([{ x: c0.x - dAx, y: c0.y - dAy }, { x: c0.x - (EXT+EX2)*dAx, y: c0.y - (EXT+EX2)*dAy }]);
-                    const wMid = { x: (wD1.x+wD2.x)/2, y: (wD1.y+wD2.y)/2 };
-                    gLine([wD1, { x: wMid.x - TO*wAx, y: wMid.y - TO*wAy }]);
-                    gLine([{ x: wMid.x + TO*wAx, y: wMid.y + TO*wAy }, wD2]);
-                    gLine([{ x: wD1.x - TK*tkX, y: wD1.y - TK*tkY }, { x: wD1.x + TK*tkX, y: wD1.y + TK*tkY }]);
-                    gLine([{ x: wD2.x - TK*tkX, y: wD2.y - TK*tkY }, { x: wD2.x + TK*tkX, y: wD2.y + TK*tkY }]);
-                    gLbl(wMid, bldg.width.toFixed(1) + "'", labelRotW);
-                });
-
-                // ── HEIGHT dim (clickable) ──
-                dimGroup('bldg_B'+(bi+1)+'_c'+j+'_h', (gLine, gLbl) => {
-                    const hD1 = { x: c3.x - EXT*wAx, y: c3.y - EXT*wAy };
-                    const hD2 = { x: c2.x - EXT*wAx, y: c2.y - EXT*wAy };
-                    gLine([{ x: c3.x - wAx, y: c3.y - wAy }, { x: c3.x - (EXT+EX2)*wAx, y: c3.y - (EXT+EX2)*wAy }]);
-                    gLine([{ x: c2.x - wAx, y: c2.y - wAy }, { x: c2.x - (EXT+EX2)*wAx, y: c2.y - (EXT+EX2)*wAy }]);
-                    const hMid = { x: (hD1.x+hD2.x)/2, y: (hD1.y+hD2.y)/2 };
-                    gLine([hD1, { x: hMid.x - TO*dAx, y: hMid.y - TO*dAy }]);
-                    gLine([{ x: hMid.x + TO*dAx, y: hMid.y + TO*dAy }, hD2]);
-                    gLine([{ x: hD1.x - TK*tkX, y: hD1.y - TK*tkY }, { x: hD1.x + TK*tkX, y: hD1.y + TK*tkY }]);
-                    gLine([{ x: hD2.x - TK*tkX, y: hD2.y - TK*tkY }, { x: hD2.x + TK*tkX, y: hD2.y + TK*tkY }]);
-                    gLbl(hMid, bldg.height.toFixed(1) + "'", labelRotH);
-                });
-            }
+            // (Individual width/height dims replaced by chain dims below)
         });
 
-        // ── CLEARANCE DIMS: building edges to lot boundary ─────────────────
-        // Full architectural dim line between two points along an axis
-        // Returns array of layers so caller can group them for click-to-hide
-        const dimLine = (p1, p2, perpX, perpY, rotDeg, dimKey) => {
-            const dist = Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2);
-            if (dist < 0.5) return; // skip zero/tiny clearances
-            if (MapEngine.hiddenDimKeys.has(dimKey)) return; // user hid this
-            const layers = [];
-            const pLine = pts => { const l = line(pts); layers.push(l); return l; };
-            // Unit vector along dim direction
-            const ux = (p2.x - p1.x) / dist, uy = (p2.y - p1.y) / dist;
-            // Dim line offset from geometry (along perpendicular)
-            const o = EXT;
-            const d1 = { x: p1.x + o*perpX, y: p1.y + o*perpY };
-            const d2 = { x: p2.x + o*perpX, y: p2.y + o*perpY };
-            // Extension (witness) lines
-            pLine([p1, { x: p1.x + (o+EX2)*perpX, y: p1.y + (o+EX2)*perpY }]);
-            pLine([p2, { x: p2.x + (o+EX2)*perpX, y: p2.y + (o+EX2)*perpY }]);
-            // Dim line split around text
-            const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
-            pLine([d1, { x: mid.x - TO*ux, y: mid.y - TO*uy }]);
-            pLine([{ x: mid.x + TO*ux, y: mid.y + TO*uy }, d2]);
-            // 45-deg ticks
-            const tk45x = (ux + perpX) * 0.7071 * TK;
-            const tk45y = (uy + perpY) * 0.7071 * TK;
-            pLine([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
-            pLine([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
-            // Clickable label — click hides entire dim group, persists across redraws
-            const m = push(L.marker(toLatLng(mid), {
-                icon: L.divIcon({
-                    className: '',
-                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
-                    iconSize: [0, 0], iconAnchor: [0, 0]
-                }),
-                interactive: true
-            }).addTo(MapEngine.map));
-            layers.push(m);
-            m.on('click', () => {
-                MapEngine.hiddenDimKeys.add(dimKey);
-                layers.forEach(l => MapEngine.map.removeLayer(l));
-            });
-        };
-
+        // ── CHAIN DIMENSIONS ────────────────────────────────────────────────
+        // Collects all boundary points along each axis, then draws one
+        // continuous chain dim (shared witness lines at junctions).
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const lotHD = lotD / 2, lotHW = lotW / 2;
+        const dimNorm = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
+        const clrDepthAngle = dimNorm(-state.rotation);
+        const clrWidthAngle = dimNorm(-state.rotation - 90);
 
-        state.buildings.forEach((bldg, bi) => {
+        // ── Collect boundary points ────────────────────────────────────────
+        // Width chain (along y): building widths + inter-bldg gaps + lot clearances
+        const wPts = [{ v: -lotHW }, { v: lotHW }];
+        // Depth chain (along x): building heights + inter-copy gaps + lot clearances
+        const dPts = [{ v: -lotHD }, { v: lotHD }];
+        let chainRefX = null;   // fixed x for the width chain (front edge)
+        let chainRefY = null;   // fixed y for the depth chain (left edge)
+
+        state.buildings.forEach((bldg) => {
             const count  = bldg.count || 1;
             const ss     = bldg.stackSpacing || 0;
             const anchor = bldg.anchor || 'center';
@@ -517,35 +455,181 @@ const SetbackEngine = {
             const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
             const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
             const cxFirst = baseCx + (0 - aOff) * step;
-            const cxLast  = baseCx + (count - 1 - aOff) * step;
-            const k = 'clr_B' + (bi+1);
 
-            // Clearance label angles snapped to screen axis
-            const clrSnap = (a) => { a = ((a % 360) + 360) % 360; return (a > 45 && a < 135) || (a > 225 && a < 315) ? -90 : 0; };
-            const clrDepthAngle = clrSnap(state.rotation + 90);
-            const clrWidthAngle = clrSnap(state.rotation);
+            // Use first building's edges as the chain reference lines
+            if (chainRefX === null) chainRefX = cxFirst - halfDepth;
+            if (chainRefY === null) chainRefY = cy - halfWidth;
 
-            // Front: building front edge → front lot line (along depth axis)
-            dimLine(
-                { x: -lotHD, y: cy }, { x: cxFirst - halfDepth, y: cy },
-                0, -1, clrDepthAngle, k + '_front'
-            );
-            // Rear: building rear edge → rear lot line (along depth axis)
-            dimLine(
-                { x: cxLast + halfDepth, y: cy }, { x: lotHD, y: cy },
-                0, 1, clrDepthAngle, k + '_rear'
-            );
-            // Left: building left edge → left lot line (along width axis)
-            dimLine(
-                { x: baseCx, y: -lotHW }, { x: baseCx, y: cy - halfWidth },
-                -1, 0, clrWidthAngle, k + '_left'
-            );
-            // Right: building right edge → right lot line (along width axis)
-            dimLine(
-                { x: baseCx, y: cy + halfWidth }, { x: baseCx, y: lotHW },
-                1, 0, clrWidthAngle, k + '_right'
-            );
+            // Width chain: building left/right edges
+            wPts.push({ v: cy - halfWidth });
+            wPts.push({ v: cy + halfWidth });
+
+            // Depth chain: each copy's front/rear edges
+            for (let j = 0; j < count; j++) {
+                const cx = baseCx + (j - aOff) * step;
+                dPts.push({ v: cx - halfDepth });
+                dPts.push({ v: cx + halfDepth });
+            }
         });
+
+        // Deduplicate & sort
+        const dedup = (arr) => {
+            arr.sort((a, b) => a.v - b.v);
+            const out = [arr[0]];
+            for (let i = 1; i < arr.length; i++) {
+                if (Math.abs(arr[i].v - out[out.length - 1].v) > 0.01) out.push(arr[i]);
+            }
+            return out;
+        };
+        const wChain = dedup(wPts);
+        const dChain = dedup(dPts);
+
+        // ── Draw chain helper ──────────────────────────────────────────────
+        // Draws a full chain dim: shared witness lines + individual segments
+        // Lines are draggable to reposition the chain perpendicular to its run.
+        const drawChain = (chain, refCoord, isX, perpX, perpY, rotDeg, prefix) => {
+            const chainLayers = [];
+            const dimStyle = { color: '#1a202c', weight: 1.2, opacity: 1, interactive: true, noClip: true, className: 'chain-dim-line' };
+
+            // Witness lines at every boundary
+            chain.forEach((seg) => {
+                const p = isX ? { x: seg.v, y: refCoord } : { x: refCoord, y: seg.v };
+                const l = push(L.polyline([toLatLng(p), toLatLng({ x: p.x + (EXT+EX2)*perpX, y: p.y + (EXT+EX2)*perpY })], dimStyle).addTo(MapEngine.map));
+                chainLayers.push(l);
+            });
+
+            // Dim segments between adjacent boundaries
+            for (let i = 0; i < chain.length - 1; i++) {
+                const v1 = chain[i].v, v2 = chain[i + 1].v;
+                const dist = Math.abs(v2 - v1);
+                if (dist < 0.5) continue;
+                const dimKey = prefix + '_' + i;
+                if (MapEngine.hiddenDimKeys.has(dimKey)) continue;
+
+                const p1 = isX ? { x: v1, y: refCoord } : { x: refCoord, y: v1 };
+                const p2 = isX ? { x: v2, y: refCoord } : { x: refCoord, y: v2 };
+                const d1 = { x: p1.x + EXT*perpX, y: p1.y + EXT*perpY };
+                const d2 = { x: p2.x + EXT*perpX, y: p2.y + EXT*perpY };
+                const ux = (p2.x - p1.x) / dist, uy = (p2.y - p1.y) / dist;
+                const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
+                const tk45x = (ux + perpX) * 0.7071 * TK;
+                const tk45y = (uy + perpY) * 0.7071 * TK;
+
+                const layers = [];
+                const pLine = pts => { const l = push(L.polyline(pts.map(toLatLng), dimStyle).addTo(MapEngine.map)); layers.push(l); chainLayers.push(l); };
+
+                // Dim line split around label
+                pLine([d1, { x: mid.x - TO*ux, y: mid.y - TO*uy }]);
+                pLine([{ x: mid.x + TO*ux, y: mid.y + TO*uy }, d2]);
+                // Ticks
+                pLine([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
+                pLine([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
+                // Label
+                const m = push(L.marker(toLatLng(mid), {
+                    icon: L.divIcon({
+                        className: '',
+                        html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    }),
+                    interactive: true
+                }).addTo(MapEngine.map));
+                layers.push(m); chainLayers.push(m);
+                m.on('click', () => {
+                    MapEngine.hiddenDimKeys.add(dimKey);
+                    layers.forEach(l => MapEngine.map.removeLayer(l));
+                });
+            }
+            return chainLayers;
+        };
+
+        // ── Draw the two chain dims ──────────────────────────────────────
+        // Perpendicular flips outward: if chain is on the rear/right half, push further out
+        const wRef = chainRefX + MapEngine.chainWOffset;
+        const dRef = chainRefY + MapEngine.chainDOffset;
+        const wPerpX = wRef > 0 ? 1 : -1;
+        const dPerpY = dRef > 0 ? 1 : -1;
+        let wLayers = drawChain(wChain, wRef, false, wPerpX, 0, clrWidthAngle, 'chain_w');
+        let dLayers = drawChain(dChain, dRef, true, 0, dPerpY, clrDepthAngle, 'chain_d');
+
+        // ── Drag-to-reposition via chain lines ──────────────────────────
+        const rad = state.rotation * Math.PI / 180;
+        const rCos = Math.cos(rad), rSin = Math.sin(rad);
+        const toLocal = (ll) => {
+            const rx = (ll.lng - state.lng) * F_LNG;
+            const ry = (ll.lat - state.lat) * F_LAT;
+            return { x: rx * rCos + ry * rSin, y: -rx * rSin + ry * rCos };
+        };
+
+        // Snap anchors: lot edges + all building boundaries
+        const wAnchors = [-lotHD, lotHD];
+        const dAnchors = [-lotHW, lotHW];
+        state.buildings.forEach((bldg) => {
+            const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+            const count  = bldg.count || 1;
+            const ss     = bldg.stackSpacing || 0;
+            const anchor = bldg.anchor || 'center';
+            const step   = halfDepth * 2 + ss;
+            const aOff   = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+            const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
+            const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
+            for (let j = 0; j < count; j++) {
+                const cx = baseCx + (j - aOff) * step;
+                wAnchors.push(cx - halfDepth, cx + halfDepth);
+            }
+            dAnchors.push(cy - halfWidth, cy + halfWidth);
+        });
+
+        const snapTo = (val, anchors) => {
+            let best = anchors[0], bestD = Math.abs(val - anchors[0]);
+            for (let i = 1; i < anchors.length; i++) {
+                const d = Math.abs(val - anchors[i]);
+                if (d < bestD) { best = anchors[i]; bestD = d; }
+            }
+            return best;
+        };
+
+        // Attach drag behavior to all polylines in a chain
+        const self = this;
+        let dragging = false;
+        const attachChainDrag = (layers, chain, isX, perpX, perpY, offsetProp, baseRef, anchors, rotDeg, prefix, getLayers, setLayers) => {
+            layers.forEach(l => {
+                if (!l.on || !(l instanceof L.Polyline)) return;
+                l.on('mousedown', (e) => {
+                    if (dragging) return;
+                    dragging = true;
+                    L.DomEvent.stop(e.originalEvent);
+                    MapEngine.map.dragging.disable();
+                    const onMove = (me) => {
+                        const loc = toLocal(me.latlng);
+                        const rawVal = isX ? loc.y : loc.x;
+                        const snapped = snapTo(rawVal, anchors);
+                        if (MapEngine[offsetProp] === snapped - baseRef) return;
+                        MapEngine[offsetProp] = snapped - baseRef;
+                        const newRef = baseRef + MapEngine[offsetProp];
+                        // Flip perpendicular outward based on which side of lot center
+                        const pX = isX ? perpX : (newRef > 0 ? 1 : -1);
+                        const pY = isX ? (newRef > 0 ? 1 : -1) : perpY;
+                        getLayers().forEach(ll => MapEngine.map.removeLayer(ll));
+                        const newLayers = drawChain(chain, newRef, isX, pX, pY, rotDeg, prefix);
+                        setLayers(newLayers);
+                    };
+                    const onUp = () => {
+                        dragging = false;
+                        MapEngine.map.off('mousemove', onMove);
+                        MapEngine.map.off('mouseup', onUp);
+                        MapEngine.map.dragging.enable();
+                        self.updateBldgDimLabels();
+                    };
+                    MapEngine.map.on('mousemove', onMove);
+                    MapEngine.map.on('mouseup', onUp);
+                });
+            });
+        };
+
+        attachChainDrag(wLayers, wChain, false, wPerpX, 0, 'chainWOffset', chainRefX, wAnchors, clrWidthAngle, 'chain_w',
+            () => wLayers, (l) => { wLayers = l; });
+        attachChainDrag(dLayers, dChain, true, 0, dPerpY, 'chainDOffset', chainRefY, dAnchors, clrDepthAngle, 'chain_d',
+            () => dLayers, (l) => { dLayers = l; });
     },
 
     updateFAR: function() {
@@ -774,6 +858,8 @@ const SetbackEngine = {
         MapEngine.showBldgDims = dimsOn;
         MapEngine.showDims     = dimsOn;
         if (state.hiddenDimKeys) state.hiddenDimKeys.forEach(k => MapEngine.hiddenDimKeys.add(k));
+        if (state.chainWOffset != null) MapEngine.chainWOffset = state.chainWOffset;
+        if (state.chainDOffset != null) MapEngine.chainDOffset = state.chainDOffset;
         const dimBtn = document.getElementById('bldgDimBtn');
         dimBtn.classList.toggle('active', dimsOn);
         if (dimsOn) dimBtn.textContent = 'Hide Dims';
@@ -807,7 +893,9 @@ const SetbackEngine = {
             activeBuilding: state.activeBuilding,
             commFront:      state.commFront,
             showBldgDims:   state.showBldgDims,
-            hiddenDimKeys:  [...MapEngine.hiddenDimKeys]
+            hiddenDimKeys:  [...MapEngine.hiddenDimKeys],
+            chainWOffset:   MapEngine.chainWOffset,
+            chainDOffset:   MapEngine.chainDOffset
         }));
         this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
