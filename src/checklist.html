@@ -125,7 +125,7 @@ const CHOICES = {
 // ═══════════════════════════════════════
 const DATA = [
   { id:"A", title:"A. PERMIT PATHWAY DECISION", items:[
-    {id:"A1",text:"Confirm site within SDA on ZAPP map",note:"Required for CCHS. sandiego.gov/ZAPP"},
+    {id:"A1",text:"Confirm site within SDA on ZAPP map",note:"SDA = Sustainable Development Area (~1 mi walk to high-frequency transit). Required for CCHS. sandiego.gov/ZAPP"},
     {id:"A2",text:"Decide pathway: BASE ZONE vs CCHS TIER 3",note:"Synced with Building Config above. 12 DU exceeds base max of 10."},
     {id:"A3",text:"Calculate affordability (40% of pre-bonus units)",note:"15% <=50% AMI, 10% <=60% AMI, 15% <=120% AMI = ~4 units"},
     {id:"A4",text:"Budget Neighborhood Enhancement Fund ($11.78/SF)",note:"FY2026: $11.78 x 6,250 = ~$73,625. Waived for 100% affordable."},
@@ -140,7 +140,7 @@ const DATA = [
     ]},
     { sub:"CCHS Pathway", items:[
       {id:"B5",text:"Email DSDMinisterialPM+CCN@sandiego.gov for CCHS Review",note:"MANDATORY first step",alert:true},
-      {id:"B6",text:"Prepare CCHS eligibility package",note:"Density, parkway, supplemental regs"},
+      {id:"B6",text:"Prepare CCHS eligibility package",note:"Density calcs, street parkway landscaping (10-ft buffer), supplemental regs (SS143.1025)"},
       {id:"B7",text:"Confirm 10-ft sidewalk + landscaped buffer",note:"SS143.1025"},
       {id:"B8",text:"Enter CCHS Now track (30 biz day plan check)",note:"Ministerial: no CEQA, no hearing"},
     ]},
@@ -221,6 +221,25 @@ const CONTACTS = [
     {name:"Mechanical",val:"Christopher Sorchy (619-236-7033)"},
     {name:"Grading",val:"Alejandro Ruiz (858-627-2034)"},
   ]),
+];
+
+const GLOSSARY = [
+  {term:"SDA",full:"Sustainable Development Area",def:"City of San Diego zone within ~1 mile walking distance of high-frequency transit. Sites must be in an SDA to qualify for CCHS. Verify on ZAPP map."},
+  {term:"CCHS",full:"Complete Communities Housing Solutions",def:"San Diego's opt-in parallel zoning program (2020). Removes density caps and height limits near transit in exchange for affordable units and a Neighborhood Enhancement Fund fee."},
+  {term:"Ministerial",full:"",def:"Approval that is automatic by law — the city must approve if code requirements are met. No public hearing, no CEQA review. CCHS projects are ministerial. Contrast: Discretionary."},
+  {term:"Discretionary",full:"",def:"Approval requiring a public hearing or planning commission decision, where the city exercises judgment. Adds months to the timeline. Standard permit pathway (non-CCHS) may be discretionary."},
+  {term:"CEQA",full:"California Environmental Quality Act",def:"State law requiring environmental impact analysis before discretionary approvals. Ministerial projects (including CCHS) are categorically exempt from CEQA."},
+  {term:"SDMC",full:"San Diego Municipal Code",def:"The local law book governing land use, zoning, building standards, and fees in San Diego. Sections referenced throughout (e.g., Sec.143.1010 = CCHS; Sec.155.0240 = CUPD zoning)."},
+  {term:"DSD",full:"Development Services Department",def:"The City of San Diego department that issues building permits, reviews plans, enforces zoning, and assigns Development Project Managers. Main point of contact for all permits."},
+  {term:"CUPD",full:"Commercial Urbanist Planned Development",def:"Zoning overlay covering this site. CU-2-4 = sub-district 4, which requires commercial use in the front 30 ft and restricts operating hours to 6 AM-midnight."},
+  {term:"DPM",full:"Development Project Manager",def:"DSD staff member assigned to coordinate all disciplines (planning, structural, MEP, engineering) on a Multiple Discipline Preliminary Review. Acts as single point of contact."},
+  {term:"DU",full:"Dwelling Unit",def:"One residential apartment or home, counted for density purposes. Commercial suites, lobbies, and storage do NOT count as DUs."},
+  {term:"AMI",full:"Area Median Income",def:"HUD-published income benchmark for a geographic area, updated annually. Affordable housing deed-restrictions are set as a percentage of AMI (e.g., 50% AMI = very low income, 120% AMI = moderate income)."},
+  {term:"VLI",full:"Very Low Income",def:"Households earning 50% or less of AMI. The highest-priority affordable tier. Required for the most favorable density bonus under State Density Bonus Law (5% VLI units unlocks 20% bonus)."},
+  {term:"APN",full:"Assessor Parcel Number",def:"Unique ID assigned to every parcel by the County Assessor (e.g., 471-271-16-00). Used to look up exact DIF fees via the City DIF Calculator, ownership records, and zoning verification."},
+  {term:"STC",full:"Sound Transmission Class",def:"Lab rating measuring how well a wall or assembly blocks airborne sound (speech, music, TV). Higher STC = better isolation. Code minimum between units: STC 50 (lab) / 45 (field)."},
+  {term:"IIC",full:"Impact Insulation Class",def:"Lab rating measuring how well a floor-ceiling assembly blocks impact noise (footsteps, dropped objects). Higher IIC = better. Code minimum: IIC 50 (lab) / 45 (field) per CBC S1206."},
+  {term:"AFF",full:"Above Finish Floor",def:"Vertical measurement reference taken from the finished floor surface. Used for accessibility specifications — e.g., mailbox locks must be 15–67\" AFF per ADA standards."},
 ];
 
 function allItemsOf(d){let o=[];d.forEach(c=>{if(c.items)o.push(...c.items);if(c.sections)c.sections.forEach(s=>o.push(...s.items))});return o}
@@ -533,6 +552,20 @@ function AdvisorySection({sel,bldgs,onHelp}){
         </AdvCard>
 
 
+        <AdvCard id="glossary" title="Glossary" isOpen={!!open["glossary"]} onToggle={toggle}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"6px 14px"}}>
+            {GLOSSARY.map(g=>(
+              <div key={g.term} style={{padding:"7px 10px",borderRadius:8,background:"#f8fafc",border:"1px solid #e2e8f0"}}>
+                <div style={{display:"flex",gap:6,alignItems:"baseline",marginBottom:3}}>
+                  <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,color:"#0f4c81",flexShrink:0}}>{g.term}</span>
+                  {g.full&&<span style={{fontSize:9,color:"#64748b",fontWeight:600}}>{g.full}</span>}
+                </div>
+                <div style={{fontSize:11,color:"#475569",lineHeight:1.5}}>{g.def}</div>
+              </div>
+            ))}
+          </div>
+        </AdvCard>
+
         <div style={{marginTop:8,borderRadius:10,border:"1px solid #e2e8f0",background:"#fff",overflow:"clip"}}>
           <button onClick={e=>{e.currentTarget.blur();toggle("footnotes")}} style={{width:"100%",padding:"10px 14px",border:"none",cursor:"pointer",fontFamily:"inherit",background:open["footnotes"]?"#f8fafc":"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left"}}>
             <span style={{fontSize:13,fontWeight:700,color:"#1e293b"}}>Sources and References</span>
@@ -551,8 +584,9 @@ function AdvisorySection({sel,bldgs,onHelp}){
               <a href="https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/ab-2097-ta.pdf" target="_blank" rel="noopener" style={{color:"#2563eb",wordBreak:"break-all"}}>hcd.ca.gov/.../ab-2097-ta.pdf</a> (HCD Technical Advisory)</div>
             <div data-fn="6" style={{marginTop:6}}>[6] SB 9 (2021): Gov. Code Sec.65852.21. Multi-dwelling unit development on single-family parcels.<br/>
               <a href="https://www.sandiego.gov/development-services/forms-publications/information-bulletins/409" target="_blank" rel="noopener" style={{color:"#2563eb",wordBreak:"break-all"}}>sandiego.gov/.../information-bulletins/409</a> (San Diego IB-409)</div>
-            <div data-fn="7" style={{marginTop:6}}>[7] CCHS FAR Tier 3 = 6.5. SDMC Sec.143.1010(d), Table 143-10A.<br/>
-              <a href="https://docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art03Division10.pdf" target="_blank" rel="noopener" style={{color:"#2563eb",wordBreak:"break-all"}}>docs.sandiego.gov/municode/.../Ch14Art03Division10.pdf</a></div>
+            <div data-fn="7" style={{marginTop:6}}>[7] CCHS FAR Tier 3 = 6.5. SDMC Sec.143.1010(d), Table 143-10A. SDA eligibility confirmed via ZAPP map.<br/>
+              <a href="https://docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art03Division10.pdf" target="_blank" rel="noopener" style={{color:"#2563eb",wordBreak:"break-all"}}>docs.sandiego.gov/municode/.../Ch14Art03Division10.pdf</a> (SDMC) &nbsp;|&nbsp;
+              <a href="https://www.sandiego.gov/sites/default/files/ib-411_complete_communities_housing_solutions.pdf" target="_blank" rel="noopener" style={{color:"#2563eb",wordBreak:"break-all"}}>sandiego.gov/.../ib-411_complete_communities_housing_solutions.pdf</a> (IB-411)</div>
             <div data-fn="8" style={{marginTop:6}}>[8] State Density Bonus Law: Gov. Code Sec.65915 et seq. San Diego implementation: SDMC Sec.143.0720.<br/>
               <a href="https://www.sandiego.gov/development-services/regulatory-updates" target="_blank" rel="noopener" style={{color:"#2563eb",wordBreak:"break-all"}}>sandiego.gov/development-services/regulatory-updates</a></div>
             <div data-fn="9" style={{marginTop:6}}>[9] CUPD-CU-2-4 commercial frontage: SDMC Ch.15, Art.5, Div.2, Sec.155.0240, Table 155-02D.<br/>
