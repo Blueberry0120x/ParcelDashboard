@@ -694,6 +694,22 @@ const SetbackEngine = {
         const activeStories = active.stories || 1;
         const totalHeight = activeStories === 1 ? floorH : activeStories * (floorH + 1);
         set('bldgTotalHeight', totalHeight.toFixed(0));
+
+        // Density check: total residential units vs base zone max
+        const sd        = window.__SITE_DEFAULTS__ || {};
+        const densPerSF = sd.densityPerSF || 600;
+        const baseDMax  = Math.floor(lotArea / densPerSF);
+        const resiU     = state.buildings.reduce((s, b) => s + (b.stories || 1) * (b.count || 1), 0);
+        const sdbMin    = baseDMax + Math.ceil(baseDMax * 0.225); // 5% LI → 22.5% bonus
+        const densEl    = document.getElementById('bldgDensity');
+        const densChk   = document.getElementById('bldgDensityCheck');
+        if (densEl)  densEl.textContent  = resiU + ' DU / ' + (commFront ? 'unlimited' : baseDMax + ' max');
+        if (densChk) {
+            if (commFront)         { densChk.textContent = '\u2713 CCHS: no limit'; densChk.style.color = '#2f855a'; }
+            else if (resiU <= baseDMax) { densChk.textContent = '\u2713 Within base zone'; densChk.style.color = '#2f855a'; }
+            else if (resiU <= sdbMin)   { densChk.textContent = '\u26a0 Needs SDB (min 5% aff)'; densChk.style.color = '#d97706'; }
+            else                        { densChk.textContent = '\u2717 Exceeds base — use CCHS or SDB'; densChk.style.color = '#c53030'; }
+        }
     },
 
     // ── Init wiring ───────────────────────────────────────────────────────────

@@ -502,7 +502,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 
 </style>
-<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.755575,"lng":-117.09185,"rotation":10,"locked":false,"setbacks":{"front":10,"rear":10,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":18,"D":20,"offsetX":0,"offsetY":0,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9},{"orientation":0,"W":18,"D":40,"offsetX":0,"offsetY":0,"spacing":0,"count":3,"stackSpacing":5,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":true,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"Master Site Dashboard","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.755575,"lng":-117.09185,"rotation":10,"locked":false,"setbacks":{"front":10,"rear":10,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":18,"D":20,"offsetX":0,"offsetY":0,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9},{"orientation":0,"W":18,"D":40,"offsetX":0,"offsetY":0,"spacing":0,"count":3,"stackSpacing":5,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":true,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70};</script>
 </head>
 <body>
 <style>
@@ -713,6 +713,11 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <div style="grid-column: 2 / -1; padding-left: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
                             <span id="bldgFAR" style="font-weight: 700; color: #0f4c81; font-size: 1.05em;">—</span>
                             <span id="bldgFARCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
+                        </div>
+                        <strong>Density:</strong>
+                        <div style="grid-column: 2 / -1; padding-left: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
+                            <span id="bldgDensity" style="font-weight: 700; color: #0f4c81; font-size: 1.05em;">—</span>
+                            <span id="bldgDensityCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
                         </div>
                     </div>
                 </div>
@@ -2491,6 +2496,22 @@ const SetbackEngine = {
         const activeStories = active.stories || 1;
         const totalHeight = activeStories === 1 ? floorH : activeStories * (floorH + 1);
         set('bldgTotalHeight', totalHeight.toFixed(0));
+
+        // Density check: total residential units vs base zone max
+        const sd        = window.__SITE_DEFAULTS__ || {};
+        const densPerSF = sd.densityPerSF || 600;
+        const baseDMax  = Math.floor(lotArea / densPerSF);
+        const resiU     = state.buildings.reduce((s, b) => s + (b.stories || 1) * (b.count || 1), 0);
+        const sdbMin    = baseDMax + Math.ceil(baseDMax * 0.225); // 5% LI → 22.5% bonus
+        const densEl    = document.getElementById('bldgDensity');
+        const densChk   = document.getElementById('bldgDensityCheck');
+        if (densEl)  densEl.textContent  = resiU + ' DU / ' + (commFront ? 'unlimited' : baseDMax + ' max');
+        if (densChk) {
+            if (commFront)         { densChk.textContent = '\u2713 CCHS: no limit'; densChk.style.color = '#2f855a'; }
+            else if (resiU <= baseDMax) { densChk.textContent = '\u2713 Within base zone'; densChk.style.color = '#2f855a'; }
+            else if (resiU <= sdbMin)   { densChk.textContent = '\u26a0 Needs SDB (min 5% aff)'; densChk.style.color = '#d97706'; }
+            else                        { densChk.textContent = '\u2717 Exceeds base — use CCHS or SDB'; densChk.style.color = '#c53030'; }
+        }
     },
 
     // ── Init wiring ───────────────────────────────────────────────────────────

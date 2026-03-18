@@ -1,6 +1,7 @@
 ﻿{
     "project":  "Master Site Dashboard",
     "site":  {
+                 "project":  "Master Site Dashboard",
                  "address":  "4335 Euclid Avenue, San Diego, CA 92105",
                  "apn":  "471-271-16-00",
                  "zoning":  "CUPD-CU-2-4",
