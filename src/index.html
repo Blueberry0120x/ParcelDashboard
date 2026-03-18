@@ -36,6 +36,7 @@
         <div class="header-btn-group">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="header-btn header-btn-teal">SanDag GIS &#x2197;</a>
+            <button onclick="window.print()" class="header-btn header-btn-print">&#128438; Print</button>
         </div>
     </div>
 
@@ -332,6 +333,24 @@
     </div>
 
 </div><!-- end page-wrapper -->
+
+<!-- Auto-save flash badge -->
+<div id="map-save-flash" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:#166534;color:#dcfce7;padding:7px 16px;border-radius:20px;font-size:12px;
+  font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.28);pointer-events:none;
+  font-family:'Segoe UI',sans-serif;animation:mapFlashIn .2s ease;">
+  &#10003; Auto-saved
+</div>
+<style>
+@keyframes mapFlashIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media print{
+  .header-btn-group,.suite-nav,.col-divider,.sidebar{display:none!important}
+  .main-container{height:auto!important}
+  .map-panel{width:100%!important;height:90vh!important}
+  #map-save-flash{display:none!important}
+  body{padding:0!important}
+}
+</style>
 
 <script src="js/engine-config.js"></script>
 <script src="js/engine-ui.js"></script>

@@ -48,6 +48,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .header-btn:hover { background-color: var(--primary); color: white; }
 .header-btn-teal { color: #0d9488; border-color: #0d9488; }
 .header-btn-teal:hover { background-color: #0d9488; color: white; }
+.header-btn-print { color: #475569; border-color: #94a3b8; cursor: pointer; }
+.header-btn-print:hover { background-color: #475569; color: white; border-color: #475569; }
 
 /* Title row — title stack inline with address+apn pair */
 .header-title-row { display: flex; align-items: center; gap: 0; }
@@ -500,6 +502,62 @@ input:checked + .slider:before { transform: translateX(20px); }
     color: #0f4c81 !important; font-weight: 700 !important; font-size: 0.78em !important;
     padding: 2px 6px !important; border-radius: 4px !important; white-space: nowrap !important; }
 
+/* ==========================================
+   MOBILE — max-width: 767px
+   ========================================== */
+@media (max-width: 767px) {
+    body { padding: 8px; }
+    .page-wrapper { max-width: 100%; }
+
+    /* Header: stack title + buttons */
+    .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .header-left { width: 100%; }
+    .header-title-row { flex-wrap: wrap; gap: 8px; }
+    .header-title-stack h1 { font-size: 20px; }
+    .header-address-pair { margin-left: 0; flex-wrap: wrap; }
+    .header-address { padding: 6px 10px; }
+    .header-btn-group { flex-wrap: wrap; gap: 6px; }
+    .header-btn { padding: 6px 12px; font-size: 0.82em; min-height: 36px; }
+
+    /* Main layout: stack vertically (map on top, sidebar below) */
+    .main-container { flex-direction: column-reverse; height: auto; min-height: 0; }
+    .map-panel { min-height: 52vw; height: 52vw; max-height: 420px; width: 100%; }
+    .col-divider { display: none; }
+    .sidebar { width: 100%; min-width: 0; padding-right: 0; overflow-y: visible; }
+
+    /* Sidebar boxes: slightly less padding */
+    .sidebar-box { padding: 10px; }
+
+    /* Align grid: collapse to 2 cols (label | value+control) */
+    .align-grid { grid-template-columns: auto 1fr; }
+    .align-grid > *:nth-child(3n+2) { grid-column: span 1; }
+
+    /* Setback grid: 2-col stays but shrinks */
+    .setback-grid { gap: 6px; }
+
+    /* Touch targets — buttons */
+    .btn-align, .btn-accept, .btn-save-boundary, .btn-lock-position,
+    .btn-save-config, .btn-elev-toggle, .btn-elev-sample, .btn-elev-clear {
+        min-height: 36px; font-size: 0.8em;
+    }
+
+    /* Info bottom: single column */
+    .info-bottom { flex-direction: column; }
+    .info-col-left { width: 100%; }
+    .info-col-gap { display: none; }
+    .info-col-right { width: 100%; }
+
+    /* Property banner: allow 2-line wrapping on very small screens */
+    .property-banner { flex-wrap: wrap; }
+    .banner-stat { flex: 1 0 auto; min-width: 110px; }
+
+    /* Mode track stays compact */
+    .mode-track { width: 100px; }
+
+    /* Anchor/bldg tabs: larger tap area */
+    .anchor-btn, .bldg-tab { min-height: 30px; padding: 4px 10px; }
+}
+
 
 </style>
 <script>window.__SITE_DEFAULTS__ = {"project":"Master Site Dashboard","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.755575,"lng":-117.09185,"rotation":10,"locked":false,"setbacks":{"front":10,"rear":10,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":18,"D":20,"offsetX":0,"offsetY":0,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9},{"orientation":0,"W":18,"D":40,"offsetX":0,"offsetY":0,"spacing":0,"count":3,"stackSpacing":5,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":true,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70};</script>
@@ -537,6 +595,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <div class="header-btn-group">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="header-btn header-btn-teal">SanDag GIS &#x2197;</a>
+            <button onclick="window.print()" class="header-btn header-btn-print">&#128438; Print</button>
         </div>
     </div>
 
@@ -833,6 +892,24 @@ input:checked + .slider:before { transform: translateX(20px); }
     </div>
 
 </div><!-- end page-wrapper -->
+
+<!-- Auto-save flash badge -->
+<div id="map-save-flash" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:#166534;color:#dcfce7;padding:7px 16px;border-radius:20px;font-size:12px;
+  font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.28);pointer-events:none;
+  font-family:'Segoe UI',sans-serif;animation:mapFlashIn .2s ease;">
+  &#10003; Auto-saved
+</div>
+<style>
+@keyframes mapFlashIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media print{
+  .header-btn-group,.suite-nav,.col-divider,.sidebar{display:none!important}
+  .main-container{height:auto!important}
+  .map-panel{width:100%!important;height:90vh!important}
+  #map-save-flash{display:none!important}
+  body{padding:0!important}
+}
+</style>
 
 <script>
 /* ==========================================
@@ -1829,6 +1906,7 @@ const SetbackEngine = {
         ConfigEngine.state.setbacks = { front, rear, sideL, sideR };
         localStorage.setItem('saved_setbacks', JSON.stringify(ConfigEngine.state.setbacks));
         ExportEngine.pushToServer();
+        ExportEngine.showFlash();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
@@ -2740,6 +2818,7 @@ const SetbackEngine = {
             chainDOffset:   MapEngine.chainDOffset
         }));
         ExportEngine.pushToServer();
+        ExportEngine.showFlash();
         this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
@@ -2831,6 +2910,7 @@ const ExportEngine = {
         ConfigEngine.save();
         localStorage.setItem('boundary_location', JSON.stringify(state, null, 2));
         this.pushToServer();
+        this.showFlash();
         // Button feedback
         const btn = document.getElementById('saveBoundaryBtn');
         const orig = btn.textContent;
@@ -2877,6 +2957,18 @@ const ExportEngine = {
         };
     },
 
+    // Show the fixed save flash badge for 2 seconds
+    showFlash: function() {
+        const el = document.getElementById('map-save-flash');
+        if (!el) return;
+        if (this._flashTimer) clearTimeout(this._flashTimer);
+        el.style.display = 'block';
+        el.style.animation = 'none';
+        void el.offsetWidth; // reflow to restart animation
+        el.style.animation = '';
+        this._flashTimer = setTimeout(() => { el.style.display = 'none'; }, 2000);
+    },
+
     // Silent background push to local dev server — no-op when not on localhost
     pushToServer: function() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
@@ -2894,6 +2986,7 @@ const ExportEngine = {
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             this.pushToServer();
+            this.showFlash();
             _ok();
             return;
         }

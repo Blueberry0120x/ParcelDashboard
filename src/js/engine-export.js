@@ -55,6 +55,7 @@ const ExportEngine = {
         ConfigEngine.save();
         localStorage.setItem('boundary_location', JSON.stringify(state, null, 2));
         this.pushToServer();
+        this.showFlash();
         // Button feedback
         const btn = document.getElementById('saveBoundaryBtn');
         const orig = btn.textContent;
@@ -101,6 +102,18 @@ const ExportEngine = {
         };
     },
 
+    // Show the fixed save flash badge for 2 seconds
+    showFlash: function() {
+        const el = document.getElementById('map-save-flash');
+        if (!el) return;
+        if (this._flashTimer) clearTimeout(this._flashTimer);
+        el.style.display = 'block';
+        el.style.animation = 'none';
+        void el.offsetWidth; // reflow to restart animation
+        el.style.animation = '';
+        this._flashTimer = setTimeout(() => { el.style.display = 'none'; }, 2000);
+    },
+
     // Silent background push to local dev server — no-op when not on localhost
     pushToServer: function() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
@@ -118,6 +131,7 @@ const ExportEngine = {
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             this.pushToServer();
+            this.showFlash();
             _ok();
             return;
         }

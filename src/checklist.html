@@ -27,6 +27,9 @@
     body{background:#fff}
     input,select,textarea{border:none!important;background:transparent!important}
   }
+  @media(max-width:767px){
+    body{font-size:14px}
+  }
 </style>
 </head>
 <body>
@@ -36,6 +39,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
 const {useState,useEffect,useCallback,useRef}=React;
+function useMobile(bp=768){const[m,setM]=useState(()=>window.innerWidth<bp);useEffect(()=>{const h=()=>setM(window.innerWidth<bp);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[bp]);return m;}
 const SD = window.__SITE_DEFAULTS__ || {};
 
 // Seed checklist buildings from map's live localStorage state, then fall back to baked SD
@@ -355,7 +359,7 @@ function Pill({label,active,onClick,color="#0f4c81",small}){return <button onCli
 // ═══════════════════════════════════════
 //  BUILDING CONFIGURATOR
 // ═══════════════════════════════════════
-function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,onRefresh}){
+function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,onRefresh,isMobile}){
   const LOT=SD.lotSF??6250;const mono="'JetBrains Mono',monospace";
   const [showLockMsg,setShowLockMsg]=useState(false);
   const update=(i,f,v)=>{const n=[...bldgs];n[i]={...n[i],[f]:v};setBldgs(n)};
@@ -424,10 +428,11 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>
 
       {/* Building rows + SDB panel */}
-      <div style={{display:"flex",alignItems:"stretch"}}>
+      <div style={{display:"flex",alignItems:"stretch",flexDirection:isMobile?"column":"row"}}>
       <div style={{position:"relative",flex:1}}>
         <div style={{padding:"10px 14px",pointerEvents:mapLocked?"none":undefined,opacity:mapLocked?.65:1}}>
-          <div style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",fontSize:9,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>
+          <div style={{overflowX:isMobile?"auto":"visible"}}>
+          <div style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",fontSize:9,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5,marginBottom:3,minWidth:isMobile?320:undefined}}>
             <span>#</span><span>Type</span><span>W</span><span>D</span><span>Flr</span><span>U/F</span><span></span>
           </div>
           {bldgs.map((b,i)=>(
@@ -444,6 +449,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
               <button onClick={()=>remove(i)} style={{background:"#fee2e2",border:"none",borderRadius:5,cursor:"pointer",color:"#dc2626",fontWeight:700,fontSize:13,width:24,height:24}}>{"\u00D7"}</button>
             </div>
           ))}
+          </div>{/* end overflow wrapper */}
           <button onClick={add} style={{marginTop:4,marginLeft:29,padding:"4px 12px",borderRadius:8,border:"1.5px dashed #a78bfa",background:"#faf5ff",color:"#7c3aed",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add Building</button>
         </div>
         {mapLocked&&(
@@ -462,7 +468,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
 
       {/* SDB Calculator Panel */}
       {isSDB&&(
-        <div style={{borderLeft:"2px solid #a5f3fc",background:"#ecfeff",padding:"12px 14px",minWidth:230,maxWidth:260,flexShrink:0,display:"flex",flexDirection:"column",gap:8}}>
+        <div style={isMobile?{borderTop:"2px solid #a5f3fc",background:"#ecfeff",padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}:{borderLeft:"2px solid #a5f3fc",background:"#ecfeff",padding:"12px 14px",minWidth:230,maxWidth:260,flexShrink:0,display:"flex",flexDirection:"column",gap:8}}>
           <div style={{fontSize:10,fontWeight:700,color:"#0e7490",textTransform:"uppercase",letterSpacing:.8}}>SDB Calculator</div>
           <div>
             <div style={{fontSize:9,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>Deed-Restricted Units</div>
@@ -499,7 +505,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>{/* end flex wrapper */}
 
       {/* Dashboard */}
-      <div style={{borderTop:"2px solid #e2e8f0",padding:"10px 14px 10px 43px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:11}}>
+      <div style={{borderTop:"2px solid #e2e8f0",padding:"10px 14px 10px 43px",display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:"6px 14px",fontSize:11}}>
         <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Commercial:</span><span style={{fontWeight:700,fontFamily:mono}}>{commSF.toLocaleString()} SF / {commU} units</span></div>
         <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Residential:</span><span style={{fontWeight:700,fontFamily:mono}}>{resiSF.toLocaleString()} SF / {resiU} units</span></div>
         <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Total SF:</span><span style={{fontWeight:700,fontFamily:mono}}>{totalSF.toLocaleString()}</span></div>
@@ -831,6 +837,7 @@ function ItemRow({it,isDone,toggleCheck,sel,onSel,userNote,setNote,noteOpen,togg
 //  MAIN APP
 // ═══════════════════════════════════════
 function App(){
+  const isMobile=useMobile();
   const [ck,setCk]=useState({});const [sel,setSel]=useState({});const [notes,setNotes]=useState({});
   const [noteOpen,setNoteOpen]=useState({});const [collapsed,setCollapsed]=useState({});
   const [bldgs,setBldgs]=useState(DEFAULT_BLDGS);const [mapLocked,setMapLocked]=useState(false);const [filter,setFilter]=useState("all");
@@ -904,7 +911,7 @@ function App(){
 
       {/* BODY */}
       <div style={{padding:"14px 18px 50px",maxWidth:920,margin:"0 auto"}}>
-        <BuildingConfig bldgs={bldgs} setBldgs={setBldgsS} sel={sel} onSel={onSel} onHelp={openHelp} mapLocked={mapLocked} onToggleLock={toggleMapLock} onRefresh={refreshFromMap}/>
+        <BuildingConfig bldgs={bldgs} setBldgs={setBldgsS} sel={sel} onSel={onSel} onHelp={openHelp} mapLocked={mapLocked} onToggleLock={toggleMapLock} onRefresh={refreshFromMap} isMobile={isMobile}/>
         <AdvisorySection sel={sel} bldgs={bldgs} onHelp={openHelp}/>
 
         {DATA.map(cat=>{

@@ -27,6 +27,7 @@ const SetbackEngine = {
         ConfigEngine.state.setbacks = { front, rear, sideL, sideR };
         localStorage.setItem('saved_setbacks', JSON.stringify(ConfigEngine.state.setbacks));
         ExportEngine.pushToServer();
+        ExportEngine.showFlash();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
@@ -938,6 +939,7 @@ const SetbackEngine = {
             chainDOffset:   MapEngine.chainDOffset
         }));
         ExportEngine.pushToServer();
+        ExportEngine.showFlash();
         this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
