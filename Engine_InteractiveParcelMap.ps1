@@ -8,13 +8,16 @@
 
 param([string]$Mode = "reload")
 
-$base    = Split-Path $MyInvocation.MyCommand.Path -Resolve
-$src     = Join-Path $base "src"
-$shell   = Join-Path $src  "index.html"
-$output  = Join-Path $base "InteractiveMap.html"
-$dist    = Join-Path $base "dist"
-$cssFile = Join-Path $src  "css\style.css"
+$base         = Split-Path $MyInvocation.MyCommand.Path -Resolve
+$src          = Join-Path $base "src"
+$shell        = Join-Path $src  "index.html"
+$checklistSrc = Join-Path $src  "checklist.html"
+$outputDir    = Join-Path $base "Output"
+$outputMap    = Join-Path $outputDir "InteractiveMap.html"
+$outputChk    = Join-Path $outputDir "PreApp_Checklist.html"
+$cssFile      = Join-Path $src  "css\style.css"
 $siteDataFile = Join-Path $base "data\site-data.json"
+
 
 $engines = @(
     "js/engine-config.js",
@@ -27,11 +30,24 @@ $engines = @(
     "js/bootstrap.js"
 )
 
-# ── Build function ─────────────────────────────────────────────────────────
+# ── Suite nav bar — injected into every output file ────────────────────────
+$navStyle = @'
+<style>
+.suite-nav{display:flex;align-items:center;gap:0;background:#0f4c81;padding:0 16px;height:32px;font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.3px;flex-shrink:0;position:relative;z-index:9999}
+.suite-nav-link{color:rgba(255,255,255,.65);text-decoration:none;padding:0 14px;height:32px;display:flex;align-items:center;transition:color .15s,background .15s}
+.suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
+.suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
+</style>
+'@
+$navMap = '<div class="suite-nav"><span class="suite-nav-active">Map</span><span class="suite-nav-sep">|</span><a href="PreApp_Checklist.html" class="suite-nav-link">Checklist</a></div>'
+$navChk = '<div class="suite-nav"><a href="InteractiveMap.html" class="suite-nav-link">Map</a><span class="suite-nav-sep">|</span><span class="suite-nav-active">Checklist</span></div>'
+
+# ── Build: InteractiveMap ───────────────────────────────────────────────────
 function Build-Html {
     Write-Host ""
     Write-Host "===========================================" -ForegroundColor Cyan
-    Write-Host "  Master Site Dashboard - Build           " -ForegroundColor Cyan
+    Write-Host "  [1/2] InteractiveMap                    " -ForegroundColor Cyan
     Write-Host "===========================================" -ForegroundColor Cyan
     Write-Host ""
 
@@ -75,14 +91,39 @@ function Build-Html {
         Write-Host "  [i] No site-data.json found (using defaults)" -ForegroundColor DarkGray
     }
 
-    if (-not (Test-Path $dist)) { New-Item -ItemType Directory -Path $dist -Force | Out-Null }
-    [System.IO.File]::WriteAllText($output,  $html, [System.Text.UTF8Encoding]::new($false))
-    [System.IO.File]::WriteAllText((Join-Path $dist "InteractiveMap.html"), $html, [System.Text.UTF8Encoding]::new($false))
+    # Inject suite nav bar
+    $html = $html.Replace('<body>', "<body>`n$navStyle`n$navMap")
+    Write-Host "  [+] Injected suite nav bar" -ForegroundColor Green
+
+    # Ensure Output dir exists and write
+    if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
+    [System.IO.File]::WriteAllText($outputMap, $html, [System.Text.UTF8Encoding]::new($false))
 
     Write-Host ""
-    Write-Host "  [BUILD COMPLETE]" -ForegroundColor Green
-    Write-Host "  Output: $output" -ForegroundColor White
-    Write-Host "  Dist:   $(Join-Path $dist 'InteractiveMap.html')" -ForegroundColor White
+    Write-Host "  [DONE] Output\InteractiveMap.html" -ForegroundColor Green
+    Write-Host ""
+    return $true
+}
+
+# ── Build: PreApp Checklist (desktop) ──────────────────────────────────────
+function Build-Checklist {
+    Write-Host "===========================================" -ForegroundColor Cyan
+    Write-Host "  [2/2] PreApp_Checklist                  " -ForegroundColor Cyan
+    Write-Host "===========================================" -ForegroundColor Cyan
+    Write-Host ""
+
+    if (-not (Test-Path $checklistSrc)) { Write-Host "  [WARN] src\checklist.html not found - skipping" -ForegroundColor Yellow; return $true }
+    $html = Get-Content $checklistSrc -Raw -Encoding UTF8
+
+    # Inject suite nav bar
+    $html = $html.Replace('<body>', "<body>`n$navStyle`n$navChk")
+    Write-Host "  [+] Injected suite nav bar" -ForegroundColor Green
+
+    if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
+    [System.IO.File]::WriteAllText($outputChk, $html, [System.Text.UTF8Encoding]::new($false))
+
+    Write-Host ""
+    Write-Host "  [DONE] Output\PreApp_Checklist.html" -ForegroundColor Green
     Write-Host ""
     return $true
 }
@@ -90,11 +131,12 @@ function Build-Html {
 # ── Initial build ──────────────────────────────────────────────────────────
 $ok = Build-Html
 if (-not $ok) { exit 1 }
+Build-Checklist | Out-Null
 
 # ── Modes ──────────────────────────────────────────────────────────────────
 if ($Mode -eq "debug") {
     Write-Host "  [DEBUG] Opening in browser..." -ForegroundColor Cyan
-    Start-Process $output
+    Start-Process $outputMap
 }
 
 if ($Mode -eq "serve") {
@@ -107,8 +149,9 @@ if ($Mode -eq "serve") {
     }
 
     Write-Host "===========================================" -ForegroundColor Cyan
-    Write-Host "  [SERVE] http://localhost:$port" -ForegroundColor Cyan
-    Write-Host "  Save Config in the browser writes directly to site-data.json" -ForegroundColor Green
+    Write-Host "  [SERVE] http://localhost:$port           Map" -ForegroundColor Cyan
+    Write-Host "          http://localhost:$port/checklist  Checklist" -ForegroundColor Cyan
+    Write-Host "  Save Config writes directly to site-data.json" -ForegroundColor Green
     Write-Host "  Press Ctrl+C to stop" -ForegroundColor DarkGray
     Write-Host "===========================================" -ForegroundColor Cyan
     Write-Host ""
@@ -132,20 +175,25 @@ if ($Mode -eq "serve") {
                     $res.StatusCode = 204
 
                 } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -eq "/save") {
-                    # Write site-data.json, then rebuild so next refresh gets fresh defaults
                     $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
                     $body   = $reader.ReadToEnd()
                     [System.IO.File]::WriteAllText($siteDataFile, $body, [System.Text.UTF8Encoding]::new($false))
                     Write-Host "  [SAVE] site-data.json updated - rebuilding..." -ForegroundColor Yellow
                     Build-Html | Out-Null
+                    Build-Checklist | Out-Null
                     Write-Host "  [SAVE] Done. Refresh browser to load new defaults." -ForegroundColor Green
                     $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
                     $res.ContentType = "application/json"
                     $res.OutputStream.Write($bytes, 0, $bytes.Length)
 
+                } elseif ($req.HttpMethod -eq "GET" -and $req.Url.LocalPath -eq "/checklist") {
+                    $res.ContentType = "text/html; charset=utf-8"
+                    $fileBytes = [System.IO.File]::ReadAllBytes($outputChk)
+                    $res.OutputStream.Write($fileBytes, 0, $fileBytes.Length)
+
                 } elseif ($req.HttpMethod -eq "GET") {
                     $res.ContentType = "text/html; charset=utf-8"
-                    $fileBytes = [System.IO.File]::ReadAllBytes($output)
+                    $fileBytes = [System.IO.File]::ReadAllBytes($outputMap)
                     $res.OutputStream.Write($fileBytes, 0, $fileBytes.Length)
 
                 } else {

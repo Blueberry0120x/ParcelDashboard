@@ -501,6 +501,14 @@ input:checked + .slider:before { transform: translateX(20px); }
 </style>
 </head>
 <body>
+<style>
+.suite-nav{display:flex;align-items:center;gap:0;background:#0f4c81;padding:0 16px;height:32px;font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.3px;flex-shrink:0;position:relative;z-index:9999}
+.suite-nav-link{color:rgba(255,255,255,.65);text-decoration:none;padding:0 14px;height:32px;display:flex;align-items:center;transition:color .15s,background .15s}
+.suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
+.suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
+</style>
+<div class="suite-nav"><span class="suite-nav-active">Map</span><span class="suite-nav-sep">|</span><a href="PreApp_Checklist.html" class="suite-nav-link">Checklist</a></div>
 <div class="page-wrapper">
 
     <!-- HEADER -->
