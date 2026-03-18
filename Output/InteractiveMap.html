@@ -39,12 +39,15 @@ body {
     display: flex; justify-content: space-between; align-items: center;
 }
 h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
+.header-btn-group { display: flex; gap: 8px; align-items: center; }
 .header-btn {
     background-color: white; color: var(--primary); border: 2px solid var(--primary);
     padding: 8px 16px; border-radius: 6px; text-decoration: none;
     font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .header-btn:hover { background-color: var(--primary); color: white; }
+.header-btn-teal { color: #0d9488; border-color: #0d9488; }
+.header-btn-teal:hover { background-color: #0d9488; color: white; }
 
 /* Title row — title stack inline with address+apn pair */
 .header-title-row { display: flex; align-items: center; gap: 0; }
@@ -499,7 +502,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 
 </style>
-<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}]};</script>
+<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.755575,"lng":-117.09185,"rotation":10,"locked":false,"setbacks":{"front":10,"rear":10,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":18,"D":20,"offsetX":0,"offsetY":0,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9},{"orientation":0,"W":18,"D":40,"offsetX":0,"offsetY":0,"spacing":0,"count":3,"stackSpacing":5,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":true,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70};</script>
 </head>
 <body>
 <style>
@@ -508,6 +511,11 @@ input:checked + .slider:before { transform: translateX(20px); }
 .suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
 .suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
 .suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
+.suite-nav-extbtn{margin-left:auto;display:flex;gap:6px;align-items:center}
+.suite-nav-extlink{color:#fff;text-decoration:none;padding:0 10px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(255,255,255,.4);transition:all .15s}
+.suite-nav-extlink:hover{background:rgba(255,255,255,.15);border-color:#fff}
+.suite-nav-extlink-teal{color:#5eead4;border-color:rgba(94,234,212,.5)}
+.suite-nav-extlink-teal:hover{background:rgba(94,234,212,.12);border-color:#5eead4}
 </style>
 <div class="suite-nav"><span class="suite-nav-active">Map</span><span class="suite-nav-sep">|</span><a href="PreApp_Checklist.html" class="suite-nav-link">Checklist</a></div>
 <div class="page-wrapper">
@@ -526,7 +534,10 @@ input:checked + .slider:before { transform: translateX(20px); }
                 </div>
             </div>
         </div>
-        <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">Open ParcelQuest &#x2197;</a>
+        <div class="header-btn-group">
+            <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">ParcelQuest &#x2197;</a>
+            <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="header-btn header-btn-teal">SanDag GIS &#x2197;</a>
+        </div>
     </div>
 
     <!-- DRAGGABLE PROPERTY BANNER -->

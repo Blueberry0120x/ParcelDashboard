@@ -31,6 +31,18 @@
 const {useState,useEffect,useCallback}=React;
 const SD = window.__SITE_DEFAULTS__ || {};
 
+// Seed checklist buildings from map's saved building config
+function seedFromMap(){
+  if(!SD.buildings||!SD.buildings.length)return null;
+  const out=[];
+  SD.buildings.forEach((b,i)=>{
+    const type=(i===0&&SD.commFront)?"Commercial":"Residential";
+    const n=b.count||1;
+    for(let j=0;j<n;j++)out.push({type,w:b.W||18,d:b.D||40,stories:b.stories||1,unitsPerFloor:1});
+  });
+  return out.length?out:null;
+}
+
 
 // ═══════════════════════════════════════
 //  HELP CONTENT (?) modals
@@ -259,7 +271,7 @@ function Pill({label,active,onClick,color="#0f4c81",small}){return <button onCli
 // ═══════════════════════════════════════
 //  BUILDING CONFIGURATOR
 // ═══════════════════════════════════════
-function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp}){
+function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,onRefresh}){
   const LOT=SD.lotSF??6250;const mono="'JetBrains Mono',monospace";
   const update=(i,f,v)=>{const n=[...bldgs];n[i]={...n[i],[f]:v};setBldgs(n)};
   const add=()=>setBldgs([...bldgs,{type:"Residential",w:18,d:40,stories:3,unitsPerFloor:1}]);
@@ -289,7 +301,13 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp}){
   return (
     <div style={{marginBottom:10,borderRadius:10,overflow:"clip",border:"1px solid #d1d5db",background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,.04)"}}>
       <div style={{padding:"11px 16px",background:"linear-gradient(90deg,#7c3aed,#6d28d9)",color:"#fff",fontWeight:700,fontSize:13,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <span>BUILDING CONFIGURATION</span>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span>BUILDING CONFIGURATION</span>
+          {SD.buildings&&SD.buildings.length>0&&<>
+            <button onClick={onToggleLock} style={{padding:"2px 9px",borderRadius:5,border:`1.5px solid ${mapLocked?"rgba(251,191,36,.7)":"rgba(134,239,172,.7)"}`,background:mapLocked?"rgba(251,191,36,.12)":"rgba(134,239,172,.12)",color:mapLocked?"#fbbf24":"#86efac",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{mapLocked?"Override":"Reset to Map"}</button>
+            <button onClick={onRefresh} title="Reload page to pull latest map save" style={{padding:"2px 9px",borderRadius:5,border:"1.5px solid rgba(147,197,253,.6)",background:"rgba(147,197,253,.1)",color:"#93c5fd",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>&#x21BB; Refresh</button>
+          </>}
+        </div>
         <HelpIcon k="unitSize" onOpen={onHelp}/>
       </div>
 
@@ -306,7 +324,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp}){
       </div>
 
       {/* Building rows */}
-      <div style={{padding:"10px 14px"}}>
+      <div style={{padding:"10px 14px",pointerEvents:mapLocked?"none":undefined,opacity:mapLocked?.65:1}}>
         <div style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",fontSize:9,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>
           <span>#</span><span>Type</span><span>W</span><span>D</span><span>Flr</span><span>U/F</span><span></span>
         </div>
@@ -620,15 +638,17 @@ function ItemRow({it,isDone,toggleCheck,sel,onSel,userNote,setNote,noteOpen,togg
 function App(){
   const [ck,setCk]=useState({});const [sel,setSel]=useState({});const [notes,setNotes]=useState({});
   const [noteOpen,setNoteOpen]=useState({});const [collapsed,setCollapsed]=useState({});
-  const [bldgs,setBldgs]=useState(DEFAULT_BLDGS);const [filter,setFilter]=useState("all");
+  const [bldgs,setBldgs]=useState(DEFAULT_BLDGS);const [mapLocked,setMapLocked]=useState(false);const [filter,setFilter]=useState("all");
   const [loaded,setLoaded]=useState(false);const [copied,setCopied]=useState(null);const [helpOpen,setHelpOpen]=useState(null);
 
-  useEffect(()=>{(()=>{try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.ck)setCk(d.ck);if(d.sel)setSel(d.sel);if(d.notes)setNotes(d.notes);if(d.bldgs)setBldgs(d.bldgs)}}catch(e){}setLoaded(true)})();},[]);
-  const save=useCallback((c,s,n,b)=>{try{localStorage.setItem(SK,JSON.stringify({ck:c,sel:s,notes:n,bldgs:b}))}catch(e){}},[]);
-  const toggleCheck=id=>{const n={...ck,[id]:!ck[id]};setCk(n);save(n,sel,notes,bldgs)};
-  const onSel=(k,v)=>{const n={...sel,[k]:v};setSel(n);save(ck,n,notes,bldgs)};
-  const setNote=(id,v)=>{const n={...notes,[id]:v};setNotes(n);save(ck,sel,n,bldgs)};
-  const setBldgsS=b=>{setBldgs(b);save(ck,sel,notes,b)};
+  useEffect(()=>{(()=>{try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.ck)setCk(d.ck);if(d.sel)setSel(d.sel);if(d.notes)setNotes(d.notes);if(d.bldgs)setBldgs(d.bldgs);if(d.mapLocked!=null)setMapLocked(d.mapLocked);}else{const s=seedFromMap();if(s){setBldgs(s);setMapLocked(true);}}}catch(e){}setLoaded(true)})();},[]);
+  const save=useCallback((c,s,n,b,ml)=>{try{localStorage.setItem(SK,JSON.stringify({ck:c,sel:s,notes:n,bldgs:b,mapLocked:ml}))}catch(e){}},[]);
+  const toggleCheck=id=>{const n={...ck,[id]:!ck[id]};setCk(n);save(n,sel,notes,bldgs,mapLocked)};
+  const onSel=(k,v)=>{const n={...sel,[k]:v};setSel(n);save(ck,n,notes,bldgs,mapLocked)};
+  const setNote=(id,v)=>{const n={...notes,[id]:v};setNotes(n);save(ck,sel,n,bldgs,mapLocked)};
+  const setBldgsS=b=>{setBldgs(b);save(ck,sel,notes,b,mapLocked)};
+  const toggleMapLock=()=>{if(mapLocked){setMapLocked(false);save(ck,sel,notes,bldgs,false);}else{const s=seedFromMap();const b=s||bldgs;setBldgs(b);setMapLocked(true);save(ck,sel,notes,b,true);}};
+  const refreshFromMap=()=>{try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);delete d.bldgs;delete d.mapLocked;localStorage.setItem(SK,JSON.stringify(d));}}catch(e){}location.reload();};
   const toggleNote=id=>setNoteOpen(p=>({...p,[id]:!p[id]}));
   const toggleCat=id=>setCollapsed(p=>({...p,[id]:!p[id]}));
 
@@ -636,7 +656,7 @@ function App(){
   const matchF=it=>{if(filter==="all")return true;if(filter==="pending")return !ck[it.id];if(filter==="done")return !!ck[it.id];if(filter==="alert")return !!it.alert;return true};
   const total=ai.length,done=ai.filter(i=>ck[i.id]).length,pct=total?Math.round(done/total*100):0;
   const catSt=cat=>{let items=[];if(cat.items)items=cat.items;if(cat.sections)cat.sections.forEach(s=>items.push(...s.items));const t=items.length,d=items.filter(i=>ck[i.id]).length;return{total:t,done:d,pct:t?Math.round(d/t*100):0}};
-  const resetAll=()=>{if(confirm("Clear ALL progress?")){setCk({});setSel({});setNotes({});setNoteOpen({});setBldgs(DEFAULT_BLDGS);save({},{},{},DEFAULT_BLDGS)}};
+  const resetAll=()=>{if(confirm("Clear ALL progress?")){const s=seedFromMap();const b=s||DEFAULT_BLDGS;const ml=!!s;setCk({});setSel({});setNotes({});setNoteOpen({});setBldgs(b);setMapLocked(ml);save({},{},{},b,ml)}};
   const copyText=t=>{navigator.clipboard.writeText(t).then(()=>{setCopied(t);setTimeout(()=>setCopied(null),1500)}).catch(()=>{})};
 
   if(!loaded)return <div style={{padding:60,textAlign:"center",fontFamily:"'DM Sans',sans-serif",color:"#94a3b8"}}>Loading...</div>;
@@ -684,7 +704,7 @@ function App(){
 
       {/* BODY */}
       <div style={{padding:"14px 18px 50px",maxWidth:920,margin:"0 auto"}}>
-        <BuildingConfig bldgs={bldgs} setBldgs={setBldgsS} sel={sel} onSel={onSel} onHelp={setHelpOpen}/>
+        <BuildingConfig bldgs={bldgs} setBldgs={setBldgsS} sel={sel} onSel={onSel} onHelp={setHelpOpen} mapLocked={mapLocked} onToggleLock={toggleMapLock} onRefresh={refreshFromMap}/>
         <AdvisorySection sel={sel} bldgs={bldgs} onHelp={setHelpOpen}/>
 
         {DATA.map(cat=>{

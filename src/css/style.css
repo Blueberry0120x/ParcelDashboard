@@ -22,12 +22,15 @@ body {
     display: flex; justify-content: space-between; align-items: center;
 }
 h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
+.header-btn-group { display: flex; gap: 8px; align-items: center; }
 .header-btn {
     background-color: white; color: var(--primary); border: 2px solid var(--primary);
     padding: 8px 16px; border-radius: 6px; text-decoration: none;
     font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .header-btn:hover { background-color: var(--primary); color: white; }
+.header-btn-teal { color: #0d9488; border-color: #0d9488; }
+.header-btn-teal:hover { background-color: #0d9488; color: white; }
 
 /* Title row — title stack inline with address+apn pair */
 .header-title-row { display: flex; align-items: center; gap: 0; }

@@ -60,10 +60,15 @@ $navStyle = @'
 .suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
 .suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
 .suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
+.suite-nav-extbtn{margin-left:auto;display:flex;gap:6px;align-items:center}
+.suite-nav-extlink{color:#fff;text-decoration:none;padding:0 10px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(255,255,255,.4);transition:all .15s}
+.suite-nav-extlink:hover{background:rgba(255,255,255,.15);border-color:#fff}
+.suite-nav-extlink-teal{color:#5eead4;border-color:rgba(94,234,212,.5)}
+.suite-nav-extlink-teal:hover{background:rgba(94,234,212,.12);border-color:#5eead4}
 </style>
 '@
 $navMap = '<div class="suite-nav"><span class="suite-nav-active">Map</span><span class="suite-nav-sep">|</span><a href="PreApp_Checklist.html" class="suite-nav-link">Checklist</a></div>'
-$navChk = '<div class="suite-nav"><a href="InteractiveMap.html" class="suite-nav-link">Map</a><span class="suite-nav-sep">|</span><span class="suite-nav-active">Checklist</span></div>'
+$navChk = '<div class="suite-nav"><a href="InteractiveMap.html" class="suite-nav-link">Map</a><span class="suite-nav-sep">|</span><span class="suite-nav-active">Checklist</span><div class="suite-nav-extbtn"><a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-nav-extlink">ParcelQuest &#x2197;</a><a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-nav-extlink suite-nav-extlink-teal">SanDag GIS &#x2197;</a></div></div>'
 
 # ── Build: InteractiveMap ───────────────────────────────────────────────────
 function Build-Html {
