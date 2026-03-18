@@ -198,6 +198,18 @@ if ($Mode -eq "serve") {
                 if ($req.HttpMethod -eq "OPTIONS") {
                     $res.StatusCode = 204
 
+                } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -eq "/backup-checklist") {
+                    $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
+                    $body   = $reader.ReadToEnd()
+                    $backupDir = Join-Path $base "config\backup"
+                    if (-not (Test-Path $backupDir)) { New-Item -ItemType Directory -Path $backupDir -Force | Out-Null }
+                    $stamp = Get-Date -Format "yyyy-MM-dd"
+                    $backupFile = Join-Path $backupDir "preapp-checklist-$stamp.json"
+                    [System.IO.File]::WriteAllText($backupFile, $body, [System.Text.UTF8Encoding]::new($false))
+                    $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
+                    $res.ContentType = "application/json"
+                    $res.OutputStream.Write($bytes, 0, $bytes.Length)
+
                 } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -eq "/save") {
                     $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
                     $body   = $reader.ReadToEnd()

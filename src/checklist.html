@@ -20,6 +20,13 @@
   .adv-card-body{font-size:13px;line-height:1.7;color:#475569}
   .adv-card-body>p,.adv-card-body>div{margin-bottom:10px}
   .adv-card-body>p:last-child{margin-bottom:0}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @media print{
+    .suite-nav,.no-print{display:none!important}
+    #fab-float{display:none!important}
+    body{background:#fff}
+    input,select,textarea{border:none!important;background:transparent!important}
+  }
 </style>
 </head>
 <body>
@@ -28,7 +35,7 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
-const {useState,useEffect,useCallback}=React;
+const {useState,useEffect,useCallback,useRef}=React;
 const SD = window.__SITE_DEFAULTS__ || {};
 
 // Seed checklist buildings from map's saved building config
@@ -84,14 +91,14 @@ You get 3.25x more buildable area (40,625 SF vs 12,500 SF). In return, 40% of "b
 **Your project qualifies:** 80% residential (needs >=66.7%).
 **Key rules:** 180-day window, >=20% change in units/SF loses vesting, construction must start within 2.5 years of final approval.`
   },
-  reviewType: { title: "Preliminary Review Type", body: `**Single ($1,481):** 1 discipline, 10 questions, ~20 days.\n**Multiple ($12,106):** All disciplines, assigns DPM.\n**Skip:** If CCHS, the mandatory CCHS Now review replaces this (free).` },
+  reviewType: { title: "Preliminary Review Type", body: `**Single ($1,481):** 1 discipline, 10 questions, ~20 days.\n**Multiple ($12,106):** All disciplines, assigns DPM.\n**Skip:** If CCHS, the mandatory CCHS Now review replaces this (free).\n\n**Note:** "Multiple Discipline" is often called "Express Preliminary Review" in DSD communications and IB-513 — same process, different label. Single Discipline has no equivalent alias.` },
   nupRequired: { title: "Neighborhood Use Permit", body: `Required for restaurants/cafes/bars. General retail/office = no NUP. Adds 4-8 weeks, ~$3K-5K.\n\n**Tip:** If designing for restaurant use (grease trap, hood), assume NUP.`, options:{"yes":"Budget ~$3K-5K, 4-8 weeks.","no":"Commercial use is by-right.","tbd":"Depends on tenant."} },
   cupRequired: { title: "Conditional Use Permit", body: `Main trigger: ALCOHOL. Adds 3-6 months, $10K-20K+. CUP is for the USE, not the BUILDING — you can get building permit ministerially and file CUP separately.`, options:{"yes":"Budget 3-6 months, $10K-20K+.","no":"No alcohol planned.","tbd":"Depends on tenant."} },
   sideSetback: { title: "Side Setback", body: `**0 ft:** Max width, but no windows on that wall (fire-rated party wall).\n**10 ft:** Windows/balconies possible, reduces width by 10 ft.\n\nAt 18 ft building width, you have room for multiple buildings side by side.`, options:{"0 FT (zero lot line)":"50 ft buildable.","10 FT":"40 ft (one side) or 30 ft (both)."} },
   hauler: { title: "Waste Hauler", body: `Must use private hauler. Engage BEFORE finalizing site plan.`, options:{"EDCO":"Local, strong in Mid-City.","Republic Services":"National.","Waste Management":"Largest national."} },
   enclosurePlacement: { title: "Trash Enclosure", body: `~120-180 SF enclosure needed. 25 ft overhead clearance for trucks.`, options:{"Side of building":"Side access.","Rear of building":"Most common for narrow lots.","Integrated ground floor":"Built into building."} },
   mailMode: { title: "USPS Mail Mode", body: `Developer pays for everything.`, options:{"STD-4C (indoor wall-mount)":"Recommended. $200-800/unit. In lobby.","CBU (outdoor pedestal)":"Outdoor. $1,000-2,200/CBU. Needs canopy + pad."} },
-  unitSize: { title: "Unit Size & DIF", body: `**720 SF = DIF applies to market-rate units.**\n**486 SF (18x27) = DIF WAIVED on ALL units.**\n\nShrinking saves ~$120,000 total. See Advisory section for full breakdown.` },
+  unitSize: { title: "Building Configuration — Column Guide", body: `**Column definitions:**\n**W** — Building width (ft), measured parallel to the street front.\n**D** — Building depth (ft), measured front-to-back.\n**FLR** — Number of floors (stories) in the building.\n**U/F** — Units per floor (residential only). Total units = FLR x U/F.\n\n**Types:**\n**Commercial** — Ground-floor commercial space (required in front 30 ft per CCHS).\n**Residential** — Upper-floor or rear residential units.\n\n**Unit Size & DIF:**\n**720 SF = DIF applies to market-rate units.**\n**486 SF (18x27) = DIF WAIVED on ALL units.**\n\nShrinking unit size saves ~$120,000 total. See Advisory section for full breakdown.` },
   commSF: { title: "Commercial SF", body: `Front 30 ft rule: 30 ft - 10 ft setback = 20 ft commercial depth. Your 18 ft building fits within this zone.` },
   commHours: { title: "Commercial Hours", body: `6 AM - midnight. Hard zoning restriction. No 24-hour businesses.` },
 };
@@ -292,6 +299,7 @@ function Pill({label,active,onClick,color="#0f4c81",small}){return <button onCli
 // ═══════════════════════════════════════
 function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,onRefresh}){
   const LOT=SD.lotSF??6250;const mono="'JetBrains Mono',monospace";
+  const [showLockMsg,setShowLockMsg]=useState(false);
   const update=(i,f,v)=>{const n=[...bldgs];n[i]={...n[i],[f]:v};setBldgs(n)};
   const add=()=>setBldgs([...bldgs,{type:"Residential",w:18,d:40,stories:3,unitsPerFloor:1}]);
   const remove=i=>{if(bldgs.length>1)setBldgs(bldgs.filter((_,j)=>j!==i))};
@@ -343,25 +351,39 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>
 
       {/* Building rows */}
-      <div style={{padding:"10px 14px",pointerEvents:mapLocked?"none":undefined,opacity:mapLocked?.65:1}}>
-        <div style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",fontSize:9,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>
-          <span>#</span><span>Type</span><span>W</span><span>D</span><span>Flr</span><span>U/F</span><span></span>
-        </div>
-        {bldgs.map((b,i)=>(
-          <div key={i} style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",alignItems:"center",marginBottom:2}}>
-            <span style={{fontSize:10,fontWeight:700,color:"#94a3b8",fontFamily:mono}}>{i+1}</span>
-            <select value={b.type} onChange={e=>update(i,"type",e.target.value)} style={{padding:"3px 4px",borderRadius:5,border:"1.5px solid #cbd5e1",fontSize:10,fontFamily:"inherit",background:b.type==="Commercial"?"#fef3c7":"#ecfdf5",cursor:"pointer"}}>
-              <option>Commercial</option><option>Residential</option>
-            </select>
-            {["w","d","stories","unitsPerFloor"].map(f=>(
-              <input key={f} type="number" value={b[f]} min={f==="stories"||f==="unitsPerFloor"?1:1}
-                onChange={e=>update(i,f,+e.target.value||0)}
-                style={{padding:"3px 4px",borderRadius:5,border:"1.5px solid #cbd5e1",fontSize:11,fontFamily:mono,textAlign:"center",width:"100%"}}/>
-            ))}
-            <button onClick={()=>remove(i)} style={{background:"#fee2e2",border:"none",borderRadius:5,cursor:"pointer",color:"#dc2626",fontWeight:700,fontSize:13,width:24,height:24}}>{"\u00D7"}</button>
+      <div style={{position:"relative"}}>
+        <div style={{padding:"10px 14px",pointerEvents:mapLocked?"none":undefined,opacity:mapLocked?.65:1}}>
+          <div style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",fontSize:9,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5,marginBottom:3}}>
+            <span>#</span><span>Type</span><span>W</span><span>D</span><span>Flr</span><span>U/F</span><span></span>
           </div>
-        ))}
-        <button onClick={add} style={{marginTop:4,padding:"4px 12px",borderRadius:8,border:"1.5px dashed #a78bfa",background:"#faf5ff",color:"#7c3aed",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add Building</button>
+          {bldgs.map((b,i)=>(
+            <div key={i} style={{display:"grid",gridTemplateColumns:"24px 88px 56px 56px 44px 44px 28px",gap:"3px 5px",alignItems:"center",marginBottom:2}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#94a3b8",fontFamily:mono}}>{i+1}</span>
+              <select value={b.type} onChange={e=>update(i,"type",e.target.value)} style={{padding:"3px 4px",borderRadius:5,border:"1.5px solid #cbd5e1",fontSize:10,fontFamily:"inherit",background:b.type==="Commercial"?"#fef3c7":"#ecfdf5",cursor:"pointer"}}>
+                <option>Commercial</option><option>Residential</option>
+              </select>
+              {["w","d","stories","unitsPerFloor"].map(f=>(
+                <input key={f} type="number" value={b[f]} min={f==="stories"||f==="unitsPerFloor"?1:1}
+                  onChange={e=>update(i,f,+e.target.value||0)}
+                  style={{padding:"3px 4px",borderRadius:5,border:"1.5px solid #cbd5e1",fontSize:11,fontFamily:mono,textAlign:"center",width:"100%"}}/>
+              ))}
+              <button onClick={()=>remove(i)} style={{background:"#fee2e2",border:"none",borderRadius:5,cursor:"pointer",color:"#dc2626",fontWeight:700,fontSize:13,width:24,height:24}}>{"\u00D7"}</button>
+            </div>
+          ))}
+          <button onClick={add} style={{marginTop:4,padding:"4px 12px",borderRadius:8,border:"1.5px dashed #a78bfa",background:"#faf5ff",color:"#7c3aed",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add Building</button>
+        </div>
+        {mapLocked&&(
+          <div onClick={()=>setShowLockMsg(v=>!v)} style={{position:"absolute",inset:0,cursor:"pointer",background:"repeating-linear-gradient(45deg,rgba(100,116,139,.06),rgba(100,116,139,.06) 5px,transparent 5px,transparent 15px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {showLockMsg&&(
+              <div style={{background:"rgba(15,23,42,.93)",color:"#fff",padding:"12px 18px",borderRadius:10,textAlign:"center",lineHeight:1.65,maxWidth:270,boxShadow:"0 8px 24px rgba(0,0,0,.3)",pointerEvents:"none"}}>
+                <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"#94a3b8",marginBottom:4}}>Read-only</div>
+                <div style={{fontSize:12,fontWeight:600,marginBottom:4}}>Value assigned from</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#a5b4fc",marginBottom:8}}>"MAP \u2014 Concept Design"</div>
+                <div style={{fontSize:11,color:"#94a3b8"}}>Please contact designer for more information.</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Dashboard */}
@@ -646,8 +668,8 @@ function ItemRow({it,isDone,toggleCheck,sel,onSel,userNote,setNote,noteOpen,togg
         <input type="checkbox" checked={!!isDone} onChange={()=>toggleCheck(it.id)} style={{marginTop:3,width:16,height:16,accentColor:"#0f4c81",flexShrink:0,cursor:"pointer"}}/>
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",gap:6,alignItems:"baseline",flexWrap:"wrap"}}>
-            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:600,color:it.alert?"#dc2626":"#64748b",flexShrink:0}}>{it.id}</span>
-            <span style={{fontSize:12,fontWeight:500,textDecoration:isDone?"line-through":"none",color:isDone?"#94a3b8":"#1e293b"}}>{it.text}</span>
+            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:isDone?"#15803d":it.alert?"#dc2626":"#64748b",flexShrink:0}}>{it.id}</span>
+            <span style={{fontSize:12,fontWeight:500,color:isDone?"#166534":"#1e293b"}}>{it.text}</span>
           </div>
           {it.note&&<div style={{fontSize:10,color:"#94a3b8",marginTop:1}}>{it.note}</div>}
           <ChoiceUI id={it.id} sel={sel} onSel={onSel} onHelp={onHelp}/>
@@ -674,9 +696,10 @@ function App(){
   const [noteOpen,setNoteOpen]=useState({});const [collapsed,setCollapsed]=useState({});
   const [bldgs,setBldgs]=useState(DEFAULT_BLDGS);const [mapLocked,setMapLocked]=useState(false);const [filter,setFilter]=useState("all");
   const [loaded,setLoaded]=useState(false);const [copied,setCopied]=useState(null);const [helpOpen,setHelpOpen]=useState(null);
+  const [saveFlash,setSaveFlash]=useState(false);const sfTimer=useRef(null);
 
   useEffect(()=>{(()=>{try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.ck)setCk(d.ck);if(d.sel)setSel(d.sel);if(d.notes)setNotes(d.notes);if(d.bldgs)setBldgs(d.bldgs);if(d.mapLocked!=null)setMapLocked(d.mapLocked);}else{const s=seedFromMap();if(s){setBldgs(s);setMapLocked(true);}}}catch(e){}setLoaded(true)})();},[]);
-  const save=useCallback((c,s,n,b,ml)=>{try{localStorage.setItem(SK,JSON.stringify({ck:c,sel:s,notes:n,bldgs:b,mapLocked:ml}))}catch(e){}},[]);
+  const save=useCallback((c,s,n,b,ml)=>{try{localStorage.setItem(SK,JSON.stringify({ck:c,sel:s,notes:n,bldgs:b,mapLocked:ml}))}catch(e){}pushBackup(c,s,n,b,ml);setSaveFlash(true);if(sfTimer.current)clearTimeout(sfTimer.current);sfTimer.current=setTimeout(()=>setSaveFlash(false),2000);},[pushBackup]);
   const toggleCheck=id=>{const n={...ck,[id]:!ck[id]};setCk(n);save(n,sel,notes,bldgs,mapLocked)};
   const onSel=(k,v)=>{const n={...sel,[k]:v};setSel(n);save(ck,n,notes,bldgs,mapLocked)};
   const setNote=(id,v)=>{const n={...notes,[id]:v};setNotes(n);save(ck,sel,n,bldgs,mapLocked)};
@@ -691,6 +714,8 @@ function App(){
   const total=ai.length,done=ai.filter(i=>ck[i.id]).length,pct=total?Math.round(done/total*100):0;
   const catSt=cat=>{let items=[];if(cat.items)items=cat.items;if(cat.sections)cat.sections.forEach(s=>items.push(...s.items));const t=items.length,d=items.filter(i=>ck[i.id]).length;return{total:t,done:d,pct:t?Math.round(d/t*100):0}};
   const resetAll=()=>{if(confirm("Clear ALL progress?")){const s=seedFromMap();const b=s||DEFAULT_BLDGS;const ml=!!s;setCk({});setSel({});setNotes({});setNoteOpen({});setBldgs(b);setMapLocked(ml);save({},{},{},b,ml)}};
+  const pushBackup=useCallback((c,s,n,b,ml)=>{try{const d={project:SD.project||"Master Site Dashboard",address:SD.address||"",exportedAt:new Date().toISOString(),progress:{done:Object.values(c).filter(Boolean).length,total:allItemsOf(DATA).length},checklist:c,selections:s,notes:n,buildings:b,mapLocked:ml};fetch("http://localhost:7734/backup-checklist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).catch(()=>{});}catch(e){}},[]);
+  const printPDF=()=>window.print();
   const copyText=t=>{navigator.clipboard.writeText(t).then(()=>{setCopied(t);setTimeout(()=>setCopied(null),1500)}).catch(()=>{})};
 
   if(!loaded)return <div style={{padding:60,textAlign:"center",fontFamily:"'DM Sans',sans-serif",color:"#94a3b8"}}>Loading...</div>;
@@ -785,6 +810,18 @@ function App(){
         <div style={{textAlign:"center",marginTop:20,fontSize:9,color:"#94a3b8",lineHeight:1.8}}>
           All data persists in browser localStorage {"\u2022"} 4335 Euclid Ave {"\u2022"} v6.3
         </div>
+      </div>
+
+      {/* FLOATING FAB */}
+      <div id="fab-float" style={{position:"fixed",bottom:24,right:24,zIndex:9998,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8,pointerEvents:"none"}}>
+        {saveFlash&&(
+          <div style={{pointerEvents:"none",background:"#166534",color:"#dcfce7",padding:"6px 14px",borderRadius:20,fontSize:11,fontWeight:700,boxShadow:"0 4px 16px rgba(0,0,0,.25)",display:"flex",alignItems:"center",gap:5,animation:"fadeInUp .2s ease",whiteSpace:"nowrap"}}>
+            <span style={{fontSize:13}}>&#10003;</span> Auto-saved
+          </div>
+        )}
+        <button onClick={printPDF} style={{pointerEvents:"all",background:"#0f4c81",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
+          &#128438; Print / PDF
+        </button>
       </div>
     </div>
   );
