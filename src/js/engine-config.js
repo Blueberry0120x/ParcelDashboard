@@ -35,6 +35,14 @@ const ConfigEngine = {
     init: function() {
         const sd    = window.__SITE_DEFAULTS__ || {};         // injected by PS1 from site-data.json
 
+        // Override site identity from site-data.json.site if available
+        if (sd.address)         this.data.address         = sd.address;
+        if (sd.apn)             this.data.apn             = sd.apn;
+        if (sd.zoning)          this.data.zoning          = sd.zoning;
+        if (sd.lotWidth)        this.data.width           = sd.lotWidth;
+        if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
+        if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
+
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
         const sdBldg = sd.buildings && sd.buildings[0];
         this.defaultBuilding = sdBldg

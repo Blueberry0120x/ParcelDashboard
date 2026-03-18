@@ -499,6 +499,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 
 </style>
+<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}]};</script>
 </head>
 <body>
 <style>
@@ -525,7 +526,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                 </div>
             </div>
         </div>
-        <a href="https://assr.parcelquest.com/Statewide?IndexViewModel=PQGov.Models.IndexViewModel" target="_blank" class="header-btn">Open ParcelQuest &#x2197;</a>
+        <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">Open ParcelQuest &#x2197;</a>
     </div>
 
     <!-- DRAGGABLE PROPERTY BANNER -->
@@ -854,6 +855,14 @@ const ConfigEngine = {
     },
     init: function() {
         const sd    = window.__SITE_DEFAULTS__ || {};         // injected by PS1 from site-data.json
+
+        // Override site identity from site-data.json.site if available
+        if (sd.address)         this.data.address         = sd.address;
+        if (sd.apn)             this.data.apn             = sd.apn;
+        if (sd.zoning)          this.data.zoning          = sd.zoning;
+        if (sd.lotWidth)        this.data.width           = sd.lotWidth;
+        if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
+        if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
         const sdBldg = sd.buildings && sd.buildings[0];

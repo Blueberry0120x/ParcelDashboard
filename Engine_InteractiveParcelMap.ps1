@@ -30,6 +30,28 @@ $engines = @(
     "js/bootstrap.js"
 )
 
+# ── site-data.json injection helper ───────────────────────────────────────
+# Merges site-data.json.site (static) + .saved (session) into window.__SITE_DEFAULTS__
+# Returns the <script> tag string, or "" if nothing to inject
+function Get-InjectScript {
+    if (-not (Test-Path $siteDataFile)) { return "" }
+    try {
+        $sd = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        $merged = [ordered]@{}
+        if ($null -ne $sd.site) {
+            $sd.site.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+        }
+        if ($null -ne $sd.saved) {
+            $sd.saved.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+        }
+        if ($merged.Count -gt 0) {
+            $json = $merged | ConvertTo-Json -Compress -Depth 10
+            return "<script>window.__SITE_DEFAULTS__ = $json;</script>"
+        }
+    } catch {}
+    return ""
+}
+
 # ── Suite nav bar — injected into every output file ────────────────────────
 $navStyle = @'
 <style>
@@ -72,23 +94,13 @@ function Build-Html {
     $html = $html.Replace("Development Shell -->", "Compiled Build -->")
     $html = $html.Replace("<!-- Open with Live Server (VS Code Go Live). Run build.cmd to compile to InteractiveMap.html -->", "")
 
-    # Inject site-data.json
-    if (Test-Path $siteDataFile) {
-        try {
-            $siteData = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ($null -ne $siteData.saved) {
-                $savedJson    = $siteData.saved | ConvertTo-Json -Compress -Depth 10
-                $injectScript = "<script>window.__SITE_DEFAULTS__ = $savedJson;</script>"
-                $html = $html.Replace('</head>', "$injectScript`n</head>")
-                Write-Host "  [+] Injected settings from site-data.json" -ForegroundColor Green
-            } else {
-                Write-Host "  [i] site-data.json has no saved settings (using defaults)" -ForegroundColor DarkGray
-            }
-        } catch {
-            Write-Host "  [WARN] Could not parse site-data.json: $_" -ForegroundColor Yellow
-        }
+    # Inject site-data.json (site identity + session state merged)
+    $inject = Get-InjectScript
+    if ($inject) {
+        $html = $html.Replace('</head>', "$inject`n</head>")
+        Write-Host "  [+] Injected settings from site-data.json" -ForegroundColor Green
     } else {
-        Write-Host "  [i] No site-data.json found (using defaults)" -ForegroundColor DarkGray
+        Write-Host "  [i] No site-data.json settings found (using defaults)" -ForegroundColor DarkGray
     }
 
     # Inject suite nav bar
@@ -114,6 +126,13 @@ function Build-Checklist {
 
     if (-not (Test-Path $checklistSrc)) { Write-Host "  [WARN] src\checklist.html not found - skipping" -ForegroundColor Yellow; return $true }
     $html = Get-Content $checklistSrc -Raw -Encoding UTF8
+
+    # Inject site-data.json (same merged payload as InteractiveMap)
+    $inject = Get-InjectScript
+    if ($inject) {
+        $html = $html.Replace('</head>', "$inject`n</head>")
+        Write-Host "  [+] Injected settings from site-data.json" -ForegroundColor Green
+    }
 
     # Inject suite nav bar
     $html = $html.Replace('<body>', "<body>`n$navStyle`n$navChk")
@@ -177,6 +196,21 @@ if ($Mode -eq "serve") {
                 } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -eq "/save") {
                     $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
                     $body   = $reader.ReadToEnd()
+                    # Preserve site key: merge incoming saved with existing site data
+                    try {
+                        $incoming = ConvertFrom-Json -InputObject $body
+                        if (Test-Path $siteDataFile) {
+                            $existing = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
+                            if ($null -ne $existing.site) {
+                                $merged = [PSCustomObject]@{
+                                    project = $incoming.project
+                                    site    = $existing.site
+                                    saved   = $incoming.saved
+                                }
+                                $body = $merged | ConvertTo-Json -Depth 10
+                            }
+                        }
+                    } catch {}
                     [System.IO.File]::WriteAllText($siteDataFile, $body, [System.Text.UTF8Encoding]::new($false))
                     Write-Host "  [SAVE] site-data.json updated - rebuilding..." -ForegroundColor Yellow
                     Build-Html | Out-Null

@@ -21,6 +21,7 @@
   .adv-card-body>p,.adv-card-body>div{margin-bottom:10px}
   .adv-card-body>p:last-child{margin-bottom:0}
 </style>
+<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}]};</script>
 </head>
 <body>
 <style>
@@ -37,6 +38,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
 const {useState,useEffect,useCallback}=React;
+const SD = window.__SITE_DEFAULTS__ || {};
 
 
 // ═══════════════════════════════════════
@@ -209,11 +211,13 @@ const CONTACTS = [
   {name:"CCHS Now Intake",val:"DSDMinisterialPM+CCN@sandiego.gov",copy:true},
   {name:"USPS Growth Mgr",val:"Delivery.Growth@USPS.GOV",copy:true},
   {name:"DSD Prelim Review",val:"Form DS-375 / IB-513"},
-  {name:"Combination",val:"Wesley Tukker (619-446-5362)"},
-  {name:"Structural",val:"Ricardo Ordonez (619-446-5123)"},
-  {name:"Electrical",val:"Richard Gable (858-573-1223)"},
-  {name:"Mechanical",val:"Christopher Sorchy (619-236-7033)"},
-  {name:"Grading",val:"Alejandro Ruiz (858-627-2034)"},
+  ...(SD.inspectors || [
+    {name:"Combination",val:"Wesley Tukker (619-446-5362)"},
+    {name:"Structural",val:"Ricardo Ordonez (619-446-5123)"},
+    {name:"Electrical",val:"Richard Gable (858-573-1223)"},
+    {name:"Mechanical",val:"Christopher Sorchy (619-236-7033)"},
+    {name:"Grading",val:"Alejandro Ruiz (858-627-2034)"},
+  ]),
 ];
 
 function allItemsOf(d){let o=[];d.forEach(c=>{if(c.items)o.push(...c.items);if(c.sections)c.sections.forEach(s=>o.push(...s.items))});return o}
@@ -265,7 +269,7 @@ function Pill({label,active,onClick,color="#0f4c81",small}){return <button onCli
 //  BUILDING CONFIGURATOR
 // ═══════════════════════════════════════
 function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp}){
-  const LOT=6250;const mono="'JetBrains Mono',monospace";
+  const LOT=SD.lotSF??6250;const mono="'JetBrains Mono',monospace";
   const update=(i,f,v)=>{const n=[...bldgs];n[i]={...n[i],[f]:v};setBldgs(n)};
   const add=()=>setBldgs([...bldgs,{type:"Residential",w:18,d:40,stories:3,unitsPerFloor:1}]);
   const remove=i=>{if(bldgs.length>1)setBldgs(bldgs.filter((_,j)=>j!==i))};
@@ -278,15 +282,15 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp}){
   const resiU=resiB.reduce((s,b)=>s+b.unitsPerFloor*b.stories,0);
   const far=totalSF/LOT;
   const resiPct=totalSF>0?(resiSF/totalSF*100):0;
-  const baseDMax=Math.floor(LOT/600);
+  const baseDMax=Math.floor(LOT/(SD.densityPerSF??600));
   const pw=sel.pathway||"";const isCCHS=pw.includes("CCHS");
-  const farLim=isCCHS?6.5:2.0;
+  const farLim=isCCHS?(SD.commFAR??6.5):(SD.baseFAR??2.0);
   const farOK=far<=farLim;
   const denOK=isCCHS||resiU<=baseDMax;
   const unitSF=resiB.length>0?resiB[0].w*resiB[0].d:0;
-  const difWaiver=unitSF<=500;
-  const preBonus=baseDMax;const affordReq=Math.ceil(preBonus*0.4);const nef=11.78*LOT;
-  const difPerUnit=15000;
+  const difWaiver=unitSF<=(SD.difWaiverSF??500);
+  const preBonus=baseDMax;const affordReq=Math.ceil(preBonus*(SD.affordabilityPct??0.40));const nef=(SD.nefRatePerSF??11.78)*LOT;
+  const difPerUnit=SD.difPerUnit??15000;
   const mktUnits=Math.max(0,resiU-affordReq);
   const difTotal=difWaiver?0:mktUnits*difPerUnit;
   const sb330OK=resiPct>=66.67;
@@ -386,10 +390,12 @@ function AdvisorySection({sel,bldgs,onHelp}){
   const unitSF=resiB.length>0?resiB[0].w*resiB[0].d:720;
   const resiU=resiB.reduce((s,b)=>s+b.unitsPerFloor*b.stories,0);
   const isCCHS=(sel.pathway||"").includes("CCHS");
-  const baseDMax=Math.floor(6250/600);
-  const affordReq=Math.ceil(baseDMax*0.4);
+  const LOT=SD.lotSF??6250;
+  const baseDMax=Math.floor(LOT/(SD.densityPerSF??600));
+  const affordReq=Math.ceil(baseDMax*(SD.affordabilityPct??0.40));
   const mktU=Math.max(0,resiU-affordReq);
-  const difPerUnit=15000;
+  const difPerUnit=SD.difPerUnit??15000;
+  const nefTotal=Math.round((SD.nefRatePerSF??11.78)*LOT);
 
   return (
     <div style={{marginBottom:12}}>
@@ -407,9 +413,9 @@ function AdvisorySection({sel,bldgs,onHelp}){
 
         <AdvCard id="far_density" title="FAR vs Density: How Commercial Counts Differently" isOpen={!!open["far_density"]} onToggle={toggle}>
           <p><AB>FAR (Floor Area Ratio)</AB> measures <AB>total building size</AB> relative to the lot. It counts EVERYTHING — commercial AND residential floor area combined.</p>
-          <p style={{background:"#eff6ff",padding:"8px 12px",borderRadius:8,margin:"8px 0"}}><AB>Your FAR:</AB> <ANum>{(bldgs.reduce((s,b)=>s+b.w*b.d*b.stories,0)/6250).toFixed(2)}</ANum> = {bldgs.reduce((s,b)=>s+b.w*b.d*b.stories,0).toLocaleString()} total SF / 6,250 lot SF</p>
+          <p style={{background:"#eff6ff",padding:"8px 12px",borderRadius:8,margin:"8px 0"}}><AB>Your FAR:</AB> <ANum>{(bldgs.reduce((s,b)=>s+b.w*b.d*b.stories,0)/LOT).toFixed(2)}</ANum> = {bldgs.reduce((s,b)=>s+b.w*b.d*b.stories,0).toLocaleString()} total SF / {LOT.toLocaleString()} lot SF</p>
           <p><AB>Density</AB> counts <AB>only residential dwelling units</AB>. Your 3 commercial suites are NOT dwelling units. So your density is <ANum>{resiU} DU</ANum>, not {resiU + bldgs.filter(b=>b.type==="Commercial").reduce((s,b)=>s+b.unitsPerFloor*b.stories,0)}.</p>
-          <p><AB>Why this matters:</AB> Your FAR ({(bldgs.reduce((s,b)=>s+b.w*b.d*b.stories,0)/6250).toFixed(2)}) fits under the base zone limit of 2.0 — FAR is not the problem. But your <ANum>{resiU} residential units</ANum> exceeds the base zone cap of <ANum>{baseDMax} DU</ANum>. {resiU > baseDMax ? <AWarn> Density is the constraint that pushes you toward CCHS.</AWarn> : <AGood> Density fits within base zone.</AGood>}</p>
+          <p><AB>Why this matters:</AB> Your FAR ({(bldgs.reduce((s,b)=>s+b.w*b.d*b.stories,0)/LOT).toFixed(2)}) fits under the base zone limit of {SD.baseFAR??2.0} — FAR is not the problem. But your <ANum>{resiU} residential units</ANum> exceeds the base zone cap of <ANum>{baseDMax} DU</ANum>. {resiU > baseDMax ? <AWarn> Density is the constraint that pushes you toward CCHS.</AWarn> : <AGood> Density fits within base zone.</AGood>}</p>
           <p style={{fontSize:11,color:"#94a3b8",marginTop:8}}>Think of it this way: FAR asks "how big is the building?" — Density asks "how many homes are inside?"</p>
         </AdvCard>
 
@@ -446,7 +452,7 @@ function AdvisorySection({sel,bldgs,onHelp}){
 
           <p><AB>Can you actually do this?</AB> Yes — shrinking from 18x40 to 18x27 is an architectural decision. You lose 234 SF per unit but save roughly <ANum>${difPerUnit.toLocaleString()}</ANum> per market-rate unit. At 486 SF it's a tight studio or 1-bedroom, but this size is common in transit-oriented developments. Many CCHS projects in San Diego target just under 500 SF for exactly this reason.</p>
 
-          <p><AB>Scenario C: 100% affordable</AB> — ALL DIF waived AND the <ANum>$73,625</ANum> NEF is waived too. Total City fees: <AGood>$0</AGood>.</p>
+          <p><AB>Scenario C: 100% affordable</AB> — ALL DIF waived AND the <ANum>${nefTotal.toLocaleString()}</ANum> NEF is waived too. Total City fees: <AGood>$0</AGood>.</p>
         </AdvCard>
 
         <AdvCard id="sb330" title="SB 330: Locking In Your Rules" isOpen={!!open["sb330"]} onToggle={toggle}>
@@ -494,7 +500,7 @@ function AdvisorySection({sel,bldgs,onHelp}){
                   ["Height","No limit <95 ft","45 ft (unless incentive)"],
                   ["Parking","0 (TPA + AB 2097)","Reduced (0.5/unit near transit)"],
                   ["Process","Ministerial, 30-day review","Ministerial if conforming"],
-                  ["Growth potential","Massive (40,625 SF)","Limited (12,500 SF base)"],
+                  ["Growth potential",`Massive (${((SD.commFAR??6.5)*LOT).toLocaleString()} SF)`,`Limited (${((SD.baseFAR??2.0)*LOT).toLocaleString()} SF base)`],
                 ].map(([f,c,d],i)=>(
                   <tr key={i} style={{borderBottom:"1px solid #f1f5f9"}}>
                     <td style={{padding:"5px 8px",fontWeight:600}}>{f}</td>
@@ -658,8 +664,8 @@ function App(){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:920,margin:"0 auto"}}>
           <div>
             <div style={{fontSize:9,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",opacity:.4}}>PRE-APPLICATION PERMIT CHECKLIST</div>
-            <div style={{fontSize:21,fontWeight:700,marginTop:1}}>4335 Euclid Avenue</div>
-            <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>471-271-16-00 {"\u2022"} CUPD-CU-2-4 {"\u2022"} 50x125 {"\u2022"} 6,250 SF</div>
+            <div style={{fontSize:21,fontWeight:700,marginTop:1}}>{(SD.address||'').split(',')[0]||'4335 Euclid Avenue'}</div>
+            <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{SD.apn??'471-271-16-00'} {"\u2022"} {SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:38,fontWeight:700,lineHeight:1,fontFamily:"'JetBrains Mono',monospace",color:pct===100?"#4ade80":pct>60?"#38bdf8":"#fbbf24"}}>{pct}<span style={{fontSize:14,opacity:.7}}>%</span></div>

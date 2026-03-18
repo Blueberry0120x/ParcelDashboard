@@ -49,13 +49,43 @@ Every action that mutates persisted state MUST call `ExportEngine.pushToServer()
 - Dead code: when a design changes (e.g. individual dims → chain dims),
   remove unused helpers immediately — don't leave them for cleanup later.
 
+## ── SITE-DATA.JSON ARCHITECTURE ───────────────────────────────────────────────
+
+`data/site-data.json` has TWO top-level keys with different lifecycles:
+
+| Key     | What it holds                         | Written by          |
+|---------|---------------------------------------|---------------------|
+| `site`  | Static project identity (address, APN, zoning rules, fees, contacts) | You, manually       |
+| `saved` | Session state (lat, lng, buildings, …) | `ExportEngine._payload()` via pushToServer() |
+
+At build time, PS1 merges both into `window.__SITE_DEFAULTS__` (injected into
+ALL suite files — InteractiveMap AND PreApp_Checklist).
+
+**POST /save preserves `site`** — the save handler reads the existing file,
+keeps `site`, and overwrites only `saved`.
+
+### Site identity fields (in `site` key — NOT in `_payload()`)
+```
+address, apn, zoning, lotWidth, lotDepth, lotSF, commercialDepth,
+baseFAR, commFAR, maxHeight, baseHeightLimit, cchsMaxHeight,
+frontSetback, rearSetback, sideSetback, densityPerSF,
+nefRatePerSF, affordabilityPct, difPerUnit, difWaiverSF,
+inspectors[]
+```
+
+### Adding a new site identity field
+1. Add it to `data/site-data.json.site`
+2. Consume from `SD = window.__SITE_DEFAULTS__` with a fallback
+3. In `engine-config.js.init()` if it drives ConfigEngine.data
+
 ## ── BUILD PIPELINE ────────────────────────────────────────────────────────────
-- Source files live in `src/`; compiled output is `InteractiveMap.html` + `dist/`
+- Source files live in `src/`; compiled output is `Output/InteractiveMap.html` + `Output/PreApp_Checklist.html`
 - Build: run `Engine_InteractiveParcelMap.ps1` (compile only)
 - Dev server: run with `serve` argument → localhost:7734
-  - GET `/`      → serves InteractiveMap.html
-  - POST `/save` → writes site-data.json + rebuilds
-- `data/site-data.json` is the on-disk state file; injected as
-  `window.__SITE_DEFAULTS__` at build time
+  - GET `/`          → serves InteractiveMap.html
+  - GET `/checklist` → serves PreApp_Checklist.html
+  - POST `/save`     → writes site-data.json (preserving site key) + rebuilds both
+- `data/site-data.json` is the on-disk state file; merged into
+  `window.__SITE_DEFAULTS__` at build time via `Get-InjectScript`
 - Em dashes and non-ASCII in PS1 string literals cause cp1252 parse errors —
   use plain ASCII hyphens only in PS1 files
