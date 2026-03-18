@@ -98,10 +98,6 @@
             <div class="sidebar-box">
                 <div class="box-header">
                     <h2>Concept Design</h2>
-                    <div class="mode-track">
-                        <button class="mode-btn active" id="modeComplex" onclick="SetbackEngine.setMode('complex')">Complex</button>
-                        <button class="mode-btn"        id="modeSingle"  onclick="SetbackEngine.setMode('single')">Single</button>
-                    </div>
                 </div>
                 <h3 style="margin-top:2px;">Setback Configuration</h3>
                 <div class="setback-grid">
@@ -143,13 +139,13 @@
                         <input type="range" id="bldgOrientSlider" min="-90" max="90" value="0" step="0.1">
                         <strong>Footprint:</strong>
                         <div class="footprint-inputs">
-                            <label>W</label>
-                            <input type="number" id="bldgWidth"  class="align-angle-input" value="30.0" min="1" step="0.5">
+                            <label title="W — Footprint Width (side to side)">W</label>
+                            <input type="number" id="bldgW" class="align-angle-input" value="30.0" min="1" step="0.5">
                             <span class="ft-label">ft</span>
-                            <label>L</label>
-                            <input type="number" id="bldgHeight" class="align-angle-input" value="60.0" min="1" step="0.5">
+                            <label title="D — Footprint Depth (front to rear)">D</label>
+                            <input type="number" id="bldgD" class="align-angle-input" value="60.0" min="1" step="0.5">
                             <span class="ft-label">ft</span>
-                            <label>A</label>
+                            <label title="A — Footprint Area (W × D)">A</label>
                             <input type="text" id="bldgFootprintArea" class="align-angle-input" readonly tabindex="-1">
                             <span class="ft-label">sf</span>
                         </div>

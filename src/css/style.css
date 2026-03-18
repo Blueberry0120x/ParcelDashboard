@@ -203,9 +203,11 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     cursor: pointer; user-select: none;
 }
 .dim-label:hover { opacity: 0.5; }
-/* Chain dim lines — draggable to reposition */
-.chain-dim-line { cursor: grab; }
-.chain-dim-line:active { cursor: grabbing; }
+/* Chain dim lines — normal state */
+.chain-dim-line { cursor: default; }
+/* When dim drag mode is on: lines turn red, thicker hit area, pointer cursor */
+.dim-drag-mode-on .chain-dim-line { stroke: #e53e3e !important; cursor: pointer; }
+.dim-drag-mode-on .chain-dim-line:hover { stroke: #c53030 !important; }
 /* Architectural dimension text labels on map — plain text, centered */
 .arch-dim-label {
     font-size: 0.68em; font-weight: 800; font-family: 'Segoe UI', sans-serif;
@@ -334,7 +336,7 @@ details[open] summary { border-bottom: 1px solid var(--cad-border); }
 #map { flex: 1; width: 100%; border: 2px solid #cbd5e0; border-radius: 8px; z-index: 1; background-color: #e5e5e5; }
 
 /* Horizontal control row at top-left */
-.leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; padding-top: 10px; padding-left: 10px; }
+.leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; gap: 6px; padding-top: 10px; padding-left: 10px; }
 .leaflet-top.leaflet-left .leaflet-control { margin-top: 0; margin-left: 0; margin-right: 10px; }
 
 /* Toggle switch (snap-to-grid) */
@@ -361,11 +363,74 @@ input:checked + .slider:before { transform: translateX(20px); }
 .leaflet-control-helper:hover .helper-popup { display: block; }
 .helper-popup ul { padding-left: 15px; margin: 5px 0 0 0; }
 
-/* North compass */
+/* Chain dim lines — stroke-width is controlled by Leaflet weight (no CSS override) */
+
+/* Active chain dim line — highlights when handle is active */
+.chain-dim-active {
+    stroke: #d9381e !important;
+    stroke-width: 2px !important;
+    stroke-dasharray: none !important;
+}
+
+/* Chain dim drag handle — visible knob offset from dim line */
+.chain-drag-handle {
+    width: 20px; height: 20px;
+    background: #d9381e;
+    border: 2.5px solid #ffffff;
+    border-radius: 50%;
+    cursor: grab;
+    opacity: 0.8;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.55);
+    transition: transform .1s, opacity .1s;
+}
+.chain-drag-handle:hover { transform: scale(1.15); opacity: 1; }
+.chain-drag-handle:active { cursor: grabbing; transform: scale(1.05); }
+
+/* North compass — compass rose */
 .north-compass-wrap {
     background: transparent; cursor: default; pointer-events: none;
-    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55));
 }
+
+/* Opacity panel */
+.em-oc-ctrl {
+    background: rgba(10,10,10,.82); color: #e0e0e0;
+    padding: 5px 7px; border-radius: 5px; font-size: 9px;
+    min-width: 130px; box-shadow: 0 2px 6px rgba(0,0,0,.55);
+    cursor: default;
+}
+.em-oc-ctrl h4 {
+    margin: 0 0 4px; font-size: 7px; color: #aaa;
+    text-transform: uppercase; letter-spacing: .05em;
+    user-select: none;
+}
+.em-oc-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+.em-oc-row label { flex: 1; font-size: 9px; white-space: nowrap; min-width: 52px; }
+.em-oc-row input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    flex: 2; height: 3px; background: #555; border-radius: 2px;
+    cursor: pointer; outline: none; align-self: center;
+}
+.em-oc-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 11px; height: 11px;
+    border-radius: 50%; background: #55aaff; cursor: pointer;
+}
+.em-oc-row input[type=range]::-moz-range-thumb {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #55aaff; border: none; cursor: pointer;
+}
+.em-oc-row span { min-width: 26px; text-align: right; font-size: 9px; color: #999; }
+/* Dim drag toggle control */
+.leaflet-control-dim-drag a {
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; color: #555; background: #fff;
+    transition: color .15s, background .15s;
+}
+.leaflet-control-dim-drag a:hover { color: #1a202c; background: #f0f0f0; }
+.leaflet-control-dim-drag.dim-drag-active a {
+    color: #fff; background: #e53e3e;
+}
+.leaflet-control-dim-drag.dim-drag-active a:hover { background: #c53030; }
 
 /* Banner merge / split */
 .banner-stat.merge-ready {

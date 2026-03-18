@@ -8,6 +8,9 @@ const MapEngine = {
     bldgDimLabels: [], showBldgDims: false,
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
     chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
+    _isDragging: false,        // true during any drag — suppresses dim rebuild and save
+    _saveTimer:  null,         // debounce handle for ConfigEngine.save()
+    dimDragMode: false,        // when true, clicking dim lines activates drag handle
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -37,6 +40,8 @@ const MapEngine = {
 
         this.buildNorthArrow();
         this.buildHelpControl();
+        this.buildDimDragToggle();
+        this.buildOpacityPanel(sat);
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
@@ -58,6 +63,7 @@ const MapEngine = {
             })
         }).addTo(this.map);
 
+        m.on('dragstart', () => { this._isDragging = true; });
         m.on('drag', () => {
             const raw   = m.getLatLng();
             const state = ConfigEngine.state;
@@ -95,42 +101,97 @@ const MapEngine = {
             SetbackEngine.drawBuilding(true);
         });
         m.on('dragend', () => {
+            this._isDragging = false;
             SetbackEngine.drawBuilding();
+            ExportEngine.pushToServer();
         });
         return m;
     },
 
     buildNorthArrow: function() {
         const NorthControl = L.Control.extend({
-            options: { position: 'topleft' },
+            options: { position: 'bottomleft' },
             onAdd: function() {
                 var div = L.DomUtil.create('div', 'north-compass-wrap');
-                div.innerHTML = `
-                  <svg id="compassSvg" viewBox="0 0 40 54" width="40" height="54">
-                    <defs>
-                      <filter id="nshadow" x="-30%" y="-30%" width="160%" height="160%">
-                        <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.25"/>
-                      </filter>
-                    </defs>
-                    <g filter="url(#nshadow)">
-                      <polygon points="20,5 17,25 20,23 23,25" fill="#0f4c81"/>
-                      <polygon points="20,45 17,25 20,27 23,25" fill="rgba(15,76,129,0.2)"/>
-                    </g>
-                    <text x="20" y="52" text-anchor="middle" font-size="7" font-weight="800"
-                          fill="#0f4c81" font-family="Segoe UI,sans-serif" letter-spacing="0.3">N</text>
-                    <g id="siteNorthArm" transform="rotate(0 20 25)">
-                      <polygon points="20,8 18.2,15 21.8,15" fill="#d9381e" opacity="0.92"/>
-                      <line x1="20" y1="8" x2="20" y2="25" stroke="#d9381e" stroke-width="1.6" stroke-dasharray="3,2.2"/>
-                      <text x="20" y="5.5" text-anchor="middle" font-size="6" font-weight="800"
-                            fill="#d9381e" font-family="Segoe UI,sans-serif">F</text>
-                    </g>
-                    <circle cx="20" cy="25" r="2.5" fill="#1a1a1a" opacity="0.75"/>
-                  </svg>`;
+                div.innerHTML =
+                    '<svg id="compassSvg" width="94" height="125" viewBox="-50 -50 100 132" style="display:block">' +
+                    // Background circles
+                    '<circle r="48" fill="rgba(8,8,16,.72)" stroke="rgba(255,255,255,.30)" stroke-width="1.5"/>' +
+                    '<circle r="41" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>' +
+                    // 8-point compass rose — True North (fixed, white)
+                    '<g id="compassRose">' +
+                    '  <polygon points="0,-38 5,-6 0,-19 -5,-6"  fill="#ffffff"/>' +
+                    '  <polygon points="0,38 5,6 0,19 -5,6"     fill="rgba(255,255,255,.28)" stroke="rgba(255,255,255,.50)" stroke-width="0.8"/>' +
+                    '  <polygon points="38,0 6,5 19,0 6,-5"     fill="#ffffff"/>' +
+                    '  <polygon points="-38,0 -6,5 -19,0 -6,-5" fill="#ffffff"/>' +
+                    '  <g transform="rotate(45)">' +
+                    '    <polygon points="0,-27 3,-5 0,-13 -3,-5" fill="rgba(255,255,255,.50)"/>' +
+                    '    <polygon points="0,27 3,5 0,13 -3,5"    fill="rgba(255,255,255,.22)"/>' +
+                    '    <polygon points="27,0 5,3 13,0 5,-3"    fill="rgba(255,255,255,.50)"/>' +
+                    '    <polygon points="-27,0 -5,3 -13,0 -5,-3" fill="rgba(255,255,255,.50)"/>' +
+                    '  </g>' +
+                    '  <circle r="4" fill="rgba(255,255,255,.9)" stroke="rgba(0,0,0,.4)" stroke-width="0.8"/>' +
+                    '  <circle r="2" fill="rgba(8,8,16,.9)"/>' +
+                    '</g>' +
+                    // Cardinal labels
+                    '<text x="0"   y="-42" text-anchor="middle" fill="#ffffff" stroke="rgba(0,0,0,.85)" stroke-width="4" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="11" font-weight="bold">N</text>' +
+                    '<text x="44"  y="4"   text-anchor="middle" fill="#ffffff" stroke="rgba(0,0,0,.85)" stroke-width="3" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="8">E</text>' +
+                    '<text x="0"   y="50"  text-anchor="middle" fill="#ffffff" stroke="rgba(0,0,0,.85)" stroke-width="3" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="8">S</text>' +
+                    '<text x="-44" y="4"   text-anchor="middle" fill="#ffffff" stroke="rgba(0,0,0,.85)" stroke-width="3" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="8">W</text>' +
+                    // Arc from TN to SN — red, thicker
+                    '<path id="compassArc" d="" fill="none" stroke="#d9381e" stroke-width="3" stroke-dasharray="3,2" opacity="0.9"/>' +
+                    // Site North arm — red, thicker
+                    '<g id="siteNorthArm">' +
+                    '  <line x1="0" y1="0" x2="0" y2="-28" stroke="#d9381e" stroke-width="4" stroke-linecap="round"/>' +
+                    '  <polygon points="0,-36 -5,-22 5,-22" fill="#d9381e"/>' +
+                    '</g>' +
+                    // Angle label — red, larger, white outline, pushed below circle
+                    '<text id="compassDeg" x="0" y="74" text-anchor="middle" fill="#d9381e" stroke="rgba(255,255,255,.9)" stroke-width="3" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="10" font-weight="bold">SN 0.0\u00b0</text>' +
+                    '</svg>';
                 L.DomEvent.disableClickPropagation(div);
                 return div;
             }
         });
         this.map.addControl(new NorthControl());
+    },
+
+    buildOpacityPanel: function(satLayer) {
+        const self = this;
+        const OpCtrl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function() {
+                var div = L.DomUtil.create('div', 'em-oc-ctrl leaflet-control');
+                const pct = ConfigEngine.state.mapOpacity;
+                div.innerHTML =
+                    '<h4>Basemap Opacity</h4>' +
+                    '<div class="em-oc-row">' +
+                    '  <label>Satellite</label>' +
+                    '  <input type="range" id="satOpacitySlider" min="0" max="100" value="' + pct + '">' +
+                    '  <span id="satOpacityVal">' + pct + '%</span>' +
+                    '</div>' +
+                    '';
+                L.DomEvent.disableClickPropagation(div);
+                L.DomEvent.disableScrollPropagation(div);
+                return div;
+            }
+        });
+        this.map.addControl(new OpCtrl());
+
+        // Wire slider after control is added to DOM
+        L.Util.requestAnimFrame(() => {
+            const slider = document.getElementById('satOpacitySlider');
+            const label  = document.getElementById('satOpacityVal');
+            if (!slider) return;
+            // Apply saved opacity immediately on load
+            satLayer.setOpacity(ConfigEngine.state.mapOpacity / 100);
+            slider.addEventListener('input', () => {
+                const v = parseInt(slider.value);
+                satLayer.setOpacity(v / 100);
+                label.textContent = v + '%';
+                ConfigEngine.state.mapOpacity = v;
+                localStorage.setItem('map_opacity', v);
+            });
+        });
     },
 
     buildHelpControl: function() {
@@ -153,12 +214,61 @@ const MapEngine = {
         this.map.addControl(new HelpControl());
     },
 
+    buildDimDragToggle: function() {
+        const self = this;
+        const DimDragCtrl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-dim-drag');
+                c.innerHTML = '<a href="#" title="Toggle dimension drag mode — when active, click any dimension line to reveal a drag handle. Drag the handle to reposition the chain, then click it again to lock in place." role="button" aria-label="Toggle dimension drag">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<line x1="4" y1="12" x2="20" y2="12"/>' +
+                    '<polyline points="8 8 4 12 8 16"/>' +
+                    '<polyline points="16 8 20 12 16 16"/>' +
+                    '<line x1="12" y1="4" x2="12" y2="8"/>' +
+                    '<line x1="12" y1="16" x2="12" y2="20"/>' +
+                    '</svg></a>';
+                L.DomEvent.disableClickPropagation(c);
+                c.querySelector('a').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self.dimDragMode = !self.dimDragMode;
+                    c.classList.toggle('dim-drag-active', self.dimDragMode);
+                    self.map.getContainer().classList.toggle('dim-drag-mode-on', self.dimDragMode);
+                    if (self.dimDragMode && !self.showBldgDims) {
+                        self.showBldgDims = true;
+                        self.showDims = true;
+                        const dimBtn = document.getElementById('bldgDimBtn');
+                        if (dimBtn) { dimBtn.classList.add('active'); dimBtn.textContent = 'Hide Dims'; }
+                    }
+                    if (typeof SetbackEngine !== 'undefined') SetbackEngine.updateBldgDimLabels();
+                });
+                return c;
+            }
+        });
+        this.map.addControl(new DimDragCtrl());
+    },
+
     updateNorthArrow: function() {
-        const arm = document.getElementById('siteNorthArm');
+        const arm  = document.getElementById('siteNorthArm');
+        const deg  = document.getElementById('compassDeg');
+        const arc  = document.getElementById('compassArc');
         if (!arm) return;
-        const rad   = ConfigEngine.state.rotation * Math.PI / 180;
+        const rot   = ConfigEngine.state.rotation;         // user-set rotation in degrees
+        const rad   = rot * Math.PI / 180;
+        // SN arm points toward the front of the lot — opposite of True North
         const angle = Math.atan2(-Math.cos(rad), -Math.sin(rad)) * 180 / Math.PI;
-        arm.setAttribute('transform', `rotate(${angle.toFixed(2)} 20 25)`);
+        arm.setAttribute('transform', 'rotate(' + angle.toFixed(2) + ')');
+        // Show the rotation value the user actually controls
+        if (deg) deg.textContent = rot.toFixed(1) + '\u00b0';
+        // Arc from 0° to SN arm angle at r=22
+        const normAngle = ((angle % 360) + 360) % 360;
+        if (arc && Math.abs(rot) >= 0.5) {
+            const r = 22, aRad = angle * Math.PI / 180;
+            arc.setAttribute('d', 'M 0 -' + r + ' A ' + r + ' ' + r + ' 0 ' + (normAngle > 180 ? 1 : 0) + ' 1 ' +
+                (r * Math.sin(aRad)).toFixed(2) + ' ' + (-r * Math.cos(aRad)).toFixed(2));
+        } else if (arc) {
+            arc.setAttribute('d', '');
+        }
     },
 
     render: function() {
@@ -188,12 +298,16 @@ const MapEngine = {
             this.commPoly.setStyle({ fillOpacity: 0.15, fillColor: '#0f4c81', weight: 1, dashArray: null, color: '#0f4c81' });
         }
         this.updateNorthArrow();
-        this.updateDimLabels();
+        if (!this._isDragging) this.updateDimLabels();
 
         if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
-        SetbackEngine.drawBuilding();
+        SetbackEngine.drawBuilding(this._isDragging);
 
-        ConfigEngine.save();
+        // Debounced save — max once per 400ms, never during active drag
+        if (!this._isDragging) {
+            clearTimeout(this._saveTimer);
+            this._saveTimer = setTimeout(() => ConfigEngine.save(), 400);
+        }
     },
 
     updateDimLabels: function() {
@@ -293,6 +407,7 @@ const MapEngine = {
             this.updateDimLabels();
             if (this.showBldgDims) SetbackEngine.updateBldgDimLabels();
         });
+        this.dragMarker.on('dragstart', () => { this._isDragging = true; });
         this.dragMarker.on('drag', () => {
             const raw = this.dragMarker.getLatLng();
             if (ConfigEngine.state.isSnapping) {
@@ -306,8 +421,11 @@ const MapEngine = {
             this.render();
         });
         this.dragMarker.on('dragend', () => {
+            this._isDragging = false;
             if (ConfigEngine.state.isSnapping)
                 this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
+            this.render();  // final render with dims restored
+            ConfigEngine.save();
         });
 
         const sldr = document.getElementById('rotationSlider');
@@ -347,11 +465,52 @@ const MapEngine = {
         });
         document.getElementById('resetBtn').addEventListener('click', () => {
             ConfigEngine.reset();
+
+            // Sync map position + rotation inputs
             this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
             this.map.setView([ConfigEngine.state.lat, ConfigEngine.state.lng]);
             sldr.value = ConfigEngine.state.rotation;
             inp.value  = ConfigEngine.state.rotation.toFixed(1);
+
+            // Unlock if locked
+            this.dragMarker.dragging.enable();
+            this.dragMarker.setOpacity(1);
+            sldr.disabled = false;
+            inp.disabled  = false;
+            const lockBtn = document.getElementById('lockPositionBtn');
+            lockBtn.textContent = 'Lock Position';
+            lockBtn.classList.remove('locked');
+
+            // Reset dim state
+            this.showBldgDims = false;
+            this.showDims     = false;
+            this.hiddenDimKeys.clear();
+            this.chainWOffset = 0;
+            this.chainDOffset = 0;
+            this.dimDragMode  = false;
+            this.map.getContainer().classList.remove('dim-drag-mode-on');
+            const ddCtrl = document.querySelector('.leaflet-control-dim-drag');
+            if (ddCtrl) ddCtrl.classList.remove('dim-drag-active');
+            const dimBtn = document.getElementById('bldgDimBtn');
+            if (dimBtn) { dimBtn.classList.remove('active'); dimBtn.textContent = 'Show Dims'; }
+
+            // Reset sidebar inputs
+            const sb = ConfigEngine.state.setbacks;
+            document.getElementById('sb-front').value   = sb.front;
+            document.getElementById('sb-rear').value    = sb.rear;
+            document.getElementById('sb-side-l').value  = sb.sideL;
+            document.getElementById('sb-side-r').value  = sb.sideR;
+            const chk = document.getElementById('commFrontCheck');
+            if (chk) chk.checked = false;
+
+            // Reseed building inputs from default building
+            SetbackEngine.rebuildSelector();
+            SetbackEngine._seedInputsFromBuilding(0);
+
             this.render();
+
+            // Push AFTER all MapEngine state is cleaned up so _payload() captures the full reset
+            ExportEngine.pushToServer();
         });
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
@@ -373,6 +532,7 @@ const MapEngine = {
             sldr.disabled = locked;
             inp.disabled  = locked;
             localStorage.setItem('site_locked', locked ? '1' : '0');
+            ExportEngine.pushToServer();
         });
 
         // Restore lock visual state on load

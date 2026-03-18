@@ -2,12 +2,6 @@
    ENGINE 4: SETBACK & CONCEPT MODE
    ========================================== */
 const SetbackEngine = {
-    setMode: function(mode) {
-        ConfigEngine.state.mode = mode;
-        document.getElementById('modeComplex').classList.toggle('active', mode === 'complex');
-        document.getElementById('modeSingle').classList.toggle('active', mode === 'single');
-    },
-
     applySetbacks: function() {
         const front = parseFloat(document.getElementById('sb-front').value)  || 0;
         const rear  = parseFloat(document.getElementById('sb-rear').value)   || 0;
@@ -32,13 +26,14 @@ const SetbackEngine = {
         const sideR = parseFloat(document.getElementById('sb-side-r').value) || 0;
         ConfigEngine.state.setbacks = { front, rear, sideL, sideR };
         localStorage.setItem('saved_setbacks', JSON.stringify(ConfigEngine.state.setbacks));
+        ExportEngine.pushToServer();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
 
     // Returns the building's axis-aligned bounding half-extents at a given orientation
     _buildingExtents: function(bldg) {
-        const hw   = bldg.width  / 2, hh = bldg.height / 2;
+        const hw   = bldg.W / 2, hh = bldg.D / 2;
         const bRad = bldg.orientation * Math.PI / 180;
         const aC   = Math.abs(Math.cos(bRad)), aS = Math.abs(Math.sin(bRad));
         return {
@@ -145,8 +140,8 @@ const SetbackEngine = {
         if (!bldg) return;
         document.getElementById('bldgOrientInput').value    = bldg.orientation.toFixed(1);
         document.getElementById('bldgOrientSlider').value   = bldg.orientation;
-        document.getElementById('bldgWidth').value          = (bldg.width        || 30).toFixed(1);
-        document.getElementById('bldgHeight').value         = (bldg.height       || 60).toFixed(1);
+        document.getElementById('bldgW').value          = (bldg.W || 30).toFixed(1);
+        document.getElementById('bldgD').value          = (bldg.D || 60).toFixed(1);
         document.getElementById('bldgOffsetX').value        = (bldg.offsetX      || 0).toFixed(1);
         document.getElementById('bldgOffsetY').value        = (bldg.offsetY      || 0).toFixed(1);
         document.getElementById('bldgCount').value          = bldg.count         || 1;
@@ -187,13 +182,13 @@ const SetbackEngine = {
 
     addBuilding: function() {
         const state   = ConfigEngine.state;
-        const src     = state.buildings[state.activeBuilding] || state.buildings[0];
+        const src     = state.buildings[state.activeBuilding] || state.buildings[0] || ConfigEngine.defaultBuilding;
         const last    = state.buildings[state.buildings.length - 1];
         const lastExt = this._buildingExtents(last);
         const newBldg = {
             orientation:  src.orientation,
-            width:        src.width,
-            height:       src.height,
+            W:            src.W,
+            D:            src.D,
             offsetX:      0,
             offsetY:      last.offsetY || 0,
             spacing:      0,
@@ -262,7 +257,7 @@ const SetbackEngine = {
             const count        = bldg.count        || 1;
             const stackSpacing = bldg.stackSpacing || 0;
             const anchor       = bldg.anchor       || 'center';
-            const hw   = bldg.width  / 2, hh = bldg.height / 2;
+            const hw   = bldg.W / 2, hh = bldg.D / 2;
             const bRad = bldg.orientation * Math.PI / 180;
             const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
 
@@ -381,52 +376,7 @@ const SetbackEngine = {
         const feetPerPx   = metersPerPx * 3.28084;
         const TO = 10 * feetPerPx;  // 10px gap, converted to feet at current zoom
 
-        // Helper: draw a keyed dim group (lines + clickable label), hideable
-        const dimGroup = (dimKey, drawFn) => {
-            if (MapEngine.hiddenDimKeys.has(dimKey)) return;
-            const layers = [];
-            const gLine = pts => { const l = line(pts); layers.push(l); return l; };
-            const gLbl  = (pt, txt, rotDeg) => {
-                const m = push(L.marker(toLatLng(pt), {
-                    icon: L.divIcon({
-                        className: '',
-                        html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
-                        iconSize: [0, 0], iconAnchor: [0, 0]
-                    }),
-                    interactive: true
-                }).addTo(MapEngine.map));
-                layers.push(m);
-                m.on('click', () => {
-                    MapEngine.hiddenDimKeys.add(dimKey);
-                    layers.forEach(l => MapEngine.map.removeLayer(l));
-                });
-            };
-            drawFn(gLine, gLbl);
-        };
-
-        state.buildings.forEach((bldg, bi) => {
-            const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
-            const cy     = (sideR - sideL) / 2 + (bldg.offsetY || 0);
-            const count  = bldg.count || 1;
-            const ss     = bldg.stackSpacing || 0;
-            const anchor = bldg.anchor || 'center';
-            const hw     = bldg.width  / 2, hh = bldg.height / 2;
-            const bRad   = bldg.orientation * Math.PI / 180;
-            const bCos   = Math.cos(bRad), bSin = Math.sin(bRad);
-            const dAx = bCos, dAy = bSin;
-            const wAx = -bSin, wAy = bCos;
-            const { halfDepth } = this._buildingExtents(bldg);
-            const step = halfDepth * 2 + ss;
-            const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
-            const tkX = (dAx + wAx) * 0.7071, tkY = (dAy + wAy) * 0.7071;
-            // Label rotation follows the dimension line direction, normalized upright [-90, 90)
-            const normalize = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
-            const totalRot = state.rotation + bldg.orientation;
-            const labelRotW = normalize(-totalRot - 90); // width dim
-            const labelRotH = normalize(-totalRot);       // height dim
-
-            // (Individual width/height dims replaced by chain dims below)
-        });
+        // Individual per-building dims replaced by chain dims below.
 
         // ── CHAIN DIMENSIONS ────────────────────────────────────────────────
         // Collects all boundary points along each axis, then draws one
@@ -489,7 +439,7 @@ const SetbackEngine = {
         // Lines are draggable to reposition the chain perpendicular to its run.
         const drawChain = (chain, refCoord, isX, perpX, perpY, rotDeg, prefix) => {
             const chainLayers = [];
-            const dimStyle = { color: '#1a202c', weight: 1.2, opacity: 1, interactive: true, noClip: true, className: 'chain-dim-line' };
+            const dimStyle = { color: '#1a202c', weight: 2, opacity: 1, interactive: true, noClip: true, className: 'chain-dim-line' };
 
             // Witness lines at every boundary
             chain.forEach((seg) => {
@@ -590,38 +540,81 @@ const SetbackEngine = {
 
         // Attach drag behavior to all polylines in a chain
         const self = this;
-        let dragging = false;
+        // Click dim line → visible drag handle appears offset from line.
+        // Drag the handle to reposition. Click handle (or line again) to dismiss.
+        let activeHandle  = null;   // the L.marker handle currently showing
+        let activeDragOff = null;   // cleanup fn; null = no chain active
+
+        const deactivateChain = () => {
+            if (!activeDragOff) return;
+            activeDragOff();
+        };
+
         const attachChainDrag = (layers, chain, isX, perpX, perpY, offsetProp, baseRef, anchors, rotDeg, prefix, getLayers, setLayers) => {
+
+            // Returns local coords for the handle — midpoint of chain, offset outward 7 ft past dim line
+            const getHandlePt = () => {
+                const curRef = baseRef + MapEngine[offsetProp];
+                const midV   = (chain[0].v + chain[chain.length - 1].v) / 2;
+                const sign   = curRef >= 0 ? 1 : -1;
+                return isX
+                    ? { x: midV, y: curRef + (EXT + 7) * sign }
+                    : { x: curRef + (EXT + 7) * sign, y: midV };
+            };
+
             layers.forEach(l => {
                 if (!l.on || !(l instanceof L.Polyline)) return;
-                l.on('mousedown', (e) => {
-                    if (dragging) return;
-                    dragging = true;
+                l.on('click', (e) => {
                     L.DomEvent.stop(e.originalEvent);
+                    if (MapEngine.dimDragMode) return;  // handles already shown by toggle
+                    // If any chain active — deactivate it (including this one)
+                    if (activeDragOff) { deactivateChain(); return; }
+
+                    // Highlight chain lines
+                    getLayers().forEach(ll => { if (ll._path) ll._path.classList.add('chain-dim-active'); });
                     MapEngine.map.dragging.disable();
-                    const onMove = (me) => {
-                        const loc = toLocal(me.latlng);
+
+                    // Create the drag handle marker
+                    activeHandle = L.marker(toLatLng(getHandlePt()), {
+                        draggable: true,
+                        icon: L.divIcon({
+                            className: '',
+                            html: '<div class="chain-drag-handle"></div>',
+                            iconSize:   [20, 20],
+                            iconAnchor: [10, 10]
+                        })
+                    }).addTo(MapEngine.map);
+
+                    activeHandle.on('drag', () => {
+                        const loc    = toLocal(activeHandle.getLatLng());
                         const rawVal = isX ? loc.y : loc.x;
                         const snapped = snapTo(rawVal, anchors);
                         if (MapEngine[offsetProp] === snapped - baseRef) return;
                         MapEngine[offsetProp] = snapped - baseRef;
                         const newRef = baseRef + MapEngine[offsetProp];
-                        // Flip perpendicular outward based on which side of lot center
                         const pX = isX ? perpX : (newRef > 0 ? 1 : -1);
                         const pY = isX ? (newRef > 0 ? 1 : -1) : perpY;
                         getLayers().forEach(ll => MapEngine.map.removeLayer(ll));
                         const newLayers = drawChain(chain, newRef, isX, pX, pY, rotDeg, prefix);
                         setLayers(newLayers);
-                    };
-                    const onUp = () => {
-                        dragging = false;
-                        MapEngine.map.off('mousemove', onMove);
-                        MapEngine.map.off('mouseup', onUp);
+                        // Re-highlight new layers and reposition handle
+                        getLayers().forEach(ll => { if (ll._path) ll._path.classList.add('chain-dim-active'); });
+                        activeHandle.setLatLng(toLatLng(getHandlePt()));
+                    });
+
+                    // Click handle to dismiss
+                    activeHandle.on('click', (e2) => {
+                        L.DomEvent.stop(e2.originalEvent);
+                        deactivateChain();
+                    });
+
+                    activeDragOff = () => {
+                        activeDragOff = null;
+                        if (activeHandle) { MapEngine.map.removeLayer(activeHandle); activeHandle = null; }
                         MapEngine.map.dragging.enable();
+                        getLayers().forEach(ll => { if (ll._path) ll._path.classList.remove('chain-dim-active'); });
                         self.updateBldgDimLabels();
                     };
-                    MapEngine.map.on('mousemove', onMove);
-                    MapEngine.map.on('mouseup', onUp);
                 });
             });
         };
@@ -630,6 +623,36 @@ const SetbackEngine = {
             () => wLayers, (l) => { wLayers = l; });
         attachChainDrag(dLayers, dChain, true, 0, dPerpY, 'chainDOffset', chainRefY, dAnchors, clrDepthAngle, 'chain_d',
             () => dLayers, (l) => { dLayers = l; });
+
+        // When drag mode is on, show handles immediately (no click needed)
+        if (MapEngine.dimDragMode) {
+            const autoHandle = (chain, isX, perpX, perpY, offsetProp, baseRef, anchors, rotDeg, prefix, getLayers, setLayers) => {
+                const getHPt = () => {
+                    const curRef = baseRef + MapEngine[offsetProp];
+                    const midV   = (chain[0].v + chain[chain.length - 1].v) / 2;
+                    const sign   = curRef >= 0 ? 1 : -1;
+                    return isX ? { x: midV, y: curRef + (EXT + 7) * sign }
+                               : { x: curRef + (EXT + 7) * sign, y: midV };
+                };
+                const handle = push(L.marker(toLatLng(getHPt()), {
+                    draggable: true,
+                    icon: L.divIcon({ className: '', html: '<div class="chain-drag-handle"></div>', iconSize: [20, 20], iconAnchor: [10, 10] })
+                }).addTo(MapEngine.map));
+                handle.on('drag', () => {
+                    const loc     = toLocal(handle.getLatLng());
+                    const rawVal  = isX ? loc.y : loc.x;
+                    const snapped = snapTo(rawVal, anchors);
+                    if (MapEngine[offsetProp] === snapped - baseRef) return;
+                    MapEngine[offsetProp] = snapped - baseRef;
+                    const newRef = baseRef + MapEngine[offsetProp];
+                    getLayers().forEach(ll => MapEngine.map.removeLayer(ll));
+                    setLayers(drawChain(chain, newRef, isX, isX ? perpX : (newRef > 0 ? 1 : -1), isX ? (newRef > 0 ? 1 : -1) : perpY, rotDeg, prefix));
+                    handle.setLatLng(toLatLng(getHPt()));
+                });
+            };
+            autoHandle(wChain, false, wPerpX, 0, 'chainWOffset', chainRefX, wAnchors, clrWidthAngle, 'chain_w', () => wLayers, (l) => { wLayers = l; });
+            autoHandle(dChain, true,  0, dPerpY, 'chainDOffset', chainRefY, dAnchors, clrDepthAngle, 'chain_d', () => dLayers, (l) => { dLayers = l; });
+        }
     },
 
     updateFAR: function() {
@@ -643,11 +666,11 @@ const SetbackEngine = {
         const buildable = Math.round(lotArea * maxFAR);
 
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
-        const footprintSF = (active.width || 0) * (active.height || 0);
+        const footprintSF = (active.W || 0) * (active.D || 0);
 
         // Total: sum per-building (footprint × count × stories)
         const totalArea = state.buildings.reduce((s, b) =>
-            s + (b.width||0) * (b.height||0) * (b.count||1) * (b.stories||1), 0);
+            s + (b.W||0) * (b.D||0) * (b.count||1) * (b.stories||1), 0);
         const actualFAR = totalArea / lotArea;
 
         const set = (id, txt) => { const el = document.getElementById(id); if (!el) return; if (el.tagName === 'INPUT') el.value = txt; else el.textContent = txt; };
@@ -717,12 +740,12 @@ const SetbackEngine = {
         });
 
         // Footprint
-        ['bldgWidth', 'bldgHeight'].forEach(id => {
+        ['bldgW', 'bldgD'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => {
                 const bldg = state.buildings[state.activeBuilding];
                 if (!bldg) return;
-                bldg.width  = parseFloat(document.getElementById('bldgWidth').value)  || 30;
-                bldg.height = parseFloat(document.getElementById('bldgHeight').value) || 60;
+                bldg.W = parseFloat(document.getElementById('bldgW').value) || 30;
+                bldg.D = parseFloat(document.getElementById('bldgD').value) || 60;
                 this.drawBuilding();
             });
         });
@@ -834,6 +857,7 @@ const SetbackEngine = {
             state.commFront = chk.checked;
             this.updateFAR();
             MapEngine.render();
+            ExportEngine.pushToServer();
         });
 
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
@@ -873,8 +897,8 @@ const SetbackEngine = {
         const bldg  = state.buildings[state.activeBuilding];
         if (bldg) {
             bldg.orientation  = parseFloat(document.getElementById('bldgOrientInput').value)  || 0;
-            bldg.width        = parseFloat(document.getElementById('bldgWidth').value)        || 30;
-            bldg.height       = parseFloat(document.getElementById('bldgHeight').value)       || 60;
+            bldg.W = parseFloat(document.getElementById('bldgW').value) || 30;
+            bldg.D = parseFloat(document.getElementById('bldgD').value) || 60;
             bldg.offsetX      = parseFloat(document.getElementById('bldgOffsetX').value)      || 0;
             bldg.offsetY      = parseFloat(document.getElementById('bldgOffsetY').value)      || 0;
             bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
@@ -897,6 +921,7 @@ const SetbackEngine = {
             chainWOffset:   MapEngine.chainWOffset,
             chainDOffset:   MapEngine.chainDOffset
         }));
+        ExportEngine.pushToServer();
         this.updateFAR();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);

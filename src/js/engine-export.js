@@ -54,6 +54,7 @@ const ExportEngine = {
         // Save internally — tool remembers position across sessions
         ConfigEngine.save();
         localStorage.setItem('boundary_location', JSON.stringify(state, null, 2));
+        this.pushToServer();
         // Button feedback
         const btn = document.getElementById('saveBoundaryBtn');
         const orig = btn.textContent;
@@ -75,10 +76,13 @@ const ExportEngine = {
             });
     },
 
-    saveToFile: function() {
+    // Shared payload builder — single source of truth for all persisted state.
+    // Every save path (localStorage, server, export) reads from here.
+    // When adding a new field: add it here FIRST, then wire init() + restore.
+    _payload: function() {
         const s = ConfigEngine.state;
-        const payload = {
-            project: "Master Site Dashboard",
+        return {
+            project: 'Master Site Dashboard',
             saved: {
                 lat:            s.lat,
                 lng:            s.lng,
@@ -88,17 +92,41 @@ const ExportEngine = {
                 buildings:      s.buildings,
                 activeBuilding: s.activeBuilding,
                 commFront:      s.commFront,
-                showBldgDims:   MapEngine.showBldgDims
+                showBldgDims:   MapEngine.showBldgDims,
+                hiddenDimKeys:  [...MapEngine.hiddenDimKeys],
+                chainWOffset:   MapEngine.chainWOffset,
+                chainDOffset:   MapEngine.chainDOffset,
+                mapOpacity:     s.mapOpacity
             }
         };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const a    = document.createElement('a');
-        a.href     = URL.createObjectURL(blob);
-        a.download = 'site-data.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
+    },
+
+    // Silent background push to local dev server — no-op when not on localhost
+    pushToServer: function() {
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
+        fetch('/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this._payload(), null, 2)
+        }).catch(function() {});
+    },
+
+    // Master save — explicit button with visual feedback
+    saveToFile: function() {
         const btn = document.getElementById('saveSettingsBtn');
-        if (btn) { btn.textContent = 'Saved!'; btn.style.background = '#2f855a'; setTimeout(() => { btn.textContent = 'Save to File'; btn.style.background = ''; }, 1800); }
+        const _ok = () => { if (btn) { btn.textContent = 'Saved!'; btn.style.background = '#2f855a'; setTimeout(() => { btn.textContent = 'Save to File'; btn.style.background = ''; }, 1800); } };
+
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            this.pushToServer();
+            _ok();
+            return;
+        }
+        // file:// fallback: download
+        const blob = new Blob([JSON.stringify(this._payload(), null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'site-data.json'; a.click();
+        URL.revokeObjectURL(a.href);
+        _ok();
     }
 };
 

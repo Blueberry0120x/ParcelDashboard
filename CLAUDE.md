@@ -1,0 +1,61 @@
+# Engine_InteractiveParcelMap — Project Rules
+
+## ── CANONICAL SAVE ARCHITECTURE ──────────────────────────────────────────────
+
+**`ExportEngine._payload()` is the single source of truth for all persisted state.**
+
+Every field that must survive across sessions MUST appear in `_payload()`.
+No save path — localStorage, server POST, or JSON download — may define its
+own field list. They all read from `_payload()`.
+
+### Checklist: adding a new state field
+1. Add the field to `_payload()` first
+2. Add it to `ConfigEngine.init()` so it loads from `window.__SITE_DEFAULTS__`
+3. Add it to the relevant restore block (e.g. `initBuildingConfig()`)
+4. If it has a UI element, make sure the element syncs on load
+
+### Fields currently in `_payload()` (keep in sync)
+```
+lat, lng, rotation, locked, setbacks,
+buildings, activeBuilding, commFront, showBldgDims,
+hiddenDimKeys, chainWOffset, chainDOffset, mapOpacity
+```
+
+### Save trigger rules
+Every action that mutates persisted state MUST call `ExportEngine.pushToServer()`:
+- Save Setbacks button      → saveSetbacks()       ✓
+- Save Config button        → saveConfig()          ✓
+- Save Boundary button      → saveBoundary()        ✓
+- Lock / Unlock toggle      → lockPositionBtn click ✓
+- commFrontCheck toggle     → must push             ✓
+- reset()                   → must push after clear ✓
+- Building drag-end         → dragend handler       ✓
+
+`pushToServer()` is a no-op outside localhost — always safe to call.
+
+## ── CSS RULES ─────────────────────────────────────────────────────────────────
+- Before adding any CSS rule, search the file for the selector first.
+- Never duplicate a selector block — extend the existing one.
+- SVG stroke properties: use CSS class overrides (e.g. `.chain-dim-line`),
+  NOT `stroke-width` in CSS if it would kill the Leaflet hit area.
+  Leaflet's `weight` option sets the SVG attribute; CSS `stroke-width`
+  overrides it for pointer events. Keep CSS stroke-width ≥ Leaflet weight
+  or omit it entirely.
+
+## ── STATE SYNC RULES ──────────────────────────────────────────────────────────
+- When a toggle or control forces another control's state (e.g. dim drag
+  toggle forces showBldgDims = true), ALWAYS update the related UI element
+  (button text, class) at the same time.
+- Dead code: when a design changes (e.g. individual dims → chain dims),
+  remove unused helpers immediately — don't leave them for cleanup later.
+
+## ── BUILD PIPELINE ────────────────────────────────────────────────────────────
+- Source files live in `src/`; compiled output is `InteractiveMap.html` + `dist/`
+- Build: run `Engine_InteractiveParcelMap.ps1` (compile only)
+- Dev server: run with `serve` argument → localhost:7734
+  - GET `/`      → serves InteractiveMap.html
+  - POST `/save` → writes site-data.json + rebuilds
+- `data/site-data.json` is the on-disk state file; injected as
+  `window.__SITE_DEFAULTS__` at build time
+- Em dashes and non-ASCII in PS1 string literals cause cp1252 parse errors —
+  use plain ASCII hyphens only in PS1 files
