@@ -11,6 +11,18 @@ const MapEngine = {
     _isDragging: false,        // true during any drag — suppresses dim rebuild and save
     _saveTimer:  null,         // debounce handle for ExportEngine.save()
     dimDragMode: false,        // when true, clicking dim lines activates drag handle
+    // Vehicle overlay
+    vehiclePolys: [], vehicleMarkers: [], vehicleLabels: [],
+    VEHICLE_TYPES: {
+        sedan:    { label: 'Sedan',       W: 6,   D: 15,   color: '#3b82f6' },
+        suv:      { label: 'SUV',         W: 6.5, D: 17,   color: '#3b82f6' },
+        pickup:   { label: 'Pickup',      W: 6.5, D: 20,   color: '#3b82f6' },
+        van:      { label: 'Van',         W: 7,   D: 18,   color: '#3b82f6' },
+        firetruck:{ label: 'Fire Truck',  W: 8.5, D: 35,   color: '#dc2626' },
+        bus:      { label: 'Bus',         W: 8.5, D: 40,   color: '#f59e0b' },
+        compact:  { label: 'Compact',     W: 5.5, D: 13.5, color: '#3b82f6' },
+        trash:    { label: 'Trash Truck', W: 8,   D: 28,   color: '#65a30d' }
+    },
 
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -109,6 +121,166 @@ const MapEngine = {
             ExportEngine.save();
         });
         return m;
+    },
+
+    // ── Vehicle Placement ─────────────────────────────────────────────────
+    addVehicle: function() {
+        const state = ConfigEngine.state;
+        if (!state.vehicles) state.vehicles = [];
+        state.vehicles.push({ type: 'sedan', offsetX: 0, offsetY: 0, orientation: 0 });
+        state.activeVehicle = state.vehicles.length - 1;
+        this.drawVehicles();
+        this._rebuildVehicleTabs();
+        this._seedVehicleInputs(state.activeVehicle);
+        ExportEngine.save();
+    },
+
+    removeVehicle: function() {
+        const state = ConfigEngine.state;
+        if (!state.vehicles || state.vehicles.length === 0) return;
+        const idx = state.activeVehicle || 0;
+        // Remove marker + poly
+        if (this.vehicleMarkers[idx]) { this.map.removeLayer(this.vehicleMarkers[idx]); }
+        if (this.vehiclePolys[idx])   { this.map.removeLayer(this.vehiclePolys[idx]); }
+        state.vehicles.splice(idx, 1);
+        this.vehicleMarkers.splice(idx, 1);
+        this.vehiclePolys.splice(idx, 1);
+        state.activeVehicle = Math.min(idx, state.vehicles.length - 1);
+        if (state.vehicles.length === 0) state.activeVehicle = -1;
+        this.drawVehicles();
+        this._rebuildVehicleTabs();
+        if (state.vehicles.length > 0) this._seedVehicleInputs(state.activeVehicle);
+        ExportEngine.save();
+    },
+
+    setActiveVehicle: function(idx) {
+        ConfigEngine.state.activeVehicle = idx;
+        this._rebuildVehicleTabs();
+        this._seedVehicleInputs(idx);
+    },
+
+    _rebuildVehicleTabs: function() {
+        const sel = document.getElementById('vehSelector');
+        if (!sel) return;
+        const vehicles = ConfigEngine.state.vehicles || [];
+        [...sel.querySelectorAll('.veh-tab')].forEach(b => b.remove());
+        const addBtn = sel.querySelector('.veh-tab-add');
+        vehicles.forEach((_, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'bldg-tab veh-tab' + (i === ConfigEngine.state.activeVehicle ? ' active' : '');
+            btn.textContent = 'V' + (i + 1);
+            btn.addEventListener('click', () => this.setActiveVehicle(i));
+            sel.insertBefore(btn, addBtn);
+        });
+    },
+
+    _seedVehicleInputs: function(idx) {
+        const v = (ConfigEngine.state.vehicles || [])[idx];
+        if (!v) return;
+        const typeEl = document.getElementById('vehType');
+        const oriEl  = document.getElementById('vehOrient');
+        if (typeEl) typeEl.value = v.type;
+        if (oriEl)  oriEl.value  = (v.orientation || 0).toFixed(1);
+        // Update size display
+        const spec = this.VEHICLE_TYPES[v.type] || this.VEHICLE_TYPES.sedan;
+        const szEl = document.getElementById('vehSizeLabel');
+        if (szEl) szEl.textContent = spec.W + "' x " + spec.D + "'";
+    },
+
+    createVehicleMarker: function(idx) {
+        const m = L.marker([ConfigEngine.state.lat, ConfigEngine.state.lng], {
+            draggable: true,
+            icon: L.divIcon({
+                className: '',
+                html: '<div class="veh-drag-pin">V' + (idx + 1) + '</div>',
+                iconAnchor: [9, 9]
+            })
+        }).addTo(this.map);
+
+        m.on('dragstart', () => { this._isDragging = true; });
+        m.on('drag', () => {
+            const raw   = m.getLatLng();
+            const state = ConfigEngine.state;
+            const veh   = state.vehicles[idx];
+            if (!veh) return;
+            const F_LAT = 364566;
+            const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+            const ry    = (raw.lat - state.lat) * F_LAT;
+            const rx    = (raw.lng - state.lng) * F_LNG;
+            const rad   = state.rotation * Math.PI / 180;
+            const cos   = Math.cos(rad), sin = Math.sin(rad);
+            veh.offsetX = parseFloat((rx * cos + ry * sin).toFixed(1));
+            veh.offsetY = parseFloat((-rx * sin + ry * cos).toFixed(1));
+            this.drawVehicles();
+        });
+        m.on('dragend', () => {
+            this._isDragging = false;
+            this.drawVehicles();
+            ExportEngine.save();
+        });
+        return m;
+    },
+
+    drawVehicles: function() {
+        const state    = ConfigEngine.state;
+        const vehicles = state.vehicles || [];
+        const lRad = state.rotation * Math.PI / 180;
+        const lCos = Math.cos(lRad), lSin = Math.sin(lRad);
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+        const toLL = pt => {
+            const rx = pt.x * lCos - pt.y * lSin;
+            const ry = pt.x * lSin + pt.y * lCos;
+            return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
+        };
+
+        // Sync poly/marker arrays
+        while (this.vehiclePolys.length < vehicles.length) {
+            this.vehiclePolys.push(L.polygon([], { weight: 2, fillOpacity: 0.35, noClip: true }).addTo(this.map));
+            this.vehicleMarkers.push(this.createVehicleMarker(this.vehiclePolys.length - 1));
+        }
+        while (this.vehiclePolys.length > vehicles.length) {
+            this.map.removeLayer(this.vehiclePolys.pop());
+            this.map.removeLayer(this.vehicleMarkers.pop());
+        }
+
+        // Remove old labels
+        this.vehicleLabels.forEach(l => this.map.removeLayer(l));
+        this.vehicleLabels = [];
+
+        vehicles.forEach((veh, i) => {
+            const spec = this.VEHICLE_TYPES[veh.type] || this.VEHICLE_TYPES.sedan;
+            const hw = spec.W / 2, hh = spec.D / 2;
+            const vRad = (veh.orientation || 0) * Math.PI / 180;
+            const vCos = Math.cos(vRad), vSin = Math.sin(vRad);
+            const cx = veh.offsetX || 0, cy = veh.offsetY || 0;
+
+            const raw = [
+                { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
+                { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
+            ];
+            const oriented = raw.map(pt => {
+                const dx = pt.x - cx, dy = pt.y - cy;
+                return { x: cx + dx * vCos - dy * vSin, y: cy + dx * vSin + dy * vCos };
+            });
+
+            this.vehiclePolys[i].setLatLngs(oriented.map(toLL));
+            this.vehiclePolys[i].setStyle({ color: spec.color, fillColor: spec.color });
+
+            // Position the drag marker at vehicle center
+            this.vehicleMarkers[i].setLatLng(toLL({ x: cx, y: cy }));
+
+            // Label
+            const lbl = L.marker(toLL({ x: cx, y: cy }), {
+                icon: L.divIcon({
+                    className: '',
+                    html: '<div class="veh-label">' + spec.label + '</div>',
+                    iconSize: [0, 0], iconAnchor: [0, -12]
+                }),
+                interactive: false
+            }).addTo(this.map);
+            this.vehicleLabels.push(lbl);
+        });
     },
 
     buildNorthArrow: function() {
@@ -304,6 +476,7 @@ const MapEngine = {
 
         if (ConfigEngine.state.setbacksApplied) SetbackEngine.drawSetbacks();
         SetbackEngine.drawBuilding(this._isDragging);
+        this.drawVehicles();
 
         // Debounced save — max once per 400ms, never during active drag
         if (!this._isDragging) {

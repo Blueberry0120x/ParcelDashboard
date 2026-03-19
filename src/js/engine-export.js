@@ -133,7 +133,9 @@ const ExportEngine = {
                 chainWOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainWOffset : 0,
                 chainDOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainDOffset : 0,
                 mapOpacity:     s.mapOpacity,
-                setbacksApplied: s.setbacksApplied
+                setbacksApplied: s.setbacksApplied,
+                vehicles:       s.vehicles || [],
+                activeVehicle:  s.activeVehicle ?? -1
             }
         };
         // Include checklist state if available (shared localStorage on same origin)

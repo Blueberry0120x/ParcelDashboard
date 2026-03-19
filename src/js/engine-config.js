@@ -30,7 +30,9 @@ const ConfigEngine = {
         buildings:      null,
         activeBuilding: 0,
         commFront:      false,
-        showBldgDims:   false
+        showBldgDims:   false,
+        vehicles:       [],
+        activeVehicle:  -1
     },
     init: function() {
         var sd = window.__SITE_DEFAULTS__ || {};
@@ -78,6 +80,10 @@ const ConfigEngine = {
             if (saved.buildings && saved.buildings.length) {
                 this.state.buildings      = saved.buildings;
                 this.state.activeBuilding = saved.activeBuilding ?? 0;
+            }
+            if (saved.vehicles) {
+                this.state.vehicles      = saved.vehicles;
+                this.state.activeVehicle = saved.activeVehicle ?? -1;
             }
         } else {
             // Fall back to __SITE_DEFAULTS__
@@ -167,5 +173,7 @@ const ConfigEngine = {
         this.state.hiddenDimKeys    = [];
         this.state.chainWOffset     = 0;
         this.state.chainDOffset     = 0;
+        this.state.vehicles         = [];
+        this.state.activeVehicle    = -1;
     }
 };

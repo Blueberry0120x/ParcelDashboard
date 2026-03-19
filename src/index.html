@@ -27,6 +27,7 @@
         <div class="suite-bar-ext">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-teal">SanDag GIS &#x2197;</a>
+            <a href="https://www.arcgis.com/apps/instant/sidebar/index.html?appid=b9641fb06e8d4c6ab45d1c5ca8411840" target="_blank" class="suite-bar-extlink suite-bar-extlink-teal">PermitFinder &#x2197;</a>
         </div>
     </div>
 
@@ -231,6 +232,38 @@
                         </div>
                     </div>
                     </div><!-- end building sub-body -->
+                </div>
+            </div>
+
+            <!-- VEHICLE PLACEMENT -->
+            <div class="sidebar-box">
+                <h2 class="box-toggle" onclick="this.parentElement.classList.toggle('collapsed')">Vehicle Overlay</h2>
+                <div class="box-body">
+                    <div class="building-grid">
+                        <strong>Vehicles:</strong>
+                        <div id="vehSelector" class="bldg-selector" style="grid-column: span 2">
+                            <button class="bldg-tab-add veh-tab-add" onclick="MapEngine.addVehicle()">+ Place</button>
+                            <button class="bldg-tab-del" onclick="MapEngine.removeVehicle()">Del</button>
+                        </div>
+                        <strong>Type:</strong>
+                        <select id="vehType" class="align-angle-input" style="grid-column: span 2">
+                            <option value="compact">Compact (5.5' x 13.5')</option>
+                            <option value="sedan" selected>Sedan (6' x 15')</option>
+                            <option value="suv">SUV (6.5' x 17')</option>
+                            <option value="pickup">Pickup (6.5' x 20')</option>
+                            <option value="van">Van (7' x 18')</option>
+                            <option value="firetruck">Fire Truck (8.5' x 35')</option>
+                            <option value="bus">Bus (8.5' x 40')</option>
+                            <option value="trash">Trash Truck (8' x 28')</option>
+                        </select>
+                        <strong>Size:</strong>
+                        <span id="vehSizeLabel" style="grid-column: span 2; font-weight:700; color:#4a5568; font-size:0.88em">6' x 15'</span>
+                        <strong>Rotate:</strong>
+                        <div class="footprint-inputs" style="grid-column: span 2">
+                            <input type="number" id="vehOrient" class="align-angle-input" value="0" step="1" min="-180" max="180" style="width:60px">
+                            <span class="ft-label">&deg;</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
