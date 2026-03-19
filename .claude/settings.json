@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.sandiego.gov)",
+      "WebFetch(domain:www.sandiego.gov)",
+      "WebFetch(domain:www.hcd.ca.gov)",
+      "WebFetch(domain:calrecycle.ca.gov)",
+      "WebFetch(domain:pe.usps.com)",
+      "WebFetch(domain:nalc.com)",
+      "WebFetch(domain:about.usps.com)",
+      "WebFetch(domain:www.usps.com)",
+      "WebFetch(domain:www.completecommunitiessd.org)"
+    ]
+  }
+}
