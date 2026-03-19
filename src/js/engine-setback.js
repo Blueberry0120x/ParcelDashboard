@@ -19,15 +19,8 @@ const SetbackEngine = {
     },
 
     saveSetbacks: function() {
+        ExportEngine.save();
         const btn = document.getElementById('saveSetbackBtn');
-        const front = parseFloat(document.getElementById('sb-front').value)  || 0;
-        const rear  = parseFloat(document.getElementById('sb-rear').value)   || 0;
-        const sideL = parseFloat(document.getElementById('sb-side-l').value) || 0;
-        const sideR = parseFloat(document.getElementById('sb-side-r').value) || 0;
-        ConfigEngine.state.setbacks = { front, rear, sideL, sideR };
-        localStorage.setItem('saved_setbacks', JSON.stringify(ConfigEngine.state.setbacks));
-        ExportEngine.pushToServer();
-        ExportEngine.showFlash();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
@@ -729,8 +722,8 @@ const SetbackEngine = {
         const chk = document.getElementById('commFrontCheck');
         if (chk) chk.checked = state.commFront || false;
 
-        if (localStorage.getItem('saved_setbacks')) {
-            ConfigEngine.state.setbacksApplied = true;
+        // Auto-draw setbacks if they were explicitly applied in a prior session
+        if (ConfigEngine.state.setbacksApplied) {
             this.drawSetbacks();
         }
 
@@ -874,7 +867,7 @@ const SetbackEngine = {
             state.commFront = chk.checked;
             this.updateFAR();
             MapEngine.render();
-            ExportEngine.pushToServer();
+            ExportEngine.save();
         });
 
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
@@ -909,38 +902,9 @@ const SetbackEngine = {
     },
 
     saveConfig: function() {
-        const btn   = document.getElementById('saveConfigBtn');
-        const state = ConfigEngine.state;
-        const bldg  = state.buildings[state.activeBuilding];
-        if (bldg) {
-            bldg.orientation  = parseFloat(document.getElementById('bldgOrientInput').value)  || 0;
-            bldg.W = parseFloat(document.getElementById('bldgW').value) || 30;
-            bldg.D = parseFloat(document.getElementById('bldgD').value) || 60;
-            bldg.offsetX      = parseFloat(document.getElementById('bldgOffsetX').value)      || 0;
-            bldg.offsetY      = parseFloat(document.getElementById('bldgOffsetY').value)      || 0;
-            bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
-            bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
-            bldg.stories      = parseInt(document.getElementById('bldgStories').value)        || 1;
-            bldg.floorHeight  = parseFloat(document.getElementById('bldgFloorHeight').value)  || 9;
-            // Persist anchor selection
-            const anchorBtns = ['anchorFront','anchorCenter','anchorRear'];
-            const anchorVals = { anchorFront:'front', anchorCenter:'center', anchorRear:'rear' };
-            anchorBtns.forEach(id => { if (document.getElementById(id).classList.contains('active')) bldg.anchor = anchorVals[id]; });
-        }
-        state.commFront   = document.getElementById('commFrontCheck')?.checked || false;
-        state.showBldgDims = MapEngine.showBldgDims;
-        localStorage.setItem('building_config', JSON.stringify({
-            buildings:      state.buildings,
-            activeBuilding: state.activeBuilding,
-            commFront:      state.commFront,
-            showBldgDims:   state.showBldgDims,
-            hiddenDimKeys:  [...MapEngine.hiddenDimKeys],
-            chainWOffset:   MapEngine.chainWOffset,
-            chainDOffset:   MapEngine.chainDOffset
-        }));
-        ExportEngine.pushToServer();
-        ExportEngine.showFlash();
+        ExportEngine.save();
         this.updateFAR();
+        const btn = document.getElementById('saveConfigBtn');
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },

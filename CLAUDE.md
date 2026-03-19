@@ -22,16 +22,15 @@ hiddenDimKeys, chainWOffset, chainDOffset, mapOpacity
 ```
 
 ### Save trigger rules
-Every action that mutates persisted state MUST call `ExportEngine.pushToServer()`:
-- Save Setbacks button      → saveSetbacks()       ✓
-- Save Config button        → saveConfig()          ✓
-- Save Boundary button      → saveBoundary()        ✓
-- Lock / Unlock toggle      → lockPositionBtn click ✓
-- commFrontCheck toggle     → must push             ✓
-- reset()                   → must push after clear ✓
-- Building drag-end         → dragend handler       ✓
+Every action that mutates persisted state MUST call `ExportEngine.save()`.
+`save()` is the ONE function -- it syncs UI inputs to state, writes ONE
+localStorage key (`site_state`), pushes to dev server, and shows the flash badge.
 
-`pushToServer()` is a no-op outside localhost — always safe to call.
+All save buttons already call it:
+- Save Setbacks, Save Config, Save Boundary, Save to File, FAB Save Config
+- Lock/Unlock toggle, commFrontCheck toggle, reset(), drag-end handlers
+
+To add a new save trigger: just call `ExportEngine.save()`. Nothing else needed.
 
 ## ── CSS RULES ─────────────────────────────────────────────────────────────────
 - Before adding any CSS rule, search the file for the selector first.

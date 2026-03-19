@@ -52,23 +52,7 @@ function Get-InjectScript {
     return ""
 }
 
-# ── Suite nav bar — injected into every output file ────────────────────────
-$navStyle = @'
-<style>
-.suite-nav{display:flex;align-items:center;gap:0;background:#0f4c81;padding:0 16px;height:32px;font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.3px;flex-shrink:0;position:relative;z-index:9999}
-.suite-nav-link{color:rgba(255,255,255,.65);text-decoration:none;padding:0 14px;height:32px;display:flex;align-items:center;transition:color .15s,background .15s}
-.suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
-.suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
-.suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
-.suite-nav-extbtn{margin-left:auto;display:flex;gap:6px;align-items:center}
-.suite-nav-extlink{color:#fff;text-decoration:none;padding:0 10px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(255,255,255,.4);transition:all .15s}
-.suite-nav-extlink:hover{background:rgba(255,255,255,.15);border-color:#fff}
-.suite-nav-extlink-teal{color:#5eead4;border-color:rgba(94,234,212,.5)}
-.suite-nav-extlink-teal:hover{background:rgba(94,234,212,.12);border-color:#5eead4}
-</style>
-'@
-$navMap = '<div class="suite-nav"><span class="suite-nav-active">Map</span><span class="suite-nav-sep">|</span><a href="PreApp_Checklist.html" class="suite-nav-link">Checklist</a></div>'
-$navChk = '<div class="suite-nav"><a href="InteractiveMap.html" class="suite-nav-link">Map</a><span class="suite-nav-sep">|</span><span class="suite-nav-active">Checklist</span><div class="suite-nav-extbtn"><a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-nav-extlink">ParcelQuest &#x2197;</a><a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-nav-extlink suite-nav-extlink-teal">SanDag GIS &#x2197;</a></div></div>'
+# ── Suite nav — now inline in source HTML (suite-tabs in header / React) ───
 
 # ── Build: InteractiveMap ───────────────────────────────────────────────────
 function Build-Html {
@@ -108,9 +92,7 @@ function Build-Html {
         Write-Host "  [i] No site-data.json settings found (using defaults)" -ForegroundColor DarkGray
     }
 
-    # Inject suite nav bar
-    $html = $html.Replace('<body>', "<body>`n$navStyle`n$navMap")
-    Write-Host "  [+] Injected suite nav bar" -ForegroundColor Green
+    # Suite nav is now inline in source HTML (suite-tabs in header)
 
     # Ensure Output dir exists and write
     if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
@@ -139,9 +121,7 @@ function Build-Checklist {
         Write-Host "  [+] Injected settings from site-data.json" -ForegroundColor Green
     }
 
-    # Inject suite nav bar
-    $html = $html.Replace('<body>', "<body>`n$navStyle`n$navChk")
-    Write-Host "  [+] Injected suite nav bar" -ForegroundColor Green
+    # Suite nav is now inline in source HTML (suite-tabs in React header)
 
     if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
     [System.IO.File]::WriteAllText($outputChk, $html, [System.Text.UTF8Encoding]::new($false))
@@ -220,9 +200,10 @@ if ($Mode -eq "serve") {
                             $existing = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
                             if ($null -ne $existing.site) {
                                 $merged = [PSCustomObject]@{
-                                    project = $incoming.project
-                                    site    = $existing.site
-                                    saved   = $incoming.saved
+                                    project   = $incoming.project
+                                    site      = $existing.site
+                                    saved     = $incoming.saved
+                                    checklist = $incoming.checklist
                                 }
                                 $body = $merged | ConvertTo-Json -Depth 10
                             }

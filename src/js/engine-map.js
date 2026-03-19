@@ -9,7 +9,7 @@ const MapEngine = {
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
     chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
     _isDragging: false,        // true during any drag — suppresses dim rebuild and save
-    _saveTimer:  null,         // debounce handle for ConfigEngine.save()
+    _saveTimer:  null,         // debounce handle for ExportEngine.save()
     dimDragMode: false,        // when true, clicking dim lines activates drag handle
 
     init: function() {
@@ -103,7 +103,7 @@ const MapEngine = {
         m.on('dragend', () => {
             this._isDragging = false;
             SetbackEngine.drawBuilding();
-            ExportEngine.pushToServer();
+            ExportEngine.save();
         });
         return m;
     },
@@ -189,7 +189,6 @@ const MapEngine = {
                 satLayer.setOpacity(v / 100);
                 label.textContent = v + '%';
                 ConfigEngine.state.mapOpacity = v;
-                localStorage.setItem('map_opacity', v);
             });
         });
     },
@@ -306,7 +305,7 @@ const MapEngine = {
         // Debounced save — max once per 400ms, never during active drag
         if (!this._isDragging) {
             clearTimeout(this._saveTimer);
-            this._saveTimer = setTimeout(() => ConfigEngine.save(), 400);
+            this._saveTimer = setTimeout(() => ExportEngine.save(), 400);
         }
     },
 
@@ -425,7 +424,7 @@ const MapEngine = {
             if (ConfigEngine.state.isSnapping)
                 this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
             this.render();  // final render with dims restored
-            ConfigEngine.save();
+            ExportEngine.save();
         });
 
         const sldr = document.getElementById('rotationSlider');
@@ -509,12 +508,17 @@ const MapEngine = {
 
             this.render();
 
-            // Push AFTER all MapEngine state is cleaned up so _payload() captures the full reset
-            ExportEngine.pushToServer();
+            // Save AFTER all MapEngine state is cleaned up so _payload() captures the full reset
+            ExportEngine.save();
         });
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
-        document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
+        document.getElementById('saveBoundaryBtn').addEventListener('click', () => {
+            ExportEngine.save();
+            const btn = document.getElementById('saveBoundaryBtn');
+            btn.textContent = 'Saved!'; btn.style.background = '#38a169';
+            setTimeout(() => { btn.textContent = 'Save Boundary'; btn.style.removeProperty('background'); }, 1500);
+        });
 
         document.getElementById('lockPositionBtn').addEventListener('click', () => {
             ConfigEngine.state.locked = !ConfigEngine.state.locked;
@@ -531,8 +535,7 @@ const MapEngine = {
             }
             sldr.disabled = locked;
             inp.disabled  = locked;
-            localStorage.setItem('site_locked', locked ? '1' : '0');
-            ExportEngine.pushToServer();
+            ExportEngine.save();
         });
 
         // Restore lock visual state on load

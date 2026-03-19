@@ -39,17 +39,41 @@ body {
     display: flex; justify-content: space-between; align-items: center;
 }
 h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
-.header-btn-group { display: flex; gap: 8px; align-items: center; }
-.header-btn {
-    background-color: white; color: var(--primary); border: 2px solid var(--primary);
-    padding: 8px 16px; border-radius: 6px; text-decoration: none;
-    font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+/* Suite bar — full-width dark blue nav row */
+.suite-bar {
+    display: flex; align-items: center; background: var(--primary);
+    border-radius: 0; padding: 0 14px; height: 32px; margin-bottom: 8px;
+    font-family: 'Segoe UI', system-ui, sans-serif; font-size: 12px;
+    font-weight: 600; letter-spacing: 0.3px;
 }
-.header-btn:hover { background-color: var(--primary); color: white; }
-.header-btn-teal { color: #0d9488; border-color: #0d9488; }
-.header-btn-teal:hover { background-color: #0d9488; color: white; }
-.header-btn-print { color: #475569; border-color: #94a3b8; cursor: pointer; }
-.header-btn-print:hover { background-color: #475569; color: white; border-color: #475569; }
+.suite-bar button.suite-bar-extlink {
+    background: transparent; cursor: pointer; font-family: inherit;
+}
+.suite-bar-active { color: #fff; border-bottom: 2px solid #fff; height: 30px; display: flex; align-items: center; padding: 0 12px; }
+.suite-bar-link { color: rgba(255,255,255,.6); text-decoration: none; padding: 0 12px; height: 30px; display: flex; align-items: center; transition: .15s; }
+.suite-bar-link:hover { color: #fff; background: rgba(255,255,255,.1); }
+.suite-bar-sep { color: rgba(255,255,255,.25); padding: 0 3px; }
+.suite-bar-ext { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.suite-bar-extlink {
+    color: #fff; text-decoration: none; padding: 0 9px; height: 20px;
+    display: flex; align-items: center; border-radius: 4px;
+    font-size: 11px; font-weight: 600; border: 1.5px solid rgba(255,255,255,.4); transition: .15s;
+}
+.suite-bar-extlink:hover { background: rgba(255,255,255,.15); border-color: #fff; }
+.suite-bar-extlink-teal { color: #5eead4; border-color: rgba(94,234,212,.5); }
+.suite-bar-extlink-teal:hover { background: rgba(94,234,212,.12); border-color: #5eead4; }
+
+/* Collapsible sidebar sections */
+.box-toggle { user-select: none; }
+.box-toggle::after { content: '\25BE'; float: right; font-size: 21px; color: #94a3b8; transition: transform .2s; display: inline-block; }
+.sidebar-box.collapsed .box-toggle::after { transform: rotate(-90deg); }
+.sidebar-box.collapsed > .box-body { display: none; }
+.sub-toggle { user-select: none; }
+.sub-toggle::after { content: '\25BE'; float: right; font-size: 18px; color: #94a3b8; transition: transform .2s; display: inline-block; }
+.sub-body.collapsed { display: none; }
+.building-config-wrap.collapsed > .sub-body { display: none; }
+.building-config-wrap.collapsed .sub-toggle::after { transform: rotate(-90deg); }
 
 /* Title row — title stack inline with address+apn pair */
 .header-title-row { display: flex; align-items: center; gap: 0; }
@@ -103,7 +127,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 
 .sidebar {
     width: 40%; min-width: 240px; flex-shrink: 0;
-    overflow-y: auto; padding-right: 4px;
+    overflow-y: auto; padding-right: 19px;
 }
 .col-divider {
     width: 8px; min-width: 8px; flex-shrink: 0;
@@ -342,7 +366,7 @@ details[open] summary { border-bottom: 1px solid var(--cad-border); }
     padding: 4px 6px 4px 4px; border-bottom: 1px solid var(--cad-border);
     border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
 }
-.cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; padding-left: 12px; }
+.cad-table th { white-space: nowrap; font-weight: bold; background: #2a2a2a; padding-left: 12px; }
 .cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
 .cad-table td:last-child { border-right: none; }
 
@@ -475,7 +499,7 @@ input:checked + .slider:before { transform: translateX(20px); }
    5. INFO BOTTOM — aligns with sidebar/map split
    ========================================== */
 .info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
-.info-col-left  { width: 40%; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.info-col-left  { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .info-col-gap   { width: 18px;  flex-shrink: 0; }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
@@ -543,9 +567,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
     /* Info bottom: single column */
     .info-bottom { flex-direction: column; }
-    .info-col-left { width: 100%; }
     .info-col-gap { display: none; }
-    .info-col-right { width: 100%; }
 
     /* Property banner: allow 2-line wrapping on very small screens */
     .property-banner { flex-wrap: wrap; }
@@ -563,20 +585,18 @@ input:checked + .slider:before { transform: translateX(20px); }
 <script>window.__SITE_DEFAULTS__ = {"project":"Master Site Dashboard","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.755575,"lng":-117.09185,"rotation":10,"locked":false,"setbacks":{"front":10,"rear":10,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":18,"D":20,"offsetX":0,"offsetY":0,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9},{"orientation":0,"W":18,"D":40,"offsetX":0,"offsetY":0,"spacing":0,"count":3,"stackSpacing":5,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":true,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70};</script>
 </head>
 <body>
-<style>
-.suite-nav{display:flex;align-items:center;gap:0;background:#0f4c81;padding:0 16px;height:32px;font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.3px;flex-shrink:0;position:relative;z-index:9999}
-.suite-nav-link{color:rgba(255,255,255,.65);text-decoration:none;padding:0 14px;height:32px;display:flex;align-items:center;transition:color .15s,background .15s}
-.suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
-.suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
-.suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
-.suite-nav-extbtn{margin-left:auto;display:flex;gap:6px;align-items:center}
-.suite-nav-extlink{color:#fff;text-decoration:none;padding:0 10px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(255,255,255,.4);transition:all .15s}
-.suite-nav-extlink:hover{background:rgba(255,255,255,.15);border-color:#fff}
-.suite-nav-extlink-teal{color:#5eead4;border-color:rgba(94,234,212,.5)}
-.suite-nav-extlink-teal:hover{background:rgba(94,234,212,.12);border-color:#5eead4}
-</style>
-<div class="suite-nav"><span class="suite-nav-active">Map</span><span class="suite-nav-sep">|</span><a href="PreApp_Checklist.html" class="suite-nav-link">Checklist</a></div>
 <div class="page-wrapper">
+
+    <!-- SUITE BAR -->
+    <div class="suite-bar no-print">
+        <span class="suite-bar-active">Map</span>
+        <span class="suite-bar-sep">|</span>
+        <a href="PreApp_Checklist.html" class="suite-bar-link">Checklist</a>
+        <div class="suite-bar-ext">
+            <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink">ParcelQuest &#x2197;</a>
+            <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-teal">SanDag GIS &#x2197;</a>
+        </div>
+    </div>
 
     <!-- HEADER -->
     <div class="header">
@@ -591,11 +611,6 @@ input:checked + .slider:before { transform: translateX(20px); }
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
                 </div>
             </div>
-        </div>
-        <div class="header-btn-group">
-            <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">ParcelQuest &#x2197;</a>
-            <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="header-btn header-btn-teal">SanDag GIS &#x2197;</a>
-            <button onclick="window.print()" class="header-btn header-btn-print">&#128438; Print</button>
         </div>
     </div>
 
@@ -618,8 +633,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 
             <!-- ALIGN MAP TOOLS -->
             <div class="sidebar-box">
-                <h2 style="margin-bottom:10px; border-bottom:2px solid var(--secondary); padding-bottom:6px;">Align Map</h2>
-
+                <h2 class="box-toggle" onclick="this.parentElement.classList.toggle('collapsed')" style="margin-bottom:10px; border-bottom:2px solid var(--secondary); padding-bottom:6px; cursor:pointer;">Align Map</h2>
+                <div class="box-body">
                 <div class="align-grid">
                     <!-- Row 1: Snap to Grid + Save Boundary -->
                     <strong>Snap to Grid:</strong>
@@ -655,6 +670,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                         <button id="elevClearBtn"  class="btn-align btn-elev-clear">Clear</button>
                     </div>
                 </div>
+                </div><!-- end box-body -->
             </div>
 
             <!-- CONCEPT DESIGN -->
@@ -662,7 +678,8 @@ input:checked + .slider:before { transform: translateX(20px); }
                 <div class="box-header">
                     <h2>Concept Design</h2>
                 </div>
-                <h3 style="margin-top:2px;">Setback Configuration</h3>
+                <h3 class="sub-toggle" onclick="this.nextElementSibling.classList.toggle('collapsed')" style="margin-top:2px; cursor:pointer;">Setback Configuration</h3>
+                <div class="sub-body">
                 <div class="setback-grid">
                     <div class="setback-field">
                         <label>Front (ft)</label>
@@ -683,16 +700,18 @@ input:checked + .slider:before { transform: translateX(20px); }
                 </div>
                 <button class="btn-accept" onclick="SetbackEngine.applySetbacks()">&#x2714; Accept &#x2014; Draw Setback Lines</button>
                 <button id="saveSetbackBtn" class="btn-save-setback">Save Setbacks</button>
+                </div><!-- end setback sub-body -->
 
                 <!-- BUILDING CONFIG -->
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
-                        <h3 style="margin:0;">Building Config</h3>
+                        <h3 class="sub-toggle" onclick="this.closest('.building-config-wrap').classList.toggle('collapsed')" style="margin:0; cursor:pointer;">Building Config</h3>
                         <div style="display:flex;gap:5px;">
                             <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
                             <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
                         </div>
                     </div>
+                    <div class="sub-body">
                     <div class="building-grid">
                         <strong>Orientation:</strong>
                         <div class="deg-input-wrap">
@@ -779,6 +798,7 @@ input:checked + .slider:before { transform: translateX(20px); }
                             <span id="bldgDensityCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
                         </div>
                     </div>
+                    </div><!-- end building sub-body -->
                 </div>
             </div>
 
@@ -893,6 +913,12 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 </div><!-- end page-wrapper -->
 
+<!-- Floating FAB — Save + Print -->
+<div id="map-fab" class="no-print" style="position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;">
+    <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." style="pointer-events:all;background:#475569;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128190; Save Config</button>
+    <button onclick="window.print()" style="pointer-events:all;background:#0f4c81;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128438; Print / PDF</button>
+</div>
+
 <!-- Auto-save flash badge -->
 <div id="map-save-flash" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;
   background:#166534;color:#dcfce7;padding:7px 16px;border-radius:20px;font-size:12px;
@@ -903,11 +929,9 @@ input:checked + .slider:before { transform: translateX(20px); }
 <style>
 @keyframes mapFlashIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @media print{
-  .header-btn-group,.suite-nav,.col-divider,.sidebar{display:none!important}
-  .main-container{height:auto!important}
-  .map-panel{width:100%!important;height:90vh!important}
-  #map-save-flash{display:none!important}
-  body{padding:0!important}
+  .no-print,.suite-bar{display:none!important}
+  #map-save-flash,#map-fab{display:none!important}
+  body{padding:8px!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 
@@ -928,7 +952,7 @@ const ConfigEngine = {
         proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
     },
 
-    // Absolute fallback — used only when site-data.json provides no building
+    // Absolute fallback -- used only when site-data.json provides no building
     _hardcodedBuilding: { orientation: 0, W: 30, D: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: 1, floorHeight: 9 },
 
     // Source of truth for reset() and addBuilding().
@@ -938,16 +962,16 @@ const ConfigEngine = {
     state: {
         lat: 0, lng: 0, rotation: 0,
         isSnapping: false, locked: false, unitMode: 'SF',
-        mapOpacity: 70,         // satellite basemap opacity % — auto-saved on change
+        mapOpacity: 70,
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildings:      null,   // populated in init()
+        buildings:      null,
         activeBuilding: 0,
         commFront:      false,
         showBldgDims:   false
     },
     init: function() {
-        const sd    = window.__SITE_DEFAULTS__ || {};         // injected by PS1 from site-data.json
+        var sd = window.__SITE_DEFAULTS__ || {};
 
         // Override site identity from site-data.json.site if available
         if (sd.address)         this.data.address         = sd.address;
@@ -958,100 +982,127 @@ const ConfigEngine = {
         if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
-        const sdBldg = sd.buildings && sd.buildings[0];
+        var sdBldg = sd.buildings && sd.buildings[0];
         this.defaultBuilding = sdBldg
             ? Object.assign({}, this._hardcodedBuilding, sdBldg)
             : Object.assign({}, this._hardcodedBuilding);
 
-        // Seed state with a fresh copy — never mutate defaultBuilding directly
+        // Seed state with a fresh copy
         this.state.buildings = [ Object.assign({}, this.defaultBuilding) ];
 
-        // Safe localStorage reads — corrupted JSON falls back to null silently
-        const _ls = (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } };
-        const saved = _ls('boundary_location');
-        const sLat  = localStorage.getItem('site_lat');
-        const sLng  = localStorage.getItem('site_lng');
-        const sRot  = localStorage.getItem('site_rot');
-        // Priority: localStorage (live session) > site-data.json (PS1 build) > hardcoded defaults
-        this.state.lat      = saved ? saved.lat      : (sLat !== null ? parseFloat(sLat) : (sd.lat      ?? this.defaults.lat));
-        this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : (sd.lng      ?? this.defaults.lng));
-        this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : (sd.rotation ?? this.defaults.rotation));
-        if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
-        const storedOpacity = localStorage.getItem('map_opacity');
-        if (storedOpacity !== null) this.state.mapOpacity = parseFloat(storedOpacity);
-        if      (localStorage.getItem('site_locked') === '1')                     this.state.locked = true;
-        else if (localStorage.getItem('site_locked') === null && sd.locked)       this.state.locked = sd.locked;
-        const sb   = _ls('saved_setbacks');
-        const bldg = _ls('building_config');
-        if (sb)             { this.state.setbacks = sb; }
-        else if (sd.setbacks) { this.state.setbacks = sd.setbacks; }
-        if (bldg) {
-            if (bldg.buildings) {
-                // New format
-                this.state.buildings      = bldg.buildings;
-                this.state.activeBuilding = bldg.activeBuilding || 0;
-                this.state.commFront      = bldg.commFront      || false;
-                this.state.showBldgDims   = bldg.showBldgDims   || false;
-                this.state.hiddenDimKeys  = bldg.hiddenDimKeys  || [];
-                this.state.chainWOffset   = bldg.chainWOffset   ?? 0;
-                this.state.chainDOffset   = bldg.chainDOffset   ?? 0;
-                // Migrate older builds: stories/floorHeight + old width/height keys → W/D
-                const mStories = bldg.stories || 1, mFloorH = bldg.floorHeight || 9;
-                this.state.buildings.forEach(b => {
-                    if (!('stories'     in b)) b.stories     = mStories;
-                    if (!('floorHeight' in b)) b.floorHeight = mFloorH;
-                    if (!('W' in b) && 'width'  in b) { b.W = b.width;  delete b.width;  }
-                    if (!('D' in b) && 'height' in b) { b.D = b.height; delete b.height; }
-                });
-            } else if (bldg.W || bldg.width) {
-                // Migrate old single-object format
-                this.state.buildings = [{ orientation: bldg.orientation || 0, W: bldg.W || bldg.width, D: bldg.D || bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: bldg.stories || 1, floorHeight: 9 }];
-                this.state.commFront = bldg.commFront || false;
-            }
-        } else if (sd.buildings) {
-            this.state.buildings      = sd.buildings;
-            this.state.activeBuilding = sd.activeBuilding || 0;
-            this.state.commFront      = sd.commFront      || false;
-            this.state.showBldgDims   = sd.showBldgDims   || false;
-            this.state.hiddenDimKeys  = sd.hiddenDimKeys  || [];
-            this.state.chainWOffset   = sd.chainWOffset   ?? 0;
-            this.state.chainDOffset   = sd.chainDOffset   ?? 0;
-            if (sd.mapOpacity != null) this.state.mapOpacity = sd.mapOpacity;
-            // Migrate older site-data lacking per-building stories/floorHeight
-            const mStories = sd.stories || 1, mFloorH = sd.floorHeight || 9;
-            this.state.buildings.forEach(b => {
-                if (!('stories'     in b)) b.stories     = mStories;
-                if (!('floorHeight' in b)) b.floorHeight = mFloorH;
-            });
+        // ── Load saved state: ONE localStorage key > __SITE_DEFAULTS__ > defaults ──
+        var stored = null;
+        try { stored = JSON.parse(localStorage.getItem('site_state')); } catch(e) {}
+        var saved = stored ? stored.saved : null;
+
+        // Migration: check old keys if no unified state exists yet
+        if (!saved) {
+            saved = this._migrateOldKeys();
         }
+
+        if (saved) {
+            this.state.lat            = saved.lat            ?? this.defaults.lat;
+            this.state.lng            = saved.lng            ?? this.defaults.lng;
+            this.state.rotation       = saved.rotation       ?? this.defaults.rotation;
+            this.state.locked         = saved.locked         ?? false;
+            this.state.setbacks       = saved.setbacks       ?? { front: 10, rear: 10, sideL: 0, sideR: 0 };
+            this.state.commFront      = saved.commFront      ?? false;
+            this.state.showBldgDims   = saved.showBldgDims   ?? false;
+            this.state.hiddenDimKeys  = saved.hiddenDimKeys  ?? [];
+            this.state.chainWOffset   = saved.chainWOffset   ?? 0;
+            this.state.chainDOffset   = saved.chainDOffset   ?? 0;
+            this.state.mapOpacity     = saved.mapOpacity     ?? 70;
+            this.state.setbacksApplied = saved.setbacksApplied ?? false;
+            if (saved.buildings && saved.buildings.length) {
+                this.state.buildings      = saved.buildings;
+                this.state.activeBuilding = saved.activeBuilding ?? 0;
+            }
+        } else {
+            // Fall back to __SITE_DEFAULTS__
+            this.state.lat      = sd.lat      ?? this.defaults.lat;
+            this.state.lng      = sd.lng      ?? this.defaults.lng;
+            this.state.rotation = sd.rotation ?? this.defaults.rotation;
+            this.state.locked   = sd.locked   ?? false;
+            if (sd.setbacks) this.state.setbacks = sd.setbacks;
+            if (sd.buildings) {
+                this.state.buildings      = sd.buildings;
+                this.state.activeBuilding = sd.activeBuilding ?? 0;
+                this.state.commFront      = sd.commFront      ?? false;
+                this.state.showBldgDims   = sd.showBldgDims   ?? false;
+                this.state.hiddenDimKeys  = sd.hiddenDimKeys  ?? [];
+                this.state.chainWOffset   = sd.chainWOffset   ?? 0;
+                this.state.chainDOffset   = sd.chainDOffset   ?? 0;
+            }
+            if (sd.mapOpacity != null) this.state.mapOpacity = sd.mapOpacity;
+        }
+
+        // Migrate older builds: ensure per-building stories/floorHeight + W/D keys
+        this.state.buildings.forEach(function(b) {
+            if (!('stories'     in b)) b.stories     = 1;
+            if (!('floorHeight' in b)) b.floorHeight = 9;
+            if (!('W' in b) && 'width'  in b) { b.W = b.width;  delete b.width;  }
+            if (!('D' in b) && 'height' in b) { b.D = b.height; delete b.height; }
+        });
     },
-    save: function() {
-        localStorage.setItem('site_lat', this.state.lat);
-        localStorage.setItem('site_lng', this.state.lng);
-        localStorage.setItem('site_rot', this.state.rotation);
+
+    // One-time migration from scattered old localStorage keys -> returns saved-shaped object or null
+    _migrateOldKeys: function() {
+        var _ls = function(key) { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } };
+        var boundary = _ls('boundary_location');
+        var bldg     = _ls('building_config');
+        var sb       = _ls('saved_setbacks');
+        var sLat     = localStorage.getItem('site_lat');
+        var sLng     = localStorage.getItem('site_lng');
+        var sRot     = localStorage.getItem('site_rot');
+        var opacity  = localStorage.getItem('map_opacity');
+        var locked   = localStorage.getItem('site_locked');
+
+        // If nothing exists in old keys, return null
+        if (!boundary && !bldg && !sb && sLat === null) return null;
+
+        var saved = {};
+        saved.lat      = boundary ? boundary.lat      : (sLat !== null ? parseFloat(sLat) : null);
+        saved.lng      = boundary ? boundary.lng      : (sLng !== null ? parseFloat(sLng) : null);
+        saved.rotation = boundary ? boundary.rotation : (sRot !== null ? parseFloat(sRot) : null);
+        saved.locked   = locked === '1';
+        saved.setbacks = sb || (boundary ? boundary.setbacks : null);
+        saved.mapOpacity = opacity !== null ? parseFloat(opacity) : null;
+
+        if (bldg && bldg.buildings) {
+            saved.buildings      = bldg.buildings;
+            saved.activeBuilding = bldg.activeBuilding || 0;
+            saved.commFront      = bldg.commFront      || false;
+            saved.showBldgDims   = bldg.showBldgDims   || false;
+            saved.hiddenDimKeys  = bldg.hiddenDimKeys  || [];
+            saved.chainWOffset   = bldg.chainWOffset   ?? 0;
+            saved.chainDOffset   = bldg.chainDOffset   ?? 0;
+        } else if (bldg && (bldg.W || bldg.width)) {
+            saved.buildings = [{ orientation: bldg.orientation || 0, W: bldg.W || bldg.width, D: bldg.D || bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: bldg.stories || 1, floorHeight: 9 }];
+            saved.commFront = bldg.commFront || false;
+        }
+
+        // Clean up old keys now that we've migrated
+        ['boundary_location','building_config','saved_setbacks','site_lat','site_lng','site_rot','map_opacity','site_locked'].forEach(function(k) {
+            localStorage.removeItem(k);
+        });
+
+        return saved;
     },
+
     reset: function() {
-        localStorage.removeItem('site_lat');
-        localStorage.removeItem('site_lng');
-        localStorage.removeItem('site_rot');
-        localStorage.removeItem('boundary_location');
-        this.state.lat      = this.defaults.lat;
-        this.state.lng      = this.defaults.lng;
-        this.state.rotation = this.defaults.rotation;
-        this.state.locked         = false;
-        this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildings      = [ Object.assign({}, this.defaultBuilding) ];
-        this.state.activeBuilding = 0;
+        localStorage.removeItem('site_state');
+        this.state.lat              = this.defaults.lat;
+        this.state.lng              = this.defaults.lng;
+        this.state.rotation         = this.defaults.rotation;
+        this.state.locked           = false;
+        this.state.setbacks         = { front: 10, rear: 10, sideL: 0, sideR: 0 };
+        this.state.buildings        = [ Object.assign({}, this.defaultBuilding) ];
+        this.state.activeBuilding   = 0;
         this.state.commFront        = false;
         this.state.showBldgDims     = false;
         this.state.setbacksApplied  = false;
-        localStorage.removeItem('saved_setbacks');
-        localStorage.removeItem('building_config');
-        localStorage.removeItem('site_locked');
-        // Note: pushToServer() is called by the button handler AFTER MapEngine is also cleaned up
     }
 };
-
 
 </script>
 <script>
@@ -1235,7 +1286,7 @@ const MapEngine = {
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
     chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
     _isDragging: false,        // true during any drag — suppresses dim rebuild and save
-    _saveTimer:  null,         // debounce handle for ConfigEngine.save()
+    _saveTimer:  null,         // debounce handle for ExportEngine.save()
     dimDragMode: false,        // when true, clicking dim lines activates drag handle
 
     init: function() {
@@ -1329,7 +1380,7 @@ const MapEngine = {
         m.on('dragend', () => {
             this._isDragging = false;
             SetbackEngine.drawBuilding();
-            ExportEngine.pushToServer();
+            ExportEngine.save();
         });
         return m;
     },
@@ -1415,7 +1466,6 @@ const MapEngine = {
                 satLayer.setOpacity(v / 100);
                 label.textContent = v + '%';
                 ConfigEngine.state.mapOpacity = v;
-                localStorage.setItem('map_opacity', v);
             });
         });
     },
@@ -1532,7 +1582,7 @@ const MapEngine = {
         // Debounced save — max once per 400ms, never during active drag
         if (!this._isDragging) {
             clearTimeout(this._saveTimer);
-            this._saveTimer = setTimeout(() => ConfigEngine.save(), 400);
+            this._saveTimer = setTimeout(() => ExportEngine.save(), 400);
         }
     },
 
@@ -1651,7 +1701,7 @@ const MapEngine = {
             if (ConfigEngine.state.isSnapping)
                 this.dragMarker.setLatLng([ConfigEngine.state.lat, ConfigEngine.state.lng]);
             this.render();  // final render with dims restored
-            ConfigEngine.save();
+            ExportEngine.save();
         });
 
         const sldr = document.getElementById('rotationSlider');
@@ -1735,12 +1785,17 @@ const MapEngine = {
 
             this.render();
 
-            // Push AFTER all MapEngine state is cleaned up so _payload() captures the full reset
-            ExportEngine.pushToServer();
+            // Save AFTER all MapEngine state is cleaned up so _payload() captures the full reset
+            ExportEngine.save();
         });
         document.getElementById('recordBtn').addEventListener('click', () => ExportEngine.generateLISP());
         document.getElementById('imageExportBtn').addEventListener('click', () => ExportEngine.exportImage());
-        document.getElementById('saveBoundaryBtn').addEventListener('click', () => ExportEngine.saveBoundary());
+        document.getElementById('saveBoundaryBtn').addEventListener('click', () => {
+            ExportEngine.save();
+            const btn = document.getElementById('saveBoundaryBtn');
+            btn.textContent = 'Saved!'; btn.style.background = '#38a169';
+            setTimeout(() => { btn.textContent = 'Save Boundary'; btn.style.removeProperty('background'); }, 1500);
+        });
 
         document.getElementById('lockPositionBtn').addEventListener('click', () => {
             ConfigEngine.state.locked = !ConfigEngine.state.locked;
@@ -1757,8 +1812,7 @@ const MapEngine = {
             }
             sldr.disabled = locked;
             inp.disabled  = locked;
-            localStorage.setItem('site_locked', locked ? '1' : '0');
-            ExportEngine.pushToServer();
+            ExportEngine.save();
         });
 
         // Restore lock visual state on load
@@ -1898,15 +1952,8 @@ const SetbackEngine = {
     },
 
     saveSetbacks: function() {
+        ExportEngine.save();
         const btn = document.getElementById('saveSetbackBtn');
-        const front = parseFloat(document.getElementById('sb-front').value)  || 0;
-        const rear  = parseFloat(document.getElementById('sb-rear').value)   || 0;
-        const sideL = parseFloat(document.getElementById('sb-side-l').value) || 0;
-        const sideR = parseFloat(document.getElementById('sb-side-r').value) || 0;
-        ConfigEngine.state.setbacks = { front, rear, sideL, sideR };
-        localStorage.setItem('saved_setbacks', JSON.stringify(ConfigEngine.state.setbacks));
-        ExportEngine.pushToServer();
-        ExportEngine.showFlash();
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Setbacks'; btn.style.background = ''; }, 1800);
     },
@@ -2608,8 +2655,8 @@ const SetbackEngine = {
         const chk = document.getElementById('commFrontCheck');
         if (chk) chk.checked = state.commFront || false;
 
-        if (localStorage.getItem('saved_setbacks')) {
-            ConfigEngine.state.setbacksApplied = true;
+        // Auto-draw setbacks if they were explicitly applied in a prior session
+        if (ConfigEngine.state.setbacksApplied) {
             this.drawSetbacks();
         }
 
@@ -2753,7 +2800,7 @@ const SetbackEngine = {
             state.commFront = chk.checked;
             this.updateFAR();
             MapEngine.render();
-            ExportEngine.pushToServer();
+            ExportEngine.save();
         });
 
         document.getElementById('bldgAddBtn').addEventListener('click', () => this.addBuilding());
@@ -2788,38 +2835,9 @@ const SetbackEngine = {
     },
 
     saveConfig: function() {
-        const btn   = document.getElementById('saveConfigBtn');
-        const state = ConfigEngine.state;
-        const bldg  = state.buildings[state.activeBuilding];
-        if (bldg) {
-            bldg.orientation  = parseFloat(document.getElementById('bldgOrientInput').value)  || 0;
-            bldg.W = parseFloat(document.getElementById('bldgW').value) || 30;
-            bldg.D = parseFloat(document.getElementById('bldgD').value) || 60;
-            bldg.offsetX      = parseFloat(document.getElementById('bldgOffsetX').value)      || 0;
-            bldg.offsetY      = parseFloat(document.getElementById('bldgOffsetY').value)      || 0;
-            bldg.count        = parseInt(document.getElementById('bldgCount').value)          || 1;
-            bldg.stackSpacing = parseFloat(document.getElementById('bldgStackSpacing').value) || 0;
-            bldg.stories      = parseInt(document.getElementById('bldgStories').value)        || 1;
-            bldg.floorHeight  = parseFloat(document.getElementById('bldgFloorHeight').value)  || 9;
-            // Persist anchor selection
-            const anchorBtns = ['anchorFront','anchorCenter','anchorRear'];
-            const anchorVals = { anchorFront:'front', anchorCenter:'center', anchorRear:'rear' };
-            anchorBtns.forEach(id => { if (document.getElementById(id).classList.contains('active')) bldg.anchor = anchorVals[id]; });
-        }
-        state.commFront   = document.getElementById('commFrontCheck')?.checked || false;
-        state.showBldgDims = MapEngine.showBldgDims;
-        localStorage.setItem('building_config', JSON.stringify({
-            buildings:      state.buildings,
-            activeBuilding: state.activeBuilding,
-            commFront:      state.commFront,
-            showBldgDims:   state.showBldgDims,
-            hiddenDimKeys:  [...MapEngine.hiddenDimKeys],
-            chainWOffset:   MapEngine.chainWOffset,
-            chainDOffset:   MapEngine.chainDOffset
-        }));
-        ExportEngine.pushToServer();
-        ExportEngine.showFlash();
+        ExportEngine.save();
         this.updateFAR();
+        const btn = document.getElementById('saveConfigBtn');
         btn.textContent = 'Saved!'; btn.style.background = '#2f855a';
         setTimeout(() => { btn.textContent = 'Save Config'; btn.style.background = ''; }, 1800);
     },
@@ -2885,38 +2903,16 @@ const ExportEngine = {
             setbacks: ConfigEngine.state.setbacks,
             lisp:     out
         };
-        ConfigEngine.save();
         localStorage.setItem('last_lisp_export', JSON.stringify(state, null, 2));
 
-        // Download copy
+        // Save all state + download LISP file
+        this.save();
         const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
         const link = document.createElement('a');
         link.download = 'site-calibration_' + ConfigEngine.data.apn + '.json';
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
-    },
-
-    saveBoundary: function() {
-        const state = {
-            apn:      ConfigEngine.data.apn,
-            address:  ConfigEngine.data.address,
-            lat:      ConfigEngine.state.lat,
-            lng:      ConfigEngine.state.lng,
-            rotation: ConfigEngine.state.rotation,
-            setbacks: ConfigEngine.state.setbacks
-        };
-        // Save internally — tool remembers position across sessions
-        ConfigEngine.save();
-        localStorage.setItem('boundary_location', JSON.stringify(state, null, 2));
-        this.pushToServer();
-        this.showFlash();
-        // Button feedback
-        const btn = document.getElementById('saveBoundaryBtn');
-        const orig = btn.textContent;
-        btn.textContent = 'Saved!';
-        btn.style.background = '#38a169';
-        setTimeout(() => { btn.textContent = orig; btn.style.removeProperty('background'); }, 1500);
     },
 
     exportImage: function() {
@@ -2932,12 +2928,68 @@ const ExportEngine = {
             });
     },
 
-    // Shared payload builder — single source of truth for all persisted state.
-    // Every save path (localStorage, server, export) reads from here.
-    // When adding a new field: add it here FIRST, then wire init() + restore.
-    _payload: function() {
+    // ══════════════════════════════════════════════════════════════════
+    //  SINGLE SAVE — every button in the app calls this ONE function.
+    //  1. Syncs all UI inputs -> ConfigEngine.state
+    //  2. Writes _payload() to ONE localStorage key
+    //  3. Pushes to dev server (no-op outside localhost)
+    //  4. Shows flash badge
+    // ══════════════════════════════════════════════════════════════════
+    save: function() {
         const s = ConfigEngine.state;
-        return {
+
+        // ── Sync setback inputs ──
+        const sbF = document.getElementById('sb-front');
+        if (sbF) {
+            s.setbacks = {
+                front: parseFloat(sbF.value) || 0,
+                rear:  parseFloat(document.getElementById('sb-rear').value) || 0,
+                sideL: parseFloat(document.getElementById('sb-side-l').value) || 0,
+                sideR: parseFloat(document.getElementById('sb-side-r').value) || 0
+            };
+        }
+
+        // ── Sync active building inputs ──
+        const bldg = s.buildings[s.activeBuilding];
+        if (bldg) {
+            const el = function(id) { return document.getElementById(id); };
+            if (el('bldgOrientInput'))  bldg.orientation  = parseFloat(el('bldgOrientInput').value) || 0;
+            if (el('bldgW'))            bldg.W            = parseFloat(el('bldgW').value) || 30;
+            if (el('bldgD'))            bldg.D            = parseFloat(el('bldgD').value) || 60;
+            if (el('bldgOffsetX'))      bldg.offsetX      = parseFloat(el('bldgOffsetX').value) || 0;
+            if (el('bldgOffsetY'))      bldg.offsetY      = parseFloat(el('bldgOffsetY').value) || 0;
+            if (el('bldgCount'))        bldg.count        = parseInt(el('bldgCount').value) || 1;
+            if (el('bldgStackSpacing')) bldg.stackSpacing  = parseFloat(el('bldgStackSpacing').value) || 0;
+            if (el('bldgStories'))      bldg.stories      = parseInt(el('bldgStories').value) || 1;
+            if (el('bldgFloorHeight'))  bldg.floorHeight  = parseFloat(el('bldgFloorHeight').value) || 9;
+            var anchors = {anchorFront:'front', anchorCenter:'center', anchorRear:'rear'};
+            Object.keys(anchors).forEach(function(id) {
+                var btn = document.getElementById(id);
+                if (btn && btn.classList.contains('active')) bldg.anchor = anchors[id];
+            });
+        }
+
+        // ── Sync toggles ──
+        var cf = document.getElementById('commFrontCheck');
+        if (cf) s.commFront = cf.checked;
+        if (typeof MapEngine !== 'undefined' && MapEngine.showBldgDims != null) {
+            s.showBldgDims = MapEngine.showBldgDims;
+        }
+
+        // ── Persist: ONE key ──
+        localStorage.setItem('site_state', JSON.stringify(this._payload()));
+
+        // ── Push to dev server (no-op outside localhost) ──
+        this._pushToServer();
+
+        // ── Flash badge ──
+        this._showFlash();
+    },
+
+    // Shared payload builder -- single source of truth for all persisted state.
+    _payload: function() {
+        var s = ConfigEngine.state;
+        var payload = {
             project: 'Master Site Dashboard',
             saved: {
                 lat:            s.lat,
@@ -2948,29 +3000,40 @@ const ExportEngine = {
                 buildings:      s.buildings,
                 activeBuilding: s.activeBuilding,
                 commFront:      s.commFront,
-                showBldgDims:   MapEngine.showBldgDims,
-                hiddenDimKeys:  [...MapEngine.hiddenDimKeys],
-                chainWOffset:   MapEngine.chainWOffset,
-                chainDOffset:   MapEngine.chainDOffset,
-                mapOpacity:     s.mapOpacity
+                showBldgDims:   (typeof MapEngine !== 'undefined') ? MapEngine.showBldgDims : s.showBldgDims,
+                hiddenDimKeys:  (typeof MapEngine !== 'undefined' && MapEngine.hiddenDimKeys) ? [...MapEngine.hiddenDimKeys] : [],
+                chainWOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainWOffset : 0,
+                chainDOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainDOffset : 0,
+                mapOpacity:     s.mapOpacity,
+                setbacksApplied: s.setbacksApplied
             }
         };
+        // Include checklist state if available (shared localStorage on same origin)
+        try {
+            var ckRaw = null;
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (k && k.indexOf('preapp_') === 0) { ckRaw = localStorage.getItem(k); break; }
+            }
+            if (ckRaw) payload.checklist = JSON.parse(ckRaw);
+        } catch(e) {}
+        return payload;
     },
 
     // Show the fixed save flash badge for 2 seconds
-    showFlash: function() {
-        const el = document.getElementById('map-save-flash');
+    _showFlash: function() {
+        var el = document.getElementById('map-save-flash');
         if (!el) return;
         if (this._flashTimer) clearTimeout(this._flashTimer);
         el.style.display = 'block';
         el.style.animation = 'none';
-        void el.offsetWidth; // reflow to restart animation
+        void el.offsetWidth;
         el.style.animation = '';
-        this._flashTimer = setTimeout(() => { el.style.display = 'none'; }, 2000);
+        this._flashTimer = setTimeout(function() { el.style.display = 'none'; }, 2000);
     },
 
-    // Silent background push to local dev server — no-op when not on localhost
-    pushToServer: function() {
+    // Silent background push to local dev server
+    _pushToServer: function() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
         fetch('/save', {
             method: 'POST',
@@ -2979,26 +3042,31 @@ const ExportEngine = {
         }).catch(function() {});
     },
 
-    // Master save — explicit button with visual feedback
+    // Save to File button — save() + download on file://
     saveToFile: function() {
-        const btn = document.getElementById('saveSettingsBtn');
-        const _ok = () => { if (btn) { btn.textContent = 'Saved!'; btn.style.background = '#2f855a'; setTimeout(() => { btn.textContent = 'Save to File'; btn.style.background = ''; }, 1800); } };
-
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            this.pushToServer();
-            this.showFlash();
-            _ok();
-            return;
+        this.save();
+        var btn = document.getElementById('saveSettingsBtn');
+        if (btn) { btn.textContent = 'Saved!'; btn.style.background = '#2f855a'; setTimeout(function() { btn.textContent = 'Save to File'; btn.style.background = ''; }, 1800); }
+        // file:// fallback: also download
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            var blob = new Blob([JSON.stringify(this._payload(), null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = 'site-data.json'; a.click();
+            URL.revokeObjectURL(a.href);
         }
-        // file:// fallback: download
-        const blob = new Blob([JSON.stringify(this._payload(), null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = 'site-data.json'; a.click();
+    },
+
+    // FAB download — save() + always download JSON
+    downloadConfig: function() {
+        this.save();
+        var blob = new Blob([JSON.stringify(this._payload(), null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'site-data.json';
+        a.click();
         URL.revokeObjectURL(a.href);
-        _ok();
     }
 };
-
 
 </script>
 <script>
@@ -3048,6 +3116,7 @@ const ResizeEngine = {
        BOOTSTRAP
        ========================================== */
     window.onload = function() {
+        document.body.style.zoom = '0.9';
         ConfigEngine.init();
         UIEngine.init();
         MapEngine.init();

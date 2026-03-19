@@ -14,7 +14,7 @@ const ConfigEngine = {
         proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
     },
 
-    // Absolute fallback — used only when site-data.json provides no building
+    // Absolute fallback -- used only when site-data.json provides no building
     _hardcodedBuilding: { orientation: 0, W: 30, D: 60, offsetX: 0, offsetY: 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: 1, floorHeight: 9 },
 
     // Source of truth for reset() and addBuilding().
@@ -24,16 +24,16 @@ const ConfigEngine = {
     state: {
         lat: 0, lng: 0, rotation: 0,
         isSnapping: false, locked: false, unitMode: 'SF',
-        mapOpacity: 70,         // satellite basemap opacity % — auto-saved on change
+        mapOpacity: 70,
         setbacksApplied: false,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
-        buildings:      null,   // populated in init()
+        buildings:      null,
         activeBuilding: 0,
         commFront:      false,
         showBldgDims:   false
     },
     init: function() {
-        const sd    = window.__SITE_DEFAULTS__ || {};         // injected by PS1 from site-data.json
+        var sd = window.__SITE_DEFAULTS__ || {};
 
         // Override site identity from site-data.json.site if available
         if (sd.address)         this.data.address         = sd.address;
@@ -44,97 +44,124 @@ const ConfigEngine = {
         if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
-        const sdBldg = sd.buildings && sd.buildings[0];
+        var sdBldg = sd.buildings && sd.buildings[0];
         this.defaultBuilding = sdBldg
             ? Object.assign({}, this._hardcodedBuilding, sdBldg)
             : Object.assign({}, this._hardcodedBuilding);
 
-        // Seed state with a fresh copy — never mutate defaultBuilding directly
+        // Seed state with a fresh copy
         this.state.buildings = [ Object.assign({}, this.defaultBuilding) ];
 
-        // Safe localStorage reads — corrupted JSON falls back to null silently
-        const _ls = (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } };
-        const saved = _ls('boundary_location');
-        const sLat  = localStorage.getItem('site_lat');
-        const sLng  = localStorage.getItem('site_lng');
-        const sRot  = localStorage.getItem('site_rot');
-        // Priority: localStorage (live session) > site-data.json (PS1 build) > hardcoded defaults
-        this.state.lat      = saved ? saved.lat      : (sLat !== null ? parseFloat(sLat) : (sd.lat      ?? this.defaults.lat));
-        this.state.lng      = saved ? saved.lng      : (sLng !== null ? parseFloat(sLng) : (sd.lng      ?? this.defaults.lng));
-        this.state.rotation = saved ? saved.rotation : (sRot !== null ? parseFloat(sRot) : (sd.rotation ?? this.defaults.rotation));
-        if (saved && saved.setbacks) this.state.setbacks = saved.setbacks;
-        const storedOpacity = localStorage.getItem('map_opacity');
-        if (storedOpacity !== null) this.state.mapOpacity = parseFloat(storedOpacity);
-        if      (localStorage.getItem('site_locked') === '1')                     this.state.locked = true;
-        else if (localStorage.getItem('site_locked') === null && sd.locked)       this.state.locked = sd.locked;
-        const sb   = _ls('saved_setbacks');
-        const bldg = _ls('building_config');
-        if (sb)             { this.state.setbacks = sb; }
-        else if (sd.setbacks) { this.state.setbacks = sd.setbacks; }
-        if (bldg) {
-            if (bldg.buildings) {
-                // New format
-                this.state.buildings      = bldg.buildings;
-                this.state.activeBuilding = bldg.activeBuilding || 0;
-                this.state.commFront      = bldg.commFront      || false;
-                this.state.showBldgDims   = bldg.showBldgDims   || false;
-                this.state.hiddenDimKeys  = bldg.hiddenDimKeys  || [];
-                this.state.chainWOffset   = bldg.chainWOffset   ?? 0;
-                this.state.chainDOffset   = bldg.chainDOffset   ?? 0;
-                // Migrate older builds: stories/floorHeight + old width/height keys → W/D
-                const mStories = bldg.stories || 1, mFloorH = bldg.floorHeight || 9;
-                this.state.buildings.forEach(b => {
-                    if (!('stories'     in b)) b.stories     = mStories;
-                    if (!('floorHeight' in b)) b.floorHeight = mFloorH;
-                    if (!('W' in b) && 'width'  in b) { b.W = b.width;  delete b.width;  }
-                    if (!('D' in b) && 'height' in b) { b.D = b.height; delete b.height; }
-                });
-            } else if (bldg.W || bldg.width) {
-                // Migrate old single-object format
-                this.state.buildings = [{ orientation: bldg.orientation || 0, W: bldg.W || bldg.width, D: bldg.D || bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: bldg.stories || 1, floorHeight: 9 }];
-                this.state.commFront = bldg.commFront || false;
-            }
-        } else if (sd.buildings) {
-            this.state.buildings      = sd.buildings;
-            this.state.activeBuilding = sd.activeBuilding || 0;
-            this.state.commFront      = sd.commFront      || false;
-            this.state.showBldgDims   = sd.showBldgDims   || false;
-            this.state.hiddenDimKeys  = sd.hiddenDimKeys  || [];
-            this.state.chainWOffset   = sd.chainWOffset   ?? 0;
-            this.state.chainDOffset   = sd.chainDOffset   ?? 0;
-            if (sd.mapOpacity != null) this.state.mapOpacity = sd.mapOpacity;
-            // Migrate older site-data lacking per-building stories/floorHeight
-            const mStories = sd.stories || 1, mFloorH = sd.floorHeight || 9;
-            this.state.buildings.forEach(b => {
-                if (!('stories'     in b)) b.stories     = mStories;
-                if (!('floorHeight' in b)) b.floorHeight = mFloorH;
-            });
+        // ── Load saved state: ONE localStorage key > __SITE_DEFAULTS__ > defaults ──
+        var stored = null;
+        try { stored = JSON.parse(localStorage.getItem('site_state')); } catch(e) {}
+        var saved = stored ? stored.saved : null;
+
+        // Migration: check old keys if no unified state exists yet
+        if (!saved) {
+            saved = this._migrateOldKeys();
         }
+
+        if (saved) {
+            this.state.lat            = saved.lat            ?? this.defaults.lat;
+            this.state.lng            = saved.lng            ?? this.defaults.lng;
+            this.state.rotation       = saved.rotation       ?? this.defaults.rotation;
+            this.state.locked         = saved.locked         ?? false;
+            this.state.setbacks       = saved.setbacks       ?? { front: 10, rear: 10, sideL: 0, sideR: 0 };
+            this.state.commFront      = saved.commFront      ?? false;
+            this.state.showBldgDims   = saved.showBldgDims   ?? false;
+            this.state.hiddenDimKeys  = saved.hiddenDimKeys  ?? [];
+            this.state.chainWOffset   = saved.chainWOffset   ?? 0;
+            this.state.chainDOffset   = saved.chainDOffset   ?? 0;
+            this.state.mapOpacity     = saved.mapOpacity     ?? 70;
+            this.state.setbacksApplied = saved.setbacksApplied ?? false;
+            if (saved.buildings && saved.buildings.length) {
+                this.state.buildings      = saved.buildings;
+                this.state.activeBuilding = saved.activeBuilding ?? 0;
+            }
+        } else {
+            // Fall back to __SITE_DEFAULTS__
+            this.state.lat      = sd.lat      ?? this.defaults.lat;
+            this.state.lng      = sd.lng      ?? this.defaults.lng;
+            this.state.rotation = sd.rotation ?? this.defaults.rotation;
+            this.state.locked   = sd.locked   ?? false;
+            if (sd.setbacks) this.state.setbacks = sd.setbacks;
+            if (sd.buildings) {
+                this.state.buildings      = sd.buildings;
+                this.state.activeBuilding = sd.activeBuilding ?? 0;
+                this.state.commFront      = sd.commFront      ?? false;
+                this.state.showBldgDims   = sd.showBldgDims   ?? false;
+                this.state.hiddenDimKeys  = sd.hiddenDimKeys  ?? [];
+                this.state.chainWOffset   = sd.chainWOffset   ?? 0;
+                this.state.chainDOffset   = sd.chainDOffset   ?? 0;
+            }
+            if (sd.mapOpacity != null) this.state.mapOpacity = sd.mapOpacity;
+        }
+
+        // Migrate older builds: ensure per-building stories/floorHeight + W/D keys
+        this.state.buildings.forEach(function(b) {
+            if (!('stories'     in b)) b.stories     = 1;
+            if (!('floorHeight' in b)) b.floorHeight = 9;
+            if (!('W' in b) && 'width'  in b) { b.W = b.width;  delete b.width;  }
+            if (!('D' in b) && 'height' in b) { b.D = b.height; delete b.height; }
+        });
     },
-    save: function() {
-        localStorage.setItem('site_lat', this.state.lat);
-        localStorage.setItem('site_lng', this.state.lng);
-        localStorage.setItem('site_rot', this.state.rotation);
+
+    // One-time migration from scattered old localStorage keys -> returns saved-shaped object or null
+    _migrateOldKeys: function() {
+        var _ls = function(key) { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } };
+        var boundary = _ls('boundary_location');
+        var bldg     = _ls('building_config');
+        var sb       = _ls('saved_setbacks');
+        var sLat     = localStorage.getItem('site_lat');
+        var sLng     = localStorage.getItem('site_lng');
+        var sRot     = localStorage.getItem('site_rot');
+        var opacity  = localStorage.getItem('map_opacity');
+        var locked   = localStorage.getItem('site_locked');
+
+        // If nothing exists in old keys, return null
+        if (!boundary && !bldg && !sb && sLat === null) return null;
+
+        var saved = {};
+        saved.lat      = boundary ? boundary.lat      : (sLat !== null ? parseFloat(sLat) : null);
+        saved.lng      = boundary ? boundary.lng      : (sLng !== null ? parseFloat(sLng) : null);
+        saved.rotation = boundary ? boundary.rotation : (sRot !== null ? parseFloat(sRot) : null);
+        saved.locked   = locked === '1';
+        saved.setbacks = sb || (boundary ? boundary.setbacks : null);
+        saved.mapOpacity = opacity !== null ? parseFloat(opacity) : null;
+
+        if (bldg && bldg.buildings) {
+            saved.buildings      = bldg.buildings;
+            saved.activeBuilding = bldg.activeBuilding || 0;
+            saved.commFront      = bldg.commFront      || false;
+            saved.showBldgDims   = bldg.showBldgDims   || false;
+            saved.hiddenDimKeys  = bldg.hiddenDimKeys  || [];
+            saved.chainWOffset   = bldg.chainWOffset   ?? 0;
+            saved.chainDOffset   = bldg.chainDOffset   ?? 0;
+        } else if (bldg && (bldg.W || bldg.width)) {
+            saved.buildings = [{ orientation: bldg.orientation || 0, W: bldg.W || bldg.width, D: bldg.D || bldg.height, offsetX: bldg.offsetX || 0, offsetY: bldg.offsetY || 0, spacing: 0, count: 1, stackSpacing: 0, anchor: 'center', stories: bldg.stories || 1, floorHeight: 9 }];
+            saved.commFront = bldg.commFront || false;
+        }
+
+        // Clean up old keys now that we've migrated
+        ['boundary_location','building_config','saved_setbacks','site_lat','site_lng','site_rot','map_opacity','site_locked'].forEach(function(k) {
+            localStorage.removeItem(k);
+        });
+
+        return saved;
     },
+
     reset: function() {
-        localStorage.removeItem('site_lat');
-        localStorage.removeItem('site_lng');
-        localStorage.removeItem('site_rot');
-        localStorage.removeItem('boundary_location');
-        this.state.lat      = this.defaults.lat;
-        this.state.lng      = this.defaults.lng;
-        this.state.rotation = this.defaults.rotation;
-        this.state.locked         = false;
-        this.state.setbacks       = { front: 10, rear: 10, sideL: 0, sideR: 0 };
-        this.state.buildings      = [ Object.assign({}, this.defaultBuilding) ];
-        this.state.activeBuilding = 0;
+        localStorage.removeItem('site_state');
+        this.state.lat              = this.defaults.lat;
+        this.state.lng              = this.defaults.lng;
+        this.state.rotation         = this.defaults.rotation;
+        this.state.locked           = false;
+        this.state.setbacks         = { front: 10, rear: 10, sideL: 0, sideR: 0 };
+        this.state.buildings        = [ Object.assign({}, this.defaultBuilding) ];
+        this.state.activeBuilding   = 0;
         this.state.commFront        = false;
         this.state.showBldgDims     = false;
         this.state.setbacksApplied  = false;
-        localStorage.removeItem('saved_setbacks');
-        localStorage.removeItem('building_config');
-        localStorage.removeItem('site_locked');
-        // Note: pushToServer() is called by the button handler AFTER MapEngine is also cleaned up
     }
 };
-

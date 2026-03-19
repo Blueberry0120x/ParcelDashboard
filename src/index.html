@@ -19,6 +19,17 @@
 <body>
 <div class="page-wrapper">
 
+    <!-- SUITE BAR -->
+    <div class="suite-bar no-print">
+        <span class="suite-bar-active">Map</span>
+        <span class="suite-bar-sep">|</span>
+        <a href="PreApp_Checklist.html" class="suite-bar-link">Checklist</a>
+        <div class="suite-bar-ext">
+            <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink">ParcelQuest &#x2197;</a>
+            <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-teal">SanDag GIS &#x2197;</a>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <div class="header">
         <div class="header-left">
@@ -32,11 +43,6 @@
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
                 </div>
             </div>
-        </div>
-        <div class="header-btn-group">
-            <a href="https://assr.parcelquest.com/Home" target="_blank" class="header-btn">ParcelQuest &#x2197;</a>
-            <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="header-btn header-btn-teal">SanDag GIS &#x2197;</a>
-            <button onclick="window.print()" class="header-btn header-btn-print">&#128438; Print</button>
         </div>
     </div>
 
@@ -59,8 +65,8 @@
 
             <!-- ALIGN MAP TOOLS -->
             <div class="sidebar-box">
-                <h2 style="margin-bottom:10px; border-bottom:2px solid var(--secondary); padding-bottom:6px;">Align Map</h2>
-
+                <h2 class="box-toggle" onclick="this.parentElement.classList.toggle('collapsed')" style="margin-bottom:10px; border-bottom:2px solid var(--secondary); padding-bottom:6px; cursor:pointer;">Align Map</h2>
+                <div class="box-body">
                 <div class="align-grid">
                     <!-- Row 1: Snap to Grid + Save Boundary -->
                     <strong>Snap to Grid:</strong>
@@ -96,6 +102,7 @@
                         <button id="elevClearBtn"  class="btn-align btn-elev-clear">Clear</button>
                     </div>
                 </div>
+                </div><!-- end box-body -->
             </div>
 
             <!-- CONCEPT DESIGN -->
@@ -103,7 +110,8 @@
                 <div class="box-header">
                     <h2>Concept Design</h2>
                 </div>
-                <h3 style="margin-top:2px;">Setback Configuration</h3>
+                <h3 class="sub-toggle" onclick="this.nextElementSibling.classList.toggle('collapsed')" style="margin-top:2px; cursor:pointer;">Setback Configuration</h3>
+                <div class="sub-body">
                 <div class="setback-grid">
                     <div class="setback-field">
                         <label>Front (ft)</label>
@@ -124,16 +132,18 @@
                 </div>
                 <button class="btn-accept" onclick="SetbackEngine.applySetbacks()">&#x2714; Accept &#x2014; Draw Setback Lines</button>
                 <button id="saveSetbackBtn" class="btn-save-setback">Save Setbacks</button>
+                </div><!-- end setback sub-body -->
 
                 <!-- BUILDING CONFIG -->
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
-                        <h3 style="margin:0;">Building Config</h3>
+                        <h3 class="sub-toggle" onclick="this.closest('.building-config-wrap').classList.toggle('collapsed')" style="margin:0; cursor:pointer;">Building Config</h3>
                         <div style="display:flex;gap:5px;">
                             <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
                             <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
                         </div>
                     </div>
+                    <div class="sub-body">
                     <div class="building-grid">
                         <strong>Orientation:</strong>
                         <div class="deg-input-wrap">
@@ -220,6 +230,7 @@
                             <span id="bldgDensityCheck" style="font-weight: 700; font-size: 0.9em;">—</span>
                         </div>
                     </div>
+                    </div><!-- end building sub-body -->
                 </div>
             </div>
 
@@ -334,6 +345,12 @@
 
 </div><!-- end page-wrapper -->
 
+<!-- Floating FAB — Save + Print -->
+<div id="map-fab" class="no-print" style="position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;">
+    <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." style="pointer-events:all;background:#475569;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128190; Save Config</button>
+    <button onclick="window.print()" style="pointer-events:all;background:#0f4c81;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128438; Print / PDF</button>
+</div>
+
 <!-- Auto-save flash badge -->
 <div id="map-save-flash" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;
   background:#166534;color:#dcfce7;padding:7px 16px;border-radius:20px;font-size:12px;
@@ -344,11 +361,9 @@
 <style>
 @keyframes mapFlashIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @media print{
-  .header-btn-group,.suite-nav,.col-divider,.sidebar{display:none!important}
-  .main-container{height:auto!important}
-  .map-panel{width:100%!important;height:90vh!important}
-  #map-save-flash{display:none!important}
-  body{padding:0!important}
+  .no-print,.suite-bar{display:none!important}
+  #map-save-flash,#map-fab{display:none!important}
+  body{padding:8px!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 

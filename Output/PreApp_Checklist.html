@@ -22,7 +22,7 @@
   .adv-card-body>p:last-child{margin-bottom:0}
   @keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @media print{
-    .suite-nav,.no-print{display:none!important}
+    .no-print{display:none!important}
     #fab-float{display:none!important}
     body{background:#fff}
     input,select,textarea{border:none!important;background:transparent!important}
@@ -34,19 +34,17 @@
 <script>window.__SITE_DEFAULTS__ = {"project":"Master Site Dashboard","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.755575,"lng":-117.09185,"rotation":10,"locked":false,"setbacks":{"front":10,"rear":10,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":18,"D":20,"offsetX":0,"offsetY":0,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9},{"orientation":0,"W":18,"D":40,"offsetX":0,"offsetY":0,"spacing":0,"count":3,"stackSpacing":5,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":true,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70};</script>
 </head>
 <body>
-<style>
-.suite-nav{display:flex;align-items:center;gap:0;background:#0f4c81;padding:0 16px;height:32px;font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.3px;flex-shrink:0;position:relative;z-index:9999}
-.suite-nav-link{color:rgba(255,255,255,.65);text-decoration:none;padding:0 14px;height:32px;display:flex;align-items:center;transition:color .15s,background .15s}
-.suite-nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
-.suite-nav-active{color:#fff;padding:0 14px;height:32px;display:flex;align-items:center;border-bottom:2px solid #fff}
-.suite-nav-sep{color:rgba(255,255,255,.25);padding:0 4px}
-.suite-nav-extbtn{margin-left:auto;display:flex;gap:6px;align-items:center}
-.suite-nav-extlink{color:#fff;text-decoration:none;padding:0 10px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(255,255,255,.4);transition:all .15s}
-.suite-nav-extlink:hover{background:rgba(255,255,255,.15);border-color:#fff}
-.suite-nav-extlink-teal{color:#5eead4;border-color:rgba(94,234,212,.5)}
-.suite-nav-extlink-teal:hover{background:rgba(94,234,212,.12);border-color:#5eead4}
-</style>
-<div class="suite-nav"><a href="InteractiveMap.html" class="suite-nav-link">Map</a><span class="suite-nav-sep">|</span><span class="suite-nav-active">Checklist</span><div class="suite-nav-extbtn"><a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-nav-extlink">ParcelQuest &#x2197;</a><a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-nav-extlink suite-nav-extlink-teal">SanDag GIS &#x2197;</a></div></div>
+<div class="no-print" style="background:#0f4c81;padding:0 18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;flex-shrink:0">
+  <div style="display:flex;align-items:center;height:32px;max-width:920px;margin:0 auto">
+    <a href="InteractiveMap.html" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
+    <span style="color:rgba(255,255,255,.25);padding:0 3px">|</span>
+    <span style="color:#fff;border-bottom:2px solid #fff;height:32px;display:flex;align-items:center;padding:0 12px">Checklist</span>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <a href="https://assr.parcelquest.com/Home" target="_blank" style="color:#fff;text-decoration:none;padding:0 9px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(255,255,255,.4)">ParcelQuest &#x2197;</a>
+      <a href="https://sandiego.maps.arcgis.com/" target="_blank" style="color:#5eead4;text-decoration:none;padding:0 9px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(94,234,212,.5)">SanDag GIS &#x2197;</a>
+    </div>
+  </div>
+</div>
 <div id="root"></div>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -58,10 +56,12 @@ const SD = window.__SITE_DEFAULTS__ || {};
 
 // Seed checklist buildings from map's live localStorage state, then fall back to baked SD
 function seedFromMap(){
-  // 1. Live map state — written by map's Save Config to localStorage['building_config']
+  // 1. Live map state — written by map's ExportEngine.save() to localStorage['site_state']
   //    Works in serve mode (shared localhost origin). No-op in file:// mode (different origins).
   let src=null;
-  try{const raw=localStorage.getItem('building_config');if(raw){const p=JSON.parse(raw);if(p&&p.buildings&&p.buildings.length)src=p;}}catch(e){}
+  try{const raw=localStorage.getItem('site_state');if(raw){const p=JSON.parse(raw);if(p&&p.saved&&p.saved.buildings&&p.saved.buildings.length)src={buildings:p.saved.buildings,commFront:p.saved.commFront};}}catch(e){}
+  // Migration: check old key
+  if(!src){try{const raw=localStorage.getItem('building_config');if(raw){const p=JSON.parse(raw);if(p&&p.buildings&&p.buildings.length)src=p;}}catch(e){}}
   // 2. Baked build-time state from site-data.json via __SITE_DEFAULTS__
   if(!src){if(!SD.buildings||!SD.buildings.length)return null;src={buildings:SD.buildings,commFront:SD.commFront};}
   const out=[];
@@ -519,13 +519,13 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>{/* end flex wrapper */}
 
       {/* Dashboard */}
-      <div style={{borderTop:"2px solid #e2e8f0",padding:"10px 14px 10px 43px",display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:"6px 14px",fontSize:11}}>
-        <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Commercial:</span><span style={{fontWeight:700,fontFamily:mono}}>{commSF.toLocaleString()} SF / {commU} units</span></div>
-        <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Residential:</span><span style={{fontWeight:700,fontFamily:mono}}>{resiSF.toLocaleString()} SF / {resiU} units</span></div>
-        <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Total SF:</span><span style={{fontWeight:700,fontFamily:mono}}>{totalSF.toLocaleString()}</span></div>
-        <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Unit Size:</span><span style={{fontWeight:700,fontFamily:mono,color:difWaiver?"#16a34a":"#d97706"}}>{unitSF} SF {difWaiver?"(\u2713 DIF waived)":"(>500 SF)"}</span></div>
-        <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>FAR:</span><span style={{fontWeight:700,fontFamily:mono,color:farOK?"#16a34a":"#dc2626"}}>{far.toFixed(2)} / {farLim} {farOK?"\u2713":"\u2717 OVER"}</span></div>
-        <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#64748b",fontWeight:600}}>Density:</span><span style={{fontWeight:700,fontFamily:mono,color:denOK?"#16a34a":"#dc2626"}}>{resiU} DU / {isCCHS?"unlimited":isSDB&&sdbMeetsMin?sdbTotalDU+" (SDB)":baseDMax} {denOK?"\u2713":"\u2717"}</span></div>
+      <div style={{borderTop:"2px solid #e2e8f0",padding:"10px 14px 10px 43px",display:"grid",gridTemplateColumns:isMobile?"auto 1fr":"auto 1fr auto 1fr",gap:"4px 8px",fontSize:11,alignItems:"baseline"}}>
+        <span style={{color:"#64748b",fontWeight:600}}>Commercial:</span><span style={{fontWeight:700,fontFamily:mono}}>{commSF.toLocaleString()} SF / {commU} units</span>
+        <span style={{color:"#64748b",fontWeight:600}}>Residential:</span><span style={{fontWeight:700,fontFamily:mono}}>{resiSF.toLocaleString()} SF / {resiU} units</span>
+        <span style={{color:"#64748b",fontWeight:600}}>Total SF:</span><span style={{fontWeight:700,fontFamily:mono}}>{totalSF.toLocaleString()}</span>
+        <span style={{color:"#64748b",fontWeight:600}}>Unit Size:</span><span style={{fontWeight:700,fontFamily:mono,color:difWaiver?"#16a34a":"#d97706"}}>{unitSF} SF {difWaiver?"(\u2713 DIF waived)":"(>500 SF)"}</span>
+        <span style={{color:"#64748b",fontWeight:600}}>FAR:</span><span style={{fontWeight:700,fontFamily:mono,color:farOK?"#16a34a":"#dc2626"}}>{far.toFixed(2)} / {farLim} {farOK?"\u2713":"\u2717 OVER"}</span>
+        <span style={{color:"#64748b",fontWeight:600}}>Density:</span><span style={{fontWeight:700,fontFamily:mono,color:denOK?"#16a34a":"#dc2626"}}>{resiU} DU / {isCCHS?"unlimited":isSDB&&sdbMeetsMin?sdbTotalDU+" (SDB)":baseDMax} {denOK?"\u2713":"\u2717"}</span>
       </div>
 
       {/* Status badges */}
@@ -570,9 +570,12 @@ function ARef({n,onToggle}){return <span role="button" tabIndex={0} onClick={e=>
 // ═══════════════════════════════════════
 //  ADVISORY SECTION
 // ═══════════════════════════════════════
+const ADV_KEYS=["overview","far_density","dif","sb330","ab2097","sb9","densitybonus","commercial","glossary","footnotes"];
 function AdvisorySection({sel,bldgs,onHelp}){
   const [open,setOpen]=useState({"overview":true});
   const toggle=k=>setOpen(p=>({...p,[k]:!p[k]}));
+  const allOpen=ADV_KEYS.every(k=>open[k]);
+  const toggleAll=()=>{if(allOpen){setOpen({});}else{const o={};ADV_KEYS.forEach(k=>o[k]=true);setOpen(o);}};
   const resiB=bldgs.filter(b=>b.type==="Residential");
   const unitSF=resiB.length>0?resiB[0].w*resiB[0].d:720;
   const resiU=resiB.reduce((s,b)=>s+b.unitsPerFloor*b.stories,0);
@@ -589,7 +592,10 @@ function AdvisorySection({sel,bldgs,onHelp}){
     <div style={{marginBottom:12}}>
       <div style={{padding:"11px 16px",background:"linear-gradient(90deg,#0f4c81,#1a365d)",color:"#fff",fontWeight:700,fontSize:13,borderRadius:"10px 10px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <span>PLANNING ADVISORY & REFERENCE GUIDE</span>
-        <span style={{fontSize:10,opacity:.6,fontWeight:400}}>written for project stakeholders</span>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:10,opacity:.6,fontWeight:400}}>written for project stakeholders</span>
+          <button onClick={toggleAll} style={{padding:"3px 10px",borderRadius:5,border:"1.5px solid rgba(255,255,255,.4)",background:"rgba(255,255,255,.1)",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{allOpen?"Collapse All":"Expand All"}</button>
+        </div>
       </div>
 
       <div style={{background:"#f8fafc",padding:"10px",borderRadius:"0 0 10px 10px",border:"1px solid #e2e8f0",borderTop:"none"}}>
@@ -878,6 +884,7 @@ function App(){
   const resetAll=()=>{if(confirm("Clear ALL progress?")){const s=seedFromMap();const b=s||DEFAULT_BLDGS;const ml=!!s;setCk({});setSel({});setNotes({});setNoteOpen({});setBldgs(b);setMapLocked(ml);save({},{},{},b,ml)}};
   const pushBackup=useCallback((c,s,n,b,ml)=>{try{const d={project:SD.project||"Master Site Dashboard",address:SD.address||"",exportedAt:new Date().toISOString(),progress:{done:Object.values(c).filter(Boolean).length,total:allItemsOf(DATA).length},checklist:c,selections:s,notes:n,buildings:b,mapLocked:ml};fetch("http://localhost:7734/backup-checklist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).catch(()=>{});}catch(e){}},[]);
   const printPDF=()=>window.print();
+  const downloadConfig=()=>{save(ck,sel,notes,bldgs,mapLocked);let mapState={};try{const r=localStorage.getItem("site_state");if(r)mapState=JSON.parse(r);}catch(e){}const merged={project:SD.project||"Master Site Dashboard",saved:mapState.saved||{},checklist:{ck,sel,notes,bldgs,mapLocked,progress:{done:Object.values(ck).filter(Boolean).length,total:allItemsOf(DATA).length}}};const blob=new Blob([JSON.stringify(merged,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="site-data.json";a.click();URL.revokeObjectURL(a.href);setSaveFlash(true);if(sfTimer.current)clearTimeout(sfTimer.current);sfTimer.current=setTimeout(()=>setSaveFlash(false),2000);};
   const copyText=t=>{navigator.clipboard.writeText(t).then(()=>{setCopied(t);setTimeout(()=>setCopied(null),1500)}).catch(()=>{})};
 
   if(!loaded)return <div style={{padding:60,textAlign:"center",fontFamily:"'DM Sans',sans-serif",color:"#94a3b8"}}>Loading...</div>;
@@ -981,6 +988,9 @@ function App(){
             <span style={{fontSize:13}}>&#10003;</span> Auto-saved
           </div>
         )}
+        <button onClick={downloadConfig} title="Downloads preapp-checklist.json to your Downloads folder. Move it back to this same folder to keep your work synced." style={{pointerEvents:"all",background:"#475569",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
+          &#128190; Save Config
+        </button>
         <button onClick={printPDF} style={{pointerEvents:"all",background:"#0f4c81",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
           &#128438; Print / PDF
         </button>

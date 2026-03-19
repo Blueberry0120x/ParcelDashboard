@@ -22,17 +22,41 @@ body {
     display: flex; justify-content: space-between; align-items: center;
 }
 h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
-.header-btn-group { display: flex; gap: 8px; align-items: center; }
-.header-btn {
-    background-color: white; color: var(--primary); border: 2px solid var(--primary);
-    padding: 8px 16px; border-radius: 6px; text-decoration: none;
-    font-weight: bold; font-size: 0.9em; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+/* Suite bar — full-width dark blue nav row */
+.suite-bar {
+    display: flex; align-items: center; background: var(--primary);
+    border-radius: 0; padding: 0 14px; height: 32px; margin-bottom: 8px;
+    font-family: 'Segoe UI', system-ui, sans-serif; font-size: 12px;
+    font-weight: 600; letter-spacing: 0.3px;
 }
-.header-btn:hover { background-color: var(--primary); color: white; }
-.header-btn-teal { color: #0d9488; border-color: #0d9488; }
-.header-btn-teal:hover { background-color: #0d9488; color: white; }
-.header-btn-print { color: #475569; border-color: #94a3b8; cursor: pointer; }
-.header-btn-print:hover { background-color: #475569; color: white; border-color: #475569; }
+.suite-bar button.suite-bar-extlink {
+    background: transparent; cursor: pointer; font-family: inherit;
+}
+.suite-bar-active { color: #fff; border-bottom: 2px solid #fff; height: 30px; display: flex; align-items: center; padding: 0 12px; }
+.suite-bar-link { color: rgba(255,255,255,.6); text-decoration: none; padding: 0 12px; height: 30px; display: flex; align-items: center; transition: .15s; }
+.suite-bar-link:hover { color: #fff; background: rgba(255,255,255,.1); }
+.suite-bar-sep { color: rgba(255,255,255,.25); padding: 0 3px; }
+.suite-bar-ext { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.suite-bar-extlink {
+    color: #fff; text-decoration: none; padding: 0 9px; height: 20px;
+    display: flex; align-items: center; border-radius: 4px;
+    font-size: 11px; font-weight: 600; border: 1.5px solid rgba(255,255,255,.4); transition: .15s;
+}
+.suite-bar-extlink:hover { background: rgba(255,255,255,.15); border-color: #fff; }
+.suite-bar-extlink-teal { color: #5eead4; border-color: rgba(94,234,212,.5); }
+.suite-bar-extlink-teal:hover { background: rgba(94,234,212,.12); border-color: #5eead4; }
+
+/* Collapsible sidebar sections */
+.box-toggle { user-select: none; }
+.box-toggle::after { content: '\25BE'; float: right; font-size: 21px; color: #94a3b8; transition: transform .2s; display: inline-block; }
+.sidebar-box.collapsed .box-toggle::after { transform: rotate(-90deg); }
+.sidebar-box.collapsed > .box-body { display: none; }
+.sub-toggle { user-select: none; }
+.sub-toggle::after { content: '\25BE'; float: right; font-size: 18px; color: #94a3b8; transition: transform .2s; display: inline-block; }
+.sub-body.collapsed { display: none; }
+.building-config-wrap.collapsed > .sub-body { display: none; }
+.building-config-wrap.collapsed .sub-toggle::after { transform: rotate(-90deg); }
 
 /* Title row — title stack inline with address+apn pair */
 .header-title-row { display: flex; align-items: center; gap: 0; }
@@ -86,7 +110,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 
 .sidebar {
     width: 40%; min-width: 240px; flex-shrink: 0;
-    overflow-y: auto; padding-right: 4px;
+    overflow-y: auto; padding-right: 19px;
 }
 .col-divider {
     width: 8px; min-width: 8px; flex-shrink: 0;
@@ -325,7 +349,7 @@ details[open] summary { border-bottom: 1px solid var(--cad-border); }
     padding: 4px 6px 4px 4px; border-bottom: 1px solid var(--cad-border);
     border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
 }
-.cad-table th { width: 48%; font-weight: bold; background: #2a2a2a; padding-left: 12px; }
+.cad-table th { white-space: nowrap; font-weight: bold; background: #2a2a2a; padding-left: 12px; }
 .cad-table tr:last-child th, .cad-table tr:last-child td { border-bottom: none; }
 .cad-table td:last-child { border-right: none; }
 
@@ -458,7 +482,7 @@ input:checked + .slider:before { transform: translateX(20px); }
    5. INFO BOTTOM — aligns with sidebar/map split
    ========================================== */
 .info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
-.info-col-left  { width: 40%; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.info-col-left  { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .info-col-gap   { width: 18px;  flex-shrink: 0; }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
@@ -526,9 +550,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
     /* Info bottom: single column */
     .info-bottom { flex-direction: column; }
-    .info-col-left { width: 100%; }
     .info-col-gap { display: none; }
-    .info-col-right { width: 100%; }
 
     /* Property banner: allow 2-line wrapping on very small screens */
     .property-banner { flex-wrap: wrap; }
