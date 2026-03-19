@@ -20,7 +20,23 @@ const UIEngine = {
 
         this.updateLotSizeDisplay();
         document.getElementById('info-density-lot').innerText   = sqft.toFixed(1) + " S.F.";
-        document.getElementById('info-buildable-far').innerText = (sqft * 2.0).toFixed(1) + " S.F.";
+        const sd = window.__SITE_DEFAULTS__ || {};
+        const baseFAR = sd.baseFAR || 2.0;
+        const commFAR = sd.commFAR || 6.5;
+        const maxHt   = sd.maxHeight || 50;
+        const densPS  = sd.densityPerSF || 600;
+        const fSb = sd.frontSetback ?? 10, sSb = sd.sideSetback ?? 0, rSb = sd.rearSetback ?? 10;
+        document.getElementById('info-buildable-far').innerText = (sqft * baseFAR).toFixed(1) + " S.F.";
+
+        // Dynamic banner stats from site-data
+        var elDen = document.getElementById('ui-density');
+        if (elDen) elDen.innerText = '1 DU / ' + densPS + ' SF';
+        var elFar = document.getElementById('ui-far');
+        if (elFar) elFar.innerText = baseFAR + ' / ' + commFAR;
+        var elHt  = document.getElementById('ui-maxht');
+        if (elHt) elHt.innerText = maxHt + ' FT';
+        var elSb  = document.getElementById('ui-setbacks');
+        if (elSb) elSb.innerText = fSb + "' / " + sSb + "' / " + rSb + "'";
 
         document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
             ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';

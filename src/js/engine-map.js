@@ -41,7 +41,10 @@ const MapEngine = {
         this.buildNorthArrow();
         this.buildHelpControl();
         this.buildDimDragToggle();
-        this.buildOpacityPanel(sat);
+        this._baseLayers = { "Satellite": sat, "Street Map": street, "Topo (Esri)": topoEsri, "Topo (USGS)": topoUSGS };
+        this._activeBase = sat;
+        this.map.on('baselayerchange', (e) => { this._activeBase = e.layer; e.layer.setOpacity(ConfigEngine.state.mapOpacity / 100); });
+        this.buildOpacityPanel();
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
@@ -155,7 +158,7 @@ const MapEngine = {
         this.map.addControl(new NorthControl());
     },
 
-    buildOpacityPanel: function(satLayer) {
+    buildOpacityPanel: function() {
         const self = this;
         const OpCtrl = L.Control.extend({
             options: { position: 'topleft' },
@@ -165,7 +168,7 @@ const MapEngine = {
                 div.innerHTML =
                     '<h4>Basemap Opacity</h4>' +
                     '<div class="em-oc-row">' +
-                    '  <label>Satellite</label>' +
+                    '  <label>Active Layer</label>' +
                     '  <input type="range" id="satOpacitySlider" min="0" max="100" value="' + pct + '">' +
                     '  <span id="satOpacityVal">' + pct + '%</span>' +
                     '</div>' +
@@ -182,11 +185,11 @@ const MapEngine = {
             const slider = document.getElementById('satOpacitySlider');
             const label  = document.getElementById('satOpacityVal');
             if (!slider) return;
-            // Apply saved opacity immediately on load
-            satLayer.setOpacity(ConfigEngine.state.mapOpacity / 100);
+            // Apply saved opacity to current active basemap
+            if (self._activeBase) self._activeBase.setOpacity(ConfigEngine.state.mapOpacity / 100);
             slider.addEventListener('input', () => {
                 const v = parseInt(slider.value);
-                satLayer.setOpacity(v / 100);
+                if (self._activeBase) self._activeBase.setOpacity(v / 100);
                 label.textContent = v + '%';
                 ConfigEngine.state.mapOpacity = v;
             });
@@ -330,8 +333,9 @@ const MapEngine = {
         const OFF = 7;   // ft: dim line offset outward from lot edge
         const EX2 = 2;   // ft: witness line overshoot past dim line
         const TK  = 2.2; // ft: half-length of 45deg tick
-        // Annotative text gap
+        // Annotative text gap + zoom-scaled font
         const mapZoom   = this.map.getZoom();
+        const fontScale = Math.max(0.72, 0.36 + mapZoom * 0.025); // grows with zoom: ~0.84 at z19, ~0.96 at z22
         const mPerPx    = 40075016.686 * Math.cos(ConfigEngine.state.lat * Math.PI / 180) / Math.pow(2, mapZoom + 8);
         const ftPerPx   = mPerPx * 3.28084;
         const TO        = 10 * ftPerPx;
@@ -384,7 +388,7 @@ const MapEngine = {
             const m = L.marker(toLL(mid), {
                 icon: L.divIcon({
                     className: '',
-                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
+                    html: '<div style="position:relative"><div class="dim-label" style="font-size:' + fontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 }),
                 interactive: true
@@ -396,7 +400,6 @@ const MapEngine = {
                 this.hiddenDimKeys.add(e.key);
                 layers.forEach(l => this.map.removeLayer(l));
             });
-            this.dimLabels.push(m);
         });
     },
 

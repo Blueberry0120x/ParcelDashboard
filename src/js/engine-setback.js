@@ -355,7 +355,7 @@ const SetbackEngine = {
         const lbl = (pt, txt, rotDeg) => push(L.marker(toLatLng(pt), {
             icon: L.divIcon({
                 className: '',
-                html: '<div style="position:relative"><div class="arch-dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
+                html: '<div style="position:relative"><div class="arch-dim-label" style="font-size:' + bldgFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
                 iconSize: [0, 0], iconAnchor: [0, 0]
             }),
             interactive: false
@@ -364,8 +364,9 @@ const SetbackEngine = {
         const EXT = 5;    // ft: dim line offset from building edge
         const EX2 = 2;    // ft: witness line overshoot beyond dim line
         const TK  = 2.2;  // ft: half-length of 45deg tick mark
-        // Annotative text offset: convert 10px screen gap to feet at current zoom
+        // Annotative text offset + zoom-scaled font
         const mapZoom  = MapEngine.map.getZoom();
+        const bldgFontScale = Math.max(0.68, 0.34 + mapZoom * 0.024);
         const metersPerPx = 40075016.686 * Math.cos(ConfigEngine.state.lat * Math.PI / 180) / Math.pow(2, mapZoom + 8);
         const feetPerPx   = metersPerPx * 3.28084;
         const TO = 10 * feetPerPx;  // 10px gap, converted to feet at current zoom
@@ -472,7 +473,7 @@ const SetbackEngine = {
                 const m = push(L.marker(toLatLng(mid), {
                     icon: L.divIcon({
                         className: '',
-                        html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
+                        html: '<div style="position:relative"><div class="dim-label" style="font-size:' + bldgFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
                         iconSize: [0, 0], iconAnchor: [0, 0]
                     }),
                     interactive: true
@@ -655,8 +656,9 @@ const SetbackEngine = {
         const lotArea = lotW * lotD;
         if (!lotArea) return;
 
+        const sd        = window.__SITE_DEFAULTS__ || {};
         const commFront = state.commFront || false;
-        const maxFAR    = commFront ? 6.5 : 2.0;
+        const maxFAR    = commFront ? (sd.commFAR || 6.5) : (sd.baseFAR || 2.0);
         const buildable = Math.round(lotArea * maxFAR);
 
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
@@ -673,7 +675,7 @@ const SetbackEngine = {
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
         set('bldgFAR',           actualFAR.toFixed(2));
         set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
-        set('maxFARLabel',       commFront ? 'Comm. Front: 6.5 FAR' : 'Base: 2.0 FAR');
+        set('maxFARLabel',       commFront ? 'Comm. Front: ' + maxFAR + ' FAR' : 'Base: ' + maxFAR + ' FAR');
 
         const chkEl = document.getElementById('bldgFARCheck');
         if (chkEl) {
@@ -686,11 +688,10 @@ const SetbackEngine = {
 
         const floorH      = active.floorHeight || 9;
         const activeStories = active.stories || 1;
-        const totalHeight = activeStories === 1 ? floorH : activeStories * (floorH + 1);
+        const totalHeight = activeStories * floorH + Math.max(0, activeStories - 1) * 1;
         set('bldgTotalHeight', totalHeight.toFixed(0));
 
         // Density check: total residential units vs base zone max
-        const sd        = window.__SITE_DEFAULTS__ || {};
         const densPerSF = sd.densityPerSF || 600;
         const baseDMax  = Math.floor(lotArea / densPerSF);
         const resiU     = state.buildings.reduce((s, b) => s + (b.stories || 1) * (b.count || 1), 0);

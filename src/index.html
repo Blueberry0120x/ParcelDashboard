@@ -23,7 +23,7 @@
     <div class="suite-bar no-print">
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
-        <a href="PreApp_Checklist.html" class="suite-bar-link">Checklist</a>
+        <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
         <div class="suite-bar-ext">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-teal">SanDag GIS &#x2197;</a>
@@ -51,10 +51,10 @@
         <div class="banner-stat" draggable="true"><span class="banner-label">Dimensions</span><span class="banner-value"><span id="ui-w"></span>' &times; <span id="ui-d"></span>'</span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Lot Size</span><span class="banner-value" id="ui-sqft"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Zoning</span><span class="banner-value" id="ui-zoning"></span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Base Density</span><span class="banner-value">1 DU / 600 SF</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Max FAR [Base / Comm]</span><span class="banner-value">2.0 / 6.5</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Max Height</span><span class="banner-value">50 FT</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Setbacks (F/S/R)</span><span class="banner-value">10' / 0' / 10'</span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Base Density</span><span class="banner-value" id="ui-density"></span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Max FAR [Base / Comm]</span><span class="banner-value" id="ui-far"></span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Max Height</span><span class="banner-value" id="ui-maxht"></span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Setbacks (F/S/R)</span><span class="banner-value" id="ui-setbacks"></span></div>
     </div>
 
     <!-- MAIN: SIDEBAR | DIVIDER | MAP -->

@@ -163,5 +163,9 @@ const ConfigEngine = {
         this.state.commFront        = false;
         this.state.showBldgDims     = false;
         this.state.setbacksApplied  = false;
+        this.state.mapOpacity       = 70;
+        this.state.hiddenDimKeys    = [];
+        this.state.chainWOffset     = 0;
+        this.state.chainDOffset     = 0;
     }
 };

@@ -104,7 +104,8 @@ const ExportEngine = {
         }
 
         // ── Persist: ONE key ──
-        localStorage.setItem('site_state', JSON.stringify(this._payload()));
+        try { localStorage.setItem('site_state', JSON.stringify(this._payload())); }
+        catch(e) { console.warn('Save to localStorage failed:', e.message); }
 
         // ── Push to dev server (no-op outside localhost) ──
         this._pushToServer();

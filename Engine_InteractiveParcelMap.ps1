@@ -183,7 +183,7 @@ if ($Mode -eq "serve") {
                     $body   = $reader.ReadToEnd()
                     $backupDir = Join-Path $base "config\backup"
                     if (-not (Test-Path $backupDir)) { New-Item -ItemType Directory -Path $backupDir -Force | Out-Null }
-                    $stamp = Get-Date -Format "yyyy-MM-dd"
+                    $stamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
                     $backupFile = Join-Path $backupDir "preapp-checklist-$stamp.json"
                     [System.IO.File]::WriteAllText($backupFile, $body, [System.Text.UTF8Encoding]::new($false))
                     $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')

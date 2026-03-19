@@ -137,20 +137,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     margin-bottom: 10px; border-bottom: 2px solid var(--secondary); padding-bottom: 6px;
 }
 
-/* Complex / Single Toggle — compact, inline with header */
-.mode-track {
-    display: flex; background: #eef2f7; border-radius: 20px;
-    padding: 2px; gap: 0; width: 116px; flex-shrink: 0;
-    border: 1px solid #d4dce8;
-}
-.mode-btn {
-    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
-    background: transparent; color: #6b7280; font-weight: 800;
-    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
-    cursor: pointer; transition: all 0.18s; line-height: 1.5;
-    text-align: center; overflow: hidden;
-}
-.mode-btn.active { background: white; color: #22a861; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+/* (removed: .mode-track, .mode-btn — unused) */
 
 /* Align Map sidebar controls */
 /* Align-map grid — 3 cols: label | deg+° | slider or toggle+save */
@@ -167,7 +154,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .align-grid > label.switch { justify-self: center; transform: scale(0.8); transform-origin: center center; }
 .deg-input-wrap { display: flex; align-items: center; gap: 3px; }
 .deg-input-wrap span { font-weight: bold; font-size: 1em; }
-.snap-save-row { display: flex; align-items: center; gap: 8px; }
+/* (removed: .snap-save-row — unused) */
 .btn-save-boundary {
     flex: 1; padding: 4px 8px; border: none; border-radius: 4px;
     font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
@@ -299,9 +286,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
 }
 .anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-.fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
-.fp-area-badge::before { content: '['; margin-right: 1px; }
-.fp-area-badge::after  { content: ']'; margin-left: 1px; }
+/* (removed: .fp-area-badge — unused) */
 
 .footprint-inputs .align-angle-input { width: 100%; }
 /* Building selector tabs */
@@ -523,8 +508,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     .header-title-stack h1 { font-size: 20px; }
     .header-address-pair { margin-left: 0; flex-wrap: wrap; }
     .header-address { padding: 6px 10px; }
-    .header-btn-group { flex-wrap: wrap; gap: 6px; }
-    .header-btn { padding: 6px 12px; font-size: 0.82em; min-height: 36px; }
+    /* (removed: .header-btn-group, .header-btn — unused) */
 
     /* Main layout: stack vertically (map on top, sidebar below) */
     .main-container { flex-direction: column-reverse; height: auto; min-height: 0; }
@@ -556,8 +540,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     .property-banner { flex-wrap: wrap; }
     .banner-stat { flex: 1 0 auto; min-width: 110px; }
 
-    /* Mode track stays compact */
-    .mode-track { width: 100px; }
+    /* (removed: .mode-track mobile — unused) */
 
     /* Anchor/bldg tabs: larger tap area */
     .anchor-btn, .bldg-tab { min-height: 30px; padding: 4px 10px; }

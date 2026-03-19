@@ -154,20 +154,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     margin-bottom: 10px; border-bottom: 2px solid var(--secondary); padding-bottom: 6px;
 }
 
-/* Complex / Single Toggle — compact, inline with header */
-.mode-track {
-    display: flex; background: #eef2f7; border-radius: 20px;
-    padding: 2px; gap: 0; width: 116px; flex-shrink: 0;
-    border: 1px solid #d4dce8;
-}
-.mode-btn {
-    flex: 1 1 0; padding: 2px 0; border-radius: 18px; border: none;
-    background: transparent; color: #6b7280; font-weight: 800;
-    font-size: 0.60em; text-transform: uppercase; letter-spacing: 0.2px;
-    cursor: pointer; transition: all 0.18s; line-height: 1.5;
-    text-align: center; overflow: hidden;
-}
-.mode-btn.active { background: white; color: #22a861; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+/* (removed: .mode-track, .mode-btn — unused) */
 
 /* Align Map sidebar controls */
 /* Align-map grid — 3 cols: label | deg+° | slider or toggle+save */
@@ -184,7 +171,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .align-grid > label.switch { justify-self: center; transform: scale(0.8); transform-origin: center center; }
 .deg-input-wrap { display: flex; align-items: center; gap: 3px; }
 .deg-input-wrap span { font-weight: bold; font-size: 1em; }
-.snap-save-row { display: flex; align-items: center; gap: 8px; }
+/* (removed: .snap-save-row — unused) */
 .btn-save-boundary {
     flex: 1; padding: 4px 8px; border: none; border-radius: 4px;
     font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
@@ -316,9 +303,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     cursor: pointer; transition: all 0.18s; line-height: 1.5; text-align: center;
 }
 .anchor-btn.active { background: white; color: #0f4c81; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-.fp-area-badge { font-size: 1em; color: #0f4c81; font-weight: 600; white-space: nowrap; padding-left: 4px; }
-.fp-area-badge::before { content: '['; margin-right: 1px; }
-.fp-area-badge::after  { content: ']'; margin-left: 1px; }
+/* (removed: .fp-area-badge — unused) */
 
 .footprint-inputs .align-angle-input { width: 100%; }
 /* Building selector tabs */
@@ -540,8 +525,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     .header-title-stack h1 { font-size: 20px; }
     .header-address-pair { margin-left: 0; flex-wrap: wrap; }
     .header-address { padding: 6px 10px; }
-    .header-btn-group { flex-wrap: wrap; gap: 6px; }
-    .header-btn { padding: 6px 12px; font-size: 0.82em; min-height: 36px; }
+    /* (removed: .header-btn-group, .header-btn — unused) */
 
     /* Main layout: stack vertically (map on top, sidebar below) */
     .main-container { flex-direction: column-reverse; height: auto; min-height: 0; }
@@ -573,8 +557,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     .property-banner { flex-wrap: wrap; }
     .banner-stat { flex: 1 0 auto; min-width: 110px; }
 
-    /* Mode track stays compact */
-    .mode-track { width: 100px; }
+    /* (removed: .mode-track mobile — unused) */
 
     /* Anchor/bldg tabs: larger tap area */
     .anchor-btn, .bldg-tab { min-height: 30px; padding: 4px 10px; }
@@ -591,7 +574,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="suite-bar no-print">
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
-        <a href="PreApp_Checklist.html" class="suite-bar-link">Checklist</a>
+        <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
         <div class="suite-bar-ext">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-teal">SanDag GIS &#x2197;</a>
@@ -619,10 +602,10 @@ input:checked + .slider:before { transform: translateX(20px); }
         <div class="banner-stat" draggable="true"><span class="banner-label">Dimensions</span><span class="banner-value"><span id="ui-w"></span>' &times; <span id="ui-d"></span>'</span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Lot Size</span><span class="banner-value" id="ui-sqft"></span></div>
         <div class="banner-stat" draggable="true"><span class="banner-label">Zoning</span><span class="banner-value" id="ui-zoning"></span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Base Density</span><span class="banner-value">1 DU / 600 SF</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Max FAR [Base / Comm]</span><span class="banner-value">2.0 / 6.5</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Max Height</span><span class="banner-value">50 FT</span></div>
-        <div class="banner-stat" draggable="true"><span class="banner-label">Setbacks (F/S/R)</span><span class="banner-value">10' / 0' / 10'</span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Base Density</span><span class="banner-value" id="ui-density"></span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Max FAR [Base / Comm]</span><span class="banner-value" id="ui-far"></span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Max Height</span><span class="banner-value" id="ui-maxht"></span></div>
+        <div class="banner-stat" draggable="true"><span class="banner-label">Setbacks (F/S/R)</span><span class="banner-value" id="ui-setbacks"></span></div>
     </div>
 
     <!-- MAIN: SIDEBAR | DIVIDER | MAP -->
@@ -1101,6 +1084,10 @@ const ConfigEngine = {
         this.state.commFront        = false;
         this.state.showBldgDims     = false;
         this.state.setbacksApplied  = false;
+        this.state.mapOpacity       = 70;
+        this.state.hiddenDimKeys    = [];
+        this.state.chainWOffset     = 0;
+        this.state.chainDOffset     = 0;
     }
 };
 
@@ -1128,7 +1115,23 @@ const UIEngine = {
 
         this.updateLotSizeDisplay();
         document.getElementById('info-density-lot').innerText   = sqft.toFixed(1) + " S.F.";
-        document.getElementById('info-buildable-far').innerText = (sqft * 2.0).toFixed(1) + " S.F.";
+        const sd = window.__SITE_DEFAULTS__ || {};
+        const baseFAR = sd.baseFAR || 2.0;
+        const commFAR = sd.commFAR || 6.5;
+        const maxHt   = sd.maxHeight || 50;
+        const densPS  = sd.densityPerSF || 600;
+        const fSb = sd.frontSetback ?? 10, sSb = sd.sideSetback ?? 0, rSb = sd.rearSetback ?? 10;
+        document.getElementById('info-buildable-far').innerText = (sqft * baseFAR).toFixed(1) + " S.F.";
+
+        // Dynamic banner stats from site-data
+        var elDen = document.getElementById('ui-density');
+        if (elDen) elDen.innerText = '1 DU / ' + densPS + ' SF';
+        var elFar = document.getElementById('ui-far');
+        if (elFar) elFar.innerText = baseFAR + ' / ' + commFAR;
+        var elHt  = document.getElementById('ui-maxht');
+        if (elHt) elHt.innerText = maxHt + ' FT';
+        var elSb  = document.getElementById('ui-setbacks');
+        if (elSb) elSb.innerText = fSb + "' / " + sSb + "' / " + rSb + "'";
 
         document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
             ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';
@@ -1318,7 +1321,10 @@ const MapEngine = {
         this.buildNorthArrow();
         this.buildHelpControl();
         this.buildDimDragToggle();
-        this.buildOpacityPanel(sat);
+        this._baseLayers = { "Satellite": sat, "Street Map": street, "Topo (Esri)": topoEsri, "Topo (USGS)": topoUSGS };
+        this._activeBase = sat;
+        this.map.on('baselayerchange', (e) => { this._activeBase = e.layer; e.layer.setOpacity(ConfigEngine.state.mapOpacity / 100); });
+        this.buildOpacityPanel();
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
@@ -1432,7 +1438,7 @@ const MapEngine = {
         this.map.addControl(new NorthControl());
     },
 
-    buildOpacityPanel: function(satLayer) {
+    buildOpacityPanel: function() {
         const self = this;
         const OpCtrl = L.Control.extend({
             options: { position: 'topleft' },
@@ -1442,7 +1448,7 @@ const MapEngine = {
                 div.innerHTML =
                     '<h4>Basemap Opacity</h4>' +
                     '<div class="em-oc-row">' +
-                    '  <label>Satellite</label>' +
+                    '  <label>Active Layer</label>' +
                     '  <input type="range" id="satOpacitySlider" min="0" max="100" value="' + pct + '">' +
                     '  <span id="satOpacityVal">' + pct + '%</span>' +
                     '</div>' +
@@ -1459,11 +1465,11 @@ const MapEngine = {
             const slider = document.getElementById('satOpacitySlider');
             const label  = document.getElementById('satOpacityVal');
             if (!slider) return;
-            // Apply saved opacity immediately on load
-            satLayer.setOpacity(ConfigEngine.state.mapOpacity / 100);
+            // Apply saved opacity to current active basemap
+            if (self._activeBase) self._activeBase.setOpacity(ConfigEngine.state.mapOpacity / 100);
             slider.addEventListener('input', () => {
                 const v = parseInt(slider.value);
-                satLayer.setOpacity(v / 100);
+                if (self._activeBase) self._activeBase.setOpacity(v / 100);
                 label.textContent = v + '%';
                 ConfigEngine.state.mapOpacity = v;
             });
@@ -1607,8 +1613,9 @@ const MapEngine = {
         const OFF = 7;   // ft: dim line offset outward from lot edge
         const EX2 = 2;   // ft: witness line overshoot past dim line
         const TK  = 2.2; // ft: half-length of 45deg tick
-        // Annotative text gap
+        // Annotative text gap + zoom-scaled font
         const mapZoom   = this.map.getZoom();
+        const fontScale = Math.max(0.72, 0.36 + mapZoom * 0.025); // grows with zoom: ~0.84 at z19, ~0.96 at z22
         const mPerPx    = 40075016.686 * Math.cos(ConfigEngine.state.lat * Math.PI / 180) / Math.pow(2, mapZoom + 8);
         const ftPerPx   = mPerPx * 3.28084;
         const TO        = 10 * ftPerPx;
@@ -1661,7 +1668,7 @@ const MapEngine = {
             const m = L.marker(toLL(mid), {
                 icon: L.divIcon({
                     className: '',
-                    html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
+                    html: '<div style="position:relative"><div class="dim-label" style="font-size:' + fontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 }),
                 interactive: true
@@ -1673,7 +1680,6 @@ const MapEngine = {
                 this.hiddenDimKeys.add(e.key);
                 layers.forEach(l => this.map.removeLayer(l));
             });
-            this.dimLabels.push(m);
         });
     },
 
@@ -2288,7 +2294,7 @@ const SetbackEngine = {
         const lbl = (pt, txt, rotDeg) => push(L.marker(toLatLng(pt), {
             icon: L.divIcon({
                 className: '',
-                html: '<div style="position:relative"><div class="arch-dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
+                html: '<div style="position:relative"><div class="arch-dim-label" style="font-size:' + bldgFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + txt + '</div></div>',
                 iconSize: [0, 0], iconAnchor: [0, 0]
             }),
             interactive: false
@@ -2297,8 +2303,9 @@ const SetbackEngine = {
         const EXT = 5;    // ft: dim line offset from building edge
         const EX2 = 2;    // ft: witness line overshoot beyond dim line
         const TK  = 2.2;  // ft: half-length of 45deg tick mark
-        // Annotative text offset: convert 10px screen gap to feet at current zoom
+        // Annotative text offset + zoom-scaled font
         const mapZoom  = MapEngine.map.getZoom();
+        const bldgFontScale = Math.max(0.68, 0.34 + mapZoom * 0.024);
         const metersPerPx = 40075016.686 * Math.cos(ConfigEngine.state.lat * Math.PI / 180) / Math.pow(2, mapZoom + 8);
         const feetPerPx   = metersPerPx * 3.28084;
         const TO = 10 * feetPerPx;  // 10px gap, converted to feet at current zoom
@@ -2405,7 +2412,7 @@ const SetbackEngine = {
                 const m = push(L.marker(toLatLng(mid), {
                     icon: L.divIcon({
                         className: '',
-                        html: '<div style="position:relative"><div class="dim-label" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
+                        html: '<div style="position:relative"><div class="dim-label" style="font-size:' + bldgFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
                         iconSize: [0, 0], iconAnchor: [0, 0]
                     }),
                     interactive: true
@@ -2588,8 +2595,9 @@ const SetbackEngine = {
         const lotArea = lotW * lotD;
         if (!lotArea) return;
 
+        const sd        = window.__SITE_DEFAULTS__ || {};
         const commFront = state.commFront || false;
-        const maxFAR    = commFront ? 6.5 : 2.0;
+        const maxFAR    = commFront ? (sd.commFAR || 6.5) : (sd.baseFAR || 2.0);
         const buildable = Math.round(lotArea * maxFAR);
 
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
@@ -2606,7 +2614,7 @@ const SetbackEngine = {
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
         set('bldgFAR',           actualFAR.toFixed(2));
         set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
-        set('maxFARLabel',       commFront ? 'Comm. Front: 6.5 FAR' : 'Base: 2.0 FAR');
+        set('maxFARLabel',       commFront ? 'Comm. Front: ' + maxFAR + ' FAR' : 'Base: ' + maxFAR + ' FAR');
 
         const chkEl = document.getElementById('bldgFARCheck');
         if (chkEl) {
@@ -2619,11 +2627,10 @@ const SetbackEngine = {
 
         const floorH      = active.floorHeight || 9;
         const activeStories = active.stories || 1;
-        const totalHeight = activeStories === 1 ? floorH : activeStories * (floorH + 1);
+        const totalHeight = activeStories * floorH + Math.max(0, activeStories - 1) * 1;
         set('bldgTotalHeight', totalHeight.toFixed(0));
 
         // Density check: total residential units vs base zone max
-        const sd        = window.__SITE_DEFAULTS__ || {};
         const densPerSF = sd.densityPerSF || 600;
         const baseDMax  = Math.floor(lotArea / densPerSF);
         const resiU     = state.buildings.reduce((s, b) => s + (b.stories || 1) * (b.count || 1), 0);
@@ -2977,7 +2984,8 @@ const ExportEngine = {
         }
 
         // ── Persist: ONE key ──
-        localStorage.setItem('site_state', JSON.stringify(this._payload()));
+        try { localStorage.setItem('site_state', JSON.stringify(this._payload())); }
+        catch(e) { console.warn('Save to localStorage failed:', e.message); }
 
         // ── Push to dev server (no-op outside localhost) ──
         this._pushToServer();
