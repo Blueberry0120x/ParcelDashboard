@@ -2,6 +2,9 @@
   "permissions": {
     "additionalDirectories": [
       "C:\\Users\\napham\\.claude\\skills\\mobilize"
+    ],
+    "allow": [
+      "mcp__claude_ai_GitHub-NP_ClaudeAgent__get_me"
     ]
   }
 }

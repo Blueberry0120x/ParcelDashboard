@@ -1,5 +1,18 @@
 # Engine_InteractiveParcelMap — Project Rules
 
+## -- CONTROLLER AUTHORITY -------------------------------------------------------
+This project is managed by the **NP_ClaudeAgent Controller**
+(`Blueberry0120x/NP_ClaudeAgent`). The Controller may make changes to this repo
+remotely (via GitHub API or direct file edits) for:
+- Standards enforcement (CLAUDE.md baseline sections)
+- Cross-repo sync (global rules, compliance checks)
+- Build/deploy commands
+- UI updates coordinated across the suite
+
+If you see changes not made in this session, check the Controller's commit log.
+Any Claude agent working in this project should respect global rules from the
+Controller. Project-specific rules below take precedence for domain logic only.
+
 ## ── CANONICAL SAVE ARCHITECTURE ──────────────────────────────────────────────
 
 **`ExportEngine._payload()` is the single source of truth for all persisted state.**
