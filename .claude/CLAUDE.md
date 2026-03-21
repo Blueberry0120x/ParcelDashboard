@@ -12,6 +12,12 @@ remotely (via GitHub API or direct file edits) for:
 If you see changes not made in this session, check the Controller's commit log.
 Any Claude agent working in this project should respect global rules from the
 Controller. Project-specific rules below take precedence for domain logic only.
+n### Where to check
+- Controller repo: `Blueberry0120x/NP_ClaudeAgent`
+- Compliance reports: `report/ctrl004_baseline_push_*.md`
+- Inspection reports: `report/inspection_*.md`
+- Global rules: `report/global_rules_2026-03-15.md`
+- Build plan: `report/supervisor_build_plan_*.md`
 
 ### Changes from Controller (2026-03-20)
 - Suite bar button colors: ParcelQuest=amber, SanDag GIS=sky, PermitFinder=rose
