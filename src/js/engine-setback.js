@@ -204,7 +204,9 @@ const SetbackEngine = {
     removeLastBuilding: function() {
         const state = ConfigEngine.state;
         if (state.buildings.length <= 1) return;
-        state.buildings.pop();
+        // Remove the active (selected) building, not just the last one
+        const idx = state.activeBuilding;
+        state.buildings.splice(idx, 1);
         if (state.activeBuilding >= state.buildings.length) {
             state.activeBuilding = state.buildings.length - 1;
         }
@@ -259,16 +261,22 @@ const SetbackEngine = {
             const rawCy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
 
             // Non-overlap first: push preCx past previous building if needed
+            // Skip if free drag mode is active
             let preCx = rawCx;
-            if (i > 0) {
+            if (i > 0 && !state.freeDrag) {
                 const prev       = buildings[i - 1];
                 const prevExt    = this._buildingExtents(prev);
                 const thisExt    = this._buildingExtents(bldg);
                 const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
                 preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
             }
-            // Lot boundary is always the final constraint — clamp wins over non-overlap
-            let { cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg);
+            // Lot boundary is the final constraint — skip in free drag mode
+            let baseCx, cy;
+            if (state.freeDrag) {
+                baseCx = preCx; cy = rawCy;
+            } else {
+                ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
+            }
 
             // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));

@@ -206,11 +206,17 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .btn-lock-position.locked { background: #c53030; }
 .btn-lock-position.locked:hover { background: #9b2c2c; }
 .btn-save-config {
-    flex: 0 0 auto; padding: 4px 12px; border: none; border-radius: 4px;
+    flex: 1 1 0; min-width: 100px; padding: 6px 16px; border: none; border-radius: 4px;
     font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
-    background: #805ad5; transition: 0.2s; white-space: nowrap;
+    background: #475569; transition: 0.2s; white-space: nowrap; text-align: center;
 }
-.btn-save-config:hover { background: #6b46c1; }
+.btn-save-config:hover { background: #334155; }
+#saveConfigBtn  { background: #0f4c81; }
+#saveConfigBtn:hover { background: #0d3f6b; }
+#freeDragBtn    { background: #64748b; }
+#freeDragBtn:hover { background: #475569; }
+#snapEdgeBtn    { background: #64748b; }
+#snapEdgeBtn:hover { background: #475569; }
 .align-angle-input {
     width: 100%; text-align: right;
     border: 1px solid #cbd5e0; border-radius: 3px;
@@ -729,9 +735,15 @@ input:checked + .slider:before { transform: translateX(20px); }
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 class="sub-toggle" onclick="this.closest('.building-config-wrap').classList.toggle('collapsed')" style="margin:0; cursor:pointer;">Building Config</h3>
-                        <div style="display:flex;gap:5px;">
-                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
-                            <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                        <div style="display:flex;flex-direction:column;gap:3px;">
+                            <div style="display:flex;gap:5px;">
+                                <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
+                                <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                            </div>
+                            <div style="display:flex;gap:5px;">
+                                <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
+                                <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
+                            </div>
                         </div>
                     </div>
                     <div class="sub-body">
@@ -1456,7 +1468,8 @@ const MapEngine = {
             let newOffsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
             bldg.offsetY   = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
             // Enforce non-overlap: cannot drag past previous building (min gap = 0)
-            if (idx > 0) {
+            // Skip if free drag mode is active
+            if (idx > 0 && !state.freeDrag) {
                 const prev       = state.buildings[idx - 1];
                 const prevExt    = SetbackEngine._buildingExtents(prev);
                 const thisExt    = SetbackEngine._buildingExtents(bldg);
@@ -1465,6 +1478,12 @@ const MapEngine = {
                 bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
             bldg.offsetX = newOffsetX;
+            // Apply snap-to-edge if enabled
+            if (state.snapEdge) {
+                const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
+                bldg.offsetX = snapped.x;
+                bldg.offsetY = snapped.y;
+            }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -1481,6 +1500,84 @@ const MapEngine = {
             ExportEngine.save();
         });
         return m;
+    },
+
+    // ── Free Drag & Snap ──────────────────────────────────────────────────
+    toggleFreeDrag: function() {
+        const state = ConfigEngine.state;
+        state.freeDrag = !state.freeDrag;
+        const btn = document.getElementById('freeDragBtn');
+        if (state.freeDrag) {
+            btn.style.background = '#d97706'; btn.style.color = '#fff';
+            btn.textContent = 'Free Drag ON';
+        } else {
+            btn.style.background = ''; btn.style.color = '';
+            btn.textContent = 'Free Drag';
+        }
+    },
+
+    toggleSnapEdge: function() {
+        const state = ConfigEngine.state;
+        state.snapEdge = !state.snapEdge;
+        const btn = document.getElementById('snapEdgeBtn');
+        if (state.snapEdge) {
+            btn.style.background = '#e11d48'; btn.style.color = '#fff';
+            btn.textContent = 'Snap ON';
+        } else {
+            btn.style.background = ''; btn.style.color = '';
+            btn.textContent = 'Snap Edge';
+        }
+    },
+
+    _applySnap: function(idx, offsetX, offsetY) {
+        const state = ConfigEngine.state;
+        const bldg = state.buildings[idx];
+        const THRESHOLD = 8; // snap within 8 feet
+        const thisExt = SetbackEngine._buildingExtents(bldg);
+        let snappedX = offsetX, snappedY = offsetY;
+        let bestDistY = THRESHOLD, bestDistX = THRESHOLD;
+
+        // This building's edges
+        const thisTop    = offsetY + thisExt.halfWidth;
+        const thisBot    = offsetY - thisExt.halfWidth;
+        const thisRight  = offsetX + thisExt.halfDepth;
+        const thisLeft   = offsetX - thisExt.halfDepth;
+
+        state.buildings.forEach((other, i) => {
+            if (i === idx) return;
+            const otherExt = SetbackEngine._buildingExtents(other);
+            const oTop   = other.offsetY + otherExt.halfWidth;
+            const oBot   = other.offsetY - otherExt.halfWidth;
+            const oRight = other.offsetX + otherExt.halfDepth;
+            const oLeft  = other.offsetX - otherExt.halfDepth;
+
+            // Y snaps: edge-to-edge (wall touch), edge-to-edge (align), center
+            const ySnaps = [
+                { from: thisBot, to: oBot,   adj: oBot + thisExt.halfWidth },     // bottom-to-bottom
+                { from: thisTop, to: oTop,   adj: oTop - thisExt.halfWidth },     // top-to-top
+                { from: thisBot, to: oTop,   adj: oTop + thisExt.halfWidth },     // my bottom to their top (stack)
+                { from: thisTop, to: oBot,   adj: oBot - thisExt.halfWidth },     // my top to their bottom (stack)
+                { from: offsetY, to: other.offsetY, adj: other.offsetY },          // center align
+            ];
+            for (const s of ySnaps) {
+                const d = Math.abs(s.from - s.to);
+                if (d < bestDistY) { bestDistY = d; snappedY = s.adj; }
+            }
+
+            // X snaps: edge-to-edge, center
+            const xSnaps = [
+                { from: thisLeft,  to: oLeft,  adj: oLeft + thisExt.halfDepth },   // left-to-left
+                { from: thisRight, to: oRight, adj: oRight - thisExt.halfDepth },  // right-to-right
+                { from: thisLeft,  to: oRight, adj: oRight + thisExt.halfDepth },  // my left to their right (abut)
+                { from: thisRight, to: oLeft,  adj: oLeft - thisExt.halfDepth },   // my right to their left (abut)
+                { from: offsetX, to: other.offsetX, adj: other.offsetX },           // center align
+            ];
+            for (const s of xSnaps) {
+                const d = Math.abs(s.from - s.to);
+                if (d < bestDistX) { bestDistX = d; snappedX = s.adj; }
+            }
+        });
+        return { x: parseFloat(snappedX.toFixed(1)), y: parseFloat(snappedY.toFixed(1)) };
     },
 
     // ── Vehicle Placement ─────────────────────────────────────────────────
@@ -2396,7 +2493,9 @@ const SetbackEngine = {
     removeLastBuilding: function() {
         const state = ConfigEngine.state;
         if (state.buildings.length <= 1) return;
-        state.buildings.pop();
+        // Remove the active (selected) building, not just the last one
+        const idx = state.activeBuilding;
+        state.buildings.splice(idx, 1);
         if (state.activeBuilding >= state.buildings.length) {
             state.activeBuilding = state.buildings.length - 1;
         }
@@ -2451,16 +2550,22 @@ const SetbackEngine = {
             const rawCy = (sideR - sideL) / 2 + (bldg.offsetY || 0);
 
             // Non-overlap first: push preCx past previous building if needed
+            // Skip if free drag mode is active
             let preCx = rawCx;
-            if (i > 0) {
+            if (i > 0 && !state.freeDrag) {
                 const prev       = buildings[i - 1];
                 const prevExt    = this._buildingExtents(prev);
                 const thisExt    = this._buildingExtents(bldg);
                 const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
                 preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
             }
-            // Lot boundary is always the final constraint — clamp wins over non-overlap
-            let { cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg);
+            // Lot boundary is the final constraint — skip in free drag mode
+            let baseCx, cy;
+            if (state.freeDrag) {
+                baseCx = preCx; cy = rawCy;
+            } else {
+                ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
+            }
 
             // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));

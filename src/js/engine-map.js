@@ -96,7 +96,8 @@ const MapEngine = {
             let newOffsetX = parseFloat((lx - (front - rear) / 2).toFixed(1));
             bldg.offsetY   = parseFloat((ly - (sideR - sideL) / 2).toFixed(1));
             // Enforce non-overlap: cannot drag past previous building (min gap = 0)
-            if (idx > 0) {
+            // Skip if free drag mode is active
+            if (idx > 0 && !state.freeDrag) {
                 const prev       = state.buildings[idx - 1];
                 const prevExt    = SetbackEngine._buildingExtents(prev);
                 const thisExt    = SetbackEngine._buildingExtents(bldg);
@@ -105,6 +106,12 @@ const MapEngine = {
                 bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
             bldg.offsetX = newOffsetX;
+            // Apply snap-to-edge if enabled
+            if (state.snapEdge) {
+                const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
+                bldg.offsetX = snapped.x;
+                bldg.offsetY = snapped.y;
+            }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -121,6 +128,84 @@ const MapEngine = {
             ExportEngine.save();
         });
         return m;
+    },
+
+    // ── Free Drag & Snap ──────────────────────────────────────────────────
+    toggleFreeDrag: function() {
+        const state = ConfigEngine.state;
+        state.freeDrag = !state.freeDrag;
+        const btn = document.getElementById('freeDragBtn');
+        if (state.freeDrag) {
+            btn.style.background = '#d97706'; btn.style.color = '#fff';
+            btn.textContent = 'Free Drag ON';
+        } else {
+            btn.style.background = ''; btn.style.color = '';
+            btn.textContent = 'Free Drag';
+        }
+    },
+
+    toggleSnapEdge: function() {
+        const state = ConfigEngine.state;
+        state.snapEdge = !state.snapEdge;
+        const btn = document.getElementById('snapEdgeBtn');
+        if (state.snapEdge) {
+            btn.style.background = '#e11d48'; btn.style.color = '#fff';
+            btn.textContent = 'Snap ON';
+        } else {
+            btn.style.background = ''; btn.style.color = '';
+            btn.textContent = 'Snap Edge';
+        }
+    },
+
+    _applySnap: function(idx, offsetX, offsetY) {
+        const state = ConfigEngine.state;
+        const bldg = state.buildings[idx];
+        const THRESHOLD = 8; // snap within 8 feet
+        const thisExt = SetbackEngine._buildingExtents(bldg);
+        let snappedX = offsetX, snappedY = offsetY;
+        let bestDistY = THRESHOLD, bestDistX = THRESHOLD;
+
+        // This building's edges
+        const thisTop    = offsetY + thisExt.halfWidth;
+        const thisBot    = offsetY - thisExt.halfWidth;
+        const thisRight  = offsetX + thisExt.halfDepth;
+        const thisLeft   = offsetX - thisExt.halfDepth;
+
+        state.buildings.forEach((other, i) => {
+            if (i === idx) return;
+            const otherExt = SetbackEngine._buildingExtents(other);
+            const oTop   = other.offsetY + otherExt.halfWidth;
+            const oBot   = other.offsetY - otherExt.halfWidth;
+            const oRight = other.offsetX + otherExt.halfDepth;
+            const oLeft  = other.offsetX - otherExt.halfDepth;
+
+            // Y snaps: edge-to-edge (wall touch), edge-to-edge (align), center
+            const ySnaps = [
+                { from: thisBot, to: oBot,   adj: oBot + thisExt.halfWidth },     // bottom-to-bottom
+                { from: thisTop, to: oTop,   adj: oTop - thisExt.halfWidth },     // top-to-top
+                { from: thisBot, to: oTop,   adj: oTop + thisExt.halfWidth },     // my bottom to their top (stack)
+                { from: thisTop, to: oBot,   adj: oBot - thisExt.halfWidth },     // my top to their bottom (stack)
+                { from: offsetY, to: other.offsetY, adj: other.offsetY },          // center align
+            ];
+            for (const s of ySnaps) {
+                const d = Math.abs(s.from - s.to);
+                if (d < bestDistY) { bestDistY = d; snappedY = s.adj; }
+            }
+
+            // X snaps: edge-to-edge, center
+            const xSnaps = [
+                { from: thisLeft,  to: oLeft,  adj: oLeft + thisExt.halfDepth },   // left-to-left
+                { from: thisRight, to: oRight, adj: oRight - thisExt.halfDepth },  // right-to-right
+                { from: thisLeft,  to: oRight, adj: oRight + thisExt.halfDepth },  // my left to their right (abut)
+                { from: thisRight, to: oLeft,  adj: oLeft - thisExt.halfDepth },   // my right to their left (abut)
+                { from: offsetX, to: other.offsetX, adj: other.offsetX },           // center align
+            ];
+            for (const s of xSnaps) {
+                const d = Math.abs(s.from - s.to);
+                if (d < bestDistX) { bestDistX = d; snappedX = s.adj; }
+            }
+        });
+        return { x: parseFloat(snappedX.toFixed(1)), y: parseFloat(snappedY.toFixed(1)) };
     },
 
     // ── Vehicle Placement ─────────────────────────────────────────────────

@@ -13,6 +13,13 @@ If you see changes not made in this session, check the Controller's commit log.
 Any Claude agent working in this project should respect global rules from the
 Controller. Project-specific rules below take precedence for domain logic only.
 
+### Changes from Controller (2026-03-20)
+- Suite bar button colors: ParcelQuest=amber, SanDag GIS=sky, PermitFinder=rose
+- Per-building independent Y offset confirmed working (offsetX chained, offsetY free)
+- Added "Free Drag" button — toggles X-axis chaining off, allows free placement
+- Added "Snap Edge" button — snaps active building bottom edge to nearest building
+- Fixed "x Del" to delete the selected building tab, not just the last one
+
 ## ── CANONICAL SAVE ARCHITECTURE ──────────────────────────────────────────────
 
 **`ExportEngine._payload()` is the single source of truth for all persisted state.**

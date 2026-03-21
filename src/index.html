@@ -145,9 +145,15 @@
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 class="sub-toggle" onclick="this.closest('.building-config-wrap').classList.toggle('collapsed')" style="margin:0; cursor:pointer;">Building Config</h3>
-                        <div style="display:flex;gap:5px;">
-                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
-                            <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                        <div style="display:flex;flex-direction:column;gap:3px;">
+                            <div style="display:flex;gap:5px;">
+                                <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
+                                <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                            </div>
+                            <div style="display:flex;gap:5px;">
+                                <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
+                                <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
+                            </div>
                         </div>
                     </div>
                     <div class="sub-body">
