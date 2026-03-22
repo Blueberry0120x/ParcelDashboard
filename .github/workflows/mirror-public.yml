@@ -15,90 +15,57 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Sanitize all sensitive data
+      - name: Strip internal dev files only (keep real data)
         run: |
-          echo "=== Phase 1: Remove sensitive dirs/files ==="
-          rm -rf .claude/ .vscode/ .github/ exports/
-          rm -rf ProjectDev-Checklist-Legacy/
+          rm -rf .claude/ .vscode/ .github/
           rm -f  .env .env.*
 
-          echo "=== Phase 2: Replace site-data.json ==="
-          cat > data/site-data.json <<'EOF'
-          {
-            "project": "Parcel Dashboard (Demo)",
-            "site": {
-              "address": "123 Demo Street, San Diego, CA 92101",
-              "apn": "000-000-00-00",
-              "zoning": "DEMO-ZONE",
-              "lotWidth": 50,
-              "lotDepth": 125,
-              "lotSF": 6250,
-              "commercialDepth": 30,
-              "baseFAR": 2.0,
-              "commFAR": 6.5,
-              "maxHeight": 50,
-              "baseHeightLimit": 45,
-              "cchsMaxHeight": 95,
-              "frontSetback": 10,
-              "rearSetback": 10,
-              "sideSetback": 0,
-              "densityPerSF": 600,
-              "nefRatePerSF": 11.78,
-              "affordabilityPct": 0.40,
-              "difPerUnit": 15000,
-              "difWaiverSF": 500,
-              "inspectors": []
-            },
-            "saved": {}
-          }
-          EOF
+      - name: Fix cross-links in docs/ for static hosting
+        run: |
+          # Map links to checklist via dev server route "/checklist" — fix to static path
+          sed -i 's|href="checklist"|href="PreApp_Checklist.html"|g' docs/InteractiveMap.html
+          sed -i 's|href="checklist"|href="PreApp_Checklist.html"|g' docs/InteractiveMap_Mobile.html
 
-          echo "=== Phase 3: Scrub PII from all text files ==="
+          # Checklist links to map via dev server route "/" — fix to static path
+          sed -i "s|href=\"/\"|href=\"InteractiveMap.html\"|g" docs/PreApp_Checklist.html
+          sed -i "s|href=\"/\"|href=\"InteractiveMap_Mobile.html\"|g" docs/PreApp_Checklist_Mobile.html
 
-          # Address replacements
-          find . -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \
-            -o -name '*.md' -o -name '*.ps1' -o -name '*.cmd' -o -name '*.css' \
-            -o -name '*.txt' \) -exec sed -i \
-            -e 's/4333 \&amp; 4335 Euclid Avenue, San Diego, CA 92105/123 Demo Street, San Diego, CA 92101/g' \
-            -e 's/4335 Euclid Avenue, San Diego, CA 92105/123 Demo Street, San Diego, CA 92101/g' \
-            -e 's/4335 Euclid Ave/123 Demo St/g' \
-            -e 's/4335 Euclid/123 Demo/g' \
-            -e 's/471-271-16-00/000-000-00-00/g' \
-            -e 's/471-271-16/000-000-00/g' \
-            -e 's/CUPD-CU-2-4/DEMO-ZONE/g' \
-            {} +
+      - name: Add mobile auto-detection to docs/ HTML
+        run: |
+          # Auto-detect script: redirects mobile users to mobile version and vice versa
+          MOBILE_DETECT='<script>(function(){var m=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||window.innerWidth<=768;'
 
-          # Inspector PII replacements (names + phone numbers)
-          find . -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \
-            -o -name '*.md' -o -name '*.ps1' -o -name '*.cmd' -o -name '*.txt' \) -exec sed -i \
-            -e 's/Wesley Tukker (619-446-5362)/Demo Inspector (000-000-0000)/g' \
-            -e 's/Ricardo Ordonez (619-446-5123)/Demo Inspector (000-000-0000)/g' \
-            -e 's/Richard Gable (858-573-1223)/Demo Inspector (000-000-0000)/g' \
-            -e 's/Christopher Sorchy (619-236-7033)/Demo Inspector (000-000-0000)/g' \
-            -e 's/Alejandro Ruiz (858-627-2034)/Demo Inspector (000-000-0000)/g' \
-            -e 's/Wesley Tukker/Demo Inspector/g' \
-            -e 's/Ricardo Ordonez/Demo Inspector/g' \
-            -e 's/Richard Gable/Demo Inspector/g' \
-            -e 's/Christopher Sorchy/Demo Inspector/g' \
-            -e 's/Alejandro Ruiz/Demo Inspector/g' \
-            -e 's/619-446-5362/000-000-0000/g' \
-            -e 's/619-446-5123/000-000-0000/g' \
-            -e 's/858-573-1223/000-000-0000/g' \
-            -e 's/619-236-7033/000-000-0000/g' \
-            -e 's/858-627-2034/000-000-0000/g' \
-            {} +
+          # Desktop InteractiveMap -> redirect to mobile if on phone
+          SCRIPT="${MOBILE_DETECT}if(m&&!location.pathname.includes(\"_Mobile\"))location.replace(location.pathname.replace(\".html\",\"_Mobile.html\"));})()</script>"
+          sed -i "s|</head>|${SCRIPT}\n</head>|" docs/InteractiveMap.html
+          sed -i "s|</head>|${SCRIPT}\n</head>|" docs/PreApp_Checklist.html
 
-          echo "=== Phase 4: Rename legacy files with address in name ==="
-          find . -name "*4335*" -exec bash -c 'mv "$1" "$(echo "$1" | sed "s/4335_Euclid/Demo_Site/g")"' _ {} \;
+          # Mobile versions -> redirect to desktop if NOT on phone
+          SCRIPT_DESK="${MOBILE_DETECT}if(!m&&location.pathname.includes(\"_Mobile\"))location.replace(location.pathname.replace(\"_Mobile\",\"\"));})()</script>"
+          sed -i "s|</head>|${SCRIPT_DESK}\n</head>|" docs/InteractiveMap_Mobile.html
+          sed -i "s|</head>|${SCRIPT_DESK}\n</head>|" docs/PreApp_Checklist_Mobile.html
 
-          echo "=== Sanitization complete ==="
+      - name: Inject dark mode into docs/ HTML
+        run: |
+          # Dark mode CSS block — overrides CSS custom properties for all pages
+          DARK_CSS='<style>@media(prefers-color-scheme:dark){:root{--primary:#5ba3e6;--secondary:#2d3748;--accent:#ff6b6b;--text:#e2e8f0;--bg:#0f172a;--card:#1e293b;--line:#334155;--cad-bg:#0a0a0a;--cad-text:#e0e0e0;--cad-border:#555;--cad-accent:#e090e0}body{background:#0f172a!important;color:#e2e8f0!important}.suite-bar{background:#1e293b!important}input,select,textarea{background:#1e293b!important;color:#e2e8f0!important;border-color:#334155!important}.header{border-color:#334155!important}h1{color:#5ba3e6!important}.card,.section-card,.adv-card{background:#1e293b!important;border-color:#334155!important;color:#e2e8f0!important}.stat-label,.banner-label{color:#94a3b8!important}a{color:#93c5fd}}</style>'
 
-      - name: Commit sanitized snapshot
+          # Inject before </head> in all 4 main HTML files
+          for f in docs/InteractiveMap.html docs/InteractiveMap_Mobile.html docs/PreApp_Checklist.html docs/PreApp_Checklist_Mobile.html; do
+            sed -i "s|</head>|${DARK_CSS}\n</head>|" "$f"
+          done
+
+          # Also add dark theme-color meta tags
+          for f in docs/InteractiveMap.html docs/InteractiveMap_Mobile.html docs/PreApp_Checklist.html docs/PreApp_Checklist_Mobile.html; do
+            sed -i 's|<meta name="theme-color" content="#0f4c81">|<meta name="theme-color" content="#0f4c81" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">|' "$f"
+          done
+
+      - name: Commit mirror snapshot
         run: |
           git config user.name "mirror-bot"
           git config user.email "mirror-bot@users.noreply.github.com"
           git add -A
-          git commit -m "Mirror from MasterSiteDashboard (sanitized)" --allow-empty
+          git commit -m "Mirror from MasterSiteDashboard (real data, dark mode, links fixed, mobile auto-detect)" --allow-empty
 
       - name: Force-push to ParcelDashboard
         run: |

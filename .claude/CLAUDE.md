@@ -1,6 +1,7 @@
-# Engine_InteractiveParcelMap — Project Rules
+# MasterSiteDashboard
 
-## -- CONTROLLER AUTHORITY -------------------------------------------------------
+## Controller Authority
+
 This project is managed by the **NP_ClaudeAgent Controller**
 (`Blueberry0120x/NP_ClaudeAgent`). The Controller may make changes to this repo
 remotely (via GitHub API or direct file edits) for:
@@ -12,13 +13,26 @@ remotely (via GitHub API or direct file edits) for:
 If you see changes not made in this session, check the Controller's commit log.
 Any Claude agent working in this project should respect global rules from the
 Controller. Project-specific rules below take precedence for domain logic only.
-n### Where to check
+
+### Where to check
 - Controller repo: `Blueberry0120x/NP_ClaudeAgent`
 - Compliance reports: `report/ctrl004_baseline_push_*.md`
 - Inspection reports: `report/inspection_*.md`
 - Global rules: `report/global_rules_2026-03-15.md`
 - Build plan: `report/supervisor_build_plan_*.md`
-### Controller DispatchWhen the user says **"controller dispatch"** or **"check with controller"**,read the latest dispatch notes below and execute the pending tasks.**Completion protocol:**- After completing each task, commit with prefix `[DISPATCH-DONE]`- After ALL tasks done, add a summary to this section under **Completed:**  with the date and what was done- The Controller will verify by scanning for `[DISPATCH-DONE]` commits  and reading the changes. Once verified, the Controller clears the dispatch.**Pending dispatch:** None
+
+### Controller Dispatch
+When the user says **"controller dispatch"** or **"check with controller"**,
+read the latest dispatch notes below and execute the pending tasks.
+
+**Completion protocol:**
+- After completing each task, commit with prefix `[DISPATCH-DONE]`
+- After ALL tasks done, add a summary to this section under **Completed:**
+  with the date and what was done
+- The Controller will verify by scanning for `[DISPATCH-DONE]` commits
+  and reading the changes. Once verified, the Controller clears the dispatch.
+
+**Pending dispatch:** *(none)*
 
 ### Changes from Controller (2026-03-20)
 - Suite bar button colors: ParcelQuest=amber, SanDag GIS=sky, PermitFinder=rose

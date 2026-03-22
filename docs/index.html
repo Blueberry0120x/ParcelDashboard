@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f4c81">
+  <meta name="theme-color" content="#0f4c81" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
   <title>Master Site Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f3d7;</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230c3d6b' width='100' height='100' rx='20'/><text y='.78em' x='.12em' font-size='72'>&#x1f3d7;</text></svg>">
@@ -65,6 +66,18 @@
     }
     .hint b { color: #78350f; }
     footer { margin-top: 22px; text-align: center; font-size: 11px; color: #a0aec0; }
+    @media (prefers-color-scheme: dark) {
+      :root { --primary: #5ba3e6; --bg: #0f172a; --card: #1e293b; --line: #334155; --text: #e2e8f0; }
+      .suite-bar { background: #1e293b !important; }
+      .note { background: #1e293b; border-color: #334155; }
+      .note strong { color: #93c5fd; }
+      .hint { background: #2d2207; border-color: #854d0e; color: #fbbf24; }
+      .hint b { color: #f59e0b; }
+      .card { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+      .btn-mobile { background: #334155; }
+      .btn-mobile:hover, .btn-mobile:active { background: #475569; }
+      footer { color: #64748b; }
+    }
   </style>
 </head>
 <body>
@@ -106,8 +119,9 @@
       </div>
     </div>
     <div class="hint">
-      <b>&#x1f4f1; iPhone:</b> Tap any button above. To add to your Home Screen,
-      tap Share (&#x1f4e4;) then "Add to Home Screen" for a native app experience.
+      <b>&#x1f4f1; Mobile:</b> Tap any button above. To add to your Home Screen:
+      on iOS, tap Share (&#x1f4e4;) &rarr; "Add to Home Screen";
+      on Android, tap Menu (&#x22ee;) &rarr; "Add to Home Screen" or "Install App."
     </div>
     <footer>Master Site Dashboard &bull; 4335 Euclid Ave &bull; CUPD-CU-2-4</footer>
   </div>
