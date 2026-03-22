@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f4c81">
+  <title>Master Site Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f3d7;</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230c3d6b' width='100' height='100' rx='20'/><text y='.78em' x='.12em' font-size='72'>&#x1f3d7;</text></svg>">
+  <style>
+    :root { --primary: #0f4c81; --bg: #f4f7fb; --card: #fff; --line: #dbe3ee; --text: #2d3748; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .suite-bar {
+      display: flex; align-items: center; background: var(--primary);
+      padding: 0 14px; height: 32px; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.3px; color: #fff;
+    }
+    .suite-bar-label { color: #a0c4e8; margin-right: 10px; }
+    .page { max-width: 860px; margin: 0 auto; padding: 24px 16px 20px; }
+    .header { border-bottom: 3px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px; }
+    .header h1 { color: var(--primary); font-size: clamp(20px, 5vw, 26px); font-weight: 700; margin-bottom: 3px; }
+    .header-sub { color: #718096; font-size: 13px; }
+    .note {
+      background: #eef7ff; border-left: 4px solid var(--primary);
+      border-radius: 0 8px 8px 0; padding: 14px 16px; font-size: 13px;
+      line-height: 1.65; margin-bottom: 22px;
+    }
+    .note strong { color: var(--primary); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+    @media (max-width: 580px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      padding: 22px 18px 18px; display: flex; flex-direction: column;
+      box-shadow: 0 2px 8px rgba(15,76,129,0.07);
+    }
+    .card-icon { font-size: 34px; margin-bottom: 10px; line-height: 1; }
+    .card-step {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 10px; margin-bottom: 10px;
+    }
+    .step1 { background: #dbeafe; color: var(--primary); }
+    .step2 { background: #d1fae5; color: #1a7a5e; }
+    .card-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .card-desc { font-size: 13px; color: #4a5568; line-height: 1.65; flex: 1; margin-bottom: 18px; }
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: var(--primary); color: #fff; text-decoration: none; border-radius: 7px;
+      padding: 12px 0; font-size: 14px; font-weight: 600; min-height: 44px;
+      transition: background 0.15s; -webkit-tap-highlight-color: transparent;
+      margin-bottom: 6px;
+    }
+    .btn:hover, .btn:active { background: #0a3a6e; }
+    .btn-mobile { background: #475569; font-size: 12px; padding: 8px 0; min-height: 36px; }
+    .btn-mobile:hover, .btn-mobile:active { background: #334155; }
+    .hint {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 13px 15px; font-size: 12px; color: #92400e; line-height: 1.65;
+    }
+    .hint b { color: #78350f; }
+    footer { margin-top: 22px; text-align: center; font-size: 11px; color: #a0aec0; }
+  </style>
+</head>
+<body>
+  <div class="suite-bar"><span class="suite-bar-label">Master Site Dashboard</span></div>
+  <div class="page">
+    <div class="header">
+      <h1>&#x1f3d7;&#xfe0f; Master Site Dashboard</h1>
+      <div class="header-sub">4335 Euclid Ave &bull; CUPD-CU-2-4 &bull; Launcher</div>
+    </div>
+    <div class="note">
+      <strong>How these tools work together:</strong>
+      Start with the <strong>Interactive Site Map</strong> to place buildings, draw setbacks,
+      and lock in your site configuration. Then open the <strong>Pre-App Checklist</strong>,
+      which reads that configuration to guide you through every zoning, permit, and
+      fire-code requirement before submitting your pre-application.
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">&#x1f5fa;&#xfe0f;</div>
+        <span class="card-step step1">Step 1 &bull; Site Design</span>
+        <div class="card-title">Interactive Site Map</div>
+        <div class="card-desc">
+          Place and configure buildings on a live satellite map. Draw setbacks,
+          measure dimensions, compute FAR &amp; density, and export AutoCAD coordinates.
+        </div>
+        <a class="btn" href="InteractiveMap.html">Open Map &#x2192;</a>
+        <a class="btn btn-mobile" href="InteractiveMap_Mobile.html">&#x1f4f1; iPhone Version</a>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#x2705;</div>
+        <span class="card-step step2">Step 2 &bull; Permit Planning</span>
+        <div class="card-title">Pre-App Checklist</div>
+        <div class="card-desc">
+          Work through every pre-application requirement: permit pathway,
+          FAR compliance, affordability, waste, USPS, fire &amp; acoustic rules.
+        </div>
+        <a class="btn" href="PreApp_Checklist.html">Open Checklist &#x2192;</a>
+        <a class="btn btn-mobile" href="PreApp_Checklist_Mobile.html">&#x1f4f1; iPhone Version</a>
+      </div>
+    </div>
+    <div class="hint">
+      <b>&#x1f4f1; iPhone:</b> Tap any button above. To add to your Home Screen,
+      tap Share (&#x1f4e4;) then "Add to Home Screen" for a native app experience.
+    </div>
+    <footer>Master Site Dashboard &bull; 4335 Euclid Ave &bull; CUPD-CU-2-4</footer>
+  </div>
+</body>
+</html>
