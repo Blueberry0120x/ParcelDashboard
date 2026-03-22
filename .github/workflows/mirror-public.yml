@@ -18,10 +18,11 @@ jobs:
 
       - name: Strip sensitive files and replace with demo data
         run: |
-          # Remove sensitive / internal files
+          # Remove sensitive / internal / CI files
           rm -f  data/site-data.json
           rm -rf .claude/
           rm -rf .vscode/
+          rm -rf .github/
           rm -f  .env .env.*
           rm -rf exports/
 
