@@ -5,6 +5,15 @@
 
 ---
 
+## [2026-03-22 07:30] Repo cleanup
+
+- Deleted `ProjectDev-Checklist-Legacy/` -- zero references, confirmed dead weight
+- Synced root `index.html` to match `docs/index.html` (added dark mode, improved mobile hint)
+- Merged `controller-upnote-03221416.md` detail into rolling `controller-upnote.md`, deleted timestamped file
+- Committed controller's rolling note and `.ping` file
+
+---
+
 ## [2026-03-22 07:22] CLAUDE.md updated with controller-note protocol -- READ THIS
 
 **CONTROLLER ACTION REQUIRED:**
