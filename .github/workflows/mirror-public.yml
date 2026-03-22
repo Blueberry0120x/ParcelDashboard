@@ -1,0 +1,71 @@
+name: Mirror to ParcelDashboard (public)
+
+# Runs on every push to main, or manually via workflow_dispatch
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout MasterSiteDashboard
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Strip sensitive files and replace with demo data
+        run: |
+          # Remove sensitive / internal files
+          rm -f  data/site-data.json
+          rm -rf .claude/
+          rm -rf .vscode/
+          rm -f  .env .env.*
+          rm -rf exports/
+
+          # Write sanitized demo site-data.json
+          mkdir -p data
+          cat > data/site-data.json <<'EOF'
+          {
+            "project": "Parcel Dashboard (Demo)",
+            "site": {
+              "address": "123 Demo Street, San Diego, CA 92101",
+              "apn": "000-000-00-00",
+              "zoning": "EXAMPLE-ZONE",
+              "lotWidth": 50,
+              "lotDepth": 125,
+              "lotSF": 6250,
+              "commercialDepth": 30,
+              "baseFAR": 2.0,
+              "commFAR": 6.5,
+              "maxHeight": 50,
+              "baseHeightLimit": 45,
+              "cchsMaxHeight": 95,
+              "frontSetback": 10,
+              "rearSetback": 10,
+              "sideSetback": 0,
+              "densityPerSF": 600,
+              "nefRatePerSF": 11.78,
+              "affordabilityPct": 0.40,
+              "difPerUnit": 15000,
+              "difWaiverSF": 500,
+              "inspectors": []
+            },
+            "saved": {}
+          }
+          EOF
+
+      - name: Commit sanitized snapshot
+        run: |
+          git config user.name "mirror-bot"
+          git config user.email "mirror-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Mirror from MasterSiteDashboard (sanitized)" --allow-empty
+
+      - name: Force-push to ParcelDashboard
+        run: |
+          git remote add public https://x-access-token:${MIRROR_TOKEN}@github.com/Blueberry0120x/ParcelDashboard.git
+          git push public HEAD:main --force
+        env:
+          MIRROR_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
