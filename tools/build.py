@@ -305,7 +305,123 @@ window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if
     return True
 
 
+def serve(port=7734):
+    """Run a local dev server matching the PS1 serve mode."""
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    import datetime
+
+    output_map = os.path.join(OUTPUT_DIR, "InteractiveMap.html")
+    output_chk = os.path.join(OUTPUT_DIR, "PreApp_Checklist.html")
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_OPTIONS(self):
+            self.send_response(204)
+            self._cors()
+            self.end_headers()
+
+        def do_GET(self):
+            if self.path == "/checklist":
+                self._serve_file(output_chk)
+            else:
+                self._serve_file(output_map)
+
+        def do_POST(self):
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+
+            if self.path == "/save":
+                self._handle_save(body)
+            elif self.path == "/backup-checklist":
+                self._handle_backup(body)
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def _handle_save(self, body):
+            try:
+                incoming = json.loads(body)
+                # Preserve site key
+                if os.path.exists(SITE_DATA):
+                    with open(SITE_DATA, "r", encoding="utf-8") as f:
+                        existing = json.load(f)
+                    if existing.get("site"):
+                        merged = {
+                            "project": incoming.get("project", "Master Site Dashboard"),
+                            "site": existing["site"],
+                            "saved": incoming.get("saved"),
+                            "checklist": incoming.get("checklist"),
+                        }
+                        body = json.dumps(merged, indent=2)
+                with open(SITE_DATA, "w", encoding="utf-8") as f:
+                    f.write(body)
+                print(f"  [SAVE] site-data.json updated - rebuilding...")
+                build_interactive_map()
+                build_checklist()
+                print(f"  [SAVE] Done. Refresh browser to load new defaults.")
+            except Exception as e:
+                print(f"  [SAVE ERROR] {e}")
+            self.send_response(200)
+            self._cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true}')
+
+        def _handle_backup(self, body):
+            backup_dir = os.path.join(BASE, "config", "backup")
+            os.makedirs(backup_dir, exist_ok=True)
+            stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            path = os.path.join(backup_dir, f"preapp-checklist-{stamp}.json")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(body)
+            self.send_response(200)
+            self._cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true}')
+
+        def _serve_file(self, filepath):
+            try:
+                with open(filepath, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self._cors()
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(404)
+                self.end_headers()
+
+        def _cors(self):
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+        def log_message(self, fmt, *args):
+            # Quieter logging
+            pass
+
+    server = HTTPServer(("localhost", port), Handler)
+    print()
+    print("===========================================")
+    print(f"  [SERVE] http://localhost:{port}           Map")
+    print(f"          http://localhost:{port}/checklist  Checklist")
+    print("  Save Config writes directly to site-data.json")
+    print("  Press Ctrl+C to stop")
+    print("===========================================")
+    print()
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n  [SERVE] Server stopped.")
+        server.server_close()
+
+
 if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else "build"
+
     ok = build_interactive_map()
     if not ok:
         sys.exit(1)
@@ -314,3 +430,6 @@ if __name__ == "__main__":
     build_iphone_checklist()
     print("===========================================")
     print()
+
+    if mode == "serve":
+        serve()
