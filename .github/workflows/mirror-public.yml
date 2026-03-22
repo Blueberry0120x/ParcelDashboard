@@ -20,10 +20,15 @@ jobs:
           rm -rf .claude/ .vscode/ .github/
           rm -f  .env .env.*
 
-      - name: Transform docs/ for static hosting (links, mobile detect, dark mode)
+      - name: Transform docs/ for static hosting (links, mobile detect, dark mode toggle)
         run: |
           python3 << 'PYEOF'
           import pathlib
+
+          ALL_FILES = [
+              'docs/InteractiveMap.html', 'docs/InteractiveMap_Mobile.html',
+              'docs/PreApp_Checklist.html', 'docs/PreApp_Checklist_Mobile.html',
+          ]
 
           # --- 1. Fix cross-links (dev server routes -> static file paths) ---
           fixes = {
@@ -56,33 +61,130 @@ jobs:
               html = html.replace('</head>', TO_DESKTOP + '\n</head>', 1)
               p.write_text(html, encoding='utf-8')
 
-          # --- 3. Dark mode (CSS variable overrides via prefers-color-scheme) ---
-          DARK_CSS = (
-              '<style>@media(prefers-color-scheme:dark){'
-              ':root{--primary:#5ba3e6;--secondary:#2d3748;--accent:#ff6b6b;'
-              '--text:#e2e8f0;--bg:#0f172a;--card:#1e293b;--line:#334155;'
-              '--cad-bg:#0a0a0a;--cad-text:#e0e0e0;--cad-border:#555;--cad-accent:#e090e0}'
-              'body{background:#0f172a!important;color:#e2e8f0!important}'
-              '.suite-bar{background:#1e293b!important}'
-              'input,select,textarea{background:#1e293b!important;color:#e2e8f0!important;border-color:#334155!important}'
-              '.header{border-color:#334155!important}'
-              'h1{color:#5ba3e6!important}'
-              '.card,.section-card,.adv-card{background:#1e293b!important;border-color:#334155!important;color:#e2e8f0!important}'
-              '.stat-label,.banner-label{color:#94a3b8!important}'
-              'a{color:#93c5fd}}</style>'
+          # --- 3. Dark mode toggle + comprehensive color overrides ---
+          # Early script: apply theme before paint (prevents flash)
+          THEME_INIT = (
+              '<script>(function(){'
+              'var s=localStorage.getItem("theme");'
+              'if(s==="dark"||(s!=="light"&&window.matchMedia("(prefers-color-scheme:dark)").matches))'
+              'document.documentElement.setAttribute("data-theme","dark");'
+              '})()</script>'
           )
-          THEME_OLD = '<meta name="theme-color" content="#0f4c81">'
-          THEME_NEW = '<meta name="theme-color" content="#0f4c81" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">'
 
-          for fname in ['docs/InteractiveMap.html', 'docs/InteractiveMap_Mobile.html',
-                        'docs/PreApp_Checklist.html', 'docs/PreApp_Checklist_Mobile.html']:
+          # Comprehensive dark mode CSS — covers CSS variables + inline style overrides
+          DARK_CSS = """<style>
+          /* --- Dark mode: toggle via data-theme attribute --- */
+          .theme-toggle{position:fixed;top:38px;right:12px;z-index:9999;width:36px;height:36px;
+            border-radius:50%;border:1.5px solid #dbe3ee;background:#fff;cursor:pointer;
+            font-size:18px;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 2px 6px rgba(0,0,0,.15);transition:.2s}
+          .theme-toggle:hover{border-color:#0f4c81}
+
+          /* CSS variable overrides */
+          html[data-theme="dark"]{
+            --primary:#5ba3e6;--secondary:#2d3748;--accent:#ff6b6b;
+            --text:#e2e8f0;--bg:#0f172a;--card:#1e293b;
+            --line:#334155;--cad-bg:#0a0a0a;--cad-text:#e0e0e0;
+            --cad-border:#555;--cad-accent:#e090e0;color-scheme:dark}
+
+          /* Base element overrides */
+          html[data-theme="dark"] body{background:#0f172a!important;color:#e2e8f0!important}
+          html[data-theme="dark"] .suite-bar{background:#1e293b!important}
+          html[data-theme="dark"] .header{border-color:#334155!important}
+          html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3{color:#93c5fd!important}
+          html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{
+            background:#1e293b!important;color:#e2e8f0!important;border-color:#334155!important}
+          html[data-theme="dark"] .card,html[data-theme="dark"] .section-card,
+          html[data-theme="dark"] .adv-card{background:#1e293b!important;border-color:#334155!important}
+          html[data-theme="dark"] .adv-card-body{color:#cbd5e1!important}
+          html[data-theme="dark"] .stat-label,html[data-theme="dark"] .banner-label{color:#94a3b8!important}
+          html[data-theme="dark"] a:not(.btn):not(.suite-bar-link):not(.suite-bar-extlink){color:#93c5fd}
+          html[data-theme="dark"] .theme-toggle{background:#1e293b;border-color:#475569}
+
+          /* Inline style overrides: dark text colors -> light equivalents */
+          html[data-theme="dark"] [style*="color:#0f4c81"],
+          html[data-theme="dark"] [style*="color: #0f4c81"]{color:#93c5fd!important}
+          html[data-theme="dark"] [style*="color:#334155"],
+          html[data-theme="dark"] [style*="color: #334155"]{color:#cbd5e1!important}
+          html[data-theme="dark"] [style*="color:#475569"],
+          html[data-theme="dark"] [style*="color: #475569"]{color:#94a3b8!important}
+          html[data-theme="dark"] [style*="color:#4a5568"],
+          html[data-theme="dark"] [style*="color: #4a5568"]{color:#94a3b8!important}
+          html[data-theme="dark"] [style*="color:#64748b"],
+          html[data-theme="dark"] [style*="color: #64748b"]{color:#94a3b8!important}
+          html[data-theme="dark"] [style*="color:#2d3748"],
+          html[data-theme="dark"] [style*="color: #2d3748"]{color:#e2e8f0!important}
+          html[data-theme="dark"] [style*="color:#1a202c"],
+          html[data-theme="dark"] [style*="color: #1a202c"]{color:#e2e8f0!important}
+          html[data-theme="dark"] [style*="color:#1e293b"],
+          html[data-theme="dark"] [style*="color: #1e293b"]{color:#e2e8f0!important}
+          html[data-theme="dark"] [style*="color:#111"],
+          html[data-theme="dark"] [style*="color: #111"]{color:#e2e8f0!important}
+          html[data-theme="dark"] [style*="color:#6b21a8"],
+          html[data-theme="dark"] [style*="color: #6b21a8"]{color:#c084fc!important}
+          html[data-theme="dark"] [style*="color:#92400e"],
+          html[data-theme="dark"] [style*="color: #92400e"]{color:#fbbf24!important}
+
+          /* Inline style overrides: light backgrounds -> dark equivalents */
+          html[data-theme="dark"] [style*="background:#fff"],
+          html[data-theme="dark"] [style*="background: #fff"],
+          html[data-theme="dark"] [style*="background:#ffffff"],
+          html[data-theme="dark"] [style*="background: #ffffff"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#f1f5f9"],
+          html[data-theme="dark"] [style*="background: #f1f5f9"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#f0f2f5"],
+          html[data-theme="dark"] [style*="background: #f0f2f5"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#eef2f7"],
+          html[data-theme="dark"] [style*="background: #eef2f7"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#f4f7fb"],
+          html[data-theme="dark"] [style*="background: #f4f7fb"]{background:#0f172a!important}
+          html[data-theme="dark"] [style*="background:#f0f0f0"],
+          html[data-theme="dark"] [style*="background: #f0f0f0"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#e2e8f0"],
+          html[data-theme="dark"] [style*="background: #e2e8f0"]{background:#334155!important}
+          html[data-theme="dark"] [style*="background:#eef7ff"],
+          html[data-theme="dark"] [style*="background: #eef7ff"]{background:#1e293b!important}
+
+          /* Border overrides */
+          html[data-theme="dark"] [style*="border-color:#dbe3ee"],
+          html[data-theme="dark"] [style*="border: 1px solid #dbe3ee"],
+          html[data-theme="dark"] [style*="border:1px solid #dbe3ee"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom:1px solid #e2e8f0"],
+          html[data-theme="dark"] [style*="border-bottom: 1px solid #e2e8f0"]{border-color:#334155!important}
+          </style>"""
+
+          # Toggle button HTML (injected before </body>)
+          TOGGLE_BTN = (
+              '<button class="theme-toggle" onclick="(function(){'
+              'var d=document.documentElement,'
+              "t=d.getAttribute('data-theme')==='dark'?'light':'dark';"
+              "d.setAttribute('data-theme',t);"
+              "localStorage.setItem('theme',t);"
+              "document.querySelector('.theme-toggle').textContent="
+              "t==='dark'?'\\u2600\\ufe0f':'\\ud83c\\udf19';"
+              '})()" aria-label="Toggle dark mode">'
+              "<script>document.write(document.documentElement.getAttribute('data-theme')==='dark'"
+              "?'\\u2600\\ufe0f':'\\ud83c\\udf19')</script></button>"
+          )
+
+          THEME_OLD = '<meta name="theme-color" content="#0f4c81">'
+          THEME_NEW = (
+              '<meta name="theme-color" content="#0f4c81" media="(prefers-color-scheme: light)">'
+              '<meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">'
+          )
+
+          for fname in ALL_FILES:
               p = pathlib.Path(fname)
               html = p.read_text(encoding='utf-8')
-              html = html.replace('</head>', DARK_CSS + '\n</head>', 1)
+              # Inject early theme init + dark CSS before </head>
+              html = html.replace('</head>', THEME_INIT + '\n' + DARK_CSS + '\n</head>', 1)
+              # Inject toggle button before </body>
+              html = html.replace('</body>', TOGGLE_BTN + '\n</body>', 1)
+              # Swap theme-color meta
               html = html.replace(THEME_OLD, THEME_NEW, 1)
               p.write_text(html, encoding='utf-8')
 
-          print("Transformed 4 HTML files: cross-links, mobile detect, dark mode")
+          print("Transformed 4 HTML files: cross-links, mobile detect, dark mode toggle")
           PYEOF
 
       - name: Commit mirror snapshot

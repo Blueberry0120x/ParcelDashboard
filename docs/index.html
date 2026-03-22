@@ -66,19 +66,43 @@
     }
     .hint b { color: #78350f; }
     footer { margin-top: 22px; text-align: center; font-size: 11px; color: #a0aec0; }
-    @media (prefers-color-scheme: dark) {
-      :root { --primary: #5ba3e6; --bg: #0f172a; --card: #1e293b; --line: #334155; --text: #e2e8f0; }
-      .suite-bar { background: #1e293b !important; }
-      .note { background: #1e293b; border-color: #334155; }
-      .note strong { color: #93c5fd; }
-      .hint { background: #2d2207; border-color: #854d0e; color: #fbbf24; }
-      .hint b { color: #f59e0b; }
-      .card { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-      .btn-mobile { background: #334155; }
-      .btn-mobile:hover, .btn-mobile:active { background: #475569; }
-      footer { color: #64748b; }
+    /* Dark mode toggle button */
+    .theme-toggle {
+      position: fixed; top: 38px; right: 12px; z-index: 9999;
+      width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--line);
+      background: var(--card); cursor: pointer; font-size: 18px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: background 0.2s, border-color 0.2s;
     }
+    .theme-toggle:hover { border-color: var(--primary); }
+    /* Dark theme overrides */
+    html[data-theme="dark"] { --primary: #5ba3e6; --bg: #0f172a; --card: #1e293b; --line: #334155; --text: #e2e8f0; }
+    html[data-theme="dark"] .suite-bar { background: #1e293b !important; }
+    html[data-theme="dark"] .suite-bar-label { color: #64748b; }
+    html[data-theme="dark"] .header-sub { color: #94a3b8; }
+    html[data-theme="dark"] .note { background: #1e293b; border-color: #334155; }
+    html[data-theme="dark"] .note strong { color: #93c5fd; }
+    html[data-theme="dark"] .card-desc { color: #94a3b8; }
+    html[data-theme="dark"] .step1 { background: #1e3a5f; color: #93c5fd; }
+    html[data-theme="dark"] .step2 { background: #14332a; color: #6ee7b7; }
+    html[data-theme="dark"] .hint { background: #2d2207; border-color: #854d0e; color: #fbbf24; }
+    html[data-theme="dark"] .hint b { color: #f59e0b; }
+    html[data-theme="dark"] .card { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    html[data-theme="dark"] .btn { background: #2563eb; }
+    html[data-theme="dark"] .btn:hover { background: #1d4ed8; }
+    html[data-theme="dark"] .btn-mobile { background: #334155; }
+    html[data-theme="dark"] .btn-mobile:hover { background: #475569; }
+    html[data-theme="dark"] footer { color: #475569; }
+    html[data-theme="dark"] .theme-toggle { background: #1e293b; border-color: #475569; }
   </style>
+  <script>
+    // Dark mode toggle — persists in localStorage, falls back to system preference
+    (function(){
+      var s=localStorage.getItem('theme');
+      if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))
+        document.documentElement.setAttribute('data-theme','dark');
+    })();
+  </script>
 </head>
 <body>
   <div class="suite-bar"><span class="suite-bar-label">Master Site Dashboard</span></div>
@@ -125,5 +149,8 @@
     </div>
     <footer>Master Site Dashboard &bull; 4335 Euclid Ave &bull; CUPD-CU-2-4</footer>
   </div>
+  <button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';})()" aria-label="Toggle dark mode">
+    <script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script>
+  </button>
 </body>
 </html>
