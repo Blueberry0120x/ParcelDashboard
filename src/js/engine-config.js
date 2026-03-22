@@ -46,6 +46,8 @@ const ConfigEngine = {
         if (sd.lotWidth)        this.data.width           = sd.lotWidth;
         if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
         if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
+        if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
+        if (sd.siteId)          this.data.siteId          = sd.siteId;
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
         var sdBldg = sd.buildings && sd.buildings[0];
@@ -59,6 +61,11 @@ const ConfigEngine = {
         // ── Load saved state: ONE localStorage key > __SITE_DEFAULTS__ > defaults ──
         var stored = null;
         try { stored = JSON.parse(localStorage.getItem('site_state')); } catch(e) {}
+        // Clear localStorage if site changed (multi-site switch)
+        if (stored && this.data.siteId && stored.siteId !== this.data.siteId) {
+            localStorage.removeItem('site_state');
+            stored = null;
+        }
         var saved = stored ? stored.saved : null;
 
         // Migration: check old keys if no unified state exists yet

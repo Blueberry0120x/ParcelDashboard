@@ -54,4 +54,23 @@
             MapEngine._rebuildVehicleTabs();
             MapEngine._seedVehicleInputs(ConfigEngine.state.activeVehicle);
         }
+
+        // Populate site switcher dropdown
+        (function() {
+            var sel = document.getElementById('site-switcher');
+            if (!sel) return;
+            fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
+                sel.innerHTML = '';
+                sites.forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.address;
+                    if (s.active) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            }).catch(function() {
+                // Static file mode or no server -- hide switcher
+                sel.style.display = 'none';
+            });
+        })();
     };

@@ -5,6 +5,35 @@
 
 ---
 
+## [2026-03-22 17:00] Multi-site system + address book dropdown -- IN PROGRESS
+
+**Tagged stable Euclid as `v0.1-euclid-stable` before multi-site work.**
+
+### What changed
+- `data/sites/` folder: per-site JSON configs (`euclid.json`, `wa-burien.json`)
+- `data/site-data.json` remains the "active" file the build reads
+- Server endpoints: `GET /api/sites` (list), `POST /api/sites/{id}/activate` (switch + rebuild)
+- Suite bar dropdown in both Map and Checklist -- fetches site list, switches on change
+- `ConfigEngine` clears localStorage on site switch (prevents stale coords)
+- `engine-map.js` supports `parcelPolygon` from GIS (irregular lot boundaries)
+- POST `/save` writes back to active site file so per-site state persists
+
+### For controller / Git-Projection (CTRL-006)
+- Mirror workflow unaffected -- still mirrors `docs/` which is the active site's build
+- Multi-site dropdown hides gracefully on static file:// (no server = no API = hidden)
+- `data/sites/` should be included in mirror if we want public to have multi-site
+
+### Architecture
+```
+User picks site in dropdown -> POST /api/sites/{id}/activate
+  -> Server copies sites/{id}.json -> site-data.json
+  -> Server rebuilds both HTMLs
+  -> Client clears localStorage, reloads page
+  -> New site loads fresh from __SITE_DEFAULTS__
+```
+
+---
+
 ## [2026-03-22 16:00] Dark mode baked into source files -- COMPLETED
 
 **Dark mode is now in source (`src/`) instead of being injected by the mirror workflow.**

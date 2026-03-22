@@ -695,13 +695,16 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1,"siteId":"euclid"};</script>
 </head>
 <body>
 <div class="page-wrapper">
 
     <!-- SUITE BAR -->
     <div class="suite-bar no-print">
+        <select id="site-switcher" style="background:#1a3a5c;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;max-width:200px;margin-right:8px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+            <option value="">Loading sites...</option>
+        </select>
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
         <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
@@ -1142,6 +1145,8 @@ const ConfigEngine = {
         if (sd.lotWidth)        this.data.width           = sd.lotWidth;
         if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
         if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
+        if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
+        if (sd.siteId)          this.data.siteId          = sd.siteId;
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
         var sdBldg = sd.buildings && sd.buildings[0];
@@ -1155,6 +1160,11 @@ const ConfigEngine = {
         // ── Load saved state: ONE localStorage key > __SITE_DEFAULTS__ > defaults ──
         var stored = null;
         try { stored = JSON.parse(localStorage.getItem('site_state')); } catch(e) {}
+        // Clear localStorage if site changed (multi-site switch)
+        if (stored && this.data.siteId && stored.siteId !== this.data.siteId) {
+            localStorage.removeItem('site_state');
+            stored = null;
+        }
         var saved = stored ? stored.saved : null;
 
         // Migration: check old keys if no unified state exists yet
@@ -1532,6 +1542,12 @@ const MapEngine = {
 
         this.attachEvents();
         this.render();
+
+        // If we have a GIS parcel polygon, fit map to its bounds
+        if (ConfigEngine.data.parcelPolygon && ConfigEngine.data.parcelPolygon.length > 2) {
+            this.map.fitBounds(this.lotPoly.getBounds(), { padding: [40, 40] });
+        }
+
         L.Util.requestAnimFrame(() => this.map.invalidateSize());
     },
 
@@ -2044,10 +2060,7 @@ const MapEngine = {
     },
 
     render: function() {
-        const { width: w, depth: h, commercialDepth: cD } = ConfigEngine.data;
-        const baseLot  = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
-        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
-
+        const { width: w, depth: h, commercialDepth: cD, parcelPolygon } = ConfigEngine.data;
         const rad    = ConfigEngine.state.rotation * Math.PI / 180;
         const cos    = Math.cos(rad), sin = Math.sin(rad);
         const F_LAT  = 364566;
@@ -2059,7 +2072,15 @@ const MapEngine = {
             return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
         };
 
-        this.lotPoly.setLatLngs(baseLot.map(transform));
+        // Lot boundary: use actual GIS parcel polygon if available, else rectangle
+        if (parcelPolygon && parcelPolygon.length > 2) {
+            this.lotPoly.setLatLngs(parcelPolygon);
+        } else {
+            const baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+            this.lotPoly.setLatLngs(baseLot.map(transform));
+        }
+
+        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
         // Always show 30ft commercial zone; style depends on comm checkbox
         this.commPoly.setLatLngs(baseComm.map(transform));
         if (ConfigEngine.state.commFront) {
@@ -3675,6 +3696,25 @@ const ResizeEngine = {
             MapEngine._rebuildVehicleTabs();
             MapEngine._seedVehicleInputs(ConfigEngine.state.activeVehicle);
         }
+
+        // Populate site switcher dropdown
+        (function() {
+            var sel = document.getElementById('site-switcher');
+            if (!sel) return;
+            fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
+                sel.innerHTML = '';
+                sites.forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.address;
+                    if (s.active) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            }).catch(function() {
+                // Static file mode or no server -- hide switcher
+                sel.style.display = 'none';
+            });
+        })();
     };
 
 </script>

@@ -27,6 +27,9 @@
 
     <!-- SUITE BAR -->
     <div class="suite-bar no-print">
+        <select id="site-switcher" style="background:#1a3a5c;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;max-width:200px;margin-right:8px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+            <option value="">Loading sites...</option>
+        </select>
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
         <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>

@@ -239,6 +239,7 @@
 <body>
 <div class="no-print" style="background:#0f4c81;padding:0 18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;flex-shrink:0">
   <div style="display:flex;align-items:center;height:32px;max-width:920px;margin:0 auto">
+    <select id="site-switcher" style="background:#1a3a5c;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;max-width:200px;margin-right:8px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}"><option value="">Sites...</option></select>
     <a href="/" onclick="if(location.protocol==='file:')this.href='InteractiveMap.html'" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
     <span style="color:rgba(255,255,255,.25);padding:0 3px">|</span>
     <span style="color:#fff;border-bottom:2px solid #fff;height:32px;display:flex;align-items:center;padding:0 12px">Checklist</span>
@@ -1216,6 +1217,9 @@ root.render(<App/>);
 <noscript><div style="padding:40px 20px;text-align:center;font-family:system-ui">JavaScript is required. Enable it in Settings &gt; Safari.</div></noscript>
 <script>
 window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if(box){box.style.display='block';box.textContent+='ERROR: '+m+'\nLine: '+l+', Col: '+c+'\n'+(e&&e.stack?e.stack:'')+'\n\n';}};
+</script>
+<script>
+(function(){var sel=document.getElementById('site-switcher');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sel.innerHTML='';sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.style.display='none'})})();
 </script>
 <button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>

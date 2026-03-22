@@ -65,6 +65,12 @@ const MapEngine = {
 
         this.attachEvents();
         this.render();
+
+        // If we have a GIS parcel polygon, fit map to its bounds
+        if (ConfigEngine.data.parcelPolygon && ConfigEngine.data.parcelPolygon.length > 2) {
+            this.map.fitBounds(this.lotPoly.getBounds(), { padding: [40, 40] });
+        }
+
         L.Util.requestAnimFrame(() => this.map.invalidateSize());
     },
 
@@ -577,10 +583,7 @@ const MapEngine = {
     },
 
     render: function() {
-        const { width: w, depth: h, commercialDepth: cD } = ConfigEngine.data;
-        const baseLot  = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
-        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
-
+        const { width: w, depth: h, commercialDepth: cD, parcelPolygon } = ConfigEngine.data;
         const rad    = ConfigEngine.state.rotation * Math.PI / 180;
         const cos    = Math.cos(rad), sin = Math.sin(rad);
         const F_LAT  = 364566;
@@ -592,7 +595,15 @@ const MapEngine = {
             return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
         };
 
-        this.lotPoly.setLatLngs(baseLot.map(transform));
+        // Lot boundary: use actual GIS parcel polygon if available, else rectangle
+        if (parcelPolygon && parcelPolygon.length > 2) {
+            this.lotPoly.setLatLngs(parcelPolygon);
+        } else {
+            const baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+            this.lotPoly.setLatLngs(baseLot.map(transform));
+        }
+
+        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
         // Always show 30ft commercial zone; style depends on comm checkbox
         this.commPoly.setLatLngs(baseComm.map(transform));
         if (ConfigEngine.state.commFront) {

@@ -11,6 +11,7 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(BASE, "src")
 OUTPUT_DIR = os.path.join(BASE, "Output")
 SITE_DATA = os.path.join(BASE, "data", "site-data.json")
+SITES_DIR = os.path.join(BASE, "data", "sites")
 
 ENGINES = [
     "js/engine-config.js",
@@ -22,6 +23,27 @@ ENGINES = [
     "js/engine-resize.js",
     "js/bootstrap.js",
 ]
+
+
+def get_active_site_id():
+    """Determine the active site ID from site-data.json filename match."""
+    if not os.path.exists(SITES_DIR):
+        return None
+    try:
+        with open(SITE_DATA, "r", encoding="utf-8") as f:
+            active = json.load(f)
+        active_apn = active.get("site", {}).get("apn", "")
+        for fname in os.listdir(SITES_DIR):
+            if not fname.endswith(".json"):
+                continue
+            fpath = os.path.join(SITES_DIR, fname)
+            with open(fpath, "r", encoding="utf-8") as f:
+                sd = json.load(f)
+            if sd.get("site", {}).get("apn") == active_apn:
+                return fname.replace(".json", "")
+    except Exception:
+        pass
+    return None
 
 
 def get_inject_script():
@@ -36,6 +58,10 @@ def get_inject_script():
             merged.update(sd["site"])
         if sd.get("saved"):
             merged.update(sd["saved"])
+        # Inject siteId so client can detect site switches
+        site_id = get_active_site_id()
+        if site_id:
+            merged["siteId"] = site_id
         if merged:
             j = json.dumps(merged, separators=(",", ":"))
             return f"<script>window.__SITE_DEFAULTS__ = {j};</script>"
@@ -177,6 +203,8 @@ def serve(port=7734):
         def do_GET(self):
             if self.path == "/checklist":
                 self._serve_file(output_chk)
+            elif self.path == "/api/sites":
+                self._handle_list_sites()
             else:
                 self._serve_file(output_map)
 
@@ -186,6 +214,9 @@ def serve(port=7734):
 
             if self.path == "/save":
                 self._handle_save(body)
+            elif self.path.startswith("/api/sites/") and self.path.endswith("/activate"):
+                site_id = self.path.split("/api/sites/")[1].replace("/activate", "")
+                self._handle_activate_site(site_id)
             elif self.path == "/backup-checklist":
                 self._handle_backup(body)
             else:
@@ -209,6 +240,12 @@ def serve(port=7734):
                         body = json.dumps(merged, indent=2)
                 with open(SITE_DATA, "w", encoding="utf-8") as f:
                     f.write(body)
+                # Write back to active site file so per-site state persists
+                active_id = get_active_site_id()
+                if active_id:
+                    site_file = os.path.join(SITES_DIR, f"{active_id}.json")
+                    import shutil
+                    shutil.copy2(SITE_DATA, site_file)
                 print(f"  [SAVE] site-data.json updated - rebuilding...")
                 build_interactive_map()
                 build_checklist()
@@ -220,6 +257,53 @@ def serve(port=7734):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(b'{"ok":true}')
+
+        def _handle_list_sites(self):
+            """GET /api/sites - list available site configs."""
+            sites = []
+            active_id = get_active_site_id()
+            if os.path.exists(SITES_DIR):
+                for fname in sorted(os.listdir(SITES_DIR)):
+                    if not fname.endswith(".json"):
+                        continue
+                    sid = fname.replace(".json", "")
+                    try:
+                        with open(os.path.join(SITES_DIR, fname), "r", encoding="utf-8") as f:
+                            sd = json.load(f)
+                        site = sd.get("site", {})
+                        sites.append({
+                            "id": sid,
+                            "address": site.get("address", sid),
+                            "apn": site.get("apn", ""),
+                            "active": sid == active_id,
+                        })
+                    except Exception:
+                        continue
+            self.send_response(200)
+            self._cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(sites).encode())
+
+        def _handle_activate_site(self, site_id):
+            """POST /api/sites/{id}/activate - switch active site."""
+            import shutil
+            site_file = os.path.join(SITES_DIR, f"{site_id}.json")
+            if not os.path.exists(site_file):
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b'{"error":"site not found"}')
+                return
+            shutil.copy2(site_file, SITE_DATA)
+            print(f"  [SITE] Activated: {site_id} - rebuilding...")
+            build_interactive_map()
+            build_checklist()
+            print(f"  [SITE] Done. Browser will reload.")
+            self.send_response(200)
+            self._cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True, "siteId": site_id}).encode())
 
         def _handle_backup(self, body):
             backup_dir = os.path.join(BASE, "config", "backup")
