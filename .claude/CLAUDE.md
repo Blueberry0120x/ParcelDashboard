@@ -21,6 +21,13 @@ Controller. Project-specific rules below take precedence for domain logic only.
 - Global rules: `report/global_rules_2026-03-15.md`
 - Build plan: `report/supervisor_build_plan_*.md`
 
+### Controller-Note Protocol (auto-notify)
+- **Upnote file:** `controller-note/MasterSiteDashboard-upnote.md` — single rolling file, newest entries at top
+- **Auto-notify:** `.github/workflows/notify-controller.yml` fires a `repository_dispatch` event (`upnote-updated`) to `NP_ClaudeAgent` whenever `controller-note/**` changes on push to main
+- **On session start:** Always check `controller-note/` for `controller-upnote*.md` files from controller. Compare timestamps — if newer than last upnote entry, read and sync.
+- **On changes:** Always append to the rolling upnote before committing. No separate files per update.
+- **Mirror child:** ParcelDashboard (`Blueberry0120x/ParcelDashboard`) is owned by this agent. Full control authorized by user-designer. No controller approval needed.
+
 ### Controller Dispatch
 When the user says **"controller dispatch"** or **"check with controller"**,
 read the latest dispatch notes below and execute the pending tasks.

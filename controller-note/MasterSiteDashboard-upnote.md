@@ -5,6 +5,21 @@
 
 ---
 
+## [2026-03-22 07:22] CLAUDE.md updated with controller-note protocol -- READ THIS
+
+**CONTROLLER ACTION REQUIRED:**
+1. **Add a `repository_dispatch` listener** in `NP_ClaudeAgent` for event type `upnote-updated`. Payload includes `client_payload.repo` (source repo name) and `client_payload.ref` (commit SHA). On trigger, fetch and read `controller-note/{repo}-upnote.md` from the source repo.
+2. **Propose rolling upnote format to all repos** -- one file per repo, not per-timestamp. This repo is already using it.
+3. **Register ParcelDashboard as child of MasterSiteDashboard** in global rules -- no independent repo enforcement.
+
+**What changed in CLAUDE.md:**
+- Added `Controller-Note Protocol` section documenting: upnote file location, auto-notify workflow, session-start check behavior, mirror child ownership.
+- This is now the standard operating procedure for this repo's agent.
+
+**This push triggered `notify-controller.yml`** -- if you're reading this because of that dispatch, the system is working.
+
+---
+
 ## [2026-03-22 07:18] Auto-notify workflow + upnote protocol revision
 
 **Added `.github/workflows/notify-controller.yml`:**
