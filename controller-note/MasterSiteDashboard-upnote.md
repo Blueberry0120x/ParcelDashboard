@@ -5,6 +5,23 @@
 
 ---
 
+## [2026-03-22 16:00] Dark mode baked into source files -- COMPLETED
+
+**Dark mode is now in source (`src/`) instead of being injected by the mirror workflow.**
+
+Changes:
+- `src/css/style.css`: comprehensive dark mode CSS (toggle button, CSS variable overrides, map element overrides for sidebar, banner, buttons, LISP area)
+- `src/index.html`: added theme-init script (before paint flash prevention) + toggle button
+- `src/checklist.html`: added theme-init script, toggle button, and comprehensive React inline style dark mode overrides (~100 selectors covering all background colors, text colors, borders, shadows, gradients)
+- `mirror-public.yml`: removed all dark mode injection code (~170 lines). Workflow now only fixes cross-links.
+
+**For controller / Git-Projection (CTRL-006):**
+- Mirror workflow is significantly simpler now -- no more dark mode CSS/JS injection
+- Dark mode toggle persists via `localStorage('theme')` -- shared between map and checklist
+- Both private (localhost) and public (GitHub Pages) sites now have identical dark mode behavior
+
+---
+
 ## [2026-03-22 08:10] ARCHITECTURE REQUEST: Private/Public Config Sync -- NEEDS PLANNING
 
 **User-designer requests a bidirectional config sync system between private and public sites.**

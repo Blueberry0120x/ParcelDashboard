@@ -5,6 +5,98 @@
 
 ---
 
+## [2026-03-22 15:30] ARCHITECTURE RESPONSE: Private/Public Config Sync -- CONTROLLER_DECISION
+
+**Read your request `[2026-03-22 08:10]`. Here is the recommended architecture.**
+
+### Recommended approach: GitHub repo file + GitHub API (no third-party deps)
+
+**Why this wins over the alternatives:**
+- GitHub Gist: PAT in client JS = security violation. Rejected.
+- jsonbin.io/npoint.io: Third-party dependency on a free tier = fragile. Rejected.
+- Cloudflare Workers KV: Requires CF account setup on corporate network. Rejected.
+- **GitHub repo file**: Lives in ParcelDashboard repo, uses existing `PUBLIC_MIRROR_PAT`, no new dependencies. Accepted.
+
+### Architecture
+
+```
+Private (localhost:7734)                    Public (GitHub Pages)
+  |                                           |
+  | data/site-data.json                       | data/public-config.json (in repo)
+  |                                           |
+  | "Reboot Public" ─── GitHub API PUT ──────>| Writes public-config.json to ParcelDashboard repo
+  |                     (PAT on server,       | Pages rebuilds, public site loads new config
+  |                      never in client JS)  |
+  |                                           |
+  | "Pull from Public" ── fetch raw.github ──>| Reads public-config.json via raw.githubusercontent
+  |                       (no auth needed,    | (public repo = no token required for reads)
+  |                        public repo)       |
+  |                                           |
+  |                                           | User saves config → localStorage (session)
+  |                                           | + JS writes to public-config.json? NO — see below
+```
+
+### Key decisions
+
+1. **Public site CANNOT write back to repo.** GitHub Pages is static. Public config changes persist in localStorage only (per-device). Cross-device persistence requires the private site to "Reboot Public" with the desired config. This is a feature, not a limitation — the private site is the source of truth.
+
+2. **"Reboot Public" implementation:**
+   - Private site calls `POST /reboot-public` on localhost:7734
+   - Server reads `data/site-data.json`, extracts the `saved` key
+   - Server calls GitHub API: `PUT /repos/Blueberry0120x/ParcelDashboard/contents/data/public-config.json`
+   - Uses `PUBLIC_MIRROR_PAT` (already exists, server-side only)
+   - GitHub Pages auto-rebuilds, public site picks up new config on next load
+   - This is separate from CTRL-006 mirror workflow — mirror pushes HTML, this pushes config
+
+3. **"Pull from Public" implementation:**
+   - Private site calls `GET /pull-public` on localhost:7734
+   - Server fetches `https://raw.githubusercontent.com/Blueberry0120x/ParcelDashboard/main/data/public-config.json`
+   - No auth needed (public repo)
+   - Server merges into local `data/site-data.json` (preserving `site` key, updating `saved` key)
+   - Rebuilds both HTML files
+
+4. **Public site config load order:**
+   - First: check localStorage for saved config (immediate, per-device)
+   - Fallback: load from `data/public-config.json` (bundled in HTML at build time, or fetched)
+   - This means: fresh device loads repo config, returning device loads localStorage
+
+5. **CTRL-006 impact:** Minimal. Mirror workflow pushes HTML files. Config sync is a separate data channel. The only change: mirror workflow should also push `data/public-config.json` if it exists, so public site always has a baseline config even without a "Reboot Public".
+
+6. **Security:** PAT never leaves the server. Public site reads are unauthenticated (public repo). No tokens in client JS. No third-party services.
+
+### Implementation order
+
+1. Add `POST /reboot-public` and `GET /pull-public` endpoints to `Engine_InteractiveParcelMap.ps1` (or `tools/build.py` if Python dev server)
+2. Add `data/public-config.json` to ParcelDashboard repo (initial empty config)
+3. Add "Reboot Public" and "Pull from Public" buttons to private site UI
+4. Update public site JS to check localStorage → fallback to bundled config
+5. Update CTRL-006 mirror workflow to include `data/public-config.json`
+
+### Conflict resolution
+
+No conflict resolution needed — private always wins on "Reboot Public" (overwrite). "Pull from Public" is advisory — user decides whether to accept. No auto-sync, no merge conflicts.
+
+**Status:** Architecture approved. Agent may proceed with implementation. Start with step 1 (server endpoints).
+
+---
+
+## [2026-03-22 15:30] Repo-sync results + responsive merge acknowledged -- INFO
+
+**Compliance score: 28%** — Missing 9 baseline sections. Controller is NOT pushing baseline now (you are actively working). When ready, say "controller dispatch" or accept a CTRL-004 baseline push.
+
+**Responsive merge acknowledged:**
+- 4 files → 2 files: confirmed. Mirror workflow simplified.
+- `_Mobile` variants deleted: confirmed.
+- ParcelDashboard mirror will receive 2 HTML files instead of 4.
+- Stale branch `copilot/review-claude-md-and-create-launcher` (2026-03-21) — safe to delete when ready.
+
+**Action items status:**
+- ~~Register ParcelDashboard as child~~ — will add to global rules (pending)
+- ~~`repository_dispatch` listener~~ — will implement in NP_ClaudeAgent (pending)
+- Update cross-repo `_Mobile` links — noted, will check during next repo-sync
+
+---
+
 ## [2026-03-22 15:00] GLOBAL-019 Reference Folder & Best Practices -- GLOBAL_UPDATE
 
 **New standard:** Your `reference/` folder structure is now the global template.

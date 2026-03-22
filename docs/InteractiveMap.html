@@ -627,8 +627,74 @@ input:checked + .slider:before { transform: translateX(20px); }
     #map-fab { bottom: calc(16px + env(safe-area-inset-bottom)) !important; }
 }
 
+/* ==========================================
+   DARK MODE
+   ========================================== */
+
+/* Toggle button */
+.theme-toggle {
+    position: fixed; top: 38px; right: 12px; z-index: 9999;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1.5px solid var(--line); background: var(--card);
+    cursor: pointer; font-size: 18px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: background 0.2s, border-color 0.2s;
+}
+.theme-toggle:hover { border-color: var(--primary); }
+
+/* CSS variable overrides */
+html[data-theme="dark"] {
+    --primary: #93c5fd; --secondary: #2d3748; --accent: #ff6b6b;
+    --text: #e2e8f0; --bg: #0f172a; --card: #1e293b;
+    --line: #334155; --cad-bg: #0a0a0a; --cad-text: #e0e0e0;
+    --cad-border: #555; --cad-accent: #e090e0;
+    color-scheme: dark;
+}
+
+/* Base overrides */
+html[data-theme="dark"] body { background: #0f172a !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] .suite-bar { background: #1e293b !important; }
+html[data-theme="dark"] .header { border-color: #334155 !important; }
+html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3 { color: #93c5fd !important; }
+html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea {
+    background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important;
+}
+html[data-theme="dark"] .card, html[data-theme="dark"] .section-card,
+html[data-theme="dark"] .adv-card { background: #1e293b !important; border-color: #334155 !important; }
+html[data-theme="dark"] .adv-card-body { color: #cbd5e1 !important; }
+html[data-theme="dark"] a:not(.btn):not(.suite-bar-link):not(.suite-bar-extlink) { color: #93c5fd; }
+html[data-theme="dark"] .theme-toggle { background: #1e293b; border-color: #475569; }
+
+/* Map: banner/address labels */
+html[data-theme="dark"] .banner-label { color: #94a3b8 !important; opacity: 1 !important; }
+html[data-theme="dark"] .banner-value { color: #fff !important; }
+html[data-theme="dark"] .property-banner { background: #0c2d4a !important; }
+html[data-theme="dark"] .header-address { background: #0c2d4a !important; }
+html[data-theme="dark"] .stat-label { color: #94a3b8 !important; }
+html[data-theme="dark"] .sidebar { background: #0f172a !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] .sidebar label, html[data-theme="dark"] .sidebar p,
+html[data-theme="dark"] .sidebar span { color: #cbd5e1 !important; }
+html[data-theme="dark"] .sidebar h2, html[data-theme="dark"] .sidebar h3 { color: #93c5fd !important; }
+html[data-theme="dark"] .sidebar-box { background: #1e293b !important; border-color: #334155 !important; }
+html[data-theme="dark"] .info-bottom { background: #0f172a !important; }
+html[data-theme="dark"] .info-col-left, html[data-theme="dark"] .info-col-right { background: #1e293b !important; }
+
+/* Buttons in dark mode — better contrast */
+html[data-theme="dark"] .btn-save-config { background: #334155 !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] .btn-save-config:hover { background: #475569 !important; }
+html[data-theme="dark"] .btn-accept { background: #1e40af !important; }
+html[data-theme="dark"] .btn-save-boundary { background: #15803d !important; }
+html[data-theme="dark"] .btn-lock-position { background: #b91c1c !important; }
+html[data-theme="dark"] #map-fab { background: #1e293b !important; border-color: #334155 !important; }
+html[data-theme="dark"] #map-fab button { background: #334155 !important; color: #e2e8f0 !important; }
+
+/* LISP code area */
+html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e0e0e0 !important; border-color: #333 !important; }
+
 
 </style>
+    <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1};</script>
 </head>
 <body>
@@ -3612,5 +3678,6 @@ const ResizeEngine = {
     };
 
 </script>
+<button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>
 </html>
