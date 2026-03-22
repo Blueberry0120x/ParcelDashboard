@@ -20,45 +20,70 @@ jobs:
           rm -rf .claude/ .vscode/ .github/
           rm -f  .env .env.*
 
-      - name: Fix cross-links in docs/ for static hosting
+      - name: Transform docs/ for static hosting (links, mobile detect, dark mode)
         run: |
-          # Map links to checklist via dev server route "/checklist" — fix to static path
-          sed -i 's|href="checklist"|href="PreApp_Checklist.html"|g' docs/InteractiveMap.html
-          sed -i 's|href="checklist"|href="PreApp_Checklist.html"|g' docs/InteractiveMap_Mobile.html
+          python3 << 'PYEOF'
+          import pathlib
 
-          # Checklist links to map via dev server route "/" — fix to static path
-          sed -i "s|href=\"/\"|href=\"InteractiveMap.html\"|g" docs/PreApp_Checklist.html
-          sed -i "s|href=\"/\"|href=\"InteractiveMap_Mobile.html\"|g" docs/PreApp_Checklist_Mobile.html
+          # --- 1. Fix cross-links (dev server routes -> static file paths) ---
+          fixes = {
+              'docs/InteractiveMap.html':        [('href="checklist"', 'href="PreApp_Checklist.html"')],
+              'docs/InteractiveMap_Mobile.html':  [('href="checklist"', 'href="PreApp_Checklist.html"')],
+              'docs/PreApp_Checklist.html':       [('href="/"', 'href="InteractiveMap.html"')],
+              'docs/PreApp_Checklist_Mobile.html':[('href="/"', 'href="InteractiveMap_Mobile.html"')],
+          }
+          for fname, replacements in fixes.items():
+              p = pathlib.Path(fname)
+              html = p.read_text(encoding='utf-8')
+              for old, new in replacements:
+                  html = html.replace(old, new)
+              p.write_text(html, encoding='utf-8')
 
-      - name: Add mobile auto-detection to docs/ HTML
-        run: |
-          # Auto-detect script: redirects mobile users to mobile version and vice versa
-          MOBILE_DETECT='<script>(function(){var m=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||window.innerWidth<=768;'
+          # --- 2. Mobile auto-detection (redirect between desktop/mobile) ---
+          DETECT = '<script>(function(){var m=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||window.innerWidth<=768;'
+          TO_MOBILE = DETECT + 'if(m&&!location.pathname.includes("_Mobile"))location.replace(location.pathname.replace(".html","_Mobile.html"));})()</script>'
+          TO_DESKTOP = DETECT + 'if(!m&&location.pathname.includes("_Mobile"))location.replace(location.pathname.replace("_Mobile",""));})()</script>'
 
-          # Desktop InteractiveMap -> redirect to mobile if on phone
-          SCRIPT="${MOBILE_DETECT}if(m&&!location.pathname.includes(\"_Mobile\"))location.replace(location.pathname.replace(\".html\",\"_Mobile.html\"));})()</script>"
-          sed -i "s|</head>|${SCRIPT}\n</head>|" docs/InteractiveMap.html
-          sed -i "s|</head>|${SCRIPT}\n</head>|" docs/PreApp_Checklist.html
+          for fname in ['docs/InteractiveMap.html', 'docs/PreApp_Checklist.html']:
+              p = pathlib.Path(fname)
+              html = p.read_text(encoding='utf-8')
+              html = html.replace('</head>', TO_MOBILE + '\n</head>', 1)
+              p.write_text(html, encoding='utf-8')
 
-          # Mobile versions -> redirect to desktop if NOT on phone
-          SCRIPT_DESK="${MOBILE_DETECT}if(!m&&location.pathname.includes(\"_Mobile\"))location.replace(location.pathname.replace(\"_Mobile\",\"\"));})()</script>"
-          sed -i "s|</head>|${SCRIPT_DESK}\n</head>|" docs/InteractiveMap_Mobile.html
-          sed -i "s|</head>|${SCRIPT_DESK}\n</head>|" docs/PreApp_Checklist_Mobile.html
+          for fname in ['docs/InteractiveMap_Mobile.html', 'docs/PreApp_Checklist_Mobile.html']:
+              p = pathlib.Path(fname)
+              html = p.read_text(encoding='utf-8')
+              html = html.replace('</head>', TO_DESKTOP + '\n</head>', 1)
+              p.write_text(html, encoding='utf-8')
 
-      - name: Inject dark mode into docs/ HTML
-        run: |
-          # Dark mode CSS block — overrides CSS custom properties for all pages
-          DARK_CSS='<style>@media(prefers-color-scheme:dark){:root{--primary:#5ba3e6;--secondary:#2d3748;--accent:#ff6b6b;--text:#e2e8f0;--bg:#0f172a;--card:#1e293b;--line:#334155;--cad-bg:#0a0a0a;--cad-text:#e0e0e0;--cad-border:#555;--cad-accent:#e090e0}body{background:#0f172a!important;color:#e2e8f0!important}.suite-bar{background:#1e293b!important}input,select,textarea{background:#1e293b!important;color:#e2e8f0!important;border-color:#334155!important}.header{border-color:#334155!important}h1{color:#5ba3e6!important}.card,.section-card,.adv-card{background:#1e293b!important;border-color:#334155!important;color:#e2e8f0!important}.stat-label,.banner-label{color:#94a3b8!important}a{color:#93c5fd}}</style>'
+          # --- 3. Dark mode (CSS variable overrides via prefers-color-scheme) ---
+          DARK_CSS = (
+              '<style>@media(prefers-color-scheme:dark){'
+              ':root{--primary:#5ba3e6;--secondary:#2d3748;--accent:#ff6b6b;'
+              '--text:#e2e8f0;--bg:#0f172a;--card:#1e293b;--line:#334155;'
+              '--cad-bg:#0a0a0a;--cad-text:#e0e0e0;--cad-border:#555;--cad-accent:#e090e0}'
+              'body{background:#0f172a!important;color:#e2e8f0!important}'
+              '.suite-bar{background:#1e293b!important}'
+              'input,select,textarea{background:#1e293b!important;color:#e2e8f0!important;border-color:#334155!important}'
+              '.header{border-color:#334155!important}'
+              'h1{color:#5ba3e6!important}'
+              '.card,.section-card,.adv-card{background:#1e293b!important;border-color:#334155!important;color:#e2e8f0!important}'
+              '.stat-label,.banner-label{color:#94a3b8!important}'
+              'a{color:#93c5fd}}</style>'
+          )
+          THEME_OLD = '<meta name="theme-color" content="#0f4c81">'
+          THEME_NEW = '<meta name="theme-color" content="#0f4c81" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">'
 
-          # Inject before </head> in all 4 main HTML files
-          for f in docs/InteractiveMap.html docs/InteractiveMap_Mobile.html docs/PreApp_Checklist.html docs/PreApp_Checklist_Mobile.html; do
-            sed -i "s|</head>|${DARK_CSS}\n</head>|" "$f"
-          done
+          for fname in ['docs/InteractiveMap.html', 'docs/InteractiveMap_Mobile.html',
+                        'docs/PreApp_Checklist.html', 'docs/PreApp_Checklist_Mobile.html']:
+              p = pathlib.Path(fname)
+              html = p.read_text(encoding='utf-8')
+              html = html.replace('</head>', DARK_CSS + '\n</head>', 1)
+              html = html.replace(THEME_OLD, THEME_NEW, 1)
+              p.write_text(html, encoding='utf-8')
 
-          # Also add dark theme-color meta tags
-          for f in docs/InteractiveMap.html docs/InteractiveMap_Mobile.html docs/PreApp_Checklist.html docs/PreApp_Checklist_Mobile.html; do
-            sed -i 's|<meta name="theme-color" content="#0f4c81">|<meta name="theme-color" content="#0f4c81" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">|' "$f"
-          done
+          print("Transformed 4 HTML files: cross-links, mobile detect, dark mode")
+          PYEOF
 
       - name: Commit mirror snapshot
         run: |
