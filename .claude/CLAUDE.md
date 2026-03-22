@@ -67,7 +67,7 @@ own field list. They all read from `_payload()`.
 lat, lng, rotation, locked, setbacks,
 buildings, activeBuilding, commFront, showBldgDims,
 hiddenDimKeys, chainWOffset, chainDOffset, mapOpacity,
-setbacksApplied, vehicles, activeVehicle
+setbacksApplied, freeDrag, snapEdge, vehicles, activeVehicle
 ```
 
 ### Save trigger rules

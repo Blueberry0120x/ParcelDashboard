@@ -106,6 +106,17 @@ const MapEngine = {
                 bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
             bldg.offsetX = newOffsetX;
+            // Always clamp to lot boundary — buildings cannot leave the lot
+            if (typeof SetbackEngine._clampToLot === 'function') {
+                const { front: f, rear: r, sideL: sl, sideR: sr } = state.setbacks;
+                const clamped = SetbackEngine._clampToLot(
+                    bldg.offsetX + (f - r) / 2,
+                    bldg.offsetY + (sr - sl) / 2,
+                    bldg
+                );
+                bldg.offsetX = parseFloat((clamped.cx - (f - r) / 2).toFixed(1));
+                bldg.offsetY = parseFloat((clamped.cy - (sr - sl) / 2).toFixed(1));
+            }
             // Apply snap-to-edge if enabled
             if (state.snapEdge) {
                 const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
@@ -171,6 +182,41 @@ const MapEngine = {
         const thisRight  = offsetX + thisExt.halfDepth;
         const thisLeft   = offsetX - thisExt.halfDepth;
 
+        // Snap to lot boundary edges
+        const { front, rear, sideL, sideR } = state.setbacks;
+        const lotW = ConfigEngine.data.width;
+        const lotD = ConfigEngine.data.depth;
+        const lotHalfD = lotD / 2;
+        const lotHalfW = lotW / 2;
+        // Lot edges in offset coordinates (relative to lot center)
+        const lotFront  = lotHalfD - front;    // front edge (max X)
+        const lotRear   = -lotHalfD + rear;    // rear edge (min X)
+        const lotLeft   = lotHalfW - sideL;    // left edge (max Y)
+        const lotRight  = -lotHalfW + sideR;   // right edge (min Y)
+
+        // Snap building edges to lot boundary edges
+        const lotYSnaps = [
+            { from: thisTop, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
+            { from: thisBot, to: lotRight, adj: lotRight + thisExt.halfWidth },
+            { from: thisTop, to: lotRight, adj: lotRight + thisExt.halfWidth },
+            { from: thisBot, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
+        ];
+        for (const s of lotYSnaps) {
+            const d = Math.abs(s.from - s.to);
+            if (d < bestDistY) { bestDistY = d; snappedY = s.adj; }
+        }
+        const lotXSnaps = [
+            { from: thisRight, to: lotFront, adj: lotFront - thisExt.halfDepth },
+            { from: thisLeft,  to: lotRear,  adj: lotRear + thisExt.halfDepth },
+            { from: thisLeft,  to: lotFront, adj: lotFront - thisExt.halfDepth },
+            { from: thisRight, to: lotRear,  adj: lotRear + thisExt.halfDepth },
+        ];
+        for (const s of lotXSnaps) {
+            const d = Math.abs(s.from - s.to);
+            if (d < bestDistX) { bestDistX = d; snappedX = s.adj; }
+        }
+
+        // Snap to other buildings
         state.buildings.forEach((other, i) => {
             if (i === idx) return;
             const otherExt = SetbackEngine._buildingExtents(other);

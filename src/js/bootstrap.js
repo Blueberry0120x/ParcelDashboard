@@ -10,6 +10,21 @@
         ElevationTool.init();
         ResizeEngine.init();
 
+        // Sync toggle button states from saved config
+        (function() {
+            var s = ConfigEngine.state;
+            var fdBtn = document.getElementById('freeDragBtn');
+            var seBtn = document.getElementById('snapEdgeBtn');
+            if (fdBtn) {
+                if (s.freeDrag) { fdBtn.style.background = '#d97706'; fdBtn.style.color = '#fff'; fdBtn.textContent = 'Free Drag ON'; }
+                else            { fdBtn.style.background = '';        fdBtn.style.color = '';     fdBtn.textContent = 'Free Drag'; }
+            }
+            if (seBtn) {
+                if (s.snapEdge) { seBtn.style.background = '#e11d48'; seBtn.style.color = '#fff'; seBtn.textContent = 'Snap ON'; }
+                else            { seBtn.style.background = '';        seBtn.style.color = '';     seBtn.textContent = 'Snap Edge'; }
+            }
+        })();
+
         // Vehicle input wiring
         var vehType   = document.getElementById('vehType');
         var vehOrient = document.getElementById('vehOrient');

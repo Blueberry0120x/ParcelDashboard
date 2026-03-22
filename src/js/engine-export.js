@@ -134,6 +134,8 @@ const ExportEngine = {
                 chainDOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainDOffset : 0,
                 mapOpacity:     s.mapOpacity,
                 setbacksApplied: s.setbacksApplied,
+                freeDrag:       s.freeDrag ?? true,
+                snapEdge:       s.snapEdge ?? true,
                 vehicles:       s.vehicles || [],
                 activeVehicle:  s.activeVehicle ?? -1
             }

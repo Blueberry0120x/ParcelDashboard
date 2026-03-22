@@ -5,6 +5,22 @@
 
 ---
 
+## [2026-03-22 08:00] Free drag + snap edge defaults, toggle persistence, boundary enforcement
+
+**Changes:**
+- Free Drag and Snap Edge now default to ON (was OFF)
+- `freeDrag` and `snapEdge` added to `_payload()` -- toggle states now persist across sessions
+- Bootstrap syncs button visual state (text + color) from saved config on load
+- Lot boundary clamping is ALWAYS enforced -- buildings cannot leave the lot even in free drag mode
+- Snap Edge now snaps to lot boundary edges (setback lines) in addition to other buildings
+- CLAUDE.md payload field list updated
+
+**For controller / Git-Projection (CTRL-006):**
+- `_payload()` has 2 new fields: `freeDrag`, `snapEdge`
+- `site-data.json.saved` schema expanded accordingly
+
+---
+
 ## [2026-03-22 07:45] Responsive merge -- COMPLETED (was PENDING)
 
 **Mobile and desktop versions merged into single responsive files.**

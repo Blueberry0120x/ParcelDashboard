@@ -26,6 +26,8 @@ const ConfigEngine = {
         isSnapping: false, locked: false, unitMode: 'SF',
         mapOpacity: 70,
         setbacksApplied: false,
+        freeDrag:       true,
+        snapEdge:       true,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
         buildings:      null,
         activeBuilding: 0,
@@ -77,6 +79,8 @@ const ConfigEngine = {
             this.state.chainDOffset   = saved.chainDOffset   ?? 0;
             this.state.mapOpacity     = saved.mapOpacity     ?? 70;
             this.state.setbacksApplied = saved.setbacksApplied ?? false;
+            this.state.freeDrag       = saved.freeDrag       ?? true;
+            this.state.snapEdge       = saved.snapEdge       ?? true;
             if (saved.buildings && saved.buildings.length) {
                 this.state.buildings      = saved.buildings;
                 this.state.activeBuilding = saved.activeBuilding ?? 0;

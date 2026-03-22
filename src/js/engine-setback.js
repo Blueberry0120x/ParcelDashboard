@@ -270,13 +270,9 @@ const SetbackEngine = {
                 const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
                 preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
             }
-            // Lot boundary is the final constraint — skip in free drag mode
+            // Lot boundary is always enforced — buildings cannot leave the lot
             let baseCx, cy;
-            if (state.freeDrag) {
-                baseCx = preCx; cy = rawCy;
-            } else {
-                ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
-            }
+            ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
 
             // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));

@@ -1056,6 +1056,8 @@ const ConfigEngine = {
         isSnapping: false, locked: false, unitMode: 'SF',
         mapOpacity: 70,
         setbacksApplied: false,
+        freeDrag:       true,
+        snapEdge:       true,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
         buildings:      null,
         activeBuilding: 0,
@@ -1107,6 +1109,8 @@ const ConfigEngine = {
             this.state.chainDOffset   = saved.chainDOffset   ?? 0;
             this.state.mapOpacity     = saved.mapOpacity     ?? 70;
             this.state.setbacksApplied = saved.setbacksApplied ?? false;
+            this.state.freeDrag       = saved.freeDrag       ?? true;
+            this.state.snapEdge       = saved.snapEdge       ?? true;
             if (saved.buildings && saved.buildings.length) {
                 this.state.buildings      = saved.buildings;
                 this.state.activeBuilding = saved.activeBuilding ?? 0;
@@ -1503,6 +1507,17 @@ const MapEngine = {
                 bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
             bldg.offsetX = newOffsetX;
+            // Always clamp to lot boundary — buildings cannot leave the lot
+            if (typeof SetbackEngine._clampToLot === 'function') {
+                const { front: f, rear: r, sideL: sl, sideR: sr } = state.setbacks;
+                const clamped = SetbackEngine._clampToLot(
+                    bldg.offsetX + (f - r) / 2,
+                    bldg.offsetY + (sr - sl) / 2,
+                    bldg
+                );
+                bldg.offsetX = parseFloat((clamped.cx - (f - r) / 2).toFixed(1));
+                bldg.offsetY = parseFloat((clamped.cy - (sr - sl) / 2).toFixed(1));
+            }
             // Apply snap-to-edge if enabled
             if (state.snapEdge) {
                 const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
@@ -1568,6 +1583,41 @@ const MapEngine = {
         const thisRight  = offsetX + thisExt.halfDepth;
         const thisLeft   = offsetX - thisExt.halfDepth;
 
+        // Snap to lot boundary edges
+        const { front, rear, sideL, sideR } = state.setbacks;
+        const lotW = ConfigEngine.data.width;
+        const lotD = ConfigEngine.data.depth;
+        const lotHalfD = lotD / 2;
+        const lotHalfW = lotW / 2;
+        // Lot edges in offset coordinates (relative to lot center)
+        const lotFront  = lotHalfD - front;    // front edge (max X)
+        const lotRear   = -lotHalfD + rear;    // rear edge (min X)
+        const lotLeft   = lotHalfW - sideL;    // left edge (max Y)
+        const lotRight  = -lotHalfW + sideR;   // right edge (min Y)
+
+        // Snap building edges to lot boundary edges
+        const lotYSnaps = [
+            { from: thisTop, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
+            { from: thisBot, to: lotRight, adj: lotRight + thisExt.halfWidth },
+            { from: thisTop, to: lotRight, adj: lotRight + thisExt.halfWidth },
+            { from: thisBot, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
+        ];
+        for (const s of lotYSnaps) {
+            const d = Math.abs(s.from - s.to);
+            if (d < bestDistY) { bestDistY = d; snappedY = s.adj; }
+        }
+        const lotXSnaps = [
+            { from: thisRight, to: lotFront, adj: lotFront - thisExt.halfDepth },
+            { from: thisLeft,  to: lotRear,  adj: lotRear + thisExt.halfDepth },
+            { from: thisLeft,  to: lotFront, adj: lotFront - thisExt.halfDepth },
+            { from: thisRight, to: lotRear,  adj: lotRear + thisExt.halfDepth },
+        ];
+        for (const s of lotXSnaps) {
+            const d = Math.abs(s.from - s.to);
+            if (d < bestDistX) { bestDistX = d; snappedX = s.adj; }
+        }
+
+        // Snap to other buildings
         state.buildings.forEach((other, i) => {
             if (i === idx) return;
             const otherExt = SetbackEngine._buildingExtents(other);
@@ -2584,13 +2634,9 @@ const SetbackEngine = {
                 const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
                 preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
             }
-            // Lot boundary is the final constraint — skip in free drag mode
+            // Lot boundary is always enforced — buildings cannot leave the lot
             let baseCx, cy;
-            if (state.freeDrag) {
-                baseCx = preCx; cy = rawCy;
-            } else {
-                ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
-            }
+            ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
 
             // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
@@ -3397,6 +3443,8 @@ const ExportEngine = {
                 chainDOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainDOffset : 0,
                 mapOpacity:     s.mapOpacity,
                 setbacksApplied: s.setbacksApplied,
+                freeDrag:       s.freeDrag ?? true,
+                snapEdge:       s.snapEdge ?? true,
                 vehicles:       s.vehicles || [],
                 activeVehicle:  s.activeVehicle ?? -1
             }
@@ -3516,6 +3564,21 @@ const ResizeEngine = {
         SetbackEngine.initBuildingConfig();
         ElevationTool.init();
         ResizeEngine.init();
+
+        // Sync toggle button states from saved config
+        (function() {
+            var s = ConfigEngine.state;
+            var fdBtn = document.getElementById('freeDragBtn');
+            var seBtn = document.getElementById('snapEdgeBtn');
+            if (fdBtn) {
+                if (s.freeDrag) { fdBtn.style.background = '#d97706'; fdBtn.style.color = '#fff'; fdBtn.textContent = 'Free Drag ON'; }
+                else            { fdBtn.style.background = '';        fdBtn.style.color = '';     fdBtn.textContent = 'Free Drag'; }
+            }
+            if (seBtn) {
+                if (s.snapEdge) { seBtn.style.background = '#e11d48'; seBtn.style.color = '#fff'; seBtn.textContent = 'Snap ON'; }
+                else            { seBtn.style.background = '';        seBtn.style.color = '';     seBtn.textContent = 'Snap Edge'; }
+            }
+        })();
 
         // Vehicle input wiring
         var vehType   = document.getElementById('vehType');
