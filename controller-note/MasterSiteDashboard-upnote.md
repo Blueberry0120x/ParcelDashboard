@@ -5,6 +5,59 @@
 
 ---
 
+## [2026-03-22 08:10] ARCHITECTURE REQUEST: Private/Public Config Sync -- NEEDS PLANNING
+
+**User-designer requests a bidirectional config sync system between private and public sites.**
+
+### Requirements (confirmed by user)
+
+**Public site (ParcelDashboard / GitHub Pages):**
+- Receive-only from private (no push back)
+- Users can make config changes that persist independently
+- Config must survive across devices/browsers (not just localStorage)
+- Currently static HTML — no server-side save endpoint
+
+**Private site (MasterSiteDashboard / localhost:7734):**
+- "Reboot Public" button — force push private config to public, overwriting public state
+- "Pull from Public" button — fetch public's current config into private
+- Two-way: can push to public AND pull from public
+- Manual trigger only — no auto-sync (hard to control)
+
+**Data flow:**
+```
+Private (localhost)                    Public (GitHub Pages)
+  |                                       |
+  |-- "Reboot Public" ------------------>| (push config, overwrite)
+  |<-- "Pull from Public" ---------------| (fetch config)
+  |                                       |
+  |                                       |-- User saves config
+  |                                       |-- Persists independently
+```
+
+### Constraint: Public needs a persistence layer
+
+GitHub Pages is static — no POST endpoint. Options evaluated:
+
+| Option | Pros | Cons |
+|--------|------|------|
+| GitHub Gist | Free, API accessible | PAT token exposed in client JS |
+| Repo file (ParcelDashboard) | Lives with code | Token exposure, triggers rebuild |
+| Free JSON API (jsonbin.io, npoint.io) | No token in client, simple REST | Third-party dependency |
+| Cloudflare Workers KV | Fast, reliable, own endpoint | Needs CF account setup |
+
+### For Controller / Orchestrator
+
+This needs architectural planning before implementation:
+1. Choose persistence backend for public site config
+2. Design the sync API (endpoints, auth, conflict resolution)
+3. Determine if this affects CTRL-006 (Git-Projection) mirror workflow
+4. Consider: should public config changes trigger a notification to private?
+5. Security: public site must not expose tokens that allow repo writes
+
+**Status:** Awaiting controller input on architecture choice. User confirmed this should be planned, not rushed.
+
+---
+
 ## [2026-03-22 08:00] Free drag + snap edge defaults, toggle persistence, boundary enforcement
 
 **Changes:**
