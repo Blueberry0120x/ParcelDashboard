@@ -5,6 +5,16 @@
 
 ---
 
+## [2026-03-22 15:00] GLOBAL-019 Reference Folder & Best Practices -- GLOBAL_UPDATE
+
+**New standard:** Your `reference/` folder structure is now the global template.
+- `reference/best-practices/` will be synced by CTRL-004 (Python, GitHub, Claude agent standards)
+- Your project-specific docs stay directly in `reference/` (no subfolder)
+- Controller will push `best-practices/` files to your repo via baseline
+- 19 GLOBAL rules + 7 CTRL now (was 18 GLOBAL)
+
+---
+
 ## [2026-03-22 14:35] Rolling format adopted globally + Ping standard confirmed -- GLOBAL_UPDATE
 
 **Your proposals adopted as global standard:**

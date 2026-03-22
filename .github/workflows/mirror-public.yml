@@ -20,22 +20,20 @@ jobs:
           rm -rf .claude/ .vscode/ .github/
           rm -f  .env .env.*
 
-      - name: Transform docs/ for static hosting (links, mobile detect, dark mode toggle)
+      - name: Transform docs/ for static hosting (links, dark mode toggle)
         run: |
           python3 << 'PYEOF'
           import pathlib
 
           ALL_FILES = [
-              'docs/InteractiveMap.html', 'docs/InteractiveMap_Mobile.html',
-              'docs/PreApp_Checklist.html', 'docs/PreApp_Checklist_Mobile.html',
+              'docs/InteractiveMap.html',
+              'docs/PreApp_Checklist.html',
           ]
 
           # --- 1. Fix cross-links (dev server routes -> static file paths) ---
           fixes = {
               'docs/InteractiveMap.html':        [('href="checklist"', 'href="PreApp_Checklist.html"')],
-              'docs/InteractiveMap_Mobile.html':  [('href="checklist"', 'href="PreApp_Checklist.html"')],
               'docs/PreApp_Checklist.html':       [('href="/"', 'href="InteractiveMap.html"')],
-              'docs/PreApp_Checklist_Mobile.html':[('href="/"', 'href="InteractiveMap_Mobile.html"')],
           }
           for fname, replacements in fixes.items():
               p = pathlib.Path(fname)
@@ -44,24 +42,7 @@ jobs:
                   html = html.replace(old, new)
               p.write_text(html, encoding='utf-8')
 
-          # --- 2. Mobile auto-detection (redirect between desktop/mobile) ---
-          DETECT = '<script>(function(){var m=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||window.innerWidth<=768;'
-          TO_MOBILE = DETECT + 'if(m&&!location.pathname.includes("_Mobile"))location.replace(location.pathname.replace(".html","_Mobile.html"));})()</script>'
-          TO_DESKTOP = DETECT + 'if(!m&&location.pathname.includes("_Mobile"))location.replace(location.pathname.replace("_Mobile",""));})()</script>'
-
-          for fname in ['docs/InteractiveMap.html', 'docs/PreApp_Checklist.html']:
-              p = pathlib.Path(fname)
-              html = p.read_text(encoding='utf-8')
-              html = html.replace('</head>', TO_MOBILE + '\n</head>', 1)
-              p.write_text(html, encoding='utf-8')
-
-          for fname in ['docs/InteractiveMap_Mobile.html', 'docs/PreApp_Checklist_Mobile.html']:
-              p = pathlib.Path(fname)
-              html = p.read_text(encoding='utf-8')
-              html = html.replace('</head>', TO_DESKTOP + '\n</head>', 1)
-              p.write_text(html, encoding='utf-8')
-
-          # --- 3. Dark mode toggle + comprehensive color overrides ---
+          # --- 2. Dark mode toggle + comprehensive color overrides ---
           # Early script: apply theme before paint (prevents flash)
           THEME_INIT = (
               '<script>(function(){'
@@ -237,7 +218,7 @@ jobs:
               html = html.replace(THEME_OLD, THEME_NEW, 1)
               p.write_text(html, encoding='utf-8')
 
-          print("Transformed 4 HTML files: cross-links, mobile detect, dark mode toggle")
+          print("Transformed 2 HTML files: cross-links, dark mode toggle")
           PYEOF
 
       - name: Commit mirror snapshot
@@ -245,7 +226,7 @@ jobs:
           git config user.name "mirror-bot"
           git config user.email "mirror-bot@users.noreply.github.com"
           git add -A
-          git commit -m "Mirror from MasterSiteDashboard (real data, dark mode, links fixed, mobile auto-detect)" --allow-empty
+          git commit -m "Mirror from MasterSiteDashboard (real data, dark mode, links fixed, responsive)" --allow-empty
 
       - name: Force-push to ParcelDashboard
         run: |

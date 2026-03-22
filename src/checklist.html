@@ -7,13 +7,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f4c81">
 <title>Pre-App Checklist | 4335 Euclid Ave | CUPD-CU-2-4</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f3d7;</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230c3d6b' width='100' height='100' rx='20'/><text y='.78em' x='.12em' font-size='72'>&#x1f3d7;</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif}
+  body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;padding-bottom:env(safe-area-inset-bottom)}
   input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
   input[type=number]{-moz-appearance:textfield}
   *{overflow-anchor:none}
@@ -1007,6 +1011,11 @@ function App(){
 
 const root=ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App/>);
+</script>
+<div id="err-box" style="display:none;position:fixed;inset:0;z-index:99999;background:#fff;padding:20px;overflow:auto;font-family:monospace;font-size:13px;color:#dc2626;white-space:pre-wrap;word-break:break-all"></div>
+<noscript><div style="padding:40px 20px;text-align:center;font-family:system-ui">JavaScript is required. Enable it in Settings &gt; Safari.</div></noscript>
+<script>
+window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if(box){box.style.display='block';box.textContent+='ERROR: '+m+'\nLine: '+l+', Col: '+c+'\n'+(e&&e.stack?e.stack:'')+'\n\n';}};
 </script>
 </body>
 </html>

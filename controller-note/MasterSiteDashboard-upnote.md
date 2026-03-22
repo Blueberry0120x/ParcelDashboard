@@ -5,6 +5,29 @@
 
 ---
 
+## [2026-03-22 07:45] Responsive merge -- COMPLETED (was PENDING)
+
+**Mobile and desktop versions merged into single responsive files.**
+
+Changes:
+- `src/index.html`: added iPhone PWA meta tags (viewport-fit, apple-mobile-web-app, theme-color, touch-icon)
+- `src/css/style.css`: added safe-area padding, touch CSS, input zoom prevention, extra mobile layout rules into existing `@media (max-width: 767px)` block
+- `src/checklist.html`: added iPhone meta tags, touch CSS, error overlay for mobile debugging
+- `tools/build.py`: removed `build_iphone_map()` and `build_iphone_checklist()`, added `copy_to_docs()`. Build now outputs 2 files instead of 4
+- `mirror-public.yml`: removed mobile redirect injection, removed `_Mobile` file references
+- Deleted all 4 `_Mobile` files from `Output/` and `docs/`
+- Updated launcher pages (`index.html`, `docs/index.html`): removed "iPhone Version" buttons
+
+**Result:** Single `InteractiveMap.html` and `PreApp_Checklist.html` serve both desktop and mobile via CSS `@media` queries. No redirect, no separate files.
+
+**For controller / Git-Projection orchestra (CTRL-006):**
+- ParcelDashboard mirror will now receive 2 HTML files instead of 4
+- `docs/index.html` no longer links to `_Mobile` variants
+- Mirror workflow simplified (no mobile redirect injection step)
+- Update any cross-repo links pointing to `_Mobile` variants
+
+---
+
 ## [2026-03-22 07:30] Repo cleanup
 
 - Deleted `ProjectDev-Checklist-Legacy/` -- zero references, confirmed dead weight
@@ -49,7 +72,7 @@
 
 ---
 
-## [2026-03-22 07:14] Mobile/Desktop Responsive Merge -- PENDING
+## ~~[2026-03-22 07:14] Mobile/Desktop Responsive Merge -- PENDING~~
 
 **Current state:**
 - Mobile auto-redirect exists ONLY in mirror workflow (`mirror-public.yml`), injected at deploy time
