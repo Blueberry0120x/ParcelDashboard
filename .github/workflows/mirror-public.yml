@@ -82,7 +82,7 @@ jobs:
 
           /* CSS variable overrides */
           html[data-theme="dark"]{
-            --primary:#5ba3e6;--secondary:#2d3748;--accent:#ff6b6b;
+            --primary:#1a3f6b;--secondary:#2d3748;--accent:#ff6b6b;
             --text:#e2e8f0;--bg:#0f172a;--card:#1e293b;
             --line:#334155;--cad-bg:#0a0a0a;--cad-text:#e0e0e0;
             --cad-border:#555;--cad-accent:#e090e0;color-scheme:dark}
@@ -97,9 +97,19 @@ jobs:
           html[data-theme="dark"] .card,html[data-theme="dark"] .section-card,
           html[data-theme="dark"] .adv-card{background:#1e293b!important;border-color:#334155!important}
           html[data-theme="dark"] .adv-card-body{color:#cbd5e1!important}
-          html[data-theme="dark"] .stat-label,html[data-theme="dark"] .banner-label{color:#94a3b8!important}
           html[data-theme="dark"] a:not(.btn):not(.suite-bar-link):not(.suite-bar-extlink){color:#93c5fd}
           html[data-theme="dark"] .theme-toggle{background:#1e293b;border-color:#475569}
+
+          /* Map: banner/address labels — bright white, full opacity */
+          html[data-theme="dark"] .banner-label{color:#94a3b8!important;opacity:1!important}
+          html[data-theme="dark"] .banner-value{color:#fff!important}
+          html[data-theme="dark"] .property-banner{background:#0c2d4a!important}
+          html[data-theme="dark"] .header-address{background:#0c2d4a!important}
+          html[data-theme="dark"] .stat-label{color:#94a3b8!important}
+          html[data-theme="dark"] .sidebar{background:#0f172a!important;color:#e2e8f0!important}
+          html[data-theme="dark"] .sidebar label,html[data-theme="dark"] .sidebar p,
+          html[data-theme="dark"] .sidebar span{color:#cbd5e1!important}
+          html[data-theme="dark"] .sidebar h2,html[data-theme="dark"] .sidebar h3{color:#93c5fd!important}
 
           /* Inline style overrides: dark text colors -> light equivalents */
           html[data-theme="dark"] [style*="color:#0f4c81"],
@@ -124,33 +134,76 @@ jobs:
           html[data-theme="dark"] [style*="color: #6b21a8"]{color:#c084fc!important}
           html[data-theme="dark"] [style*="color:#92400e"],
           html[data-theme="dark"] [style*="color: #92400e"]{color:#fbbf24!important}
+          html[data-theme="dark"] [style*="color:#78350f"],
+          html[data-theme="dark"] [style*="color: #78350f"]{color:#f59e0b!important}
 
-          /* Inline style overrides: light backgrounds -> dark equivalents */
-          html[data-theme="dark"] [style*="background:#fff"],
-          html[data-theme="dark"] [style*="background: #fff"],
-          html[data-theme="dark"] [style*="background:#ffffff"],
-          html[data-theme="dark"] [style*="background: #ffffff"]{background:#1e293b!important}
-          html[data-theme="dark"] [style*="background:#f1f5f9"],
+          /* React checklist: catch-all for #root rendered content */
+          html[data-theme="dark"] #root{color:#e2e8f0!important}
+          html[data-theme="dark"] #root div:not([style*="gradient"]):not([style*="background: #22"]):not([style*="background: #16"]):not([style*="background: #7c"]):not([style*="background: #6d"]):not([style*="background: rgb"]){color:#cbd5e1}
+
+          /* React inline backgrounds (with space — React renders "background: #fff") */
+          html[data-theme="dark"] [style*="background: #fff"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#fff"]{background:#1e293b!important}
           html[data-theme="dark"] [style*="background: #f1f5f9"]{background:#1e293b!important}
-          html[data-theme="dark"] [style*="background:#f0f2f5"],
-          html[data-theme="dark"] [style*="background: #f0f2f5"]{background:#1e293b!important}
-          html[data-theme="dark"] [style*="background:#eef2f7"],
-          html[data-theme="dark"] [style*="background: #eef2f7"]{background:#1e293b!important}
-          html[data-theme="dark"] [style*="background:#f4f7fb"],
+          html[data-theme="dark"] [style*="background:#f1f5f9"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background: #f8fafc"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#f8fafc"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background: #eff6ff"]{background:#172554!important}
+          html[data-theme="dark"] [style*="background:#eff6ff"]{background:#172554!important}
+          html[data-theme="dark"] [style*="background: #ecfeff"]{background:#164e63!important}
+          html[data-theme="dark"] [style*="background:#ecfeff"]{background:#164e63!important}
+          html[data-theme="dark"] [style*="background: #faf5ff"]{background:#2e1065!important}
+          html[data-theme="dark"] [style*="background:#faf5ff"]{background:#2e1065!important}
+          html[data-theme="dark"] [style*="background: #f5f3ff"]{background:#2e1065!important}
+          html[data-theme="dark"] [style*="background:#f5f3ff"]{background:#2e1065!important}
+          html[data-theme="dark"] [style*="background: #fef3c7"]{background:#451a03!important}
+          html[data-theme="dark"] [style*="background:#fef3c7"]{background:#451a03!important}
+          html[data-theme="dark"] [style*="background: #fef2f2"]{background:#450a0a!important}
+          html[data-theme="dark"] [style*="background:#fef2f2"]{background:#450a0a!important}
+          html[data-theme="dark"] [style*="background: #fee2e2"]{background:#450a0a!important}
+          html[data-theme="dark"] [style*="background:#fee2e2"]{background:#450a0a!important}
+          html[data-theme="dark"] [style*="background: #f0fdf4"]{background:#052e16!important}
+          html[data-theme="dark"] [style*="background:#f0fdf4"]{background:#052e16!important}
+          html[data-theme="dark"] [style*="background: #fafbfc"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#fafbfc"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background: #cffafe"]{background:#164e63!important}
+          html[data-theme="dark"] [style*="background:#cffafe"]{background:#164e63!important}
           html[data-theme="dark"] [style*="background: #f4f7fb"]{background:#0f172a!important}
-          html[data-theme="dark"] [style*="background:#f0f0f0"],
+          html[data-theme="dark"] [style*="background:#f4f7fb"]{background:#0f172a!important}
+          html[data-theme="dark"] [style*="background: #f0f2f5"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#f0f2f5"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background: #eef2f7"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#eef2f7"]{background:#1e293b!important}
           html[data-theme="dark"] [style*="background: #f0f0f0"]{background:#1e293b!important}
-          html[data-theme="dark"] [style*="background:#e2e8f0"],
+          html[data-theme="dark"] [style*="background:#f0f0f0"]{background:#1e293b!important}
           html[data-theme="dark"] [style*="background: #e2e8f0"]{background:#334155!important}
-          html[data-theme="dark"] [style*="background:#eef7ff"],
+          html[data-theme="dark"] [style*="background:#e2e8f0"]{background:#334155!important}
           html[data-theme="dark"] [style*="background: #eef7ff"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background:#eef7ff"]{background:#1e293b!important}
+          html[data-theme="dark"] [style*="background: #dbeafe"]{background:#1e3a5f!important}
+          html[data-theme="dark"] [style*="background:#dbeafe"]{background:#1e3a5f!important}
+          html[data-theme="dark"] [style*="background: #e0f2fe"]{background:#0c4a6e!important}
+          html[data-theme="dark"] [style*="background:#e0f2fe"]{background:#0c4a6e!important}
 
-          /* Border overrides */
-          html[data-theme="dark"] [style*="border-color:#dbe3ee"],
-          html[data-theme="dark"] [style*="border: 1px solid #dbe3ee"],
+          /* React borders */
+          html[data-theme="dark"] [style*="border: 1px solid #e2e8f0"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border:1px solid #e2e8f0"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border: 1px solid #d1d5db"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border:1px solid #d1d5db"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border: 1px solid #dbe3ee"]{border-color:#334155!important}
           html[data-theme="dark"] [style*="border:1px solid #dbe3ee"]{border-color:#334155!important}
-          html[data-theme="dark"] [style*="border-bottom:1px solid #e2e8f0"],
+          html[data-theme="dark"] [style*="border-bottom: 1px solid #f1f5f9"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom:1px solid #f1f5f9"]{border-color:#334155!important}
           html[data-theme="dark"] [style*="border-bottom: 1px solid #e2e8f0"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom:1px solid #e2e8f0"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom: 2px solid #e2e8f0"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom:2px solid #e2e8f0"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom: 1px solid #e0f2fe"]{border-color:#334155!important}
+          html[data-theme="dark"] [style*="border-bottom:1px solid #e0f2fe"]{border-color:#334155!important}
+
+          /* React gradients -> dark variants */
+          html[data-theme="dark"] [style*="linear-gradient(90deg, #faf5ff"]{background:linear-gradient(90deg,#2e1065,#1e1b4b)!important}
+          html[data-theme="dark"] [style*="linear-gradient(90deg,#faf5ff"]{background:linear-gradient(90deg,#2e1065,#1e1b4b)!important}
           </style>"""
 
           # Toggle button HTML (injected before </body>)
