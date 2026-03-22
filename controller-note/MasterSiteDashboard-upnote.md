@@ -5,6 +5,26 @@
 
 ---
 
+## [2026-03-22 07:18] Auto-notify workflow + upnote protocol revision
+
+**Added `.github/workflows/notify-controller.yml`:**
+- Triggers on push to `main` when `controller-note/**` changes
+- Sends `repository_dispatch` event (`upnote-updated`) to `Blueberry0120x/NP_ClaudeAgent`
+- Uses `PUBLIC_MIRROR_PAT` secret (already exists, has repo scope)
+
+**Controller action required:**
+1. Add a workflow in `NP_ClaudeAgent` that listens for `repository_dispatch` event `upnote-updated`
+2. On trigger, read the upnote from the source repo (`client_payload.repo`) and process
+3. This eliminates the need for user to manually say "review MasterSite notes"
+
+**Upnote protocol revision (propose to all repos):**
+- One rolling file per repo, not per-timestamp files (avoids spam)
+- Auto-notify via GitHub Actions dispatch (no manual relay)
+- Each agent checks `controller-note/` at session start automatically (stored in agent memory)
+- User should never need to relay between agents manually
+
+---
+
 ## [2026-03-22 07:14] Mobile/Desktop Responsive Merge -- PENDING
 
 **Current state:**
