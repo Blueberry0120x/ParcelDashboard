@@ -1,36 +1,35 @@
-# RemoteLaunch-HTML
+# RemoteLaunch-HTML-procedure
 
 ## Overview
 
-Remote Launch HTML is a demo workflow that serves the MasterSiteDashboard
-application from a public GitHub Pages site. The private repo
-(`MasterSiteDashboard`) auto-mirrors sanitized content to a public repo
-(`ParcelDashboard`), which serves HTML via GitHub Pages — accessible from
-any desktop browser or phone.
+Remote Launch HTML serves the MasterSiteDashboard application from a public
+GitHub Pages site. The private repo (`MasterSiteDashboard`) auto-mirrors
+**real data** to a public repo (`ParcelDashboard`), which serves HTML via
+GitHub Pages — accessible from any desktop browser or phone.
 
 ## Architecture
 
 ```
 MasterSiteDashboard (private)
-  │
-  │  push to main
-  │
-  ▼
+  |
+  |  push to main
+  |
+  v
 GitHub Actions: mirror-public.yml
-  │
-  │  1. Checkout full repo
-  │  2. Strip sensitive files (.claude/, .github/, .vscode/, exports/)
-  │  3. Replace site-data.json with sanitized demo data
-  │  4. Scrub PII from ALL text files (address, APN, inspector names/phones)
-  │  5. Remove legacy files with real addresses in filename
-  │  6. Force-push sanitized snapshot to ParcelDashboard
-  │
-  ▼
+  |
+  |  1. Checkout full repo (fetch-depth: 0, persist-credentials: false)
+  |  2. Strip dev files only (.claude/, .github/, .vscode/, .env)
+  |  3. Fix cross-links (dev server routes -> static file paths)
+  |  4. Inject mobile auto-detection (userAgent + viewport width)
+  |  5. Inject dark mode toggle + comprehensive CSS overrides
+  |  6. Force-push real-data snapshot to ParcelDashboard
+  |
+  v
 ParcelDashboard (public)
-  │
-  │  GitHub Pages (legacy mode, main:/docs)
-  │
-  ▼
+  |
+  |  GitHub Pages (legacy mode, main:/docs)
+  |
+  v
 https://blueberry0120x.github.io/ParcelDashboard/
 ```
 
@@ -50,46 +49,76 @@ for manual runs from the GitHub Actions tab.
 | Desktop Checklist | https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html |
 | Mobile Checklist | https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist_Mobile.html |
 
-## Sensitive Data Handling
+## Data Policy
 
-The mirror workflow strips all PII before pushing to public:
+**Real data — no sanitization.** The public mirror is a faithful exact copy of
+the private repo (minus dev files). All site data, addresses, inspector names,
+and project details appear as-is.
 
-| Data | Private repo | Public repo |
-|------|-------------|-------------|
-| Address | 4335 Euclid Avenue | 123 Demo Street |
-| APN | 471-271-16-00 | 000-000-00-00 |
-| Zoning | CUPD-CU-2-4 | DEMO-ZONE |
-| Inspectors | 5 real names + phones | Empty array |
+| Content | Private repo | Public repo |
+|---------|-------------|-------------|
+| Site data (address, APN, inspectors) | Present | Present (real) |
 | .claude/ | Present | Stripped |
 | .github/ | Present (workflows) | Stripped |
 | .vscode/ | Present | Stripped |
-| exports/ | Present | Stripped |
+| .env / .env.* | Present | Stripped |
+
+## Mirror Transforms (applied by workflow Python script)
+
+| Transform | What it does |
+|-----------|-------------|
+| **Cross-link fix** | Map `href="checklist"` -> `href="PreApp_Checklist.html"`, Checklist `href="/"` -> `href="InteractiveMap.html"` |
+| **Mobile auto-detect** | Injects JS that checks `navigator.userAgent` + `window.innerWidth<=768`, redirects desktop<->mobile |
+| **Dark mode toggle** | Injects sun/moon toggle button (fixed top-right), localStorage persistence, system preference fallback |
+| **Dark mode CSS** | CSS variable overrides + attribute selectors for inline styles (`[style*="color:#0f4c81"]` etc.) |
+| **Theme-color meta** | Splits into light/dark variants for browser chrome color |
+
+## Dark Mode Details
+
+The dark mode system uses `html[data-theme="dark"]` (not `@media prefers-color-scheme`)
+so the toggle button can override system preference.
+
+**Color mapping (light -> dark):**
+
+| Light color | Dark equivalent | Used for |
+|------------|----------------|----------|
+| `#0f4c81` | `#93c5fd` | Primary blue text |
+| `#2d3748`, `#1a202c` | `#e2e8f0` | Body text |
+| `#334155`, `#475569`, `#4a5568` | `#94a3b8` / `#cbd5e1` | Secondary text |
+| `#64748b` | `#94a3b8` | Muted labels |
+| `#fff`, `#f1f5f9`, `#f0f2f5` | `#1e293b` | Card/panel backgrounds |
+| `#f4f7fb` | `#0f172a` | Page background |
+| `#dbe3ee` | `#334155` | Borders |
+
+**Persistence:** Toggle state saves to `localStorage('theme')`. On page load,
+checks localStorage first, then falls back to `window.matchMedia('(prefers-color-scheme:dark)')`.
 
 ## Secrets Required
 
 | Secret | Repo | Purpose |
 |--------|------|---------|
-| `PUBLIC_MIRROR_PAT` | MasterSiteDashboard | PAT with `repo` scope to push to ParcelDashboard |
+| `PUBLIC_MIRROR_PAT` | MasterSiteDashboard | OAuth token with `repo` scope to push to ParcelDashboard |
 
-## Verification
-
-Run the 20-test verification suite (see NP_ClaudeAgent report for full procedure):
-- Tests 1-7: File structure and sensitive dir/file stripping
-- Tests 8-9: Source code and Output HTML presence
-- Tests 10-14: SHA comparison (code fidelity)
-- Tests 15-18: HTML accessibility (desktop + mobile + launcher links)
-- Test 19: GitHub Pages active
-- Test 20: Deep PII scan across ALL text files (zero leaks)
+**Note:** Must use `persist-credentials: false` in `actions/checkout@v4` to prevent
+the default `GITHUB_TOKEN` credential helper from overriding the custom PAT.
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
 | Workflow fails with 403 | `PUBLIC_MIRROR_PAT` expired or missing `repo` scope. Regenerate and update secret. |
-| Workflow fails with "workflow scope" | The mirror is pushing `.github/` files. Ensure `rm -rf .github/` is in the strip phase. |
-| Pages shows 404 | Check Pages settings: must be `legacy` mode, `main` branch, `/docs` path. Run `gh api repos/.../pages/builds -X POST` to trigger rebuild. |
-| PII leak detected | Add new PII patterns to the `sed` commands in `mirror-public.yml`. |
+| Workflow fails with "workflow scope" | Mirror is pushing `.github/` files. Ensure `rm -rf .github/` is in the strip phase. |
+| Pages shows 404 | Check Pages settings: must be `legacy` mode, `main` branch, `/docs` path. Run `gh api repos/.../pages/builds -X POST`. |
+| Dark mode text invisible | Add missing color to the attribute selector overrides in the workflow Python script. |
+| Cross-links broken | Check if dev server routes changed. Update the `fixes` dict in the Python script. |
+| Mobile redirect loop | Check `_Mobile` suffix logic in the auto-detect JS. |
 
 ## History
 
-- 2026-03-22: Initial setup — workflow created, 20-test verification passed, GitHub Pages live
+- 2026-03-22: Initial setup — workflow created, GitHub Pages live
+- 2026-03-22: Switched from sanitized to real data (Designer directive)
+- 2026-03-22: Added cross-link fixes for static hosting
+- 2026-03-22: Added mobile auto-detection (desktop<->mobile redirect)
+- 2026-03-22: Added dark mode toggle + comprehensive CSS overrides (inline style attribute selectors)
+- 2026-03-22: Generalized mobile hint (iOS + Android)
+- 2026-03-22: Added GLOBAL-018 rule: must launch/verify HTML after every build
