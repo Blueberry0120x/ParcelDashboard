@@ -1,6 +1,5 @@
 name: Mirror to ParcelDashboard (public)
 
-# Runs on every push to main, or manually via workflow_dispatch
 on:
   push:
     branches: [main]
@@ -16,25 +15,21 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Strip sensitive files and replace with demo data
+      - name: Sanitize all sensitive data
         run: |
-          # Remove sensitive / internal / CI files
-          rm -f  data/site-data.json
-          rm -rf .claude/
-          rm -rf .vscode/
-          rm -rf .github/
+          echo "=== Phase 1: Remove sensitive dirs/files ==="
+          rm -rf .claude/ .vscode/ .github/ exports/
+          rm -rf ProjectDev-Checklist-Legacy/
           rm -f  .env .env.*
-          rm -rf exports/
 
-          # Write sanitized demo site-data.json
-          mkdir -p data
+          echo "=== Phase 2: Replace site-data.json ==="
           cat > data/site-data.json <<'EOF'
           {
             "project": "Parcel Dashboard (Demo)",
             "site": {
               "address": "123 Demo Street, San Diego, CA 92101",
               "apn": "000-000-00-00",
-              "zoning": "EXAMPLE-ZONE",
+              "zoning": "DEMO-ZONE",
               "lotWidth": 50,
               "lotDepth": 125,
               "lotSF": 6250,
@@ -57,6 +52,46 @@ jobs:
             "saved": {}
           }
           EOF
+
+          echo "=== Phase 3: Scrub PII from all text files ==="
+
+          # Address replacements
+          find . -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \
+            -o -name '*.md' -o -name '*.ps1' -o -name '*.cmd' -o -name '*.css' \
+            -o -name '*.txt' \) -exec sed -i \
+            -e 's/4333 \&amp; 4335 Euclid Avenue, San Diego, CA 92105/123 Demo Street, San Diego, CA 92101/g' \
+            -e 's/4335 Euclid Avenue, San Diego, CA 92105/123 Demo Street, San Diego, CA 92101/g' \
+            -e 's/4335 Euclid Ave/123 Demo St/g' \
+            -e 's/4335 Euclid/123 Demo/g' \
+            -e 's/471-271-16-00/000-000-00-00/g' \
+            -e 's/471-271-16/000-000-00/g' \
+            -e 's/CUPD-CU-2-4/DEMO-ZONE/g' \
+            {} +
+
+          # Inspector PII replacements (names + phone numbers)
+          find . -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \
+            -o -name '*.md' -o -name '*.ps1' -o -name '*.cmd' -o -name '*.txt' \) -exec sed -i \
+            -e 's/Wesley Tukker (619-446-5362)/Demo Inspector (000-000-0000)/g' \
+            -e 's/Ricardo Ordonez (619-446-5123)/Demo Inspector (000-000-0000)/g' \
+            -e 's/Richard Gable (858-573-1223)/Demo Inspector (000-000-0000)/g' \
+            -e 's/Christopher Sorchy (619-236-7033)/Demo Inspector (000-000-0000)/g' \
+            -e 's/Alejandro Ruiz (858-627-2034)/Demo Inspector (000-000-0000)/g' \
+            -e 's/Wesley Tukker/Demo Inspector/g' \
+            -e 's/Ricardo Ordonez/Demo Inspector/g' \
+            -e 's/Richard Gable/Demo Inspector/g' \
+            -e 's/Christopher Sorchy/Demo Inspector/g' \
+            -e 's/Alejandro Ruiz/Demo Inspector/g' \
+            -e 's/619-446-5362/000-000-0000/g' \
+            -e 's/619-446-5123/000-000-0000/g' \
+            -e 's/858-573-1223/000-000-0000/g' \
+            -e 's/619-236-7033/000-000-0000/g' \
+            -e 's/858-627-2034/000-000-0000/g' \
+            {} +
+
+          echo "=== Phase 4: Rename legacy files with address in name ==="
+          find . -name "*4335*" -exec bash -c 'mv "$1" "$(echo "$1" | sed "s/4335_Euclid/Demo_Site/g")"' _ {} \;
+
+          echo "=== Sanitization complete ==="
 
       - name: Commit sanitized snapshot
         run: |
