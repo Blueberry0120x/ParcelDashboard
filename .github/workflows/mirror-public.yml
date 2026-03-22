@@ -68,4 +68,4 @@ jobs:
           git remote add public https://x-access-token:${MIRROR_TOKEN}@github.com/Blueberry0120x/ParcelDashboard.git
           git push public HEAD:main --force
         env:
-          MIRROR_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          MIRROR_TOKEN: ${{ secrets.PUBLIC_MIRROR_PAT }}
