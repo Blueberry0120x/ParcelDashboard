@@ -303,11 +303,11 @@
                     <tr><th>PARCEL #:</th><td id="info-apn"></td></tr>
                     <tr><th>YEAR BUILT:</th><td>--</td></tr>
                     <tr><th>BASE ZONE:</th><td id="info-zone"></td></tr>
-                    <tr><th>OCCUPANCY GROUP:</th><td>R-3</td></tr>
+                    <tr><th>OCCUPANCY GROUP:</th><td id="info-occupancy">--</td></tr>
                     <tr><th>AVERAGE ELEVATION:</th><td>--</td></tr>
                     <tr><th>LOT WIDTH:</th><td id="info-w"></td></tr>
-                    <tr><th>HEIGHT RESTRICTION:</th><td>50.0 FT</td></tr>
-                    <tr><th>STANDARD SETBACKS:</th><td>(F) 10-FT | (R) 10-FT | (S) 0-FT</td></tr>
+                    <tr><th>HEIGHT RESTRICTION:</th><td id="info-height">--</td></tr>
+                    <tr><th>STANDARD SETBACKS:</th><td id="info-setbacks">--</td></tr>
                 </table>
             </details>
 
@@ -321,7 +321,7 @@
                     </tr>
                     <tr><th>EX. BLD:</th><td>--</td></tr>
                     <tr><th>MIN LOT / DENSITY:</th><td id="info-density-lot"></td></tr>
-                    <tr><th>MAX FAR:</th><td>2.0</td></tr>
+                    <tr><th>MAX FAR:</th><td id="info-max-far">--</td></tr>
                     <tr><th>BUILDABLE FAR:</th><td id="info-buildable-far"></td></tr>
                     <tr><th>PROPOSED ADU(S):</th><td>--</td></tr>
                     <tr><th>TOTAL FAR:</th><td>--</td></tr>
@@ -345,59 +345,33 @@
     <div class="info-bottom" id="infoBottom">
         <div class="info-col-left" id="infoColLeft">
             <details>
-                <summary>ZONING PARAMETERS (CUPD-CU-2-4)</summary>
+                <summary id="info-zoning-header">ZONING PARAMETERS</summary>
                 <table class="cad-table">
-                    <tr><th>BASE DENSITY:</th><td>1 DU per 600 sq. ft.</td></tr>
-                    <tr><th>BASE FAR:</th><td>2.0</td></tr>
-                    <tr><th>CCHS FAR TIER 3:</th><td>6.5 FAR</td></tr>
-                    <tr><th>MAX HEIGHT:</th><td>50 Feet</td></tr>
-                    <tr><th>FRONT SETBACK:</th><td>10 FT</td></tr>
-                    <tr><th>STREET SIDE SETBACK:</th><td>10 FT</td></tr>
-                    <tr><th>SIDE / REAR SETBACK:</th><td>10 FT  or  0 FT</td></tr>
-                    <tr><th>USE REGS:</th><td>Residential only if commercial occupies front 30 ft.</td></tr>
+                    <tr><th>BASE DENSITY:</th><td id="info-zp-density">--</td></tr>
+                    <tr><th>BASE FAR:</th><td id="info-zp-basefar">--</td></tr>
+                    <tr><th>COMM FAR:</th><td id="info-zp-commfar">--</td></tr>
+                    <tr><th>MAX HEIGHT:</th><td id="info-zp-maxht">--</td></tr>
+                    <tr><th>FRONT SETBACK:</th><td id="info-zp-front">--</td></tr>
+                    <tr><th>REAR SETBACK:</th><td id="info-zp-rear">--</td></tr>
+                    <tr><th>SIDE SETBACK:</th><td id="info-zp-side">--</td></tr>
+                    <tr><th>NOTES:</th><td id="info-zp-notes">--</td></tr>
                 </table>
             </details>
             <details>
                 <summary>SITE LOCATION &amp; BASE ZONE</summary>
                 <table class="cad-table">
-                    <tr><th>ZONE DESIGNATION:</th><td>CUPD-CU-2-4</td></tr>
-                    <tr><th>CITY COUNCIL DISTRICT:</th><td>9</td></tr>
-                    <tr><th>ADDRESS:</th><td>4333 &amp; 4335 Euclid Avenue, San Diego, CA 92105</td></tr>
-                    <tr><th>CITY OWNED PARKS/PROP:</th><td>No</td></tr>
+                    <tr><th>ZONE DESIGNATION:</th><td id="info-sl-zone">--</td></tr>
+                    <tr><th>ADDRESS:</th><td id="info-sl-address">--</td></tr>
+                    <tr><th>PROJECT TYPE:</th><td id="info-sl-projtype">--</td></tr>
+                    <tr><th>ARCHITECT:</th><td id="info-sl-architect">--</td></tr>
                 </table>
             </details>
         </div>
         <div class="info-col-gap" id="infoColGap"></div>
         <div class="info-col-right" id="infoColRight">
-            <details>
-                <summary>PLANNING &amp; TRANSIT AREAS</summary>
-                <table class="cad-table">
-                    <tr><th>COMMUNITY PLAN AREA:</th><td>MID-CITY: CITY HEIGHTS</td></tr>
-                    <tr><th>LAND USE DESIGNATION:</th><td>Commercial / Mixed Use A (73 du/ac)</td></tr>
-                    <tr><th>CCHS (HOUSING SOLUTIONS):</th><td>Yes &#x2014; FAR Tier 3: 6.5 FAR</td></tr>
-                    <tr><th>TRANSIT PRIORITY AREA (TPA):</th><td>Yes</td></tr>
-                    <tr><th>PARKING STANDARDS (PSTPA):</th><td>Yes (0 Parking Required)</td></tr>
-                    <tr><th>MOBILITY CHOICES:</th><td>Yes &#x2014; Mobility Zone 2</td></tr>
-                </table>
-            </details>
-            <details>
-                <summary>OVERLAY ZONES</summary>
-                <table class="cad-table">
-                    <tr><th>TRANSIT AREA OVERLAY:</th><td>Yes</td></tr>
-                    <tr><th>AIRPORT INFLUENCE AREA:</th><td>No</td></tr>
-                    <tr><th>COASTAL OVERLAY:</th><td>No</td></tr>
-                    <tr><th>VERY HIGH FIRE HAZARD:</th><td>No</td></tr>
-                    <tr><th>FAULT ZONE:</th><td>No</td></tr>
-                </table>
-            </details>
-            <details>
+            <details id="info-inspectors-section">
                 <summary>CITY INSPECTOR CONTACTS</summary>
-                <table class="cad-table">
-                    <tr><th>COMBINATION:</th><td>Wesley Tukker (619-446-5362)</td></tr>
-                    <tr><th>STRUCTURAL:</th><td>Ricardo Ordonez (619-446-5123)</td></tr>
-                    <tr><th>ELECTRICAL:</th><td>Richard Gable (858-573-1223)</td></tr>
-                    <tr><th>MECHANICAL:</th><td>Christopher Sorchy (619-236-7033)</td></tr>
-                    <tr><th>PRIVATE GRADING:</th><td>Alejandro Ruiz (858-627-2034)</td></tr>
+                <table class="cad-table" id="info-inspectors-table">
                 </table>
             </details>
         </div>

@@ -1,6 +1,7 @@
 {
   "project": "Master Site Dashboard",
   "site": {
+    "siteId": "WA-BURIEN",
     "address": "405 SW 126th St, Burien, WA 98146",
     "apn": "0723049368",
     "zoning": "TBD",

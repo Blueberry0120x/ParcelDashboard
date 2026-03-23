@@ -4,7 +4,7 @@
     "siteId": "CA-WESTMINSTER",
     "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
     "apn": "100-151-33, 100-151-34",
-    "zoning": "C-2 (pending MDR rezone per GPA-003-2021)",
+    "zoning": "R-3",
     "cadZone": "CA_V",
     "lotWidth": 155.3,
     "lotDepth": 109.9,
@@ -34,20 +34,34 @@
     "architect": "ADEC Architecture & Construction Group",
     "cornerVisibilityTriangle": true,
     "densityBonus": true,
-    "notes": "Combined lots 33+34. Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. GP amendment GPA-003-2021 rezones from Light Commercial to MDR. Rear abuts R-3 residential.",
+    "notes": "Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.",
     "parcelPolygon": [
-      [33.76014719, -117.93749677],
-      [33.76014719, -117.93698399],
-      [33.75980985, -117.93698399],
-      [33.75980985, -117.93747102],
-      [33.75984555, -117.93749677],
-      [33.76014719, -117.93749677]
+      [
+        33.76014719,
+        -117.93749677
+      ],
+      [
+        33.76014719,
+        -117.93698399
+      ],
+      [
+        33.75980985,
+        -117.93698399
+      ],
+      [
+        33.75980985,
+        -117.93749677
+      ],
+      [
+        33.76014719,
+        -117.93749677
+      ]
     ],
     "inspectors": []
   },
   "saved": {
-    "lat": 33.75997,
-    "lng": -117.93724,
+    "lat": 33.760021505915304,
+    "lng": -117.93719621519948,
     "rotation": 0,
     "locked": false,
     "setbacks": {
@@ -82,5 +96,6 @@
     "snapEdge": true,
     "vehicles": [],
     "activeVehicle": -1
-  }
+  },
+  "checklist": null
 }

@@ -656,13 +656,13 @@ const SetbackEngine = {
 
     updateFAR: function() {
         const state   = ConfigEngine.state;
-        const { width: lotW, depth: lotD } = ConfigEngine.data;
-        const lotArea = lotW * lotD;
+        const { width: lotW, depth: lotD, lotSF } = ConfigEngine.data;
+        const lotArea = (lotSF && lotSF > 0) ? lotSF : (lotW * lotD);
         if (!lotArea) return;
 
         const sd        = window.__SITE_DEFAULTS__ || {};
         const commFront = state.commFront || false;
-        const maxFAR    = commFront ? (sd.commFAR || 6.5) : (sd.baseFAR || 2.0);
+        const maxFAR    = commFront ? (sd.commFAR ?? 6.5) : (sd.baseFAR ?? 2.0);
         const buildable = Math.round(lotArea * maxFAR);
 
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
@@ -677,17 +677,25 @@ const SetbackEngine = {
 
         set('bldgFootprintArea', Math.round(footprintSF).toLocaleString());
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
-        set('bldgFAR',           actualFAR.toFixed(2));
-        set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
-        set('maxFARLabel',       commFront ? 'Comm. Front: ' + maxFAR + ' FAR' : 'Base: ' + maxFAR + ' FAR');
 
         const chkEl = document.getElementById('bldgFARCheck');
-        if (chkEl) {
-            const ok = actualFAR <= maxFAR + 0.005;
-            chkEl.textContent = ok
-                ? '\u2713 Within limit (' + actualFAR.toFixed(2) + ' \u2264 ' + maxFAR + ')'
-                : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
-            chkEl.style.color = ok ? '#2f855a' : '#c53030';
+        if (maxFAR > 0) {
+            set('bldgFAR',       actualFAR.toFixed(2));
+            set('bldgBuildable', 'MAX ' + buildable.toLocaleString() + ' sf');
+            set('maxFARLabel',   commFront ? 'Comm. Front: ' + maxFAR + ' FAR' : 'Base: ' + maxFAR + ' FAR');
+            if (chkEl) {
+                const ok = actualFAR <= maxFAR + 0.005;
+                chkEl.textContent = ok
+                    ? '\u2713 Within limit (' + actualFAR.toFixed(2) + ' \u2264 ' + maxFAR + ')'
+                    : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
+                chkEl.style.color = ok ? '#2f855a' : '#c53030';
+            }
+        } else {
+            // FAR not applicable for this zone (baseFAR=0)
+            set('bldgFAR',       'N/A');
+            set('bldgBuildable', 'Per zoning');
+            set('maxFARLabel',   'FAR: N/A');
+            if (chkEl) { chkEl.textContent = '\u2713 FAR not applicable'; chkEl.style.color = '#2f855a'; }
         }
 
         const floorH      = active.floorHeight || 9;
@@ -696,18 +704,24 @@ const SetbackEngine = {
         set('bldgTotalHeight', totalHeight.toFixed(0));
 
         // Density check: total residential units vs base zone max
-        const densPerSF = sd.densityPerSF || 600;
-        const baseDMax  = Math.floor(lotArea / densPerSF);
+        const densPerSF = sd.densityPerSF ?? 600;
         const resiU     = state.buildings.reduce((s, b) => s + (b.stories || 1) * (b.count || 1), 0);
-        const sdbMin    = baseDMax + Math.ceil(baseDMax * 0.225); // 5% LI → 22.5% bonus
         const densEl    = document.getElementById('bldgDensity');
         const densChk   = document.getElementById('bldgDensityCheck');
-        if (densEl)  densEl.textContent  = resiU + ' DU / ' + (commFront ? 'unlimited' : baseDMax + ' max');
-        if (densChk) {
-            if (commFront)         { densChk.textContent = '\u2713 CCHS: no limit'; densChk.style.color = '#2f855a'; }
-            else if (resiU <= baseDMax) { densChk.textContent = '\u2713 Within base zone'; densChk.style.color = '#2f855a'; }
-            else if (resiU <= sdbMin)   { densChk.textContent = '\u26a0 Needs SDB (min 5% aff)'; densChk.style.color = '#d97706'; }
-            else                        { densChk.textContent = '\u2717 Exceeds base — use CCHS or SDB'; densChk.style.color = '#c53030'; }
+        if (densPerSF > 0) {
+            const baseDMax  = Math.floor(lotArea / densPerSF);
+            const sdbMin    = baseDMax + Math.ceil(baseDMax * 0.225); // 5% LI -> 22.5% bonus
+            if (densEl)  densEl.textContent  = resiU + ' DU / ' + (commFront ? 'unlimited' : baseDMax + ' max');
+            if (densChk) {
+                if (commFront)             { densChk.textContent = '\u2713 CCHS: no limit'; densChk.style.color = '#2f855a'; }
+                else if (resiU <= baseDMax) { densChk.textContent = '\u2713 Within base zone'; densChk.style.color = '#2f855a'; }
+                else if (resiU <= sdbMin)   { densChk.textContent = '\u26a0 Needs SDB (min 5% aff)'; densChk.style.color = '#d97706'; }
+                else                        { densChk.textContent = '\u2717 Exceeds base -- use CCHS or SDB'; densChk.style.color = '#c53030'; }
+            }
+        } else {
+            // densityPerSF=0 means density not governed by lot-area formula (e.g. R-3 MDR)
+            if (densEl)  densEl.textContent  = resiU + ' DU / per zoning';
+            if (densChk) { densChk.textContent = '\u2713 Density per zoning overlay'; densChk.style.color = '#2f855a'; }
         }
     },
 

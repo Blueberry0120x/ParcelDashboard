@@ -20,15 +20,37 @@
     "sideSetback": 0,
     "densityPerSF": 600,
     "nefRatePerSF": 11.78,
-    "affordabilityPct": 0.40,
+    "affordabilityPct": 0.4,
     "difPerUnit": 15000,
     "difWaiverSF": 500,
+    "parcelPolygon": [
+      [32.75577393, -117.09202349],
+      [32.75577393, -117.09186016],
+      [32.75543053, -117.09186016],
+      [32.75543053, -117.09202349],
+      [32.75577393, -117.09202349]
+    ],
     "inspectors": [
-      {"name": "Combination", "val": "Wesley Tukker (619-446-5362)"},
-      {"name": "Structural", "val": "Ricardo Ordonez (619-446-5123)"},
-      {"name": "Electrical", "val": "Richard Gable (858-573-1223)"},
-      {"name": "Mechanical", "val": "Christopher Sorchy (619-236-7033)"},
-      {"name": "Grading", "val": "Alejandro Ruiz (858-627-2034)"}
+      {
+        "name": "Combination",
+        "val": "Wesley Tukker (619-446-5362)"
+      },
+      {
+        "name": "Structural",
+        "val": "Ricardo Ordonez (619-446-5123)"
+      },
+      {
+        "name": "Electrical",
+        "val": "Richard Gable (858-573-1223)"
+      },
+      {
+        "name": "Mechanical",
+        "val": "Christopher Sorchy (619-236-7033)"
+      },
+      {
+        "name": "Grading",
+        "val": "Alejandro Ruiz (858-627-2034)"
+      }
     ]
   },
   "saved": {
@@ -92,19 +114,11 @@
     "chainWOffset": 0,
     "chainDOffset": 40,
     "mapOpacity": 70,
-    "setbacksApplied": true,
+    "setbacksApplied": false,
+    "freeDrag": true,
+    "snapEdge": true,
     "vehicles": [],
     "activeVehicle": -1
   },
-  "checklist": {
-    "ck": {
-      "A1": true,
-      "A2": true,
-      "A5": false
-    },
-    "sel": {
-      "pathway": "STATE DENSITY BONUS"
-    },
-    "notes": {}
-  }
+  "checklist": null
 }

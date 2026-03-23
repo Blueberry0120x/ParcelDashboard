@@ -695,7 +695,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","parcelPolygon":[[33.76014719,-117.93749677],[33.76014719,-117.93698399],[33.75980985,-117.93698399],[33.75980985,-117.93749677],[33.76014719,-117.93749677]],"inspectors":[],"lat":33.760021505915304,"lng":-117.93719621519948,"rotation":0,"locked":false,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"offsetX":0,"offsetY":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":16,"D":37}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -978,11 +978,11 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
                     <tr><th>PARCEL #:</th><td id="info-apn"></td></tr>
                     <tr><th>YEAR BUILT:</th><td>--</td></tr>
                     <tr><th>BASE ZONE:</th><td id="info-zone"></td></tr>
-                    <tr><th>OCCUPANCY GROUP:</th><td>R-3</td></tr>
+                    <tr><th>OCCUPANCY GROUP:</th><td id="info-occupancy">--</td></tr>
                     <tr><th>AVERAGE ELEVATION:</th><td>--</td></tr>
                     <tr><th>LOT WIDTH:</th><td id="info-w"></td></tr>
-                    <tr><th>HEIGHT RESTRICTION:</th><td>50.0 FT</td></tr>
-                    <tr><th>STANDARD SETBACKS:</th><td>(F) 10-FT | (R) 10-FT | (S) 0-FT</td></tr>
+                    <tr><th>HEIGHT RESTRICTION:</th><td id="info-height">--</td></tr>
+                    <tr><th>STANDARD SETBACKS:</th><td id="info-setbacks">--</td></tr>
                 </table>
             </details>
 
@@ -996,7 +996,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
                     </tr>
                     <tr><th>EX. BLD:</th><td>--</td></tr>
                     <tr><th>MIN LOT / DENSITY:</th><td id="info-density-lot"></td></tr>
-                    <tr><th>MAX FAR:</th><td>2.0</td></tr>
+                    <tr><th>MAX FAR:</th><td id="info-max-far">--</td></tr>
                     <tr><th>BUILDABLE FAR:</th><td id="info-buildable-far"></td></tr>
                     <tr><th>PROPOSED ADU(S):</th><td>--</td></tr>
                     <tr><th>TOTAL FAR:</th><td>--</td></tr>
@@ -1020,59 +1020,33 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
     <div class="info-bottom" id="infoBottom">
         <div class="info-col-left" id="infoColLeft">
             <details>
-                <summary>ZONING PARAMETERS (CUPD-CU-2-4)</summary>
+                <summary id="info-zoning-header">ZONING PARAMETERS</summary>
                 <table class="cad-table">
-                    <tr><th>BASE DENSITY:</th><td>1 DU per 600 sq. ft.</td></tr>
-                    <tr><th>BASE FAR:</th><td>2.0</td></tr>
-                    <tr><th>CCHS FAR TIER 3:</th><td>6.5 FAR</td></tr>
-                    <tr><th>MAX HEIGHT:</th><td>50 Feet</td></tr>
-                    <tr><th>FRONT SETBACK:</th><td>10 FT</td></tr>
-                    <tr><th>STREET SIDE SETBACK:</th><td>10 FT</td></tr>
-                    <tr><th>SIDE / REAR SETBACK:</th><td>10 FT  or  0 FT</td></tr>
-                    <tr><th>USE REGS:</th><td>Residential only if commercial occupies front 30 ft.</td></tr>
+                    <tr><th>BASE DENSITY:</th><td id="info-zp-density">--</td></tr>
+                    <tr><th>BASE FAR:</th><td id="info-zp-basefar">--</td></tr>
+                    <tr><th>COMM FAR:</th><td id="info-zp-commfar">--</td></tr>
+                    <tr><th>MAX HEIGHT:</th><td id="info-zp-maxht">--</td></tr>
+                    <tr><th>FRONT SETBACK:</th><td id="info-zp-front">--</td></tr>
+                    <tr><th>REAR SETBACK:</th><td id="info-zp-rear">--</td></tr>
+                    <tr><th>SIDE SETBACK:</th><td id="info-zp-side">--</td></tr>
+                    <tr><th>NOTES:</th><td id="info-zp-notes">--</td></tr>
                 </table>
             </details>
             <details>
                 <summary>SITE LOCATION &amp; BASE ZONE</summary>
                 <table class="cad-table">
-                    <tr><th>ZONE DESIGNATION:</th><td>CUPD-CU-2-4</td></tr>
-                    <tr><th>CITY COUNCIL DISTRICT:</th><td>9</td></tr>
-                    <tr><th>ADDRESS:</th><td>4333 &amp; 4335 Euclid Avenue, San Diego, CA 92105</td></tr>
-                    <tr><th>CITY OWNED PARKS/PROP:</th><td>No</td></tr>
+                    <tr><th>ZONE DESIGNATION:</th><td id="info-sl-zone">--</td></tr>
+                    <tr><th>ADDRESS:</th><td id="info-sl-address">--</td></tr>
+                    <tr><th>PROJECT TYPE:</th><td id="info-sl-projtype">--</td></tr>
+                    <tr><th>ARCHITECT:</th><td id="info-sl-architect">--</td></tr>
                 </table>
             </details>
         </div>
         <div class="info-col-gap" id="infoColGap"></div>
         <div class="info-col-right" id="infoColRight">
-            <details>
-                <summary>PLANNING &amp; TRANSIT AREAS</summary>
-                <table class="cad-table">
-                    <tr><th>COMMUNITY PLAN AREA:</th><td>MID-CITY: CITY HEIGHTS</td></tr>
-                    <tr><th>LAND USE DESIGNATION:</th><td>Commercial / Mixed Use A (73 du/ac)</td></tr>
-                    <tr><th>CCHS (HOUSING SOLUTIONS):</th><td>Yes &#x2014; FAR Tier 3: 6.5 FAR</td></tr>
-                    <tr><th>TRANSIT PRIORITY AREA (TPA):</th><td>Yes</td></tr>
-                    <tr><th>PARKING STANDARDS (PSTPA):</th><td>Yes (0 Parking Required)</td></tr>
-                    <tr><th>MOBILITY CHOICES:</th><td>Yes &#x2014; Mobility Zone 2</td></tr>
-                </table>
-            </details>
-            <details>
-                <summary>OVERLAY ZONES</summary>
-                <table class="cad-table">
-                    <tr><th>TRANSIT AREA OVERLAY:</th><td>Yes</td></tr>
-                    <tr><th>AIRPORT INFLUENCE AREA:</th><td>No</td></tr>
-                    <tr><th>COASTAL OVERLAY:</th><td>No</td></tr>
-                    <tr><th>VERY HIGH FIRE HAZARD:</th><td>No</td></tr>
-                    <tr><th>FAULT ZONE:</th><td>No</td></tr>
-                </table>
-            </details>
-            <details>
+            <details id="info-inspectors-section">
                 <summary>CITY INSPECTOR CONTACTS</summary>
-                <table class="cad-table">
-                    <tr><th>COMBINATION:</th><td>Wesley Tukker (619-446-5362)</td></tr>
-                    <tr><th>STRUCTURAL:</th><td>Ricardo Ordonez (619-446-5123)</td></tr>
-                    <tr><th>ELECTRICAL:</th><td>Richard Gable (858-573-1223)</td></tr>
-                    <tr><th>MECHANICAL:</th><td>Christopher Sorchy (619-236-7033)</td></tr>
-                    <tr><th>PRIVATE GRADING:</th><td>Alejandro Ruiz (858-627-2034)</td></tr>
+                <table class="cad-table" id="info-inspectors-table">
                 </table>
             </details>
         </div>
@@ -1111,7 +1085,7 @@ const ConfigEngine = {
         address: "4335 Euclid Avenue, San Diego, CA 92105",
         apn: "471-271-16-00",
         zoning: "CUPD-CU-2-4",
-        width: 50, depth: 125, commercialDepth: 30
+        width: 50, depth: 125, commercialDepth: 30, lotSF: 0
     },
     defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
     // Coordinate system library — keyed by state/zone
@@ -1159,7 +1133,8 @@ const ConfigEngine = {
         if (sd.zoning)          this.data.zoning          = sd.zoning;
         if (sd.lotWidth)        this.data.width           = sd.lotWidth;
         if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
-        if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
+        if (sd.commercialDepth != null) this.data.commercialDepth = sd.commercialDepth;
+        if (sd.lotSF != null)   this.data.lotSF           = sd.lotSF;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
 
@@ -1339,7 +1314,8 @@ const ConfigEngine = {
 const UIEngine = {
     init: function() {
         const d    = ConfigEngine.data;
-        const sqft = d.width * d.depth;
+        const rectSqft = d.width * d.depth;
+        const sqft = (d.lotSF && d.lotSF > 0) ? d.lotSF : rectSqft;
 
         document.getElementById('ui-address').innerText      = d.address;
         document.getElementById('header-ui-apn').innerText   = d.apn;
@@ -1356,10 +1332,10 @@ const UIEngine = {
         this.updateLotSizeDisplay();
         document.getElementById('info-density-lot').innerText   = sqft.toFixed(1) + " S.F.";
         const sd = window.__SITE_DEFAULTS__ || {};
-        const baseFAR = sd.baseFAR || 2.0;
-        const commFAR = sd.commFAR || 6.5;
-        const maxHt   = sd.maxHeight || 50;
-        const densPS  = sd.densityPerSF || 600;
+        const baseFAR = sd.baseFAR ?? 2.0;
+        const commFAR = sd.commFAR ?? 6.5;
+        const maxHt   = sd.maxHeight ?? 50;
+        const densPS  = sd.densityPerSF ?? 600;
         const fSb = sd.frontSetback ?? 10, sSb = sd.sideSetback ?? 0, rSb = sd.rearSetback ?? 10;
         document.getElementById('info-buildable-far').innerText = (sqft * baseFAR).toFixed(1) + " S.F.";
 
@@ -1373,6 +1349,46 @@ const UIEngine = {
         var elSb  = document.getElementById('ui-setbacks');
         if (elSb) elSb.innerText = fSb + "' / " + sSb + "' / " + rSb + "'";
 
+        // ── Populate dynamic info tables from site-data ──
+        var _set = function(id, txt) { var el = document.getElementById(id); if (el) el.innerText = txt; };
+        _set('info-height', maxHt > 0 ? maxHt + '.0 FT' : '--');
+        _set('info-setbacks', '(F) ' + fSb + '-FT | (R) ' + rSb + '-FT | (S) ' + sSb + '-FT');
+        _set('info-max-far', baseFAR > 0 ? baseFAR.toString() : 'N/A');
+        _set('info-occupancy', d.zoning || '--');
+
+        // Zoning parameters table
+        var zpHdr = document.getElementById('info-zoning-header');
+        if (zpHdr) zpHdr.textContent = 'ZONING PARAMETERS (' + (d.zoning || '--') + ')';
+        _set('info-zp-density', densPS > 0 ? '1 DU per ' + densPS + ' sq. ft.' : 'Per zoning overlay');
+        _set('info-zp-basefar', baseFAR > 0 ? baseFAR.toString() : 'N/A');
+        _set('info-zp-commfar', commFAR > 0 ? commFAR + ' FAR' : 'N/A');
+        _set('info-zp-maxht', maxHt > 0 ? maxHt + ' Feet' : '--');
+        _set('info-zp-front', fSb + ' FT');
+        _set('info-zp-rear', rSb + ' FT');
+        _set('info-zp-side', sSb + ' FT');
+        _set('info-zp-notes', sd.notes || '--');
+
+        // Site location table
+        _set('info-sl-zone', d.zoning || '--');
+        _set('info-sl-address', d.address || '--');
+        _set('info-sl-projtype', sd.projectType || '--');
+        _set('info-sl-architect', sd.architect || '--');
+
+        // Inspector contacts (dynamic from site JSON)
+        var inspTable = document.getElementById('info-inspectors-table');
+        var inspectors = sd.inspectors || [];
+        if (inspTable) {
+            if (inspectors.length > 0) {
+                inspTable.innerHTML = inspectors.map(function(ins) {
+                    var n = (ins.name || '').toUpperCase().replace(/[<>]/g, '');
+                    var v = (ins.val || '--').replace(/[<>]/g, '');
+                    return '<tr><th>' + n + ':</th><td>' + v + '</td></tr>';
+                }).join('');
+            } else {
+                inspTable.innerHTML = '<tr><td>No inspectors assigned</td></tr>';
+            }
+        }
+
         document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
             ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';
             e.target.innerText = ConfigEngine.state.unitMode;
@@ -1383,7 +1399,8 @@ const UIEngine = {
     },
 
     updateLotSizeDisplay: function() {
-        const sqft = ConfigEngine.data.width * ConfigEngine.data.depth;
+        const d = ConfigEngine.data;
+        const sqft = (d.lotSF && d.lotSF > 0) ? d.lotSF : (d.width * d.depth);
         const el   = document.getElementById('info-lotsize');
         el.innerText = ConfigEngine.state.unitMode === 'SF'
             ? sqft.toFixed(1) + " S.F."
@@ -3150,13 +3167,13 @@ const SetbackEngine = {
 
     updateFAR: function() {
         const state   = ConfigEngine.state;
-        const { width: lotW, depth: lotD } = ConfigEngine.data;
-        const lotArea = lotW * lotD;
+        const { width: lotW, depth: lotD, lotSF } = ConfigEngine.data;
+        const lotArea = (lotSF && lotSF > 0) ? lotSF : (lotW * lotD);
         if (!lotArea) return;
 
         const sd        = window.__SITE_DEFAULTS__ || {};
         const commFront = state.commFront || false;
-        const maxFAR    = commFront ? (sd.commFAR || 6.5) : (sd.baseFAR || 2.0);
+        const maxFAR    = commFront ? (sd.commFAR ?? 6.5) : (sd.baseFAR ?? 2.0);
         const buildable = Math.round(lotArea * maxFAR);
 
         const active      = state.buildings[state.activeBuilding] || state.buildings[0];
@@ -3171,17 +3188,25 @@ const SetbackEngine = {
 
         set('bldgFootprintArea', Math.round(footprintSF).toLocaleString());
         set('bldgTotalArea',     Math.round(totalArea).toLocaleString()   + ' sf');
-        set('bldgFAR',           actualFAR.toFixed(2));
-        set('bldgBuildable',     'MAX ' + buildable.toLocaleString() + ' sf');
-        set('maxFARLabel',       commFront ? 'Comm. Front: ' + maxFAR + ' FAR' : 'Base: ' + maxFAR + ' FAR');
 
         const chkEl = document.getElementById('bldgFARCheck');
-        if (chkEl) {
-            const ok = actualFAR <= maxFAR + 0.005;
-            chkEl.textContent = ok
-                ? '\u2713 Within limit (' + actualFAR.toFixed(2) + ' \u2264 ' + maxFAR + ')'
-                : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
-            chkEl.style.color = ok ? '#2f855a' : '#c53030';
+        if (maxFAR > 0) {
+            set('bldgFAR',       actualFAR.toFixed(2));
+            set('bldgBuildable', 'MAX ' + buildable.toLocaleString() + ' sf');
+            set('maxFARLabel',   commFront ? 'Comm. Front: ' + maxFAR + ' FAR' : 'Base: ' + maxFAR + ' FAR');
+            if (chkEl) {
+                const ok = actualFAR <= maxFAR + 0.005;
+                chkEl.textContent = ok
+                    ? '\u2713 Within limit (' + actualFAR.toFixed(2) + ' \u2264 ' + maxFAR + ')'
+                    : '\u2717 Exceeds limit (' + actualFAR.toFixed(2) + ' > ' + maxFAR + ')';
+                chkEl.style.color = ok ? '#2f855a' : '#c53030';
+            }
+        } else {
+            // FAR not applicable for this zone (baseFAR=0)
+            set('bldgFAR',       'N/A');
+            set('bldgBuildable', 'Per zoning');
+            set('maxFARLabel',   'FAR: N/A');
+            if (chkEl) { chkEl.textContent = '\u2713 FAR not applicable'; chkEl.style.color = '#2f855a'; }
         }
 
         const floorH      = active.floorHeight || 9;
@@ -3190,18 +3215,24 @@ const SetbackEngine = {
         set('bldgTotalHeight', totalHeight.toFixed(0));
 
         // Density check: total residential units vs base zone max
-        const densPerSF = sd.densityPerSF || 600;
-        const baseDMax  = Math.floor(lotArea / densPerSF);
+        const densPerSF = sd.densityPerSF ?? 600;
         const resiU     = state.buildings.reduce((s, b) => s + (b.stories || 1) * (b.count || 1), 0);
-        const sdbMin    = baseDMax + Math.ceil(baseDMax * 0.225); // 5% LI → 22.5% bonus
         const densEl    = document.getElementById('bldgDensity');
         const densChk   = document.getElementById('bldgDensityCheck');
-        if (densEl)  densEl.textContent  = resiU + ' DU / ' + (commFront ? 'unlimited' : baseDMax + ' max');
-        if (densChk) {
-            if (commFront)         { densChk.textContent = '\u2713 CCHS: no limit'; densChk.style.color = '#2f855a'; }
-            else if (resiU <= baseDMax) { densChk.textContent = '\u2713 Within base zone'; densChk.style.color = '#2f855a'; }
-            else if (resiU <= sdbMin)   { densChk.textContent = '\u26a0 Needs SDB (min 5% aff)'; densChk.style.color = '#d97706'; }
-            else                        { densChk.textContent = '\u2717 Exceeds base — use CCHS or SDB'; densChk.style.color = '#c53030'; }
+        if (densPerSF > 0) {
+            const baseDMax  = Math.floor(lotArea / densPerSF);
+            const sdbMin    = baseDMax + Math.ceil(baseDMax * 0.225); // 5% LI -> 22.5% bonus
+            if (densEl)  densEl.textContent  = resiU + ' DU / ' + (commFront ? 'unlimited' : baseDMax + ' max');
+            if (densChk) {
+                if (commFront)             { densChk.textContent = '\u2713 CCHS: no limit'; densChk.style.color = '#2f855a'; }
+                else if (resiU <= baseDMax) { densChk.textContent = '\u2713 Within base zone'; densChk.style.color = '#2f855a'; }
+                else if (resiU <= sdbMin)   { densChk.textContent = '\u26a0 Needs SDB (min 5% aff)'; densChk.style.color = '#d97706'; }
+                else                        { densChk.textContent = '\u2717 Exceeds base -- use CCHS or SDB'; densChk.style.color = '#c53030'; }
+            }
+        } else {
+            // densityPerSF=0 means density not governed by lot-area formula (e.g. R-3 MDR)
+            if (densEl)  densEl.textContent  = resiU + ' DU / per zoning';
+            if (densChk) { densChk.textContent = '\u2713 Density per zoning overlay'; densChk.style.color = '#2f855a'; }
         }
     },
 

@@ -4,7 +4,8 @@
 const UIEngine = {
     init: function() {
         const d    = ConfigEngine.data;
-        const sqft = d.width * d.depth;
+        const rectSqft = d.width * d.depth;
+        const sqft = (d.lotSF && d.lotSF > 0) ? d.lotSF : rectSqft;
 
         document.getElementById('ui-address').innerText      = d.address;
         document.getElementById('header-ui-apn').innerText   = d.apn;
@@ -21,10 +22,10 @@ const UIEngine = {
         this.updateLotSizeDisplay();
         document.getElementById('info-density-lot').innerText   = sqft.toFixed(1) + " S.F.";
         const sd = window.__SITE_DEFAULTS__ || {};
-        const baseFAR = sd.baseFAR || 2.0;
-        const commFAR = sd.commFAR || 6.5;
-        const maxHt   = sd.maxHeight || 50;
-        const densPS  = sd.densityPerSF || 600;
+        const baseFAR = sd.baseFAR ?? 2.0;
+        const commFAR = sd.commFAR ?? 6.5;
+        const maxHt   = sd.maxHeight ?? 50;
+        const densPS  = sd.densityPerSF ?? 600;
         const fSb = sd.frontSetback ?? 10, sSb = sd.sideSetback ?? 0, rSb = sd.rearSetback ?? 10;
         document.getElementById('info-buildable-far').innerText = (sqft * baseFAR).toFixed(1) + " S.F.";
 
@@ -38,6 +39,46 @@ const UIEngine = {
         var elSb  = document.getElementById('ui-setbacks');
         if (elSb) elSb.innerText = fSb + "' / " + sSb + "' / " + rSb + "'";
 
+        // ── Populate dynamic info tables from site-data ──
+        var _set = function(id, txt) { var el = document.getElementById(id); if (el) el.innerText = txt; };
+        _set('info-height', maxHt > 0 ? maxHt + '.0 FT' : '--');
+        _set('info-setbacks', '(F) ' + fSb + '-FT | (R) ' + rSb + '-FT | (S) ' + sSb + '-FT');
+        _set('info-max-far', baseFAR > 0 ? baseFAR.toString() : 'N/A');
+        _set('info-occupancy', d.zoning || '--');
+
+        // Zoning parameters table
+        var zpHdr = document.getElementById('info-zoning-header');
+        if (zpHdr) zpHdr.textContent = 'ZONING PARAMETERS (' + (d.zoning || '--') + ')';
+        _set('info-zp-density', densPS > 0 ? '1 DU per ' + densPS + ' sq. ft.' : 'Per zoning overlay');
+        _set('info-zp-basefar', baseFAR > 0 ? baseFAR.toString() : 'N/A');
+        _set('info-zp-commfar', commFAR > 0 ? commFAR + ' FAR' : 'N/A');
+        _set('info-zp-maxht', maxHt > 0 ? maxHt + ' Feet' : '--');
+        _set('info-zp-front', fSb + ' FT');
+        _set('info-zp-rear', rSb + ' FT');
+        _set('info-zp-side', sSb + ' FT');
+        _set('info-zp-notes', sd.notes || '--');
+
+        // Site location table
+        _set('info-sl-zone', d.zoning || '--');
+        _set('info-sl-address', d.address || '--');
+        _set('info-sl-projtype', sd.projectType || '--');
+        _set('info-sl-architect', sd.architect || '--');
+
+        // Inspector contacts (dynamic from site JSON)
+        var inspTable = document.getElementById('info-inspectors-table');
+        var inspectors = sd.inspectors || [];
+        if (inspTable) {
+            if (inspectors.length > 0) {
+                inspTable.innerHTML = inspectors.map(function(ins) {
+                    var n = (ins.name || '').toUpperCase().replace(/[<>]/g, '');
+                    var v = (ins.val || '--').replace(/[<>]/g, '');
+                    return '<tr><th>' + n + ':</th><td>' + v + '</td></tr>';
+                }).join('');
+            } else {
+                inspTable.innerHTML = '<tr><td>No inspectors assigned</td></tr>';
+            }
+        }
+
         document.getElementById('unitToggleBtn').addEventListener('click', (e) => {
             ConfigEngine.state.unitMode = ConfigEngine.state.unitMode === 'SF' ? 'AC' : 'SF';
             e.target.innerText = ConfigEngine.state.unitMode;
@@ -48,7 +89,8 @@ const UIEngine = {
     },
 
     updateLotSizeDisplay: function() {
-        const sqft = ConfigEngine.data.width * ConfigEngine.data.depth;
+        const d = ConfigEngine.data;
+        const sqft = (d.lotSF && d.lotSF > 0) ? d.lotSF : (d.width * d.depth);
         const el   = document.getElementById('info-lotsize');
         el.innerText = ConfigEngine.state.unitMode === 'SF'
             ? sqft.toFixed(1) + " S.F."

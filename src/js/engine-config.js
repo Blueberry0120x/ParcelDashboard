@@ -6,7 +6,7 @@ const ConfigEngine = {
         address: "4335 Euclid Avenue, San Diego, CA 92105",
         apn: "471-271-16-00",
         zoning: "CUPD-CU-2-4",
-        width: 50, depth: 125, commercialDepth: 30
+        width: 50, depth: 125, commercialDepth: 30, lotSF: 0
     },
     defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
     // Coordinate system library — keyed by state/zone
@@ -54,7 +54,8 @@ const ConfigEngine = {
         if (sd.zoning)          this.data.zoning          = sd.zoning;
         if (sd.lotWidth)        this.data.width           = sd.lotWidth;
         if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
-        if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
+        if (sd.commercialDepth != null) this.data.commercialDepth = sd.commercialDepth;
+        if (sd.lotSF != null)   this.data.lotSF           = sd.lotSF;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
 
