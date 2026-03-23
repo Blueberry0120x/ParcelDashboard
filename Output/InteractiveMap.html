@@ -695,7 +695,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.40,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1};</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -783,10 +783,11 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
                 <div class="align-btn-row">
                     <button id="saveSettingsBtn" class="btn-align btn-align-file" onclick="ExportEngine.saveToFile()">Save to File</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px">
+                <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px;flex-wrap:wrap">
                     <span style="font-size:10px;font-weight:600;color:#64748b">COORD:</span>
-                    <select id="cadZoneSelect" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;}">
+                    <select id="cadZoneSelect" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;document.getElementById('cadZoneLabel').textContent=sys.label;}">
                     </select>
+                    <span id="cadZoneLabel" style="font-size:9px;color:#94a3b8;font-style:italic"></span>
                 </div>
                 <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
 
@@ -1162,12 +1163,13 @@ const ConfigEngine = {
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
 
-        // Set coordinate system from site config or auto-detect from state
-        if (sd.cadZone && this.CAD_SYSTEMS[sd.cadZone]) {
-            var sys = this.CAD_SYSTEMS[sd.cadZone];
+        // Set coordinate system from site config or auto-detect from address
+        var cadZone = sd.cadZone || this._detectCadZone(sd.address || this.data.address);
+        if (cadZone && this.CAD_SYSTEMS[cadZone]) {
+            var sys = this.CAD_SYSTEMS[cadZone];
             this.cad.projection = sys.projection;
             this.cad.proj4Def   = sys.proj4Def;
-            this.data.cadZone   = sd.cadZone;
+            this.data.cadZone   = cadZone;
         }
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
@@ -1287,6 +1289,25 @@ const ConfigEngine = {
         });
 
         return saved;
+    },
+
+    // Auto-detect CAD zone from address string
+    _detectCadZone: function(addr) {
+        if (!addr) return null;
+        var a = addr.toUpperCase();
+        // San Diego County
+        if (a.indexOf('SAN DIEGO') > -1 || /\b921\d{2}\b/.test(a)) return 'CA_VI';
+        // Orange County / LA County
+        if (a.indexOf('GARDEN GROVE') > -1 || a.indexOf('ANAHEIM') > -1 ||
+            a.indexOf('SANTA ANA') > -1 || a.indexOf('IRVINE') > -1 ||
+            a.indexOf('LOS ANGELES') > -1 || a.indexOf('LONG BEACH') > -1 ||
+            /\b926\d{2}\b/.test(a) || /\b928\d{2}\b/.test(a) ||
+            /\b900\d{2}\b/.test(a) || /\b906\d{2}\b/.test(a)) return 'CA_V';
+        // WA - Seattle / King County area
+        if (a.indexOf('SEATTLE') > -1 || a.indexOf('BURIEN') > -1 ||
+            a.indexOf('BELLEVUE') > -1 || a.indexOf('TACOMA') > -1 ||
+            /\b981\d{2}\b/.test(a) || /\b980\d{2}\b/.test(a)) return 'WA_N';
+        return null;
     },
 
     reset: function() {
@@ -3539,6 +3560,7 @@ const ExportEngine = {
         var s = ConfigEngine.state;
         var payload = {
             project: 'Master Site Dashboard',
+            siteId: ConfigEngine.data.siteId || null,
             saved: {
                 lat:            s.lat,
                 lng:            s.lng,
@@ -3755,6 +3777,9 @@ const ResizeEngine = {
                 if (key === active) opt.selected = true;
                 sel.appendChild(opt);
             });
+            // Show active zone label
+            var lbl = document.getElementById('cadZoneLabel');
+            if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
         // Populate site switcher dropdown

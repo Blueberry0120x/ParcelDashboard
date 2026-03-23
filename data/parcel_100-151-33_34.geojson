@@ -1,0 +1,26 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "apn": "100-151-33, 100-151-34",
+        "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
+        "source": "OC ArcGIS Parcels MapServer (combined lots 33+34)",
+        "note": "Polygon projected from ADEC plan surveyed dims: 155.3x147.5x109.9x122.85 ft. Plan states 0.64 AC but computed area from these dims is 0.44 AC -- difference likely due to ROW dedication or setback-line vs. lot-line measurements.",
+        "assessorMap": "Book 100, Page 15, Tract 618, Block 151"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-117.93749677, 33.76014719],
+          [-117.93698399, 33.76014719],
+          [-117.93698399, 33.75980985],
+          [-117.93747102, 33.75980985],
+          [-117.93749677, 33.75984555],
+          [-117.93749677, 33.76014719]
+        ]]
+      }
+    }
+  ]
+}

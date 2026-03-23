@@ -108,10 +108,11 @@
                 <div class="align-btn-row">
                     <button id="saveSettingsBtn" class="btn-align btn-align-file" onclick="ExportEngine.saveToFile()">Save to File</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px">
+                <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px;flex-wrap:wrap">
                     <span style="font-size:10px;font-weight:600;color:#64748b">COORD:</span>
-                    <select id="cadZoneSelect" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;}">
+                    <select id="cadZoneSelect" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;document.getElementById('cadZoneLabel').textContent=sys.label;}">
                     </select>
+                    <span id="cadZoneLabel" style="font-size:9px;color:#94a3b8;font-style:italic"></span>
                 </div>
                 <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
 

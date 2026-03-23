@@ -58,12 +58,13 @@ const ConfigEngine = {
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
 
-        // Set coordinate system from site config or auto-detect from state
-        if (sd.cadZone && this.CAD_SYSTEMS[sd.cadZone]) {
-            var sys = this.CAD_SYSTEMS[sd.cadZone];
+        // Set coordinate system from site config or auto-detect from address
+        var cadZone = sd.cadZone || this._detectCadZone(sd.address || this.data.address);
+        if (cadZone && this.CAD_SYSTEMS[cadZone]) {
+            var sys = this.CAD_SYSTEMS[cadZone];
             this.cad.projection = sys.projection;
             this.cad.proj4Def   = sys.proj4Def;
-            this.data.cadZone   = sd.cadZone;
+            this.data.cadZone   = cadZone;
         }
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
@@ -183,6 +184,25 @@ const ConfigEngine = {
         });
 
         return saved;
+    },
+
+    // Auto-detect CAD zone from address string
+    _detectCadZone: function(addr) {
+        if (!addr) return null;
+        var a = addr.toUpperCase();
+        // San Diego County
+        if (a.indexOf('SAN DIEGO') > -1 || /\b921\d{2}\b/.test(a)) return 'CA_VI';
+        // Orange County / LA County
+        if (a.indexOf('GARDEN GROVE') > -1 || a.indexOf('ANAHEIM') > -1 ||
+            a.indexOf('SANTA ANA') > -1 || a.indexOf('IRVINE') > -1 ||
+            a.indexOf('LOS ANGELES') > -1 || a.indexOf('LONG BEACH') > -1 ||
+            /\b926\d{2}\b/.test(a) || /\b928\d{2}\b/.test(a) ||
+            /\b900\d{2}\b/.test(a) || /\b906\d{2}\b/.test(a)) return 'CA_V';
+        // WA - Seattle / King County area
+        if (a.indexOf('SEATTLE') > -1 || a.indexOf('BURIEN') > -1 ||
+            a.indexOf('BELLEVUE') > -1 || a.indexOf('TACOMA') > -1 ||
+            /\b981\d{2}\b/.test(a) || /\b980\d{2}\b/.test(a)) return 'WA_N';
+        return null;
     },
 
     reset: function() {

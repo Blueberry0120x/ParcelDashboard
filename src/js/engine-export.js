@@ -121,6 +121,7 @@ const ExportEngine = {
         var s = ConfigEngine.state;
         var payload = {
             project: 'Master Site Dashboard',
+            siteId: ConfigEngine.data.siteId || null,
             saved: {
                 lat:            s.lat,
                 lng:            s.lng,

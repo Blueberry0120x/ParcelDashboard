@@ -68,6 +68,9 @@
                 if (key === active) opt.selected = true;
                 sel.appendChild(opt);
             });
+            // Show active zone label
+            var lbl = document.getElementById('cadZoneLabel');
+            if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
         // Populate site switcher dropdown
