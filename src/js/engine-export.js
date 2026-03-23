@@ -166,14 +166,35 @@ const ExportEngine = {
         this._flashTimer = setTimeout(function() { el.style.display = 'none'; }, 2000);
     },
 
-    // Silent background push to local dev server
+    // Background push to local dev server
     _pushToServer: function() {
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
+        var self = this;
         fetch('/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(this._payload(), null, 2)
-        }).catch(function() {});
+        }).then(function(r) {
+            if (!r.ok) self._showSaveError('Server returned ' + r.status);
+        }).catch(function(err) {
+            self._showSaveError('Server unreachable');
+        });
+    },
+
+    _showSaveError: function(msg) {
+        var el = document.getElementById('map-save-flash');
+        if (!el) { console.warn('Save failed:', msg); return; }
+        if (this._flashTimer) clearTimeout(this._flashTimer);
+        el.textContent = 'Save failed: ' + msg;
+        el.style.display = 'block';
+        el.style.background = '#c53030';
+        el.style.animation = 'none';
+        var self = this;
+        this._flashTimer = setTimeout(function() {
+            el.style.display = 'none';
+            el.textContent = 'Saved';
+            el.style.background = '';
+        }, 4000);
     },
 
     // Save to File button — save() + download on file://
