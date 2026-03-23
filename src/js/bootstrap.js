@@ -55,6 +55,21 @@
             MapEngine._seedVehicleInputs(ConfigEngine.state.activeVehicle);
         }
 
+        // Populate CAD coordinate system dropdown
+        (function() {
+            var sel = document.getElementById('cadZoneSelect');
+            if (!sel) return;
+            var systems = ConfigEngine.CAD_SYSTEMS;
+            var active = ConfigEngine.data.cadZone || 'CA_VI';
+            Object.keys(systems).forEach(function(key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = systems[key].label;
+                if (key === active) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        })();
+
         // Populate site switcher dropdown
         (function() {
             var sel = document.getElementById('site-switcher');

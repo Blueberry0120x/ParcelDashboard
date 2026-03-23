@@ -4,6 +4,7 @@
     "address": "4335 Euclid Avenue, San Diego, CA 92105",
     "apn": "471-271-16-00",
     "zoning": "CUPD-CU-2-4",
+    "cadZone": "CA_VI",
     "lotWidth": 50,
     "lotDepth": 125,
     "lotSF": 6250,

@@ -9,6 +9,15 @@ const ConfigEngine = {
         width: 50, depth: 125, commercialDepth: 30
     },
     defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
+    // Coordinate system library — keyed by state/zone
+    CAD_SYSTEMS: {
+        "CA_VI":   { label: "CA State Plane VI (San Diego)",  projection: "CA_VI_IF",   proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "CA_V":    { label: "CA State Plane V (LA/OC)",       projection: "CA_V_IF",    proj4Def: "+proj=lcc +lat_1=35.46666666666667 +lat_2=34.03333333333333 +lat_0=33.5 +lon_0=-118.0 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "CA_IV":   { label: "CA State Plane IV (Fresno)",     projection: "CA_IV_IF",   proj4Def: "+proj=lcc +lat_1=37.25 +lat_2=36.0 +lat_0=35.33333333333334 +lon_0=-119.0 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "CA_III":  { label: "CA State Plane III (Sac/SF)",    projection: "CA_III_IF",  proj4Def: "+proj=lcc +lat_1=38.43333333333333 +lat_2=37.06666666666667 +lat_0=36.5 +lon_0=-120.5 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "WA_N":    { label: "WA State Plane North (Seattle)", projection: "WA_N_IF",    proj4Def: "+proj=lcc +lat_1=48.73333333333333 +lat_2=47.5 +lat_0=47.0 +lon_0=-120.8333333333333 +x_0=500000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs" },
+        "WA_S":    { label: "WA State Plane South (Olympia)", projection: "WA_S_IF",    proj4Def: "+proj=lcc +lat_1=47.33333333333334 +lat_2=45.83333333333334 +lat_0=45.33333333333334 +lon_0=-120.5 +x_0=500000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs" },
+    },
     cad: {
         projection: "CA_VI_IF",
         proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
@@ -48,6 +57,14 @@ const ConfigEngine = {
         if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
+
+        // Set coordinate system from site config or auto-detect from state
+        if (sd.cadZone && this.CAD_SYSTEMS[sd.cadZone]) {
+            var sys = this.CAD_SYSTEMS[sd.cadZone];
+            this.cad.projection = sys.projection;
+            this.cad.proj4Def   = sys.proj4Def;
+            this.data.cadZone   = sd.cadZone;
+        }
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
         var sdBldg = sd.buildings && sd.buildings[0];

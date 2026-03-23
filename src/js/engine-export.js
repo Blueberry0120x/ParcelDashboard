@@ -9,7 +9,9 @@ const ExportEngine = {
         let out = ";; ==========================================\n";
         out += ";; AUTOLISP BOUNDARY SCRIPT - " + ConfigEngine.data.apn + "\n";
         out += ";; Rotation Angle: " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
-        out += ";; System: CA State Plane Zone 6 (Intl Ft)\n";
+        var cadZone = ConfigEngine.data.cadZone || "CA_VI";
+        var cadLabel = (ConfigEngine.CAD_SYSTEMS[cadZone] || {}).label || ConfigEngine.cad.projection;
+        out += ";; System: " + cadLabel + " (Intl Ft)\n";
         out += ";; ==========================================\n\n(command \"_pline\"\n";
 
         const ptNames = ["Pt 1 (Front Left)", "Pt 2 (Back Left)", "Pt 3 (Back Right)", "Pt 4 (Front Right)"];

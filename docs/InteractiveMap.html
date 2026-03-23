@@ -695,7 +695,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1,"siteId":"euclid"};</script>
+<script>window.__SITE_DEFAULTS__ = {"address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1,"siteId":"euclid"};</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -782,6 +782,11 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
                 </div>
                 <div class="align-btn-row">
                     <button id="saveSettingsBtn" class="btn-align btn-align-file" onclick="ExportEngine.saveToFile()">Save to File</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px">
+                    <span style="font-size:10px;font-weight:600;color:#64748b">COORD:</span>
+                    <select id="cadZoneSelect" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;}">
+                    </select>
                 </div>
                 <textarea id="outputCoords" class="lisp-output" readonly placeholder="LISP code will appear here&#x2026;"></textarea>
 
@@ -1108,6 +1113,15 @@ const ConfigEngine = {
         width: 50, depth: 125, commercialDepth: 30
     },
     defaults: { lat: 32.755575, lng: -117.091850, rotation: 10.0 },
+    // Coordinate system library — keyed by state/zone
+    CAD_SYSTEMS: {
+        "CA_VI":   { label: "CA State Plane VI (San Diego)",  projection: "CA_VI_IF",   proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "CA_V":    { label: "CA State Plane V (LA/OC)",       projection: "CA_V_IF",    proj4Def: "+proj=lcc +lat_1=35.46666666666667 +lat_2=34.03333333333333 +lat_0=33.5 +lon_0=-118.0 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "CA_IV":   { label: "CA State Plane IV (Fresno)",     projection: "CA_IV_IF",   proj4Def: "+proj=lcc +lat_1=37.25 +lat_2=36.0 +lat_0=35.33333333333334 +lon_0=-119.0 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "CA_III":  { label: "CA State Plane III (Sac/SF)",    projection: "CA_III_IF",  proj4Def: "+proj=lcc +lat_1=38.43333333333333 +lat_2=37.06666666666667 +lat_0=36.5 +lon_0=-120.5 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs" },
+        "WA_N":    { label: "WA State Plane North (Seattle)", projection: "WA_N_IF",    proj4Def: "+proj=lcc +lat_1=48.73333333333333 +lat_2=47.5 +lat_0=47.0 +lon_0=-120.8333333333333 +x_0=500000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs" },
+        "WA_S":    { label: "WA State Plane South (Olympia)", projection: "WA_S_IF",    proj4Def: "+proj=lcc +lat_1=47.33333333333334 +lat_2=45.83333333333334 +lat_0=45.33333333333334 +lon_0=-120.5 +x_0=500000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs" },
+    },
     cad: {
         projection: "CA_VI_IF",
         proj4Def: "+proj=lcc +lat_1=33.88333333333333 +lat_2=32.78333333333333 +lat_0=32.16666666666666 +lon_0=-116.25 +x_0=2000000 +y_0=500000 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048 +no_defs"
@@ -1147,6 +1161,14 @@ const ConfigEngine = {
         if (sd.commercialDepth) this.data.commercialDepth = sd.commercialDepth;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
+
+        // Set coordinate system from site config or auto-detect from state
+        if (sd.cadZone && this.CAD_SYSTEMS[sd.cadZone]) {
+            var sys = this.CAD_SYSTEMS[sd.cadZone];
+            this.cad.projection = sys.projection;
+            this.cad.proj4Def   = sys.proj4Def;
+            this.data.cadZone   = sd.cadZone;
+        }
 
         // Resolve defaultBuilding: site-data.json first building > hardcoded fallback
         var sdBldg = sd.buildings && sd.buildings[0];
@@ -3405,7 +3427,9 @@ const ExportEngine = {
         let out = ";; ==========================================\n";
         out += ";; AUTOLISP BOUNDARY SCRIPT - " + ConfigEngine.data.apn + "\n";
         out += ";; Rotation Angle: " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
-        out += ";; System: CA State Plane Zone 6 (Intl Ft)\n";
+        var cadZone = ConfigEngine.data.cadZone || "CA_VI";
+        var cadLabel = (ConfigEngine.CAD_SYSTEMS[cadZone] || {}).label || ConfigEngine.cad.projection;
+        out += ";; System: " + cadLabel + " (Intl Ft)\n";
         out += ";; ==========================================\n\n(command \"_pline\"\n";
 
         const ptNames = ["Pt 1 (Front Left)", "Pt 2 (Back Left)", "Pt 3 (Back Right)", "Pt 4 (Front Right)"];
@@ -3696,6 +3720,21 @@ const ResizeEngine = {
             MapEngine._rebuildVehicleTabs();
             MapEngine._seedVehicleInputs(ConfigEngine.state.activeVehicle);
         }
+
+        // Populate CAD coordinate system dropdown
+        (function() {
+            var sel = document.getElementById('cadZoneSelect');
+            if (!sel) return;
+            var systems = ConfigEngine.CAD_SYSTEMS;
+            var active = ConfigEngine.data.cadZone || 'CA_VI';
+            Object.keys(systems).forEach(function(key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = systems[key].label;
+                if (key === active) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        })();
 
         // Populate site switcher dropdown
         (function() {

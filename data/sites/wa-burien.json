@@ -4,6 +4,7 @@
     "address": "405 SW 126th St, Burien, WA 98146",
     "apn": "0723049368",
     "zoning": "TBD",
+    "cadZone": "WA_N",
     "lotWidth": 94,
     "lotDepth": 95,
     "lotSF": 10791,
