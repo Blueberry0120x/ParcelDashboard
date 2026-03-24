@@ -1,5 +1,65 @@
-﻿# Build ZoningCodeLibrary.xlsx
-$xlPath = Join-Path $PSScriptRoot "ZoningCodeLibrary.xlsx"
+# Build ZoningCodeLibrary.xlsx -- Dynamic from site-data.json
+# Reads the active site config and generates a per-site zoning workbook.
+
+$base     = Split-Path $PSScriptRoot -Parent
+$siteJson = Join-Path (Join-Path $base "data") "site-data.json"
+
+if (-not (Test-Path $siteJson)) {
+    Write-Host "[ERROR] data/site-data.json not found. Run build.py or activate a site first."
+    exit 1
+}
+
+$raw  = Get-Content $siteJson -Raw -Encoding UTF8
+$data = $raw | ConvertFrom-Json
+$s    = $data.site
+
+# ── Derived values ───────────────────────────────────────────────────────
+$siteId     = if ($s.siteId) { $s.siteId } else { "UNKNOWN" }
+$addr       = if ($s.address) { $s.address } else { "--" }
+$apn        = if ($s.apn) { $s.apn } else { "--" }
+$zoning     = if ($s.zoning) { $s.zoning } else { "--" }
+$lotW       = if ($s.lotWidth)  { $s.lotWidth }  else { 0 }
+$lotD       = if ($s.lotDepth)  { $s.lotDepth }  else { 0 }
+$lotSF      = if ($s.lotSF -and $s.lotSF -gt 0) { $s.lotSF } else { $lotW * $lotD }
+$lotAcres   = [math]::Round($lotSF / 43560, 2)
+$commD      = if ($null -ne $s.commercialDepth) { $s.commercialDepth } else { 0 }
+$baseFAR    = if ($null -ne $s.baseFAR) { $s.baseFAR } else { 0 }
+$commFAR    = if ($null -ne $s.commFAR) { $s.commFAR } else { 0 }
+$maxHt      = if ($null -ne $s.maxHeight) { $s.maxHeight } else { 0 }
+$baseHtLim  = if ($null -ne $s.baseHeightLimit) { $s.baseHeightLimit } else { $maxHt }
+$cchsMaxHt  = if ($null -ne $s.cchsMaxHeight) { $s.cchsMaxHeight } else { 0 }
+$fSb        = if ($null -ne $s.frontSetback) { $s.frontSetback } else { 0 }
+$rSb        = if ($null -ne $s.rearSetback) { $s.rearSetback } else { 0 }
+$sSb        = if ($null -ne $s.sideSetback) { $s.sideSetback } else { 0 }
+$densSF     = if ($null -ne $s.densityPerSF) { $s.densityPerSF } else { 0 }
+$nefRate    = if ($null -ne $s.nefRatePerSF) { $s.nefRatePerSF } else { 0 }
+$affPct     = if ($null -ne $s.affordabilityPct) { $s.affordabilityPct } else { 0 }
+$difUnit    = if ($null -ne $s.difPerUnit) { $s.difPerUnit } else { 0 }
+$difWaiver  = if ($null -ne $s.difWaiverSF) { $s.difWaiverSF } else { 0 }
+$projType   = if ($s.projectType) { $s.projectType } else { "--" }
+$architect  = if ($s.architect) { $s.architect } else { "--" }
+$notes      = if ($s.notes) { $s.notes } else { "" }
+$unitCount  = if ($null -ne $s.unitCount) { $s.unitCount } else { 0 }
+$unitDens   = if ($null -ne $s.unitDensity) { $s.unitDensity } else { 0 }
+$densBonus  = if ($null -ne $s.densityBonus) { $s.densityBonus } else { $false }
+$cvt        = if ($null -ne $s.cornerVisibilityTriangle) { $s.cornerVisibilityTriangle } else { $false }
+$cvtSize    = if ($null -ne $s.cornerVisTriSize) { $s.cornerVisTriSize } else { 0 }
+$cvtCorner  = if ($s.cornerVisCorner) { $s.cornerVisCorner } else { "--" }
+
+# Computed
+$baseBuildable = if ($baseFAR -gt 0) { [math]::Round($lotSF * $baseFAR) } else { 0 }
+$cchsBuildable = if ($commFAR -gt 0) { [math]::Round($lotSF * $commFAR) } else { 0 }
+$maxDU         = if ($densSF -gt 0) { [math]::Floor($lotSF / $densSF) } else { 0 }
+$nefTotal      = if ($nefRate -gt 0) { [math]::Round($nefRate * $lotSF) } else { 0 }
+$affUnits      = if ($affPct -gt 0 -and $maxDU -gt 0) { [math]::Ceiling($maxDU * $affPct) } else { 0 }
+$sdbBonus      = if ($maxDU -gt 0) { $maxDU + [math]::Ceiling($maxDU * 0.2) } else { 0 }
+$sdbBuildable  = if ($baseFAR -gt 0) { [math]::Round($lotSF * $baseFAR * 1.2) } else { 0 }
+
+$xlPath = Join-Path $PSScriptRoot "$siteId-ZoningCodeLibrary.xlsx"
+
+Write-Host "Building workbook for: $siteId ($addr)"
+Write-Host "  Lot: $lotW x $lotD = $($lotSF.ToString('N0')) SF"
+
 $app = $null; $wb = $null
 
 function Set-Cell($ws,$r,$c,$v){ $ws.Cells.Item($r,$c) = $v }
@@ -21,6 +81,13 @@ function Style-Alt($ws,$row,$cols){
     $rng.Interior.Color = 0xF0F4F8
 }
 
+# Helper: format "N/A" for zero values
+function FmtOrNA($v, $fmt="") {
+    if ($v -eq 0) { return "N/A" }
+    if ($fmt) { return $v.ToString($fmt) }
+    return "$v"
+}
+
 try {
     $app = New-Object -ComObject Excel.Application
     $app.Visible = $false; $app.DisplayAlerts = $false
@@ -32,50 +99,98 @@ try {
     for($c=1;$c -le 4;$c++){ Set-Cell $s1 1 $c $h[$c-1] }
     Style-Header $s1 1 1 1 4
 
+    $densLabel = if ($densSF -gt 0) { "1 DU per $densSF SF = floor($lotSF/$densSF)" } else { "Per zoning overlay" }
+    $lotDimNote = "$lotW x $lotD" + $(if ($lotSF -ne ($lotW * $lotD)) { " (surveyed: $($lotSF.ToString('N0')) SF)" } else { "" })
+
     $rows = @(
       ,@("PROJECT")
       ,@("Project Name","Master Site Dashboard","","")
-      ,@("Address","4335 Euclid Avenue, San Diego, CA 92105","","City Heights")
-      ,@("APN","471-271-16-00","","Assessor Parcel Number")
-      ,@("Zoning","CUPD-CU-2-4","","Commercial Urbanist Planned District")
+      ,@("Site ID","$siteId","","")
+      ,@("Address","$addr","","")
+      ,@("APN","$apn","","Assessor Parcel Number")
+      ,@("Zoning","$zoning","","")
+      ,@("Project Type","$projType","","")
+      ,@("Architect","$architect","","")
       ,@("")
       ,@("LOT DIMENSIONS")
-      ,@("Lot Width","50","ft","")
-      ,@("Lot Depth","125","ft","")
-      ,@("Lot SF","6250","SF","50 x 125")
+      ,@("Lot Width","$lotW","ft","")
+      ,@("Lot Depth","$lotD","ft","")
+      ,@("Lot SF","$($lotSF.ToString('N0'))","SF","$lotDimNote")
+      ,@("Lot Acres","$lotAcres","AC","")
       ,@("")
       ,@("BASE ZONE LIMITS")
-      ,@("Base FAR","2.0","ratio","Max buildable = 12,500 SF")
-      ,@("Max Height","45","ft","CUPD-CU-2-4")
-      ,@("Max Density","10","DU","1 DU per 600 SF = floor(6250/600)")
-      ,@("Density Factor","600","SF/DU","")
-      ,@("Commercial Depth","30","ft","From front property line")
-      ,@("Front Setback","10","ft","")
-      ,@("Rear Setback","10","ft","")
-      ,@("Side Setback","0","ft","Zero lot line; fire-rated party wall")
-      ,@("")
-      ,@("CCHS TIER 3 LIMITS")
-      ,@("CCHS FAR","6.5","ratio","Max buildable = 40,625 SF")
-      ,@("CCHS Max Height","95","ft","No fixed limit under 95 ft")
-      ,@("CCHS Density","Unlimited","DU","No density cap")
-      ,@("Affordability","40%","of pre-bonus base DU","~4 units at 10 DU base")
-      ,@("")
-      ,@("FEES (FY2026)")
-      ,@("NEF Rate (<95ft)","11.78","$/SF","Waived if 100% affordable")
-      ,@("NEF Total (site)","73625","$","11.78 x 6,250 SF")
-      ,@("NEF Rate (>95ft)","14.42","$/SF","")
-      ,@("DIF per Market Unit","15000","$","Estimate. Verify with DIF Calculator.")
-      ,@("DIF Waiver Threshold","500","SF","Units <=500 SF: DIF waived (CCHS)")
-      ,@("C&D Deposit (Resi)","0.40","$/SF","Reg C-010-25; 65% diversion req.")
-      ,@("C&D Deposit (Comm)","0.20","$/SF","")
-      ,@("Prelim Review Single","1481","$","IB-513 / DS-375")
-      ,@("Prelim Review Multiple","12106","$","Assigns DPM")
-      ,@("")
-      ,@("SB 330")
-      ,@("Min Residential %","66.7","%","Project must be >=66.7% resi by SF")
-      ,@("Vesting Window","180","days","Standards frozen from filing date")
-      ,@("Construction Start","2.5","years","From final approval. AB 130 permanent.")
+      ,@("Base FAR","$(FmtOrNA $baseFAR)","ratio","$(if ($baseBuildable -gt 0) { "Max buildable = $($baseBuildable.ToString('N0')) SF" } else { 'Not applicable' })")
+      ,@("Max Height","$(FmtOrNA $baseHtLim)","ft","$zoning")
+      ,@("Max Density","$(if ($maxDU -gt 0) { $maxDU } else { 'Per zoning' })","DU","$densLabel")
+      ,@("Density Factor","$(FmtOrNA $densSF)","SF/DU","")
+      ,@("Commercial Depth","$(if ($commD -gt 0) { $commD } else { 'N/A' })","ft","$(if ($commD -gt 0) { 'From front property line' } else { 'No commercial zone' })")
+      ,@("Front Setback","$fSb","ft","")
+      ,@("Rear Setback","$rSb","ft","")
+      ,@("Side Setback","$sSb","ft","$(if ($sSb -eq 0) { 'Zero lot line' } else { '' })")
     )
+
+    # CCHS section (only if site has CCHS data)
+    if ($cchsMaxHt -gt 0 -or $commFAR -gt 0) {
+        $rows += ,@("")
+        $rows += ,@("CCHS / OVERLAY LIMITS")
+        $rows += ,@("CCHS FAR","$(FmtOrNA $commFAR)","ratio","$(if ($cchsBuildable -gt 0) { "Max buildable = $($cchsBuildable.ToString('N0')) SF" } else { '' })")
+        $rows += ,@("CCHS Max Height","$(FmtOrNA $cchsMaxHt)","ft","")
+        $rows += ,@("CCHS Density","Unlimited","DU","No density cap")
+        $rows += ,@("Affordability","$([math]::Round($affPct * 100))%","of pre-bonus base DU","$(if ($affUnits -gt 0) { "~$affUnits units at $maxDU DU base" } else { '' })")
+    }
+
+    # Fees section (only if site has fee data)
+    if ($nefRate -gt 0 -or $difUnit -gt 0) {
+        $rows += ,@("")
+        $rows += ,@("FEES")
+        if ($nefRate -gt 0) {
+            $rows += ,@("NEF Rate","$nefRate","$/SF","Waived if 100% affordable")
+            $rows += ,@("NEF Total (site)","$($nefTotal.ToString('N0'))","$","$nefRate x $($lotSF.ToString('N0')) SF")
+        }
+        if ($difUnit -gt 0) {
+            $rows += ,@("DIF per Market Unit","$($difUnit.ToString('N0'))","$","Estimate. Verify with DIF Calculator.")
+        }
+        if ($difWaiver -gt 0) {
+            $rows += ,@("DIF Waiver Threshold","$difWaiver","SF","Units <=$difWaiver SF: DIF waived")
+        }
+    }
+
+    # Corner visibility triangle (if applicable)
+    if ($cvt) {
+        $rows += ,@("")
+        $rows += ,@("SITE FEATURES")
+        $rows += ,@("Corner Visibility Triangle","Yes","","$cvtSize ft at $cvtCorner corner")
+    }
+
+    # Density bonus (if applicable)
+    if ($densBonus) {
+        $rows += ,@("Density Bonus","Applied","","")
+    }
+
+    # Unit count (if set)
+    if ($unitCount -gt 0) {
+        if (-not $densBonus -and -not $cvt) {
+            $rows += ,@("")
+            $rows += ,@("SITE FEATURES")
+        }
+        $rows += ,@("Unit Count","$unitCount","DU","$($unitDens.ToString('N2')) DU/AC")
+    }
+
+    # Notes
+    if ($notes) {
+        $rows += ,@("")
+        $rows += ,@("NOTES")
+        $rows += ,@("","$notes","","")
+    }
+
+    # SB 330 (California sites only)
+    if ($addr -match "CA\s+\d{5}" -or $addr -match "California") {
+        $rows += ,@("")
+        $rows += ,@("SB 330 (CALIFORNIA)")
+        $rows += ,@("Min Residential %","66.7","%","Project must be >=66.7% resi by SF")
+        $rows += ,@("Vesting Window","180","days","Standards frozen from filing date")
+        $rows += ,@("Construction Start","2.5","years","From final approval. AB 130 permanent.")
+    }
 
     $r = 2
     foreach ($row in $rows) {
@@ -100,50 +215,26 @@ try {
     Style-Header $s2 1 1 1 9
 
     $cRows = @(
-      ,@("C-01","FAR","SDMC Sec.143.1010(d) Table 143-10A","Base Zone FAR","2.0","ratio","Base Zone","SDMC-Ch14-Art3-Div10-CCHS.pdf","Max buildable 12,500 SF on 6,250 SF lot")
-      ,@("C-02","FAR","SDMC Sec.143.1010(d) Table 143-10A","CCHS Tier 3 FAR","6.5","ratio","CCHS","SDMC-Ch14-Art3-Div10-CCHS.pdf","Max buildable 40,625 SF")
-      ,@("C-03","Density","SDMC","Base Max Density","1 DU / 600 SF","DU/SF","Base Zone","SDMC-Ch15-Art5-Div2-CUPD.pdf","floor(6250/600) = 10 DU max")
-      ,@("C-04","Density","SDMC Sec.143.1010","CCHS Density Cap","Unlimited","DU","CCHS","SDMC-Ch14-Art3-Div10-CCHS.pdf","No density cap")
-      ,@("C-05","Height","SDMC / CUPD-CU-2-4","Base Zone Height Limit","45","ft","Base Zone","SDMC-Ch15-Art5-Div2-CUPD.pdf","")
-      ,@("C-06","Height","SDMC Sec.143.1010","CCHS Max Height","95","ft","CCHS","SDMC-Ch14-Art3-Div10-CCHS.pdf","No fixed limit UNDER 95 ft")
-      ,@("C-07","Setbacks","SDMC Sec.155.0240","Front Setback","10","ft","Both","SDMC-Ch15-Art5-Div2-CUPD.pdf","From Euclid Ave property line")
-      ,@("C-08","Setbacks","SDMC Sec.155.0240","Rear Setback","10","ft","Both","SDMC-Ch15-Art5-Div2-CUPD.pdf","")
-      ,@("C-09","Setbacks","SDMC Sec.155.0240","Side Setback (zero lot)","0","ft","Both","SDMC-Ch15-Art5-Div2-CUPD.pdf","Fire-rated party wall; no windows")
-      ,@("C-10","Setbacks","SDMC Sec.155.0240","Side Setback (with windows)","10","ft","Both","SDMC-Ch15-Art5-Div2-CUPD.pdf","Allows windows/balconies")
-      ,@("C-11","Commercial Use","SDMC Sec.155.0240 Table 155-02D","Front Commercial Zone Depth","30","ft","CUPD-CU-2-4","SDMC-Ch15-Art5-Div2-CUPD.pdf","Residential only behind 30 ft from front PL")
-      ,@("C-12","Commercial Use","SDMC Sec.155.0240","Actual Commercial Bldg Depth","20","ft","CUPD-CU-2-4","SDMC-Ch15-Art5-Div2-CUPD.pdf","30 ft zone minus 10 ft setback")
-      ,@("C-13","Commercial Use","CUPD-CU-2-4","Commercial Operating Hours","6 AM - midnight","hrs","CUPD-CU-2-4","SDMC-Ch15-Art5-Div2-CUPD.pdf","Hard zoning restriction")
-      ,@("C-14","Affordability","SDMC Sec.143.1010","CCHS Affordability Req","40%","of pre-bonus base DU","CCHS","SDMC-Ch14-Art3-Div10-CCHS.pdf","~4 units at 10 DU base")
-      ,@("C-15","Affordability","SDMC Sec.143.1010","AMI Tiers","15%<=50% / 10%<=60% / 15%<=120%","AMI","CCHS","SDMC-Ch14-Art3-Div10-CCHS.pdf","Deed-restricted per tier")
-      ,@("C-16","Fees - NEF","SDMC / Resolution R-313282","NEF Rate FY2026 (<95ft)","11.78","$/SF","CCHS","SD-FY2026-FeeSchedule.pdf","Annual auto-adjustment. Waived 100% affordable.")
-      ,@("C-17","Fees - NEF","SDMC","NEF Rate FY2026 (>95ft)","14.42","$/SF","CCHS","SD-FY2026-FeeSchedule.pdf","Higher tier over-height buildings")
-      ,@("C-18","Fees - DIF","SDMC Sec.143.1010(i)(3)","DIF Waiver Threshold (CCHS)","500","SF","CCHS","SDMC-Ch14-Art3-Div10-CCHS.pdf","Units <=500 SF: DIF fully waived")
-      ,@("C-19","Fees - DIF","SDMC","DIF per Market Unit (est.)","15000","$/unit","Both","SD-FY2026-FeeSchedule.pdf","Verify with City DIF Calculator + APN")
-      ,@("C-20","Fees - DIF","SDMC Sec.142.0640(b)(1)(a) / SB 13","ADU DIF Exemption Threshold","750","SF - ADU ONLY","ADU only","--","NOT applicable to standard multifamily")
-      ,@("C-21","Parking","Gov. Code Sec.65863.2 / AB 2097","Min Parking Req (TPA)","0","spaces","Both","HCD-AB2097-TechnicalAdvisory.pdf","Within 1/2 mile major transit stop")
-      ,@("C-22","Parking","SDMC (TPA)","Local Parking Elimination","0","spaces","Both","--","San Diego eliminated parking in TPA")
-      ,@("C-23","Density Bonus","Gov. Code Sec.65915","State DB 20% Bonus","20%","bonus DU over base","State DB","--","1 affordable unit (5% VLI) unlocks 20%")
-      ,@("C-24","Vesting","Gov. Code Sec.65589.5 / AB 130","SB 330 Vesting Window","180","days","Both","--","Permanent law since AB 130 (2025)")
-      ,@("C-25","Vesting","SB 330","SB 330 Min Residential %","66.7","%","Both","--","Project >=66.7% residential by SF")
-      ,@("C-26","Fire","CBC Table 508.4","Fire Separation (sprinklered)","1","hr","Both","--","Group M/B to R-2")
-      ,@("C-27","Fire","NFPA 13","Sprinkler Requirement","Entire building","--","Both","--","Mandatory Group R. PAYWALLED.")
-      ,@("C-28","Acoustics","CBC S1206","Wall STC (lab)","50","STC","Both","--","Airborne sound")
-      ,@("C-29","Acoustics","CBC S1206","Wall STC (field)","45","STC","Both","--","")
-      ,@("C-30","Acoustics","CBC S1206","Floor-Ceiling IIC (lab)","50","IIC","Both","--","Impact sound")
-      ,@("C-31","Acoustics","CBC S1206","Floor-Ceiling IIC (field)","45","IIC","Both","--","")
-      ,@("C-32","Acoustics","CBC S1206","Corridor Doors STC","26","STC","Both","--","With acoustic seals")
-      ,@("C-33","Acoustics","CBC S1206","Non-Resi STC","40","STC","Both","--","55-60 if restaurant next to residential")
-      ,@("C-34","Waste","SDMC Sec.142.0801-0830","Enclosure Size","120-180","SF","Both","SDMC-Ch14-Art2-Div8-WasteEnclosure.pdf","Table 142-08B + 08C")
-      ,@("C-35","Waste","SDMC Sec.142.0825","Enclosure Signage","Required","--","Both","SDMC-Ch14-Art2-Div8-WasteEnclosure.pdf","At access point")
-      ,@("C-36","Waste","SB 1383","3-Stream Containers","gray/blue/green","per unit","Both","--","Trash + recycling + organics")
-      ,@("C-37","Waste","Reg C-010-25","City Refuse Eligible","No","--","Both","--","Mixed-use >4 units: private hauler only")
-      ,@("C-38","Waste","SDMC","Truck Access Width","16","ft clear / 14 ft vertical","Both","SDMC-Ch14-Art2-Div8-WasteEnclosure.pdf","60,000 lb trucks")
-      ,@("C-39","Waste","City of SD","C&D Deposit (Resi)","0.40","$/SF","Both","--","65% diversion. Reg C-010-25")
-      ,@("C-40","Waste","City of SD","C&D Deposit (Comm)","0.20","$/SF","Both","--","")
-      ,@("C-41","Mail","USPS PO-632","Mail Delivery Mode","STD-4C or CBU","--","Both","--","Developer pays all equipment")
-      ,@("C-42","Mail","USPS PO-632","Parcel Lockers","1 per 5 compartments","--","Both","--","")
-      ,@("C-43","Mail","ADA Standards","ADA Mail Area Clear Floor","30x48 in / 60 in turn","--","Both","--","Locks: 15-67 in AFF")
-      ,@("C-44","SB 9","Gov. Code Sec.65852.21","SB 9 Applicability","NOT applicable","--","N/A","SD-IB409-SB9.pdf","CUPD-CU-2-4 is mixed-use; SB 9 = single-family RS only")
+      ,@("C-01","FAR","$zoning","Base Zone FAR","$(FmtOrNA $baseFAR)","ratio","Base Zone","--","$(if ($baseBuildable -gt 0) { "Max buildable $($baseBuildable.ToString('N0')) SF on $($lotSF.ToString('N0')) SF lot" } else { 'N/A' })")
+      ,@("C-02","FAR","$zoning","Overlay/CCHS FAR","$(FmtOrNA $commFAR)","ratio","Overlay","--","$(if ($cchsBuildable -gt 0) { "Max buildable $($cchsBuildable.ToString('N0')) SF" } else { 'N/A' })")
+      ,@("C-03","Density","$zoning","Base Max Density","$(if ($densSF -gt 0) { "1 DU / $densSF SF" } else { 'Per zoning' })","DU/SF","Base Zone","--","$(if ($maxDU -gt 0) { "floor($lotSF/$densSF) = $maxDU DU max" } else { 'Per zoning overlay' })")
+      ,@("C-04","Density","$zoning","Overlay Density Cap","$(if ($commFAR -gt 0) { 'Unlimited' } else { 'N/A' })","DU","Overlay","--","")
+      ,@("C-05","Height","$zoning","Base Zone Height Limit","$(FmtOrNA $baseHtLim)","ft","Base Zone","--","")
+      ,@("C-06","Height","$zoning","Overlay Max Height","$(FmtOrNA $cchsMaxHt)","ft","Overlay","--","")
+      ,@("C-07","Setbacks","$zoning","Front Setback","$fSb","ft","Both","--","")
+      ,@("C-08","Setbacks","$zoning","Rear Setback","$rSb","ft","Both","--","")
+      ,@("C-09","Setbacks","$zoning","Side Setback","$sSb","ft","Both","--","$(if ($sSb -eq 0) { 'Zero lot line; fire-rated party wall' } else { '' })")
+      ,@("C-10","Commercial","$zoning","Commercial Zone Depth","$(if ($commD -gt 0) { $commD } else { 'N/A' })","ft","$zoning","--","$(if ($commD -gt 0) { 'Residential only behind commercial zone' } else { 'No commercial zone' })")
+      ,@("C-11","Fees","$zoning","NEF Rate","$(if ($nefRate -gt 0) { $nefRate } else { 'N/A' })","$/SF","Both","--","$(if ($nefTotal -gt 0) { "Total: `$$($nefTotal.ToString('N0'))" } else { '' })")
+      ,@("C-12","Fees","$zoning","DIF per Market Unit","$(if ($difUnit -gt 0) { "`$$($difUnit.ToString('N0'))" } else { 'N/A' })","$/unit","Both","--","Verify with jurisdiction DIF Calculator")
+      ,@("C-13","Parking","State/Local","Min Parking Req","TBD","spaces","Both","--","Check transit proximity for AB 2097 exemption")
+      ,@("C-14","Density Bonus","Gov. Code Sec.65915","State DB 20% Bonus","20%","bonus DU over base","State DB","--","$(if ($maxDU -gt 0) { "Base $maxDU + 20% = $sdbBonus DU" } else { '' })")
+      ,@("C-15","Vesting","SB 330 / AB 130","SB 330 Vesting Window","180","days","Both","--","CA only. Permanent since AB 130 (2025)")
+      ,@("C-16","Fire","CBC Table 508.4","Fire Separation (sprinklered)","1","hr","Both","--","Group M/B to R-2")
+      ,@("C-17","Acoustics","CBC S1206","Wall STC (lab/field)","50/45","STC","Both","--","Airborne sound")
+      ,@("C-18","Acoustics","CBC S1206","Floor-Ceiling IIC (lab/field)","50/45","IIC","Both","--","Impact sound")
+      ,@("C-19","Waste","Local/SB 1383","3-Stream Containers","gray/blue/green","per unit","Both","--","Trash + recycling + organics")
+      ,@("C-20","Mail","USPS PO-632","Mail Delivery Mode","STD-4C or CBU","--","Both","--","Developer pays all equipment")
     )
 
     $r = 2
@@ -157,25 +248,23 @@ try {
     # ── SHEET 3: PATHWAY COMPARISON ───────────────────────────────────
     $s3 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s2)
     $s3.Name = "Pathway Comparison"
-    $h3 = @("Factor","Base Zone (FAR 2.0)","CCHS Tier 3 (FAR 6.5)","State Density Bonus","Notes")
+    $h3 = @("Factor","Base Zone (FAR $(FmtOrNA $baseFAR))","Overlay (FAR $(FmtOrNA $commFAR))","State Density Bonus","Notes")
     for($c=1;$c -le 5;$c++){ Set-Cell $s3 1 $c $h3[$c-1] }
     Style-Header $s3 1 1 1 5
 
+    $farRatio = if ($baseFAR -gt 0 -and $commFAR -gt 0) { "$([math]::Round($commFAR / $baseFAR, 1))x more buildable" } else { "" }
+
     $pRows = @(
-      ,@("Max FAR","2.0","6.5","2.0 (incentive to increase)","CCHS = 3.25x more buildable")
-      ,@("Max Buildable SF (6,250 SF lot)","12,500 SF","40,625 SF","~15,000 SF (20% bonus)","")
-      ,@("Max Density","10 DU (1/600 SF)","Unlimited","12 DU (20% bonus)","")
-      ,@("Max Height","45 ft","No limit <95 ft","45 ft (unless incentive)","")
-      ,@("Affordability Req","None","40% of base DU (~4 units)","1 unit (5% VLI for 20% bonus)","CCHS: deeper obligation")
-      ,@("NEF Fee","$0","~$73,625 ($11.78/SF)","$0","Waived if 100% affordable")
-      ,@("DIF Waiver","No","Yes: affordable + units <=500 SF","No general waiver","")
-      ,@("Parking","0 (TPA + AB 2097)","0 (TPA + AB 2097)","Reduced 0.5/unit near transit","")
-      ,@("Review Process","Discretionary","Ministerial 30-day","Ministerial if conforming","CCHS = fastest")
+      ,@("Max FAR","$(FmtOrNA $baseFAR)","$(FmtOrNA $commFAR)","$(FmtOrNA $baseFAR) (incentive to increase)","$farRatio")
+      ,@("Max Buildable SF ($($lotSF.ToString('N0')) SF lot)","$(if ($baseBuildable -gt 0) { "$($baseBuildable.ToString('N0')) SF" } else { 'N/A' })","$(if ($cchsBuildable -gt 0) { "$($cchsBuildable.ToString('N0')) SF" } else { 'N/A' })","$(if ($sdbBuildable -gt 0) { "~$($sdbBuildable.ToString('N0')) SF (20% bonus)" } else { 'N/A' })","")
+      ,@("Max Density","$(if ($maxDU -gt 0) { "$maxDU DU (1/$densSF SF)" } else { 'Per zoning' })","$(if ($commFAR -gt 0) { 'Unlimited' } else { 'N/A' })","$(if ($sdbBonus -gt 0) { "$sdbBonus DU (20% bonus)" } else { 'N/A' })","")
+      ,@("Max Height","$(FmtOrNA $baseHtLim) ft","$(if ($cchsMaxHt -gt 0) { "$cchsMaxHt ft" } else { 'N/A' })","$(FmtOrNA $baseHtLim) ft (unless incentive)","")
+      ,@("Affordability Req","None","$(if ($affPct -gt 0) { "$([math]::Round($affPct*100))% of base DU (~$affUnits units)" } else { 'N/A' })","1 unit (5% VLI for 20% bonus)","")
+      ,@("NEF Fee","$0","$(if ($nefTotal -gt 0) { "~`$$($nefTotal.ToString('N0'))" } else { 'N/A' })","$0","Waived if 100% affordable")
+      ,@("Review Process","Discretionary","Ministerial 30-day","Ministerial if conforming","")
       ,@("CEQA","May apply","Exempt (ministerial)","Exempt if ministerial","")
-      ,@("Stackable?","N/A","Yes - stack Density Bonus on top","Yes","")
-      ,@("Best for","<=10 units, no affordability","12+ units, maximize density","Minimize affordability obligation","")
-      ,@("SB 330 Qualifies?","Yes (>=66.7% resi)","Yes (>=66.7% resi)","Yes","")
-      ,@("Code Reference","SDMC Ch.15","SDMC Sec.143.1010","Gov. Code Sec.65915","")
+      ,@("Stackable?","N/A","Yes - stack DB on top","Yes","")
+      ,@("SB 330 Qualifies?","Yes (>=66.7% resi)","Yes (>=66.7% resi)","Yes","CA only")
     )
 
     $r = 2
@@ -189,23 +278,21 @@ try {
     # ── SHEET 4: FEE SCHEDULE ─────────────────────────────────────────
     $s4 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s3)
     $s4.Name = "Fee Schedule"
-    $h4 = @("Fee ID","Fee Name","Rate","Unit","Formula (6,250 SF lot)","Est. Total","Waiver Condition","Source")
+    $h4 = @("Fee ID","Fee Name","Rate","Unit","Formula ($($lotSF.ToString('N0')) SF lot)","Est. Total","Waiver Condition","Source")
     for($c=1;$c -le 8;$c++){ Set-Cell $s4 1 $c $h4[$c-1] }
     Style-Header $s4 1 1 1 8
 
-    $fRows = @(
-      ,@("F-01","NEF (<95 ft)","$11.78","/SF","11.78 x 6,250","~$73,625","100% affordable project","SD-FY2026-FeeSchedule.pdf")
-      ,@("F-02","NEF (>95 ft)","$14.42","/SF","14.42 x 6,250","~$90,125","100% affordable project","SD-FY2026-FeeSchedule.pdf")
-      ,@("F-03","DIF per Market Unit (est.)","~$15,000","/unit","x market-rate units","Varies","Affordable units + <=500 SF (CCHS)","SD-FY2026-FeeSchedule.pdf")
-      ,@("F-04","Prelim Review - Single","$1,481","flat","1 discipline, 10 questions","$1,481","N/A","DSD IB-513 / DS-375")
-      ,@("F-05","Prelim Review - Multiple","$12,106","flat","All disciplines, assigns DPM","$12,106","N/A","DSD IB-513 / DS-375")
-      ,@("F-06","CCHS Now Review","$0","flat","Mandatory first step CCHS","$0","N/A","SDMC Sec.143.1010")
-      ,@("F-07","NUP","~$3,000-$5,000","flat","Eating/drinking establishments","~$4,000","Not needed: retail/office","DSD Process 2")
-      ,@("F-08","CUP","~$10,000-$20,000+","flat","Alcohol sales","~$15,000","Not needed: no alcohol","DSD Process 3")
-      ,@("F-09","C&D Deposit (Resi)","$0.40","/SF","0.40 x residential SF","Varies","65% diversion & return","Reg C-010-25")
-      ,@("F-10","C&D Deposit (Comm)","$0.20","/SF","0.20 x commercial SF","Varies","65% diversion & return","Reg C-010-25")
-      ,@("F-11","SB 330 Preliminary App","Minimal","/filing","File to vest standards","~$0-500","N/A","Gov. Code Sec.65589.5")
-    )
+    $fRows = @()
+    if ($nefRate -gt 0) {
+        $nefHigh = [math]::Round($nefRate * 1.224, 2)
+        $nefHighTotal = [math]::Round($nefHigh * $lotSF)
+        $fRows += ,@("F-01","NEF","$nefRate","/SF","$nefRate x $($lotSF.ToString('N0'))","~`$$($nefTotal.ToString('N0'))","100% affordable project","--")
+        $fRows += ,@("F-02","NEF (over-height)","$nefHigh","/SF","$nefHigh x $($lotSF.ToString('N0'))","~`$$($nefHighTotal.ToString('N0'))","100% affordable project","--")
+    }
+    if ($difUnit -gt 0) {
+        $fRows += ,@("F-03","DIF per Market Unit","~`$$($difUnit.ToString('N0'))","/unit","x market-rate units","Varies","$(if ($difWaiver -gt 0) { "Affordable + units <=$difWaiver SF" } else { '--' })","--")
+    }
+    $fRows += ,@("F-04","SB 330 Preliminary App","Minimal","/filing","File to vest standards","~`$0-500","N/A","--")
 
     $r = 2
     foreach ($row in $fRows) {
@@ -215,39 +302,30 @@ try {
     }
     $s4.Columns.AutoFit() | Out-Null
 
-    # ── SHEET 5: CODE REFERENCES INDEX ───────────────────────────────
+    # ── SHEET 5: INSPECTOR CONTACTS ───────────────────────────────────
     $s5 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s4)
-    $s5.Name = "Code References"
-    $h5 = @("Ref ID","Law / Code","Section","Topic","PDF on Disk","URL")
-    for($c=1;$c -le 6;$c++){ Set-Cell $s5 1 $c $h5[$c-1] }
-    Style-Header $s5 1 1 1 6
-
-    $rRows = @(
-      ,@("R-01","SDMC Ch.14 Art.3 Div.10","Sec.143.1010","CCHS - FAR tiers, affordability, DIF waiver, NEF","SDMC-Ch14-Art3-Div10-CCHS.pdf","docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art03Division10.pdf")
-      ,@("R-02","SDMC Ch.15 Art.5 Div.2","Sec.155.0240 Tables 155-02C/D","CUPD-CU-2-4 zoning, commercial frontage, setbacks","SDMC-Ch15-Art5-Div2-CUPD.pdf","docs.sandiego.gov/municode/MuniCodeChapter15/Ch15Art05Division02.pdf")
-      ,@("R-03","SDMC Ch.14 Art.2 Div.8","Sec.142.0801-0830","Waste enclosure standards, sizing, signage","SDMC-Ch14-Art2-Div8-WasteEnclosure.pdf","docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art02Division08.pdf")
-      ,@("R-04","SDMC Ch.14 Art.3 Div.10","Sec.143.0720","State Density Bonus implementation","SDMC-Ch14-Art3-Div10-CCHS.pdf","")
-      ,@("R-05","SDMC Ch.14 Art.2 Div.6","Sec.142.0640(b)(1)(a)","ADU DIF exemption 750 SF (NOT this project)","--","")
-      ,@("R-06","City of San Diego","FY2026 Fee Schedule","NEF rates, DIF schedule, permit fees","SD-FY2026-FeeSchedule.pdf","sandiego.gov/sites/default/files/feeschedule.pdf")
-      ,@("R-07","Commercial Zoning","CUPD background","Commercial zoning overview","SD-commercialzoning.pdf","")
-      ,@("R-08","CA Gov. Code / SB 330 + AB 130","Sec.65589.5","Housing Crisis Act - vesting. AB 130 made permanent 2025.","--","")
-      ,@("R-09","CA Gov. Code / AB 2097","Sec.65863.2","Zero parking within 1/2 mile transit stop","HCD-AB2097-TechnicalAdvisory.pdf","hcd.ca.gov/sites/default/files/docs/policy-and-research/ab-2097-ta.pdf")
-      ,@("R-10","CA Gov. Code / SB 9","Sec.65852.21","Multi-unit on single-family lots (NOT this site)","SD-IB409-SB9.pdf","sandiego.gov/.../information-bulletins/409")
-      ,@("R-11","CA Gov. Code","Sec.65915","State Density Bonus Law","--","")
-      ,@("R-12","SB 1383 / CalRecycle","Title 14 CCR Div.7 Ch.12 Art.2","Organic waste 3-stream containers","--","calrecycle.ca.gov/organics/slcp/")
-      ,@("R-13","CBC 2022","Table 508.4","Mixed-occupancy fire separation","--","PAYWALLED - ICC.org")
-      ,@("R-14","CBC 2022","Section 1206","Acoustic requirements STC/IIC","--","PAYWALLED - ICC.org")
-      ,@("R-15","NFPA 13","Standard for Sprinklers","Group R sprinkler system","--","PAYWALLED - NFPA.org")
-      ,@("R-16","USPS PO-632","Centralized Mail Receptacle","Mailbox equipment, parcel lockers, ADA","--","about.usps.com/handbooks/po632/")
-      ,@("R-17","City of SD Regulation","C-010-25","Private refuse hauler req (>4 units mixed-use)","--","Verify with DSD Waste Management")
-      ,@("R-18","DSD Information Bulletin","IB-513 / DS-375","Preliminary Review application forms","--","sandiego.gov/.../information-bulletins/513")
-      ,@("R-19","DSD Information Bulletin","IB-409","SB 9 guidance for single-family lots","SD-IB409-SB9.pdf","sandiego.gov/.../information-bulletins/409")
-    )
+    $s5.Name = "Inspectors"
+    $h5 = @("Role","Contact","Phone","Notes")
+    for($c=1;$c -le 4;$c++){ Set-Cell $s5 1 $c $h5[$c-1] }
+    Style-Header $s5 1 1 1 4
 
     $r = 2
-    foreach ($row in $rRows) {
-        for($c=1;$c -le 6;$c++){ Set-Cell $s5 $r $c $row[$c-1] }
-        if ($r % 2 -eq 0) { Style-Alt $s5 $r 6 }
+    $inspectors = $s.inspectors
+    if ($inspectors -and $inspectors.Count -gt 0) {
+        foreach ($ins in $inspectors) {
+            $name  = if ($ins.name) { $ins.name } else { "--" }
+            $val   = if ($ins.val)  { $ins.val }  else { "--" }
+            # Extract phone from val if present (pattern: name (phone))
+            $phone = ""
+            if ($val -match '\(([0-9\-]+)\)') { $phone = $matches[1] }
+            Set-Cell $s5 $r 1 $name
+            Set-Cell $s5 $r 2 $val
+            Set-Cell $s5 $r 3 $phone
+            if ($r % 2 -eq 0) { Style-Alt $s5 $r 4 }
+            $r++
+        }
+    } else {
+        Set-Cell $s5 $r 1 "No inspectors assigned"
         $r++
     }
     $s5.Columns.AutoFit() | Out-Null
@@ -267,4 +345,3 @@ try {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
-

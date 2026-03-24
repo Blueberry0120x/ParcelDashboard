@@ -695,7 +695,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"siteId":"euclid","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":-12.5,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"siteId":"ca-westminster","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture & Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":270,"locked":false,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"offsetX":0,"offsetY":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":16,"D":37}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -772,7 +772,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
                         <input type="number" id="degInput" class="align-angle-input" value="0.0" step="0.1">
                         <span style="font-weight:bold;">&#176;</span>
                     </div>
-                    <input type="range" id="rotationSlider" min="-90" max="90" value="0" step="0.1" style="width:100%; margin:0;">
+                    <input type="range" id="rotationSlider" min="0" max="360" value="0" step="0.1" style="width:100%; margin:0;">
                 </div>
 
                 <div class="align-btn-row">
@@ -2121,7 +2121,11 @@ const MapEngine = {
 
     render: function() {
         const { width: w, depth: h, commercialDepth: cD, parcelPolygon } = ConfigEngine.data;
-        const rad    = ConfigEngine.state.rotation * Math.PI / 180;
+        // Normalize rotation to 0-360
+        var rawRot = ConfigEngine.state.rotation % 360;
+        if (rawRot < 0) rawRot += 360;
+        ConfigEngine.state.rotation = rawRot;
+        const rad    = rawRot * Math.PI / 180;
         const cos    = Math.cos(rad), sin = Math.sin(rad);
         const F_LAT  = 364566;
         const F_LNG  = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
@@ -2144,29 +2148,50 @@ const MapEngine = {
             var cvt = sd.cornerVisTriSize || 0;
             if (cvt > 0 && sd.cornerVisibilityTriangle) {
                 var corner = sd.cornerVisCorner || 'front-left';
+                // Resolve compass direction (SW/SE/NW/NE) to local corner based on rotation
+                if (/^[NSEW]{2}$/i.test(corner)) {
+                    var localCorners = [
+                        {name:'front-left',  x:-h/2, y:-w/2},
+                        {name:'front-right', x:-h/2, y: w/2},
+                        {name:'rear-right',  x: h/2, y: w/2},
+                        {name:'rear-left',   x: h/2, y:-w/2}
+                    ];
+                    var cu = corner.toUpperCase();
+                    var targetX = (cu.indexOf('W') >= 0) ? -1 : 1; // west=-1, east=+1
+                    var targetY = (cu.indexOf('S') >= 0) ? -1 : 1; // south=-1, north=+1
+                    var best = null, bestScore = Infinity;
+                    localCorners.forEach(function(c) {
+                        var rx = c.x * cos - c.y * sin;
+                        var ry = c.x * sin + c.y * cos;
+                        var score = (rx - targetX * 999) * (rx - targetX * 999) + (ry - targetY * 999) * (ry - targetY * 999);
+                        if (score < bestScore) { bestScore = score; best = c.name; }
+                    });
+                    corner = best;
+                }
                 if (corner === 'front-left') {
-                    // Cut c0: insert two points replacing the front-left corner
                     baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2+cvt,y:-w/2},{x:-h/2,y:-w/2+cvt}];
                 } else if (corner === 'front-right') {
                     baseLot = [{x:-h/2,y:w/2-cvt},{x:-h/2+cvt,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-left') {
-                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2+cvt},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-right') {
-                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2-cvt,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2-cvt,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 }
             }
             this.lotPoly.setLatLngs(baseLot.map(transform));
         }
 
-        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
-        // Always show 30ft commercial zone; style depends on comm checkbox
-        this.commPoly.setLatLngs(baseComm.map(transform));
-        if (ConfigEngine.state.commFront) {
-            // Comm active: dashed line only, no fill
-            this.commPoly.setStyle({ fillOpacity: 0, fillColor: '#0f4c81', weight: 2, dashArray: '8 5', color: '#0f4c81' });
+        // Commercial zone: only draw when site has commercial depth > 0
+        if (cD > 0) {
+            const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
+            this.commPoly.setLatLngs(baseComm.map(transform));
+            if (ConfigEngine.state.commFront) {
+                this.commPoly.setStyle({ fillOpacity: 0, fillColor: '#0f4c81', weight: 2, dashArray: '8 5', color: '#0f4c81' });
+            } else {
+                this.commPoly.setStyle({ fillOpacity: 0.15, fillColor: '#0f4c81', weight: 1, dashArray: null, color: '#0f4c81' });
+            }
         } else {
-            // Comm not active: show as hatch/fill (setback indicator)
-            this.commPoly.setStyle({ fillOpacity: 0.15, fillColor: '#0f4c81', weight: 1, dashArray: null, color: '#0f4c81' });
+            this.commPoly.setLatLngs([]);
         }
         this.updateNorthArrow();
         if (!this._isDragging) this.updateDimLabels();
@@ -2314,7 +2339,7 @@ const MapEngine = {
         inp.addEventListener('change', (e) => {
             let v = parseFloat(e.target.value);
             if (isNaN(v)) v = 0;
-            v = Math.max(-90, Math.min(90, v));
+            v = ((v % 360) + 360) % 360;
             ConfigEngine.state.rotation = v;
             inp.value = v.toFixed(1); sldr.value = v;
             this.render();

@@ -636,23 +636,25 @@ const MapEngine = {
                 } else if (corner === 'front-right') {
                     baseLot = [{x:-h/2,y:w/2-cvt},{x:-h/2+cvt,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-left') {
-                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2+cvt},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-right') {
-                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2-cvt,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2-cvt,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 }
             }
             this.lotPoly.setLatLngs(baseLot.map(transform));
         }
 
-        const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
-        // Always show 30ft commercial zone; style depends on comm checkbox
-        this.commPoly.setLatLngs(baseComm.map(transform));
-        if (ConfigEngine.state.commFront) {
-            // Comm active: dashed line only, no fill
-            this.commPoly.setStyle({ fillOpacity: 0, fillColor: '#0f4c81', weight: 2, dashArray: '8 5', color: '#0f4c81' });
+        // Commercial zone: only draw when site has commercial depth > 0
+        if (cD > 0) {
+            const baseComm = [{x:-h/2,y:w/2},{x:-h/2+cD,y:w/2},{x:-h/2+cD,y:-w/2},{x:-h/2,y:-w/2}];
+            this.commPoly.setLatLngs(baseComm.map(transform));
+            if (ConfigEngine.state.commFront) {
+                this.commPoly.setStyle({ fillOpacity: 0, fillColor: '#0f4c81', weight: 2, dashArray: '8 5', color: '#0f4c81' });
+            } else {
+                this.commPoly.setStyle({ fillOpacity: 0.15, fillColor: '#0f4c81', weight: 1, dashArray: null, color: '#0f4c81' });
+            }
         } else {
-            // Comm not active: show as hatch/fill (setback indicator)
-            this.commPoly.setStyle({ fillOpacity: 0.15, fillColor: '#0f4c81', weight: 1, dashArray: null, color: '#0f4c81' });
+            this.commPoly.setLatLngs([]);
         }
         this.updateNorthArrow();
         if (!this._isDragging) this.updateDimLabels();
@@ -800,7 +802,7 @@ const MapEngine = {
         inp.addEventListener('change', (e) => {
             let v = parseFloat(e.target.value);
             if (isNaN(v)) v = 0;
-            v = Math.max(-90, Math.min(90, v));
+            v = ((v % 360) + 360) % 360;
             ConfigEngine.state.rotation = v;
             inp.value = v.toFixed(1); sldr.value = v;
             this.render();
