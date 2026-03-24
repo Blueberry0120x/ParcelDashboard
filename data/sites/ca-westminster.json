@@ -35,34 +35,14 @@
     "cornerVisibilityTriangle": true,
     "densityBonus": true,
     "notes": "Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.",
-    "parcelPolygon": [
-      [
-        33.76014719,
-        -117.93749677
-      ],
-      [
-        33.76014719,
-        -117.93698399
-      ],
-      [
-        33.75980985,
-        -117.93698399
-      ],
-      [
-        33.75980985,
-        -117.93749677
-      ],
-      [
-        33.76014719,
-        -117.93749677
-      ]
-    ],
+    "cornerVisTriSize": 25,
+    "cornerVisCorner": "front-left",
     "inspectors": []
   },
   "saved": {
-    "lat": 33.760021505915304,
-    "lng": -117.93719621519948,
-    "rotation": 0,
+    "lat": 33.759937016886575,
+    "lng": -117.93757740216171,
+    "rotation": 90,
     "locked": false,
     "setbacks": {
       "front": 0,

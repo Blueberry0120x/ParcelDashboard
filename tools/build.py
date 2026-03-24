@@ -288,12 +288,25 @@ def serve(port=7734):
         def _handle_activate_site(self, site_id):
             """POST /api/sites/{id}/activate - switch active site."""
             import shutil
+            # Sanitize site_id: only allow alphanumeric, hyphen, underscore
+            import re
+            if not re.match(r'^[a-zA-Z0-9_-]+$', site_id):
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'{"error":"invalid site id"}')
+                return
             site_file = os.path.join(SITES_DIR, f"{site_id}.json")
             if not os.path.exists(site_file):
                 self.send_response(404)
                 self.end_headers()
                 self.wfile.write(b'{"error":"site not found"}')
                 return
+            # Save current state back to the previous site file BEFORE switching
+            prev_id = get_active_site_id()
+            if prev_id and prev_id != site_id and os.path.exists(SITE_DATA):
+                prev_file = os.path.join(SITES_DIR, f"{prev_id}.json")
+                shutil.copy2(SITE_DATA, prev_file)
+                print(f"  [SITE] Saved current state back to {prev_id}.json")
             shutil.copy2(site_file, SITE_DATA)
             print(f"  [SITE] Activated: {site_id} - rebuilding...")
             build_interactive_map()

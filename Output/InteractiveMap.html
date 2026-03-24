@@ -2136,7 +2136,25 @@ const MapEngine = {
         if (parcelPolygon && parcelPolygon.length > 2) {
             this.lotPoly.setLatLngs(parcelPolygon);
         } else {
-            const baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+            // Base rectangle: front-right → rear-right → rear-left → front-left
+            // c1={x:-h/2,y:w/2}, c2={x:h/2,y:w/2}, c3={x:h/2,y:-w/2}, c0={x:-h/2,y:-w/2}
+            var baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+            // Corner visibility triangle chamfer (cuts a 45-deg corner at the street intersection)
+            var sd = window.__SITE_DEFAULTS__ || {};
+            var cvt = sd.cornerVisTriSize || 0;
+            if (cvt > 0 && sd.cornerVisibilityTriangle) {
+                var corner = sd.cornerVisCorner || 'front-left';
+                if (corner === 'front-left') {
+                    // Cut c0: insert two points replacing the front-left corner
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2+cvt,y:-w/2},{x:-h/2,y:-w/2+cvt}];
+                } else if (corner === 'front-right') {
+                    baseLot = [{x:-h/2,y:w/2-cvt},{x:-h/2+cvt,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+                } else if (corner === 'rear-left') {
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
+                } else if (corner === 'rear-right') {
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2-cvt,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
+                }
+            }
             this.lotPoly.setLatLngs(baseLot.map(transform));
         }
 
