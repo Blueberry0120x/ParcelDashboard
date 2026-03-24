@@ -5,6 +5,25 @@
 
 ---
 
+## [2026-03-23 23:30] Westminster multi-site hardening + state bleed fix
+
+### Fixes applied (4 dev-check rounds, 0 Critical / 0 Major remaining)
+- **State bleed fix**: `build.py _handle_activate_site` now saves current state back to previous site file BEFORE loading new site. Prevents rotation/locked/checklist contamination across sites.
+- **Falsy-zero bugs**: `||` to `??` for baseFAR, commFAR, densityPerSF, maxHeight in engine-ui.js and engine-setback.js. Sites with legitimate 0 values (Westminster R-3, Burien TBD) no longer inherit Euclid defaults.
+- **lotSF**: FAR/density calculations now use actual surveyed lot area from site JSON instead of W*D rectangular approximation (15-20% error on irregular parcels).
+- **Dynamic info tables**: Replaced 9 hardcoded Euclid table cells in index.html with dynamic population from `__SITE_DEFAULTS__` (zoning params, setbacks, height, FAR, inspectors).
+- **FAR/density zero-guards**: When baseFAR=0 or densityPerSF=0, UI shows "N/A" / "Per zoning" instead of misleading red "Exceeds limit".
+- **Corner visibility triangle**: Chamfer drawn on lot boundary using compass direction ("SW") resolved dynamically from rotation. Supports any rotation angle.
+- **Rotation normalized to 0-360**: No more negative values.
+- **Path traversal sanitization**: site_id validated in activate endpoint.
+- **Euclid fully restored**: locked=true, setbacksApplied=true, checklist intact, no parcelPolygon (uses rectangle system).
+- **Westminster**: R-3 zoning confirmed (Garden Grove MDR), no parcelPolygon (rectangle system like Euclid), 25ft SW chamfer, rotation=270.
+
+### Euclid scope of work
+Redevelop 6,250 SF commercial lot into 2-story mixed-use. Ground floor: commercial front (30' depth), 9 residential units across 4 buildings behind. 2nd floor all residential. 9 res + 1 comm total. Base FAR 2.0, base density (10 DU max), zero side setbacks. TPA = 0 parking.
+
+---
+
 ## [2026-03-22 17:00] Multi-site system + address book dropdown -- IN PROGRESS
 
 **Tagged stable Euclid as `v0.1-euclid-stable` before multi-site work.**

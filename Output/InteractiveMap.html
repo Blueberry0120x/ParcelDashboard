@@ -695,7 +695,7 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","parcelPolygon":[[33.76014719,-117.93749677],[33.76014719,-117.93698399],[33.75980985,-117.93698399],[33.75980985,-117.93749677],[33.76014719,-117.93749677]],"inspectors":[],"lat":33.760021505915304,"lng":-117.93719621519948,"rotation":0,"locked":false,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"offsetX":0,"offsetY":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":16,"D":37}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","cornerVisTriSize":25,"cornerVisCorner":"front-left","inspectors":[],"lat":33.75997988083238,"lng":-117.9372577705989,"rotation":-90,"locked":false,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"offsetX":0,"offsetY":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":16,"D":37}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -2121,7 +2121,11 @@ const MapEngine = {
 
     render: function() {
         const { width: w, depth: h, commercialDepth: cD, parcelPolygon } = ConfigEngine.data;
-        const rad    = ConfigEngine.state.rotation * Math.PI / 180;
+        // Normalize rotation to 0-360
+        var rawRot = ConfigEngine.state.rotation % 360;
+        if (rawRot < 0) rawRot += 360;
+        ConfigEngine.state.rotation = rawRot;
+        const rad    = rawRot * Math.PI / 180;
         const cos    = Math.cos(rad), sin = Math.sin(rad);
         const F_LAT  = 364566;
         const F_LNG  = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
@@ -2144,13 +2148,32 @@ const MapEngine = {
             var cvt = sd.cornerVisTriSize || 0;
             if (cvt > 0 && sd.cornerVisibilityTriangle) {
                 var corner = sd.cornerVisCorner || 'front-left';
+                // Resolve compass direction (SW/SE/NW/NE) to local corner based on rotation
+                if (/^[NSEW]{2}$/i.test(corner)) {
+                    var localCorners = [
+                        {name:'front-left',  x:-h/2, y:-w/2},
+                        {name:'front-right', x:-h/2, y: w/2},
+                        {name:'rear-right',  x: h/2, y: w/2},
+                        {name:'rear-left',   x: h/2, y:-w/2}
+                    ];
+                    var cu = corner.toUpperCase();
+                    var targetX = (cu.indexOf('W') >= 0) ? -1 : 1; // west=-1, east=+1
+                    var targetY = (cu.indexOf('S') >= 0) ? -1 : 1; // south=-1, north=+1
+                    var best = null, bestScore = Infinity;
+                    localCorners.forEach(function(c) {
+                        var rx = c.x * cos - c.y * sin;
+                        var ry = c.x * sin + c.y * cos;
+                        var score = (rx - targetX * 999) * (rx - targetX * 999) + (ry - targetY * 999) * (ry - targetY * 999);
+                        if (score < bestScore) { bestScore = score; best = c.name; }
+                    });
+                    corner = best;
+                }
                 if (corner === 'front-left') {
-                    // Cut c0: insert two points replacing the front-left corner
                     baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2+cvt,y:-w/2},{x:-h/2,y:-w/2+cvt}];
                 } else if (corner === 'front-right') {
                     baseLot = [{x:-h/2,y:w/2-cvt},{x:-h/2+cvt,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-left') {
-                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-right') {
                     baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2-cvt,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 }

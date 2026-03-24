@@ -584,7 +584,11 @@ const MapEngine = {
 
     render: function() {
         const { width: w, depth: h, commercialDepth: cD, parcelPolygon } = ConfigEngine.data;
-        const rad    = ConfigEngine.state.rotation * Math.PI / 180;
+        // Normalize rotation to 0-360
+        var rawRot = ConfigEngine.state.rotation % 360;
+        if (rawRot < 0) rawRot += 360;
+        ConfigEngine.state.rotation = rawRot;
+        const rad    = rawRot * Math.PI / 180;
         const cos    = Math.cos(rad), sin = Math.sin(rad);
         const F_LAT  = 364566;
         const F_LNG  = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
@@ -607,13 +611,32 @@ const MapEngine = {
             var cvt = sd.cornerVisTriSize || 0;
             if (cvt > 0 && sd.cornerVisibilityTriangle) {
                 var corner = sd.cornerVisCorner || 'front-left';
+                // Resolve compass direction (SW/SE/NW/NE) to local corner based on rotation
+                if (/^[NSEW]{2}$/i.test(corner)) {
+                    var localCorners = [
+                        {name:'front-left',  x:-h/2, y:-w/2},
+                        {name:'front-right', x:-h/2, y: w/2},
+                        {name:'rear-right',  x: h/2, y: w/2},
+                        {name:'rear-left',   x: h/2, y:-w/2}
+                    ];
+                    var cu = corner.toUpperCase();
+                    var targetX = (cu.indexOf('W') >= 0) ? -1 : 1; // west=-1, east=+1
+                    var targetY = (cu.indexOf('S') >= 0) ? -1 : 1; // south=-1, north=+1
+                    var best = null, bestScore = Infinity;
+                    localCorners.forEach(function(c) {
+                        var rx = c.x * cos - c.y * sin;
+                        var ry = c.x * sin + c.y * cos;
+                        var score = (rx - targetX * 999) * (rx - targetX * 999) + (ry - targetY * 999) * (ry - targetY * 999);
+                        if (score < bestScore) { bestScore = score; best = c.name; }
+                    });
+                    corner = best;
+                }
                 if (corner === 'front-left') {
-                    // Cut c0: insert two points replacing the front-left corner
                     baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2+cvt,y:-w/2},{x:-h/2,y:-w/2+cvt}];
                 } else if (corner === 'front-right') {
                     baseLot = [{x:-h/2,y:w/2-cvt},{x:-h/2+cvt,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-left') {
-                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
+                    baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2},{x:h/2-cvt,y:-w/2},{x:-h/2,y:-w/2}];
                 } else if (corner === 'rear-right') {
                     baseLot = [{x:-h/2,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2-cvt,y:w/2},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 }
