@@ -7,8 +7,10 @@ const UIEngine = {
         const rectSqft = d.width * d.depth;
         const sqft = (d.lotSF && d.lotSF > 0) ? d.lotSF : rectSqft;
 
-        document.getElementById('ui-address').innerText      = d.address;
-        document.getElementById('header-ui-apn').innerText   = d.apn;
+        var elAddr = document.getElementById('ui-address');
+        if (elAddr) elAddr.innerText = d.address;
+        var elApn = document.getElementById('header-ui-apn');
+        if (elApn) elApn.innerText = d.apn;
         document.getElementById('ui-zoning').innerText  = d.zoning;
         document.getElementById('ui-w').innerText       = d.width;
         document.getElementById('ui-d').innerText       = d.depth;

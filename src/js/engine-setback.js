@@ -41,14 +41,32 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const count        = bldg.count        || 1;
         const stackSpacing = bldg.stackSpacing || 0;
+        const stackAngle   = bldg.stackAngle   || 0;
         const anchor       = bldg.anchor       || 'center';
+        const hw   = bldg.W / 2, hh = bldg.D / 2;
+        const bRad = bldg.orientation * Math.PI / 180;
+        const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
         const { halfDepth, halfWidth } = this._buildingExtents(bldg);
-        const step  = halfDepth * 2 + stackSpacing;
-        const aOff  = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
-        const xMin  = -lotD / 2 + aOff * step + halfDepth;
-        const xMax  =  lotD / 2 - (count - 1 - aOff) * step - halfDepth;
-        const yMin  = -lotW / 2 + halfWidth;
-        const yMax  =  lotW / 2 - halfWidth;
+
+        const sAngRad   = stackAngle * Math.PI / 180;
+        const sDirX     = Math.cos(sAngRad);
+        const sDirY     = Math.sin(sAngRad);
+        const halfInDir = Math.abs(hh * (bCos * sDirX + bSin * sDirY)) +
+                          Math.abs(hw * (-bSin * sDirX + bCos * sDirY));
+        const step = halfInDir * 2 + stackSpacing;
+        const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+
+        // Compute bounding box of ALL copies relative to anchor (cx,cy)
+        const jOff0 = -aOff * step, jOffN = (count - 1 - aOff) * step;
+        const arrXMin = Math.min(jOff0 * sDirX, jOffN * sDirX) - halfDepth;
+        const arrXMax = Math.max(jOff0 * sDirX, jOffN * sDirX) + halfDepth;
+        const arrYMin = Math.min(jOff0 * sDirY, jOffN * sDirY) - halfWidth;
+        const arrYMax = Math.max(jOff0 * sDirY, jOffN * sDirY) + halfWidth;
+
+        const xMin = -lotD / 2 - arrXMin;
+        const xMax =  lotD / 2 - arrXMax;
+        const yMin = -lotW / 2 - arrYMin;
+        const yMax =  lotW / 2 - arrYMax;
         return {
             cx: Math.max(xMin <= xMax ? xMin : -lotD/2, Math.min(xMin <= xMax ? xMax : lotD/2, cx)),
             cy: Math.max(yMin <= yMax ? yMin : -lotW/2, Math.min(yMin <= yMax ? yMax : lotW/2, cy))
@@ -140,6 +158,11 @@ const SetbackEngine = {
         document.getElementById('bldgOffsetY').value        = (bldg.offsetY      || 0).toFixed(1);
         document.getElementById('bldgCount').value          = bldg.count         || 1;
         document.getElementById('bldgStackSpacing').value   = (bldg.stackSpacing || 0).toFixed(1);
+        const sAng   = bldg.stackAngle || 0;
+        const angEl  = document.getElementById('bldgStackAngle');
+        const dirBtn = document.getElementById('bldgStackDirBtn');
+        if (angEl)  angEl.value = sAng;
+        if (dirBtn) dirBtn.textContent = Math.abs(sAng % 180) < 1 ? '→' : Math.abs(((sAng - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
         document.getElementById('bldgStories').value        = bldg.stories       || 1;
         document.getElementById('bldgFloorHeight').value    = (bldg.floorHeight  || 9).toFixed(1);
 
@@ -188,6 +211,7 @@ const SetbackEngine = {
             spacing:      0,
             count:        1,
             stackSpacing: 0,
+            stackAngle:   0,
             anchor:       'center',
             stories:      src.stories     || 1,
             floorHeight:  src.floorHeight || 9
@@ -302,19 +326,25 @@ const SetbackEngine = {
                 MapEngine.map.removeLayer(MapEngine.buildingPolys[i].pop());
             }
 
-            const halfDepth    = Math.abs(hh * bCos) + Math.abs(hw * bSin);
-            const step         = halfDepth * 2 + stackSpacing;
+            const sAngRad      = ((bldg.stackAngle || 0) * Math.PI / 180);
+            const sDirX        = Math.cos(sAngRad);
+            const sDirY        = Math.sin(sAngRad);
+            const halfInDir    = Math.abs(hh * (bCos * sDirX + bSin * sDirY)) +
+                                 Math.abs(hw * (-bSin * sDirX + bCos * sDirY));
+            const step         = halfInDir * 2 + stackSpacing;
             const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
 
             for (let j = 0; j < count; j++) {
-                const cx  = baseCx + (j - anchorOffset) * step;
+                const jOff = (j - anchorOffset) * step;
+                const cx   = baseCx + jOff * sDirX;
+                const cy_j = cy     + jOff * sDirY;
                 const raw = [
-                    { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
-                    { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
+                    { x: cx - hh, y: cy_j + hw }, { x: cx + hh, y: cy_j + hw },
+                    { x: cx + hh, y: cy_j - hw }, { x: cx - hh, y: cy_j - hw }
                 ];
                 const oriented = raw.map(pt => {
-                    const dx = pt.x - cx, dy = pt.y - cy;
-                    return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
+                    const dx = pt.x - cx, dy = pt.y - cy_j;
+                    return { x: cx + dx * bCos - dy * bSin, y: cy_j + dx * bSin + dy * bCos };
                 });
                 MapEngine.buildingPolys[i][j].setLatLngs(oriented.map(toLatLng));
             }
@@ -691,11 +721,11 @@ const SetbackEngine = {
                 chkEl.style.color = ok ? '#2f855a' : '#c53030';
             }
         } else {
-            // FAR not applicable for this zone (baseFAR=0)
-            set('bldgFAR',       'N/A');
-            set('bldgBuildable', 'Per zoning');
-            set('maxFARLabel',   'FAR: N/A');
-            if (chkEl) { chkEl.textContent = '\u2713 FAR not applicable'; chkEl.style.color = '#2f855a'; }
+            // FAR not applicable for this zone (baseFAR=0) — show actual but no limit
+            set('bldgFAR',       actualFAR.toFixed(2));
+            set('bldgBuildable', 'No FAR limit');
+            set('maxFARLabel',   'FAR: No limit');
+            if (chkEl) { chkEl.textContent = '\u2713 No FAR limit for this zone'; chkEl.style.color = '#2f855a'; }
         }
 
         const floorH      = active.floorHeight || 9;
@@ -851,6 +881,33 @@ const SetbackEngine = {
                 document.getElementById('bldgCount').value = newMaxN;
             }
             this.drawBuilding();
+        });
+
+        // Stack angle input
+        document.getElementById('bldgStackAngle').addEventListener('change', () => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            let a = parseFloat(document.getElementById('bldgStackAngle').value) || 0;
+            a = Math.max(-180, Math.min(180, a));
+            document.getElementById('bldgStackAngle').value = a;
+            bldg.stackAngle = a;
+            const dirBtn = document.getElementById('bldgStackDirBtn');
+            if (dirBtn) dirBtn.textContent = Math.abs(a % 180) < 1 ? '→' : Math.abs(((a - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
+            this.drawBuilding();
+            ExportEngine.save();
+        });
+
+        // Stack direction toggle: cycles → (0°) ↔ ↑ (90°)
+        document.getElementById('bldgStackDirBtn').addEventListener('click', () => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            const cur  = bldg.stackAngle || 0;
+            const next = Math.abs(cur % 180) < 1 ? 90 : 0;
+            bldg.stackAngle = next;
+            document.getElementById('bldgStackAngle').value = next;
+            document.getElementById('bldgStackDirBtn').textContent = next === 0 ? '→' : '↑';
+            this.drawBuilding();
+            ExportEngine.save();
         });
 
         // Anchor buttons (per-building)

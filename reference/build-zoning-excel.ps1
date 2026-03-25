@@ -1,349 +1,305 @@
+# ZoningCodeLibrary.xlsx -- 2-way sync: JSON <-> Excel
+#
+# Single master workbook, one tab per state, one ROW per site.
+# Columns = site identity fields (transposed from vertical card view).
+#
+# EXPORT (default): data/sites/*.json -> ZoningCodeLibrary.xlsx
+# IMPORT:           ZoningCodeLibrary.xlsx -> data/sites/*.json (.site key only)
+#
+# Usage:
+#   .\build-zoning-excel.ps1              # export all sites
+#   .\build-zoning-excel.ps1 -Mode import # import all rows -> JSON
+
+param(
+    [ValidateSet("export","import")]
+    [string]$Mode = "export"
+)
+
 Set-StrictMode -Version Latest
 
-# Build ZoningCodeLibrary.xlsx -- Dynamic from site-data.json
-# Reads the active site config and generates a per-site zoning workbook.
+# ── Shared engine (COM cleanup helpers) ───────────────────────────────────
+$sharedMod = "C:\Users\napham\OneDrive - Stantec\NP_OutlookTeamSuite\Engine\Shared\NPSTN_Shared.psm1"
+if (Test-Path $sharedMod) {
+    Import-Module $sharedMod -Force -ErrorAction SilentlyContinue
+} else {
+    # Fallback stubs so the script still runs standalone
+    function Remove-ComObjects {
+        param([object[]]$Objects)
+        foreach ($o in $Objects) {
+            if ($null -ne $o) {
+                try { if ($o.PSObject.Methods.Match('Quit')) { $o.Quit() } } catch {}
+                try { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($o) | Out-Null } catch {}
+            }
+        }
+        [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()
+    }
+    function Clear-OfficeGhosts { [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers() }
+}
 
 $base     = Split-Path $PSScriptRoot -Parent
-$siteJson = Join-Path (Join-Path $base "data") "site-data.json"
+$sitesDir = Join-Path $base "data\sites"
+$xlPath   = Join-Path $PSScriptRoot "ZoningCodeLibrary.xlsx"
 
-if (-not (Test-Path $siteJson)) {
-    Write-Host "[ERROR] data/site-data.json not found. Run build.py or activate a site first."
-    exit 1
+# ── Column definitions (order = Excel column order) ───────────────────────
+# Each entry: @{ key = JSON field; label = header; type = string|number|bool }
+$COLUMNS = @(
+    @{ key="siteId";                  label="Site ID";              type="string" }
+    @{ key="address";                 label="Address";              type="string" }
+    @{ key="apn";                     label="APN";                  type="string" }
+    @{ key="zoning";                  label="Zoning";               type="string" }
+    @{ key="cadZone";                 label="CAD Zone";             type="string" }
+    @{ key="projectType";             label="Project Type";         type="string" }
+    @{ key="architect";               label="Architect";            type="string" }
+    @{ key="lotWidth";                label="Lot Width (ft)";       type="number" }
+    @{ key="lotDepth";                label="Lot Depth (ft)";       type="number" }
+    @{ key="lotSF";                   label="Lot SF";               type="number" }
+    @{ key="lotAcres";                label="Lot Acres";            type="number" }
+    @{ key="lotWidthSouth";           label="Lot Width S (ft)";     type="number" }
+    @{ key="lotWidthNorth";           label="Lot Width N (ft)";     type="number" }
+    @{ key="lotDepthWest";            label="Lot Depth W (ft)";     type="number" }
+    @{ key="lotDepthEast";            label="Lot Depth E (ft)";     type="number" }
+    @{ key="commercialDepth";         label="Comm Depth (ft)";      type="number" }
+    @{ key="baseFAR";                 label="Base FAR";             type="number" }
+    @{ key="commFAR";                 label="CCHS FAR";             type="number" }
+    @{ key="maxHeight";               label="Max Height (ft)";      type="number" }
+    @{ key="baseHeightLimit";         label="Base Ht Limit (ft)";   type="number" }
+    @{ key="cchsMaxHeight";           label="CCHS Max Ht (ft)";     type="number" }
+    @{ key="frontSetback";            label="Front Setback (ft)";   type="number" }
+    @{ key="rearSetback";             label="Rear Setback (ft)";    type="number" }
+    @{ key="sideSetback";             label="Side Setback (ft)";    type="number" }
+    @{ key="densityPerSF";            label="Density (SF/DU)";      type="number" }
+    @{ key="nefRatePerSF";            label="NEF Rate ($/SF)";      type="number" }
+    @{ key="affordabilityPct";        label="Affordability %";      type="number" }
+    @{ key="difPerUnit";              label="DIF/Unit ($)";         type="number" }
+    @{ key="difWaiverSF";             label="DIF Waiver (SF)";      type="number" }
+    @{ key="unitCount";               label="Unit Count";           type="number" }
+    @{ key="unitDensity";             label="Unit Density (DU/AC)"; type="number" }
+    @{ key="densityBonus";            label="Density Bonus";        type="bool"   }
+    @{ key="cornerVisibilityTriangle";label="Corner Vis Triangle";  type="bool"   }
+    @{ key="cornerVisTriSize";        label="Corner Vis Size (ft)"; type="number" }
+    @{ key="cornerVisCorner";         label="Corner Vis Corner";    type="string" }
+    @{ key="notes";                   label="Notes";                type="string" }
+)
+
+# ── Helper: get a safe value from a PSObject property ─────────────────────
+function Get-Val($obj, $key, $default="") {
+    $p = $obj.PSObject.Properties[$key]
+    if ($null -eq $p -or $null -eq $p.Value) { return $default }
+    return $p.Value
 }
 
-$raw  = Get-Content $siteJson -Raw -Encoding UTF8
-$data = $raw | ConvertFrom-Json
-$s    = $data.site
-
-# ── Derived values ───────────────────────────────────────────────────────
-$siteId     = if ($s.siteId) { $s.siteId } else { "UNKNOWN" }
-$addr       = if ($s.address) { $s.address } else { "--" }
-$apn        = if ($s.apn) { $s.apn } else { "--" }
-$zoning     = if ($s.zoning) { $s.zoning } else { "--" }
-$lotW       = if ($s.lotWidth)  { $s.lotWidth }  else { 0 }
-$lotD       = if ($s.lotDepth)  { $s.lotDepth }  else { 0 }
-$lotSF      = if ($s.lotSF -and $s.lotSF -gt 0) { $s.lotSF } else { $lotW * $lotD }
-$lotAcres   = [math]::Round($lotSF / 43560, 2)
-$commD      = if ($null -ne $s.commercialDepth) { $s.commercialDepth } else { 0 }
-$baseFAR    = if ($null -ne $s.baseFAR) { $s.baseFAR } else { 0 }
-$commFAR    = if ($null -ne $s.commFAR) { $s.commFAR } else { 0 }
-$maxHt      = if ($null -ne $s.maxHeight) { $s.maxHeight } else { 0 }
-$baseHtLim  = if ($null -ne $s.baseHeightLimit) { $s.baseHeightLimit } else { $maxHt }
-$cchsMaxHt  = if ($null -ne $s.cchsMaxHeight) { $s.cchsMaxHeight } else { 0 }
-$fSb        = if ($null -ne $s.frontSetback) { $s.frontSetback } else { 0 }
-$rSb        = if ($null -ne $s.rearSetback) { $s.rearSetback } else { 0 }
-$sSb        = if ($null -ne $s.sideSetback) { $s.sideSetback } else { 0 }
-$densSF     = if ($null -ne $s.densityPerSF) { $s.densityPerSF } else { 0 }
-$nefRate    = if ($null -ne $s.nefRatePerSF) { $s.nefRatePerSF } else { 0 }
-$affPct     = if ($null -ne $s.affordabilityPct) { $s.affordabilityPct } else { 0 }
-$difUnit    = if ($null -ne $s.difPerUnit) { $s.difPerUnit } else { 0 }
-$difWaiver  = if ($null -ne $s.difWaiverSF) { $s.difWaiverSF } else { 0 }
-$projType   = if ($s.projectType) { $s.projectType } else { "--" }
-$architect  = if ($s.architect) { $s.architect } else { "--" }
-$notes      = if ($s.notes) { $s.notes } else { "" }
-$unitCount  = if ($null -ne $s.unitCount) { $s.unitCount } else { 0 }
-$unitDens   = if ($null -ne $s.unitDensity) { $s.unitDensity } else { 0 }
-$densBonus  = if ($null -ne $s.densityBonus) { $s.densityBonus } else { $false }
-$cvt        = if ($null -ne $s.cornerVisibilityTriangle) { $s.cornerVisibilityTriangle } else { $false }
-$cvtSize    = if ($null -ne $s.cornerVisTriSize) { $s.cornerVisTriSize } else { 0 }
-$cvtCorner  = if ($s.cornerVisCorner) { $s.cornerVisCorner } else { "--" }
-
-# Computed
-$baseBuildable = if ($baseFAR -gt 0) { [math]::Round($lotSF * $baseFAR) } else { 0 }
-$cchsBuildable = if ($commFAR -gt 0) { [math]::Round($lotSF * $commFAR) } else { 0 }
-$maxDU         = if ($densSF -gt 0) { [math]::Floor($lotSF / $densSF) } else { 0 }
-$nefTotal      = if ($nefRate -gt 0) { [math]::Round($nefRate * $lotSF) } else { 0 }
-$affUnits      = if ($affPct -gt 0 -and $maxDU -gt 0) { [math]::Ceiling($maxDU * $affPct) } else { 0 }
-$sdbBonus      = if ($maxDU -gt 0) { $maxDU + [math]::Ceiling($maxDU * 0.2) } else { 0 }
-$sdbBuildable  = if ($baseFAR -gt 0) { [math]::Round($lotSF * $baseFAR * 1.2) } else { 0 }
-
-$xlPath = Join-Path $PSScriptRoot "$siteId-ZoningCodeLibrary.xlsx"
-
-Write-Host "Building workbook for: $siteId ($addr)"
-Write-Host "  Lot: $lotW x $lotD = $($lotSF.ToString('N0')) SF"
-
-$app = $null; $wb = $null
-
-function Set-Cell($ws,$r,$c,$v){ $ws.Cells.Item($r,$c) = $v }
-
-function Style-Header($ws,$r1,$c1,$r2,$c2){
-    $rng = $ws.Range($ws.Cells.Item($r1,$c1),$ws.Cells.Item($r2,$c2))
-    $rng.Interior.Color = 0x0F4C81
-    $rng.Font.Bold = $true; $rng.Font.Color = 0xFFFFFF; $rng.Font.Size = 10
+# ── Helper: state code from siteId (e.g. "CA-EUCLID" -> "CA") ─────────────
+function Get-StateCode($siteId) {
+    if ($siteId -match '^([A-Z]{2})-') { return $Matches[1] }
+    return "OTHER"
 }
 
-function Style-Section($ws,$row,$cols,$bg=0x1E3A5F){
-    $rng = $ws.Range($ws.Cells.Item($row,1),$ws.Cells.Item($row,$cols))
-    $rng.Interior.Color = $bg; $rng.Font.Color = 0xFFFFFF
-    $rng.Font.Bold = $true; $rng.Font.Size = 9
+# ── Load all site JSON files -> group by state ────────────────────────────
+function Load-AllSites {
+    $groups = @{}
+    $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+    foreach ($f in $files) {
+        try {
+            $raw = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($null -eq $raw.site) { continue }
+            $sid   = "$(Get-Val $raw.site 'siteId')"
+            $state = Get-StateCode $sid
+            if (-not $groups.ContainsKey($state)) { $groups[$state] = @() }
+            $groups[$state] += [PSCustomObject]@{ site=$raw.site; file=$f.FullName }
+        } catch {}
+    }
+    return $groups
 }
 
-function Style-Alt($ws,$row,$cols){
-    $rng = $ws.Range($ws.Cells.Item($row,1),$ws.Cells.Item($row,$cols))
-    $rng.Interior.Color = 0xF0F4F8
+# ── Excel helpers ──────────────────────────────────────────────────────────
+function Style-Header($ws, $colCount) {
+    $rng = $ws.Range($ws.Cells.Item(1,1), $ws.Cells.Item(1,$colCount))
+    $rng.Interior.Color  = 0x0F4C81
+    $rng.Font.Bold       = $true
+    $rng.Font.Color      = 0xFFFFFF
+    $rng.Font.Size       = 10
+    $rng.WrapText        = $false
 }
 
-# Helper: format "N/A" for zero values
-function FmtOrNA($v, $fmt="") {
-    if ($v -eq 0) { return "N/A" }
-    if ($fmt) { return $v.ToString($fmt) }
-    return "$v"
+function Style-DataRow($ws, $row, $colCount, $alt) {
+    if ($alt) {
+        $rng = $ws.Range($ws.Cells.Item($row,1), $ws.Cells.Item($row,$colCount))
+        $rng.Interior.Color = 0xF0F4F8
+    }
 }
 
-try {
-    $app = New-Object -ComObject Excel.Application
-    $app.Visible = $false; $app.DisplayAlerts = $false
-    $wb = $app.Workbooks.Add()
+# ── EXPORT ────────────────────────────────────────────────────────────────
+function Export-All {
+    $groups = Load-AllSites
+    if ($groups.Count -eq 0) { Write-Host "[ERROR] No site JSON files found in $sitesDir" -ForegroundColor Red; return }
 
-    # ── SHEET 1: SITE SUMMARY ─────────────────────────────────────────
-    $s1 = $wb.Worksheets.Item(1); $s1.Name = "Site Summary"
-    $h = @("Field","Value","Unit","Notes")
-    for($c=1;$c -le 4;$c++){ Set-Cell $s1 1 $c $h[$c-1] }
-    Style-Header $s1 1 1 1 4
+    Write-Host "EXPORT -> $xlPath" -ForegroundColor Cyan
+    $colCount = $COLUMNS.Count
 
-    $densLabel = if ($densSF -gt 0) { "1 DU per $densSF SF = floor($lotSF/$densSF)" } else { "Per zoning overlay" }
-    $lotDimNote = "$lotW x $lotD" + $(if ($lotSF -ne ($lotW * $lotD)) { " (surveyed: $($lotSF.ToString('N0')) SF)" } else { "" })
+    $app = $null; $wb = $null
+    try {
+        Clear-OfficeGhosts
+        $app = New-Object -ComObject Excel.Application
+        $app.Visible = $false; $app.DisplayAlerts = $false
+        $wb  = $app.Workbooks.Add()
 
-    $rows = @(
-      ,@("PROJECT")
-      ,@("Project Name","ProjectBook-Planner","","")
-      ,@("Site ID","$siteId","","")
-      ,@("Address","$addr","","")
-      ,@("APN","$apn","","Assessor Parcel Number")
-      ,@("Zoning","$zoning","","")
-      ,@("Project Type","$projType","","")
-      ,@("Architect","$architect","","")
-      ,@("")
-      ,@("LOT DIMENSIONS")
-      ,@("Lot Width","$lotW","ft","")
-      ,@("Lot Depth","$lotD","ft","")
-      ,@("Lot SF","$($lotSF.ToString('N0'))","SF","$lotDimNote")
-      ,@("Lot Acres","$lotAcres","AC","")
-      ,@("")
-      ,@("BASE ZONE LIMITS")
-      ,@("Base FAR","$(FmtOrNA $baseFAR)","ratio","$(if ($baseBuildable -gt 0) { "Max buildable = $($baseBuildable.ToString('N0')) SF" } else { 'Not applicable' })")
-      ,@("Max Height","$(FmtOrNA $baseHtLim)","ft","$zoning")
-      ,@("Max Density","$(if ($maxDU -gt 0) { $maxDU } else { 'Per zoning' })","DU","$densLabel")
-      ,@("Density Factor","$(FmtOrNA $densSF)","SF/DU","")
-      ,@("Commercial Depth","$(if ($commD -gt 0) { $commD } else { 'N/A' })","ft","$(if ($commD -gt 0) { 'From front property line' } else { 'No commercial zone' })")
-      ,@("Front Setback","$fSb","ft","")
-      ,@("Rear Setback","$rSb","ft","")
-      ,@("Side Setback","$sSb","ft","$(if ($sSb -eq 0) { 'Zero lot line' } else { '' })")
-    )
+        # Remove default sheets later; add one per state
+        $firstSheet = $true
+        foreach ($state in ($groups.Keys | Sort-Object)) {
+            $sites = $groups[$state]
 
-    # CCHS section (only if site has CCHS data)
-    if ($cchsMaxHt -gt 0 -or $commFAR -gt 0) {
-        $rows += ,@("")
-        $rows += ,@("CCHS / OVERLAY LIMITS")
-        $rows += ,@("CCHS FAR","$(FmtOrNA $commFAR)","ratio","$(if ($cchsBuildable -gt 0) { "Max buildable = $($cchsBuildable.ToString('N0')) SF" } else { '' })")
-        $rows += ,@("CCHS Max Height","$(FmtOrNA $cchsMaxHt)","ft","")
-        $rows += ,@("CCHS Density","Unlimited","DU","No density cap")
-        $rows += ,@("Affordability","$([math]::Round($affPct * 100))%","of pre-bonus base DU","$(if ($affUnits -gt 0) { "~$affUnits units at $maxDU DU base" } else { '' })")
-    }
-
-    # Fees section (only if site has fee data)
-    if ($nefRate -gt 0 -or $difUnit -gt 0) {
-        $rows += ,@("")
-        $rows += ,@("FEES")
-        if ($nefRate -gt 0) {
-            $rows += ,@("NEF Rate","$nefRate","$/SF","Waived if 100% affordable")
-            $rows += ,@("NEF Total (site)","$($nefTotal.ToString('N0'))","$","$nefRate x $($lotSF.ToString('N0')) SF")
-        }
-        if ($difUnit -gt 0) {
-            $rows += ,@("DIF per Market Unit","$($difUnit.ToString('N0'))","$","Estimate. Verify with DIF Calculator.")
-        }
-        if ($difWaiver -gt 0) {
-            $rows += ,@("DIF Waiver Threshold","$difWaiver","SF","Units <=$difWaiver SF: DIF waived")
-        }
-    }
-
-    # Corner visibility triangle (if applicable)
-    if ($cvt) {
-        $rows += ,@("")
-        $rows += ,@("SITE FEATURES")
-        $rows += ,@("Corner Visibility Triangle","Yes","","$cvtSize ft at $cvtCorner corner")
-    }
-
-    # Density bonus (if applicable)
-    if ($densBonus) {
-        $rows += ,@("Density Bonus","Applied","","")
-    }
-
-    # Unit count (if set)
-    if ($unitCount -gt 0) {
-        if (-not $densBonus -and -not $cvt) {
-            $rows += ,@("")
-            $rows += ,@("SITE FEATURES")
-        }
-        $rows += ,@("Unit Count","$unitCount","DU","$($unitDens.ToString('N2')) DU/AC")
-    }
-
-    # Notes
-    if ($notes) {
-        $rows += ,@("")
-        $rows += ,@("NOTES")
-        $rows += ,@("","$notes","","")
-    }
-
-    # SB 330 (California sites only)
-    if ($addr -match "CA\s+\d{5}" -or $addr -match "California") {
-        $rows += ,@("")
-        $rows += ,@("SB 330 (CALIFORNIA)")
-        $rows += ,@("Min Residential %","66.7","%","Project must be >=66.7% resi by SF")
-        $rows += ,@("Vesting Window","180","days","Standards frozen from filing date")
-        $rows += ,@("Construction Start","2.5","years","From final approval. AB 130 permanent.")
-    }
-
-    $r = 2
-    foreach ($row in $rows) {
-        if ($row.Count -le 1) {
-            if ($row[0] -ne "") {
-                Set-Cell $s1 $r 1 $row[0]
-                Style-Section $s1 $r 4
+            # Add or reuse sheet
+            if ($firstSheet) {
+                $ws = $wb.Worksheets.Item(1)
+                $ws.Name = $state
+                $firstSheet = $false
+            } else {
+                $ws = $wb.Worksheets.Add([System.Reflection.Missing]::Value, $wb.Worksheets.Item($wb.Worksheets.Count))
+                $ws.Name = $state
             }
-        } else {
-            for($c=1;$c -le [Math]::Min($row.Count,4);$c++){ Set-Cell $s1 $r $c $row[$c-1] }
-            if ($r % 2 -eq 0) { Style-Alt $s1 $r 4 }
+
+            # Header row
+            for ($c = 1; $c -le $colCount; $c++) {
+                $ws.Cells.Item(1, $c) = $COLUMNS[$c-1].label
+            }
+            Style-Header $ws $colCount
+
+            # Freeze header row
+            $ws.Application.ActiveWindow.SplitRow = 1
+            $ws.Application.ActiveWindow.FreezePanes = $true
+
+            # Data rows
+            $row = 2
+            foreach ($entry in $sites) {
+                $s = $entry.site
+                for ($c = 1; $c -le $colCount; $c++) {
+                    $col = $COLUMNS[$c-1]
+                    $val = Get-Val $s $col.key ""
+                    if ($col.type -eq "bool") {
+                        $ws.Cells.Item($row, $c) = if ($val -eq $true) { "Yes" } else { "No" }
+                    } elseif ($col.type -eq "number") {
+                        $n = 0.0
+                        if ([double]::TryParse("$val", [ref]$n)) {
+                            $ws.Cells.Item($row, $c) = $n
+                        } else {
+                            $ws.Cells.Item($row, $c) = 0
+                        }
+                    } else {
+                        $ws.Cells.Item($row, $c) = "$val"
+                    }
+                }
+                Style-DataRow $ws $row $colCount ($row % 2 -eq 0)
+                $row++
+            }
+
+            $ws.Columns.AutoFit() | Out-Null
+            Write-Host "  [$state] $($sites.Count) site(s)" -ForegroundColor Green
         }
-        $r++
-    }
-    $s1.Columns.AutoFit() | Out-Null
 
-    # ── SHEET 2: ZONING CODE LIBRARY ──────────────────────────────────
-    $s2 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s1)
-    $s2.Name = "Zoning Code Library"
-    $h2 = @("ID","Category","Code / Section","Parameter","Value","Unit / Condition","Pathway","Source PDF","Notes")
-    for($c=1;$c -le 9;$c++){ Set-Cell $s2 1 $c $h2[$c-1] }
-    Style-Header $s2 1 1 1 9
-
-    $cRows = @(
-      ,@("C-01","FAR","$zoning","Base Zone FAR","$(FmtOrNA $baseFAR)","ratio","Base Zone","--","$(if ($baseBuildable -gt 0) { "Max buildable $($baseBuildable.ToString('N0')) SF on $($lotSF.ToString('N0')) SF lot" } else { 'N/A' })")
-      ,@("C-02","FAR","$zoning","Overlay/CCHS FAR","$(FmtOrNA $commFAR)","ratio","Overlay","--","$(if ($cchsBuildable -gt 0) { "Max buildable $($cchsBuildable.ToString('N0')) SF" } else { 'N/A' })")
-      ,@("C-03","Density","$zoning","Base Max Density","$(if ($densSF -gt 0) { "1 DU / $densSF SF" } else { 'Per zoning' })","DU/SF","Base Zone","--","$(if ($maxDU -gt 0) { "floor($lotSF/$densSF) = $maxDU DU max" } else { 'Per zoning overlay' })")
-      ,@("C-04","Density","$zoning","Overlay Density Cap","$(if ($commFAR -gt 0) { 'Unlimited' } else { 'N/A' })","DU","Overlay","--","")
-      ,@("C-05","Height","$zoning","Base Zone Height Limit","$(FmtOrNA $baseHtLim)","ft","Base Zone","--","")
-      ,@("C-06","Height","$zoning","Overlay Max Height","$(FmtOrNA $cchsMaxHt)","ft","Overlay","--","")
-      ,@("C-07","Setbacks","$zoning","Front Setback","$fSb","ft","Both","--","")
-      ,@("C-08","Setbacks","$zoning","Rear Setback","$rSb","ft","Both","--","")
-      ,@("C-09","Setbacks","$zoning","Side Setback","$sSb","ft","Both","--","$(if ($sSb -eq 0) { 'Zero lot line; fire-rated party wall' } else { '' })")
-      ,@("C-10","Commercial","$zoning","Commercial Zone Depth","$(if ($commD -gt 0) { $commD } else { 'N/A' })","ft","$zoning","--","$(if ($commD -gt 0) { 'Residential only behind commercial zone' } else { 'No commercial zone' })")
-      ,@("C-11","Fees","$zoning","NEF Rate","$(if ($nefRate -gt 0) { $nefRate } else { 'N/A' })","$/SF","Both","--","$(if ($nefTotal -gt 0) { "Total: `$$($nefTotal.ToString('N0'))" } else { '' })")
-      ,@("C-12","Fees","$zoning","DIF per Market Unit","$(if ($difUnit -gt 0) { "`$$($difUnit.ToString('N0'))" } else { 'N/A' })","$/unit","Both","--","Verify with jurisdiction DIF Calculator")
-      ,@("C-13","Parking","State/Local","Min Parking Req","TBD","spaces","Both","--","Check transit proximity for AB 2097 exemption")
-      ,@("C-14","Density Bonus","Gov. Code Sec.65915","State DB 20% Bonus","20%","bonus DU over base","State DB","--","$(if ($maxDU -gt 0) { "Base $maxDU + 20% = $sdbBonus DU" } else { '' })")
-      ,@("C-15","Vesting","SB 330 / AB 130","SB 330 Vesting Window","180","days","Both","--","CA only. Permanent since AB 130 (2025)")
-      ,@("C-16","Fire","CBC Table 508.4","Fire Separation (sprinklered)","1","hr","Both","--","Group M/B to R-2")
-      ,@("C-17","Acoustics","CBC S1206","Wall STC (lab/field)","50/45","STC","Both","--","Airborne sound")
-      ,@("C-18","Acoustics","CBC S1206","Floor-Ceiling IIC (lab/field)","50/45","IIC","Both","--","Impact sound")
-      ,@("C-19","Waste","Local/SB 1383","3-Stream Containers","gray/blue/green","per unit","Both","--","Trash + recycling + organics")
-      ,@("C-20","Mail","USPS PO-632","Mail Delivery Mode","STD-4C or CBU","--","Both","--","Developer pays all equipment")
-    )
-
-    $r = 2
-    foreach ($row in $cRows) {
-        for($c=1;$c -le 9;$c++){ Set-Cell $s2 $r $c $row[$c-1] }
-        if ($r % 2 -eq 0) { Style-Alt $s2 $r 9 }
-        $r++
-    }
-    $s2.Columns.AutoFit() | Out-Null
-
-    # ── SHEET 3: PATHWAY COMPARISON ───────────────────────────────────
-    $s3 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s2)
-    $s3.Name = "Pathway Comparison"
-    $h3 = @("Factor","Base Zone (FAR $(FmtOrNA $baseFAR))","Overlay (FAR $(FmtOrNA $commFAR))","State Density Bonus","Notes")
-    for($c=1;$c -le 5;$c++){ Set-Cell $s3 1 $c $h3[$c-1] }
-    Style-Header $s3 1 1 1 5
-
-    $farRatio = if ($baseFAR -gt 0 -and $commFAR -gt 0) { "$([math]::Round($commFAR / $baseFAR, 1))x more buildable" } else { "" }
-
-    $pRows = @(
-      ,@("Max FAR","$(FmtOrNA $baseFAR)","$(FmtOrNA $commFAR)","$(FmtOrNA $baseFAR) (incentive to increase)","$farRatio")
-      ,@("Max Buildable SF ($($lotSF.ToString('N0')) SF lot)","$(if ($baseBuildable -gt 0) { "$($baseBuildable.ToString('N0')) SF" } else { 'N/A' })","$(if ($cchsBuildable -gt 0) { "$($cchsBuildable.ToString('N0')) SF" } else { 'N/A' })","$(if ($sdbBuildable -gt 0) { "~$($sdbBuildable.ToString('N0')) SF (20% bonus)" } else { 'N/A' })","")
-      ,@("Max Density","$(if ($maxDU -gt 0) { "$maxDU DU (1/$densSF SF)" } else { 'Per zoning' })","$(if ($commFAR -gt 0) { 'Unlimited' } else { 'N/A' })","$(if ($sdbBonus -gt 0) { "$sdbBonus DU (20% bonus)" } else { 'N/A' })","")
-      ,@("Max Height","$(FmtOrNA $baseHtLim) ft","$(if ($cchsMaxHt -gt 0) { "$cchsMaxHt ft" } else { 'N/A' })","$(FmtOrNA $baseHtLim) ft (unless incentive)","")
-      ,@("Affordability Req","None","$(if ($affPct -gt 0) { "$([math]::Round($affPct*100))% of base DU (~$affUnits units)" } else { 'N/A' })","1 unit (5% VLI for 20% bonus)","")
-      ,@("NEF Fee","$0","$(if ($nefTotal -gt 0) { "~`$$($nefTotal.ToString('N0'))" } else { 'N/A' })","$0","Waived if 100% affordable")
-      ,@("Review Process","Discretionary","Ministerial 30-day","Ministerial if conforming","")
-      ,@("CEQA","May apply","Exempt (ministerial)","Exempt if ministerial","")
-      ,@("Stackable?","N/A","Yes - stack DB on top","Yes","")
-      ,@("SB 330 Qualifies?","Yes (>=66.7% resi)","Yes (>=66.7% resi)","Yes","CA only")
-    )
-
-    $r = 2
-    foreach ($row in $pRows) {
-        for($c=1;$c -le 5;$c++){ Set-Cell $s3 $r $c $row[$c-1] }
-        if ($r % 2 -eq 0) { Style-Alt $s3 $r 5 }
-        $r++
-    }
-    $s3.Columns.AutoFit() | Out-Null
-
-    # ── SHEET 4: FEE SCHEDULE ─────────────────────────────────────────
-    $s4 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s3)
-    $s4.Name = "Fee Schedule"
-    $h4 = @("Fee ID","Fee Name","Rate","Unit","Formula ($($lotSF.ToString('N0')) SF lot)","Est. Total","Waiver Condition","Source")
-    for($c=1;$c -le 8;$c++){ Set-Cell $s4 1 $c $h4[$c-1] }
-    Style-Header $s4 1 1 1 8
-
-    $fRows = @()
-    if ($nefRate -gt 0) {
-        $nefHigh = [math]::Round($nefRate * 1.224, 2)
-        $nefHighTotal = [math]::Round($nefHigh * $lotSF)
-        $fRows += ,@("F-01","NEF","$nefRate","/SF","$nefRate x $($lotSF.ToString('N0'))","~`$$($nefTotal.ToString('N0'))","100% affordable project","--")
-        $fRows += ,@("F-02","NEF (over-height)","$nefHigh","/SF","$nefHigh x $($lotSF.ToString('N0'))","~`$$($nefHighTotal.ToString('N0'))","100% affordable project","--")
-    }
-    if ($difUnit -gt 0) {
-        $fRows += ,@("F-03","DIF per Market Unit","~`$$($difUnit.ToString('N0'))","/unit","x market-rate units","Varies","$(if ($difWaiver -gt 0) { "Affordable + units <=$difWaiver SF" } else { '--' })","--")
-    }
-    $fRows += ,@("F-04","SB 330 Preliminary App","Minimal","/filing","File to vest standards","~`$0-500","N/A","--")
-
-    $r = 2
-    foreach ($row in $fRows) {
-        for($c=1;$c -le 8;$c++){ Set-Cell $s4 $r $c $row[$c-1] }
-        if ($r % 2 -eq 0) { Style-Alt $s4 $r 8 }
-        $r++
-    }
-    $s4.Columns.AutoFit() | Out-Null
-
-    # ── SHEET 5: INSPECTOR CONTACTS ───────────────────────────────────
-    $s5 = $wb.Worksheets.Add([System.Reflection.Missing]::Value,$s4)
-    $s5.Name = "Inspectors"
-    $h5 = @("Role","Contact","Phone","Notes")
-    for($c=1;$c -le 4;$c++){ Set-Cell $s5 1 $c $h5[$c-1] }
-    Style-Header $s5 1 1 1 4
-
-    $r = 2
-    $inspectors = $s.inspectors
-    if ($inspectors -and $inspectors.Count -gt 0) {
-        foreach ($ins in $inspectors) {
-            $name  = if ($ins.name) { $ins.name } else { "--" }
-            $val   = if ($ins.val)  { $ins.val }  else { "--" }
-            # Extract phone from val if present (pattern: name (phone))
-            $phone = ""
-            if ($val -match '\(([0-9\-]+)\)') { $phone = $matches[1] }
-            Set-Cell $s5 $r 1 $name
-            Set-Cell $s5 $r 2 $val
-            Set-Cell $s5 $r 3 $phone
-            if ($r % 2 -eq 0) { Style-Alt $s5 $r 4 }
-            $r++
+        # Remove extra blank sheets Excel added
+        while ($wb.Worksheets.Count -gt $groups.Count) {
+            $wb.Worksheets.Item($wb.Worksheets.Count).Delete()
         }
-    } else {
-        Set-Cell $s5 $r 1 "No inspectors assigned"
-        $r++
+
+        if (Test-Path $xlPath) { Remove-Item $xlPath -Force }
+        $wb.SaveAs($xlPath, 51)
+        Write-Host "DONE: $xlPath" -ForegroundColor Green
+
+    } finally {
+        if ($wb) { try { $wb.Close($false) } catch {} }
+        Remove-ComObjects @($wb, $app)
     }
-    $s5.Columns.AutoFit() | Out-Null
-
-    # Reorder: Site Summary first
-    $s1.Move($wb.Worksheets.Item(1))
-
-    $wb.SaveAs($xlPath, 51)
-    Write-Host "DONE: $xlPath"
-
-} finally {
-    if ($wb)  { try { $wb.Close($false) }  catch {} }
-    if ($app) { try { $app.Quit() }         catch {} }
-    @($wb, $app) | Where-Object { $_ } | ForEach-Object {
-        try { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($_) } catch {}
-    }
-    [System.GC]::Collect()
-    [System.GC]::WaitForPendingFinalizers()
 }
+
+# ── IMPORT ────────────────────────────────────────────────────────────────
+function Import-All {
+    if (-not (Test-Path $xlPath)) {
+        Write-Host "[ERROR] Not found: $xlPath -- run export first" -ForegroundColor Red
+        return
+    }
+    Write-Host "IMPORT <- $xlPath" -ForegroundColor Cyan
+
+    # Build siteId -> file path index
+    $siteIndex = @{}
+    $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+    foreach ($f in $files) {
+        try {
+            $raw = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($null -eq $raw.site) { continue }
+            $sid = "$(Get-Val $raw.site 'siteId')"
+            if ($sid -ne "") { $siteIndex[$sid] = $f.FullName }
+        } catch {}
+    }
+
+    $numericFields = $COLUMNS | Where-Object { $_.type -eq "number" } | ForEach-Object { $_.key }
+    $boolFields    = $COLUMNS | Where-Object { $_.type -eq "bool"   } | ForEach-Object { $_.key }
+
+    $app = $null; $wb = $null
+    try {
+        Clear-OfficeGhosts
+        $app = New-Object -ComObject Excel.Application
+        $app.Visible = $false; $app.DisplayAlerts = $false
+        $wb  = $app.Workbooks.Open($xlPath, 0, $true)
+
+        foreach ($ws in $wb.Worksheets) {
+            Write-Host "  Reading tab: $($ws.Name)" -ForegroundColor DarkGray
+
+            # Build column index from header row
+            $colIndex = @{}
+            $lastCol = $ws.UsedRange.Columns.Count
+            for ($c = 1; $c -le $lastCol; $c++) {
+                $lbl = "$($ws.Cells.Item(1,$c).Value2)"
+                if ($lbl -ne "") { $colIndex[$lbl] = $c }
+            }
+
+            # Read each data row
+            $lastRow = $ws.UsedRange.Rows.Count
+            for ($r = 2; $r -le $lastRow; $r++) {
+                # Find siteId column
+                $sidCol = if ($colIndex.ContainsKey("Site ID")) { $colIndex["Site ID"] } else { 1 }
+                $sid = "$($ws.Cells.Item($r, $sidCol).Value2)"
+                if ($sid -eq "" -or $null -eq $sid) { continue }
+
+                if (-not $siteIndex.ContainsKey($sid)) {
+                    Write-Host "  [WARN] $sid not found in data/sites/ -- skipping" -ForegroundColor Yellow
+                    continue
+                }
+
+                $jsonPath = $siteIndex[$sid]
+                $raw = Get-Content $jsonPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+                # Update each column's field in .site
+                foreach ($col in $COLUMNS) {
+                    $lbl = $col.label
+                    if (-not $colIndex.ContainsKey($lbl)) { continue }
+                    $cellVal = $ws.Cells.Item($r, $colIndex[$lbl]).Value2
+
+                    if ($boolFields -contains $col.key) {
+                        $v = "$cellVal" -eq "Yes" -or "$cellVal" -eq "TRUE" -or "$cellVal" -eq "1"
+                    } elseif ($numericFields -contains $col.key) {
+                        $n = 0.0
+                        $v = if ([double]::TryParse("$cellVal", [ref]$n)) { $n } else { 0.0 }
+                    } else {
+                        $v = "$cellVal"
+                    }
+
+                    $prop = $raw.site.PSObject.Properties[$col.key]
+                    if ($null -ne $prop) { $prop.Value = $v }
+                    else { $raw.site | Add-Member -NotePropertyName $col.key -NotePropertyValue $v -Force }
+                }
+
+                $out = $raw | ConvertTo-Json -Depth 10
+                [System.IO.File]::WriteAllText($jsonPath, $out, [System.Text.UTF8Encoding]::new($false))
+                Write-Host "  Updated: $sid" -ForegroundColor Green
+            }
+        }
+
+    } finally {
+        if ($wb) { try { $wb.Close($false) } catch {} }
+        Remove-ComObjects @($wb, $app)
+    }
+    Write-Host "DONE" -ForegroundColor Green
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────
+if ($Mode -eq "import") { Import-All } else { Export-All }

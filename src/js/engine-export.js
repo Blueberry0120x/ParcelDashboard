@@ -89,6 +89,7 @@ const ExportEngine = {
             if (el('bldgOffsetY'))      bldg.offsetY      = parseFloat(el('bldgOffsetY').value) || 0;
             if (el('bldgCount'))        bldg.count        = parseInt(el('bldgCount').value) || 1;
             if (el('bldgStackSpacing')) bldg.stackSpacing  = parseFloat(el('bldgStackSpacing').value) || 0;
+            if (el('bldgStackAngle'))   bldg.stackAngle    = parseFloat(el('bldgStackAngle').value)   || 0;
             if (el('bldgStories'))      bldg.stories      = parseInt(el('bldgStories').value) || 1;
             if (el('bldgFloorHeight'))  bldg.floorHeight  = parseFloat(el('bldgFloorHeight').value) || 9;
             var anchors = {anchorFront:'front', anchorCenter:'center', anchorRear:'rear'};

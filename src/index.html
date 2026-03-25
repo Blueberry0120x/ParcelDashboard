@@ -185,7 +185,7 @@
                             <input type="number" id="bldgOrientInput" class="align-angle-input" value="0.0" step="0.1">
                             <span>&#176;</span>
                         </div>
-                        <input type="range" id="bldgOrientSlider" min="-90" max="90" value="0" step="0.1">
+                        <input type="range" id="bldgOrientSlider" min="-90" max="90" value="0" step="0.1" style="width:140px;">
                         <strong>Footprint:</strong>
                         <div class="footprint-inputs">
                             <label title="W — Footprint Width (side to side)">W</label>
@@ -223,6 +223,9 @@
                             <label>G</label>
                             <input type="number" id="bldgStackSpacing" class="align-angle-input" value="0" min="0" step="0.5">
                             <span class="ft-label">ft</span>
+                            <button id="bldgStackDirBtn" class="anchor-btn" title="Toggle stack direction (0°=depth, 90°=width)" style="padding:2px 6px;font-size:1em;">→</button>
+                            <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="-180" max="180" step="15" title="Stack angle ° (0=depth, 90=width)">
+                            <span class="ft-label">°</span>
                         </div>
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
@@ -388,8 +391,8 @@
 
 <!-- Floating FAB — Save + Print -->
 <div id="map-fab" class="no-print" style="position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;">
-    <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." style="pointer-events:all;background:#475569;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128190; Save Config</button>
-    <button onclick="window.print()" style="pointer-events:all;background:#0f4c81;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128438; Print / PDF</button>
+    <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." class="fab-btn fab-btn-save">&#128190; Save Config</button>
+    <button onclick="window.print()" class="fab-btn fab-btn-print">&#128438; Print / PDF</button>
 </div>
 
 <!-- Auto-save flash badge -->

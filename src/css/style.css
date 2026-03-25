@@ -288,6 +288,22 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .btn-align-file  { background: #805ad5; }
 .btn-align-file:hover  { background: #6b46c1; }
 
+/* FAB floating action buttons (Save Config / Print PDF) */
+.fab-btn {
+    pointer-events: all;
+    border: none; border-radius: 20px;
+    padding: 8px 0; width: 148px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap; font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+}
+.fab-btn-save  { background: #475569; }
+.fab-btn-save:hover  { background: #334155; }
+.fab-btn-print { background: #0f4c81; }
+.fab-btn-print:hover { background: #0d3f6b; }
+
 /* Building dim toggle button */
 .btn-dim-bldg        { background: #38a169 !important; color: white !important; }
 .btn-dim-bldg:hover  { background: #2f855a !important; }
@@ -718,8 +734,9 @@ html[data-theme="dark"] .btn-save-config:hover { background: #475569 !important;
 html[data-theme="dark"] .btn-accept { background: #1e40af !important; }
 html[data-theme="dark"] .btn-save-boundary { background: #15803d !important; }
 html[data-theme="dark"] .btn-lock-position { background: #b91c1c !important; }
-html[data-theme="dark"] #map-fab { background: #1e293b !important; border-color: #334155 !important; }
-html[data-theme="dark"] #map-fab button { background: #334155 !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #map-fab { background: transparent !important; border: none !important; }
+html[data-theme="dark"] .fab-btn-save { background: #475569 !important; }
+html[data-theme="dark"] .fab-btn-print { background: #1e40af !important; }
 
 /* LISP code area */
 html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e0e0e0 !important; border-color: #333 !important; }

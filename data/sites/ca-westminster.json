@@ -45,7 +45,7 @@
                   "lat":  33.75998496008465,
                   "lng":  -117.93725445670536,
                   "rotation":  90,
-                  "locked":  false,
+                  "locked":  true,
                   "setbacks":  {
                                    "front":  25,
                                    "rear":  0,
@@ -57,7 +57,7 @@
                                         "orientation":  0,
                                         "W":  14,
                                         "D":  25,
-                                        "offsetX":  -29.5,
+                                        "offsetX":  5.8,
                                         "offsetY":  70.7,
                                         "spacing":  0,
                                         "count":  1,
@@ -65,11 +65,37 @@
                                         "anchor":  "center",
                                         "stories":  3,
                                         "floorHeight":  9
+                                    },
+                                    {
+                                        "orientation":  0,
+                                        "W":  14,
+                                        "D":  25,
+                                        "offsetX":  5.8,
+                                        "offsetY":  56.7,
+                                        "spacing":  0,
+                                        "count":  1,
+                                        "stackSpacing":  0,
+                                        "anchor":  "center",
+                                        "stories":  3,
+                                        "floorHeight":  9
+                                    },
+                                    {
+                                        "orientation":  -90,
+                                        "W":  14,
+                                        "D":  25,
+                                        "offsetX":  -13.7,
+                                        "offsetY":  37.2,
+                                        "spacing":  0,
+                                        "count":  3,
+                                        "stackSpacing":  0,
+                                        "anchor":  "front",
+                                        "stories":  3,
+                                        "floorHeight":  9
                                     }
                                 ],
-                  "activeBuilding":  0,
+                  "activeBuilding":  2,
                   "commFront":  false,
-                  "showBldgDims":  true,
+                  "showBldgDims":  false,
                   "hiddenDimKeys":  [
 
                                     ],
