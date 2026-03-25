@@ -23,7 +23,7 @@
 /* ==========================================
    1. CORE VARIABLES & BASE
    ========================================== */
-html { zoom: 0.8; }
+html { zoom: 0.9; }
 /* Thin scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -750,15 +750,14 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                     <p>Interactive Planning &amp; Concept Design</p>
                 </div>
                 <div class="header-address-pair">
-                    <div class="header-address" style="cursor:pointer;position:relative" onclick="document.getElementById('site-switcher').style.display=document.getElementById('site-switcher').style.display==='block'?'none':'block'">
-                        <span class="banner-label">Address &#x25BE;</span>
+                    <div class="header-address" id="addr-cell" style="cursor:pointer" onclick="var s=document.getElementById('site-switcher');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}">
+                        <span class="banner-label">Address <span id="addr-arrow">&#x25BE;</span></span>
                         <span class="banner-value" id="ui-address"></span>
-                        <select id="site-switcher" style="display:none;position:absolute;top:100%;left:0;width:100%;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;z-index:100" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
-                            <option value="">Loading sites...</option>
-                        </select>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
                 </div>
+                <select id="site-switcher" style="display:none;width:100%;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;z-index:100;margin-top:4px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+                </select>
             </div>
         </div>
     </div>
@@ -3890,12 +3889,11 @@ const ResizeEngine = {
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher dropdown (lives inside Address header cell)
+        // Populate site switcher dropdown (below Address header cell)
         (function() {
             var sel = document.getElementById('site-switcher');
             if (!sel) return;
             fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
-                sel.innerHTML = '';
                 sites.forEach(function(s) {
                     var opt = document.createElement('option');
                     opt.value = s.id;
@@ -3903,21 +3901,13 @@ const ResizeEngine = {
                     if (s.active) opt.selected = true;
                     sel.appendChild(opt);
                 });
-                // Show dropdown on click is handled by onclick on parent
-                sel.onchange = function() {
-                    if (this.value) {
-                        fetch('/api/sites/' + this.value + '/activate', {method:'POST'})
-                            .then(function() { localStorage.removeItem('site_state'); location.reload(); });
-                    }
-                };
             }).catch(function() {
-                // Static file mode -- hide dropdown, address cell is display-only
-                sel.style.display = 'none';
-                var parent = sel.parentElement;
-                if (parent) { parent.style.cursor = 'default'; parent.onclick = null; }
-                // Remove the dropdown arrow from label
-                var lbl = parent && parent.querySelector('.banner-label');
-                if (lbl) lbl.textContent = 'Address';
+                // Static file mode -- remove dropdown, address cell is display-only
+                sel.remove();
+                var cell = document.getElementById('addr-cell');
+                if (cell) cell.style.cursor = 'default';
+                var arrow = document.getElementById('addr-arrow');
+                if (arrow) arrow.style.display = 'none';
             });
         })();
     };

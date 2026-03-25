@@ -73,12 +73,11 @@
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher dropdown (lives inside Address header cell)
+        // Populate site switcher dropdown (below Address header cell)
         (function() {
             var sel = document.getElementById('site-switcher');
             if (!sel) return;
             fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
-                sel.innerHTML = '';
                 sites.forEach(function(s) {
                     var opt = document.createElement('option');
                     opt.value = s.id;
@@ -86,21 +85,13 @@
                     if (s.active) opt.selected = true;
                     sel.appendChild(opt);
                 });
-                // Show dropdown on click is handled by onclick on parent
-                sel.onchange = function() {
-                    if (this.value) {
-                        fetch('/api/sites/' + this.value + '/activate', {method:'POST'})
-                            .then(function() { localStorage.removeItem('site_state'); location.reload(); });
-                    }
-                };
             }).catch(function() {
-                // Static file mode -- hide dropdown, address cell is display-only
-                sel.style.display = 'none';
-                var parent = sel.parentElement;
-                if (parent) { parent.style.cursor = 'default'; parent.onclick = null; }
-                // Remove the dropdown arrow from label
-                var lbl = parent && parent.querySelector('.banner-label');
-                if (lbl) lbl.textContent = 'Address';
+                // Static file mode -- remove dropdown, address cell is display-only
+                sel.remove();
+                var cell = document.getElementById('addr-cell');
+                if (cell) cell.style.cursor = 'default';
+                var arrow = document.getElementById('addr-arrow');
+                if (arrow) arrow.style.display = 'none';
             });
         })();
     };

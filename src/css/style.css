@@ -1,7 +1,7 @@
 /* ==========================================
    1. CORE VARIABLES & BASE
    ========================================== */
-html { zoom: 0.8; }
+html { zoom: 0.9; }
 /* Thin scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

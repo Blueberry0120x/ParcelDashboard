@@ -191,8 +191,7 @@
   html[data-theme="dark"] #root { color: #e2e8f0 !important; background: #0f172a !important; }
   html[data-theme="dark"] #root > div { background: #0f172a !important; }
 
-  /* Force all text light */
-  html[data-theme="dark"] #root * { color: #e2e8f0 !important; }
+  /* Dark text overrides — light base, preserve intentional colors via JS */
   html[data-theme="dark"] #root h1,
   html[data-theme="dark"] #root h2,
   html[data-theme="dark"] #root h3,
@@ -1144,10 +1143,10 @@ function App(){
           <div>
             <div style={{fontSize:21,fontWeight:700,color:"#93c5fd"}}>Pre-Application Permit Checklist</div>
             <div style={{fontSize:11,opacity:.5,marginTop:2}}>{(function(){var a=(SD.address||'').split(',');if(a.length>=3){return a[1].trim()+', '+a[2].trim().split(' ')[0]}return a[1]?a[1].trim():'San Diego, CA'})()} Development Guide Book</div>
-            <div style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer",position:"relative"}} onClick={e=>{var s=e.currentTarget.querySelector('select');if(s&&!s.disabled)s.style.display=s.style.display==='block'?'none':'block'}}>
-              {(SD.address||'4335 Euclid Avenue, San Diego, CA 92105')} <span style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
-              <select id="site-switcher" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}><option value="">Loading...</option></select>
+            <div id="ck-addr-wrap" style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer"}} onClick={e=>{var s=document.getElementById('ck-site-sel');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}}}>
+              {(SD.address||'4335 Euclid Avenue, San Diego, CA 92105')} <span id="ck-addr-arrow" style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
             </div>
+            <select id="ck-site-sel" style={{display:"none",width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100,marginTop:4}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}></select>
             <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{SD.apn??'471-271-16-00'} {"\u2022"} {SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
           </div>
           <div style={{textAlign:"right"}}>
@@ -1252,21 +1251,31 @@ root.render(<App/>);
 window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if(box){box.style.display='block';box.textContent+='ERROR: '+m+'\nLine: '+l+', Col: '+c+'\n'+(e&&e.stack?e.stack:'')+'\n\n';}};
 </script>
 <script>
-(function(){var sel=document.getElementById('site-switcher');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sel.innerHTML='';sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.style.display='none';var p=sel.parentElement;if(p){p.style.cursor='default';p.onclick=null;var arrow=p.querySelector('span[style]');if(arrow&&arrow.textContent.indexOf('\u25BE')!==-1)arrow.style.display='none'}})})();
-// Dark mode: fix React inline backgrounds after render
+(function(){var sel=document.getElementById('ck-site-sel');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.remove();var w=document.getElementById('ck-addr-wrap');if(w)w.style.cursor='default';var a=document.getElementById('ck-addr-arrow');if(a)a.style.display='none'})})();
+// Dark mode: fix React inline backgrounds AND text colors after render
 (function(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
 function fix(){document.querySelectorAll('#root *').forEach(function(el){
 var cs=getComputedStyle(el);
-// Fix solid backgrounds
+// Fix solid backgrounds — any light bg gets forced dark
 var bg=cs.backgroundColor;
 if(bg&&bg!=='transparent'&&bg!=='rgba(0, 0, 0, 0)'){
 var m=bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
-if(m){var lum=(+m[1]*299+ +m[2]*587+ +m[3]*114)/1000;
+if(m){var r=+m[1],g=+m[2],b=+m[3],lum=(r*299+g*587+b*114)/1000;
 if(lum>130){el.style.backgroundColor='#1e293b';el.style.borderColor='#334155';}}}
 // Fix gradient backgrounds
 var bi=cs.backgroundImage;
 if(bi&&bi.indexOf('gradient')!==-1&&bi.match(/rgb\(2[2-5]\d/)){
 el.style.background='linear-gradient(135deg,#1e293b,#0f172a)';el.style.borderColor='#334155';}
+// Fix text colors — dark text to light, preserve intentional colors
+var fc=cs.color;
+if(fc){var cm=fc.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+if(cm){var cr=+cm[1],cg=+cm[2],cb=+cm[3];
+var isGray=(Math.abs(cr-cg)<30&&Math.abs(cg-cb)<30);
+var isDark=(cr*299+cg*587+cb*114)/1000<100;
+if(isGray&&isDark){el.style.color='#e2e8f0';}
+else if(isGray&&(cr*299+cg*587+cb*114)/1000<180){el.style.color='#94a3b8';}
+// Preserve: green, red, purple, orange, blue — don't touch
+}}
 // Fix low-opacity text
 if(el.style.opacity&&parseFloat(el.style.opacity)<0.6){el.style.opacity='0.85';}
 });}
