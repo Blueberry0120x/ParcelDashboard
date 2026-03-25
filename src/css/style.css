@@ -2,6 +2,12 @@
    1. CORE VARIABLES & BASE
    ========================================== */
 html { zoom: 0.8; }
+/* Thin scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+* { scrollbar-width: thin; scrollbar-color: #475569 transparent; }
 :root {
     --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
     --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
@@ -134,7 +140,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .main-container { display: flex; gap: 0; align-items: stretch; height: 600px; }
 
 .sidebar {
-    width: calc(40% + 20px); min-width: 260px; flex-shrink: 0;
+    width: 50%; min-width: 280px; flex-shrink: 0;
     overflow-y: auto; padding-right: 19px;
 }
 .col-divider {

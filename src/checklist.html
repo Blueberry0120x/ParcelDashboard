@@ -1142,7 +1142,7 @@ function App(){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:920,margin:"0 auto"}}>
           <div>
             <div style={{fontSize:21,fontWeight:700,color:"#93c5fd"}}>Pre-Application Permit Checklist</div>
-            <div style={{fontSize:11,opacity:.5,marginTop:2}}>{(function(){var a=(SD.address||'').split(',');var c=a[1]?a[1].trim().split(' ')[0]:'San Diego';var s=a[1]?a[1].trim().replace(/.*\s(\w{2})\s.*$/,'$1'):'CA';return c+', '+s})()} Development Guide Book</div>
+            <div style={{fontSize:11,opacity:.5,marginTop:2}}>{(function(){var a=(SD.address||'').split(',');if(a.length>=3){return a[1].trim()+', '+a[2].trim().split(' ')[0]}return a[1]?a[1].trim():'San Diego, CA'})()} Development Guide Book</div>
             <div style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer",position:"relative"}} onClick={e=>{var s=e.currentTarget.querySelector('select');if(s&&!s.disabled)s.style.display=s.style.display==='block'?'none':'block'}}>
               {(SD.address||'4335 Euclid Avenue, San Diego, CA 92105')} <span style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
               <select id="site-switcher" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}><option value="">Loading...</option></select>
@@ -1255,13 +1255,19 @@ window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if
 // Dark mode: fix React inline backgrounds after render
 (function(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
 function fix(){document.querySelectorAll('#root *').forEach(function(el){
-var bg=getComputedStyle(el).backgroundColor;
-if(!bg||bg==='transparent'||bg==='rgba(0, 0, 0, 0)')return;
+var cs=getComputedStyle(el);
+// Fix solid backgrounds
+var bg=cs.backgroundColor;
+if(bg&&bg!=='transparent'&&bg!=='rgba(0, 0, 0, 0)'){
 var m=bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
-if(!m)return;
-var r=+m[1],g=+m[2],b=+m[3],lum=(r*299+g*587+b*114)/1000;
-if(lum>180){el.style.backgroundColor='#1e293b';el.style.borderColor='#334155';}
-else if(lum>140){el.style.backgroundColor='#1e293b';el.style.borderColor='#334155';}
+if(m){var lum=(+m[1]*299+ +m[2]*587+ +m[3]*114)/1000;
+if(lum>130){el.style.backgroundColor='#1e293b';el.style.borderColor='#334155';}}}
+// Fix gradient backgrounds
+var bi=cs.backgroundImage;
+if(bi&&bi.indexOf('gradient')!==-1&&bi.match(/rgb\(2[2-5]\d/)){
+el.style.background='linear-gradient(135deg,#1e293b,#0f172a)';el.style.borderColor='#334155';}
+// Fix low-opacity text
+if(el.style.opacity&&parseFloat(el.style.opacity)<0.6){el.style.opacity='0.85';}
 });}
 setTimeout(fix,80);setTimeout(fix,300);setTimeout(fix,800);
 new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
