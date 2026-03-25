@@ -1252,8 +1252,9 @@ window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if
 <script>
 (function(){var sel=document.getElementById('ck-site-sel');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.remove();var w=document.getElementById('ck-addr-wrap');if(w)w.style.cursor='default';var a=document.getElementById('ck-addr-arrow');if(a)a.style.display='none'})})();
 // Dark mode: fix React inline backgrounds AND text colors after render
-(function(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
-function fix(){document.querySelectorAll('#root *').forEach(function(el){
+(function(){
+function fix(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
+document.querySelectorAll('#root *').forEach(function(el){
 var cs=getComputedStyle(el);
 // Fix solid backgrounds — any light bg gets forced dark
 var bg=cs.backgroundColor;
@@ -1282,6 +1283,6 @@ setTimeout(fix,80);setTimeout(fix,300);setTimeout(fix,800);
 new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
 })();
 </script>
-<button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
+<button class="theme-toggle" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';localStorage.setItem('theme',t);location.reload();})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>
 </html>
