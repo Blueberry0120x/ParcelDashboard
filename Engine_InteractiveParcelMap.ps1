@@ -1,5 +1,5 @@
 # ==========================================
-# Master Site Dashboard - Build Script
+# ProjectBook-Planner - Build Script
 # Usage:
 #   Engine_InteractiveParcelMap.cmd          -> compile only
 #   Engine_InteractiveParcelMap.cmd debug    -> compile + open in browser

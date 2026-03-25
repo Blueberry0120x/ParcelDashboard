@@ -106,7 +106,7 @@ try {
 
     $rows = @(
       ,@("PROJECT")
-      ,@("Project Name","Master Site Dashboard","","")
+      ,@("Project Name","ProjectBook-Planner","","")
       ,@("Site ID","$siteId","","")
       ,@("Address","$addr","","")
       ,@("APN","$apn","","Assessor Parcel Number")

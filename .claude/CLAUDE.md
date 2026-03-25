@@ -76,10 +76,17 @@ own field list. They all read from `_payload()`.
 
 ### Fields currently in `_payload()` (keep in sync)
 ```
+# Wrapper fields (outside `saved`)
+project, siteId
+
+# Inside `saved`
 lat, lng, rotation, locked, setbacks,
 buildings, activeBuilding, commFront, showBldgDims,
 hiddenDimKeys, chainWOffset, chainDOffset, mapOpacity,
 setbacksApplied, freeDrag, snapEdge, vehicles, activeVehicle
+
+# Conditional (appended if present in localStorage)
+checklist
 ```
 
 ### Save trigger rules
@@ -193,7 +200,7 @@ Before declaring any task complete:
 - Test coverage: zero automated tests currently
 
 ### Known issues
-- Git remote URL still points to old `MasterSiteDashboard.git` (GitHub redirects, but should update)
+- `data/site-data.json` contains real addresses/APNs/inspector names (PII -- accepted risk per controller)
 - `data/site-data.json` contains real addresses/APNs/inspector names (PII concern flagged by controller)
 
 

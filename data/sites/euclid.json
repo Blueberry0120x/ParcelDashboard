@@ -1,5 +1,5 @@
 {
-  "project": "Master Site Dashboard",
+  "project": "ProjectBook-Planner",
   "site": {
     "siteId": "CA-EUCLID",
     "address": "4335 Euclid Avenue, San Diego, CA 92105",
@@ -20,15 +20,30 @@
     "sideSetback": 0,
     "densityPerSF": 600,
     "nefRatePerSF": 11.78,
-    "affordabilityPct": 0.40,
+    "affordabilityPct": 0.4,
     "difPerUnit": 15000,
     "difWaiverSF": 500,
     "inspectors": [
-      {"name": "Combination", "val": "Wesley Tukker (619-446-5362)"},
-      {"name": "Structural", "val": "Ricardo Ordonez (619-446-5123)"},
-      {"name": "Electrical", "val": "Richard Gable (858-573-1223)"},
-      {"name": "Mechanical", "val": "Christopher Sorchy (619-236-7033)"},
-      {"name": "Grading", "val": "Alejandro Ruiz (858-627-2034)"}
+      {
+        "name": "Combination",
+        "val": "Wesley Tukker (619-446-5362)"
+      },
+      {
+        "name": "Structural",
+        "val": "Ricardo Ordonez (619-446-5123)"
+      },
+      {
+        "name": "Electrical",
+        "val": "Richard Gable (858-573-1223)"
+      },
+      {
+        "name": "Mechanical",
+        "val": "Christopher Sorchy (619-236-7033)"
+      },
+      {
+        "name": "Grading",
+        "val": "Alejandro Ruiz (858-627-2034)"
+      }
     ]
   },
   "saved": {
@@ -72,8 +87,8 @@
         "orientation": 0,
         "W": 18.5,
         "D": 40,
-        "offsetX": -12.5,
-        "offsetY": -2.7,
+        "offsetX": 42.5,
+        "offsetY": 15.8,
         "spacing": 0,
         "count": 1,
         "stackSpacing": 0,
@@ -92,21 +107,11 @@
     "chainWOffset": 0,
     "chainDOffset": 40,
     "mapOpacity": 70,
-    "setbacksApplied": true,
+    "setbacksApplied": false,
     "freeDrag": true,
     "snapEdge": true,
     "vehicles": [],
     "activeVehicle": -1
   },
-  "checklist": {
-    "ck": {
-      "A1": true,
-      "A2": true,
-      "A5": false
-    },
-    "sel": {
-      "pathway": "STATE DENSITY BONUS"
-    },
-    "notes": {}
-  }
+  "checklist": null
 }

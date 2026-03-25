@@ -1,5 +1,5 @@
 {
-  "project": "Master Site Dashboard",
+  "project": "ProjectBook-Planner",
   "site": {
     "siteId": "CA-WESTMINSTER",
     "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
@@ -42,10 +42,10 @@
   "saved": {
     "lat": 33.75998496008465,
     "lng": -117.93725445670536,
-    "rotation": 270,
+    "rotation": 90,
     "locked": false,
     "setbacks": {
-      "front": 0,
+      "front": 25,
       "rear": 0,
       "sideL": 0,
       "sideR": 0
@@ -53,15 +53,16 @@
     "buildings": [
       {
         "orientation": 0,
-        "offsetX": 0,
-        "offsetY": 0,
+        "W": 14,
+        "D": 25,
+        "offsetX": -29.5,
+        "offsetY": 70.7,
+        "spacing": 0,
         "count": 1,
         "stackSpacing": 0,
-        "anchor": "front",
+        "anchor": "center",
         "stories": 3,
-        "floorHeight": 9,
-        "W": 16,
-        "D": 37
+        "floorHeight": 9
       }
     ],
     "activeBuilding": 0,

@@ -120,7 +120,7 @@ const ExportEngine = {
     _payload: function() {
         var s = ConfigEngine.state;
         var payload = {
-            project: 'Master Site Dashboard',
+            project: 'ProjectBook-Planner',
             siteId: ConfigEngine.data.siteId || null,
             saved: {
                 lat:            s.lat,

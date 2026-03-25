@@ -232,7 +232,7 @@ def serve(port=7734):
                         existing = json.load(f)
                     if existing.get("site"):
                         merged = {
-                            "project": incoming.get("project", "Master Site Dashboard"),
+                            "project": incoming.get("project", "ProjectBook-Planner"),
                             "site": existing["site"],
                             "saved": incoming.get("saved"),
                             "checklist": incoming.get("checklist"),
