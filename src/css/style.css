@@ -1,6 +1,7 @@
 /* ==========================================
    1. CORE VARIABLES & BASE
    ========================================== */
+html { zoom: 0.9; }
 :root {
     --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
     --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;

@@ -23,6 +23,7 @@
 /* ==========================================
    1. CORE VARIABLES & BASE
    ========================================== */
+html { zoom: 0.9; }
 :root {
     --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
     --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
@@ -775,10 +776,10 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:2px solid var(--secondary);padding-bottom:6px;cursor:pointer;" onclick="this.parentElement.classList.toggle('collapsed')">
                     <h2 class="box-toggle" style="margin:0;border:none;padding:0;">Align Map</h2>
                     <div style="display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation()">
-                        <span style="font-size:10px;font-weight:600;color:#64748b">COORD:</span>
-                        <select id="cadZoneSelect" style="font-size:10px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;document.getElementById('cadZoneLabel').textContent=sys.label;}">
+                        <span style="font-size:0.85em;font-weight:700;color:#64748b">COORD:</span>
+                        <select id="cadZoneSelect" style="font-size:0.85em;font-weight:700;padding:2px 4px;border:1px solid #cbd5e1;border-radius:3px;background:#f8fafc;font-family:inherit;cursor:pointer" onchange="var sys=ConfigEngine.CAD_SYSTEMS[this.value];if(sys){ConfigEngine.cad.projection=sys.projection;ConfigEngine.cad.proj4Def=sys.proj4Def;ConfigEngine.data.cadZone=this.value;}">
                         </select>
-                        <span id="cadZoneLabel" style="font-size:9px;color:#94a3b8;font-style:italic"></span>
+                        <span id="cadZoneLabel" style="display:none"></span>
                     </div>
                 </div>
                 <div class="box-body">
