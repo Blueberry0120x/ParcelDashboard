@@ -670,3 +670,19 @@ html[data-theme="dark"] #map-fab button { background: #334155 !important; color:
 /* LISP code area */
 html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e0e0e0 !important; border-color: #333 !important; }
 
+/* Building config inputs & controls */
+html[data-theme="dark"] .align-angle-input { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+html[data-theme="dark"] .align-angle-input:disabled,
+html[data-theme="dark"] .align-angle-input[readonly] { background: #0f172a !important; color: #93c5fd !important; border-color: #334155 !important; }
+html[data-theme="dark"] .building-grid > strong { color: #94a3b8 !important; }
+html[data-theme="dark"] .anchor-track { background: #0f172a !important; border-color: #334155 !important; }
+html[data-theme="dark"] .anchor-btn.active { background: #1e40af !important; color: #fff !important; }
+html[data-theme="dark"] .bldg-tab { background: #0f172a !important; color: #94a3b8 !important; border-color: #334155 !important; }
+html[data-theme="dark"] .bldg-tab.active { background: #1e293b !important; color: #93c5fd !important; }
+html[data-theme="dark"] .footprint-inputs label,
+html[data-theme="dark"] .offset-inputs label { color: #94a3b8 !important; }
+html[data-theme="dark"] .footprint-inputs .ft-label,
+html[data-theme="dark"] .offset-inputs .ft-label { color: #64748b !important; }
+html[data-theme="dark"] #cadZoneSelect { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5fd !important; }
+

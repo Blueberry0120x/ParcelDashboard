@@ -77,6 +77,7 @@
         (function() {
             var sel = document.getElementById('site-switcher');
             if (!sel) return;
+            var sd = window.__SITE_DEFAULTS__ || {};
             fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
                 sel.innerHTML = '';
                 sites.forEach(function(s) {
@@ -87,8 +88,15 @@
                     sel.appendChild(opt);
                 });
             }).catch(function() {
-                // Static file mode or no server -- hide switcher
-                sel.style.display = 'none';
+                // Static file mode -- show current site from embedded defaults
+                sel.innerHTML = '';
+                var opt = document.createElement('option');
+                opt.value = (sd.site && sd.site.siteId) || '';
+                opt.textContent = (sd.site && sd.site.address) || 'Current Site';
+                opt.selected = true;
+                sel.appendChild(opt);
+                sel.disabled = true;
+                sel.title = 'Start dev server to switch sites';
             });
         })();
     };
