@@ -134,7 +134,7 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .main-container { display: flex; gap: 0; align-items: stretch; height: 600px; }
 
 .sidebar {
-    width: 40%; min-width: 240px; flex-shrink: 0;
+    width: calc(40% + 20px); min-width: 260px; flex-shrink: 0;
     overflow-y: auto; padding-right: 19px;
 }
 .col-divider {

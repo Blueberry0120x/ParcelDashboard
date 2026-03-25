@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230c3d6b' width='100' height='100' rx='20'/><text y='.78em' x='.12em' font-size='72'>&#x1f3d7;</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  html{zoom:0.8}
+  html{zoom:0.9}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;padding-bottom:env(safe-area-inset-bottom)}
   input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -1141,9 +1141,10 @@ function App(){
       <div style={{background:"linear-gradient(135deg,#0c3d6b,#162c46)",padding:"18px 24px 12px",color:"#fff",borderBottom:"3px solid #f59e0b"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:920,margin:"0 auto"}}>
           <div>
-            <div style={{fontSize:9,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",opacity:.4}}>PRE-APPLICATION PERMIT CHECKLIST</div>
-            <div style={{fontSize:21,fontWeight:700,marginTop:1,cursor:"pointer",position:"relative"}} onClick={e=>{var s=e.currentTarget.querySelector('select');if(s&&!s.disabled)s.style.display=s.style.display==='block'?'none':'block'}}>
-              {(SD.address||'').split(',')[0]||'4335 Euclid Avenue'} <span style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
+            <div style={{fontSize:21,fontWeight:700,color:"#93c5fd"}}>Pre-Application Permit Checklist</div>
+            <div style={{fontSize:11,opacity:.5,marginTop:2}}>{(function(){var a=(SD.address||'').split(',');var c=a[1]?a[1].trim().split(' ')[0]:'San Diego';var s=a[1]?a[1].trim().replace(/.*\s(\w{2})\s.*$/,'$1'):'CA';return c+', '+s})()} Development Guide Book</div>
+            <div style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer",position:"relative"}} onClick={e=>{var s=e.currentTarget.querySelector('select');if(s&&!s.disabled)s.style.display=s.style.display==='block'?'none':'block'}}>
+              {(SD.address||'4335 Euclid Avenue, San Diego, CA 92105')} <span style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
               <select id="site-switcher" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}><option value="">Loading...</option></select>
             </div>
             <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{SD.apn??'471-271-16-00'} {"\u2022"} {SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
@@ -1252,7 +1253,19 @@ window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if
 <script>
 (function(){var sel=document.getElementById('site-switcher');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sel.innerHTML='';sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.style.display='none';var p=sel.parentElement;if(p){p.style.cursor='default';p.onclick=null;var arrow=p.querySelector('span[style]');if(arrow&&arrow.textContent.indexOf('\u25BE')!==-1)arrow.style.display='none'}})})();
 // Dark mode: fix React inline backgrounds after render
-(function(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;var dm={255:'#1e293b',248:'#0f172a',249:'#0f172a',241:'#1e293b',244:'#0f172a',240:'#052e16',250:'#2e1065',254:'#451a03',245:'#2e1065'};function fix(){document.querySelectorAll('#root *').forEach(function(el){var bg=getComputedStyle(el).backgroundColor;if(!bg||bg==='transparent'||bg==='rgba(0, 0, 0, 0)')return;var m=bg.match(/rgb\((\d+)/);if(m){var r=parseInt(m[1]);if(r>200)el.style.backgroundColor='#1e293b';else if(r>230)el.style.backgroundColor='#0f172a'}});};setTimeout(fix,100);setTimeout(fix,500);new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true})})();
+(function(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
+function fix(){document.querySelectorAll('#root *').forEach(function(el){
+var bg=getComputedStyle(el).backgroundColor;
+if(!bg||bg==='transparent'||bg==='rgba(0, 0, 0, 0)')return;
+var m=bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+if(!m)return;
+var r=+m[1],g=+m[2],b=+m[3],lum=(r*299+g*587+b*114)/1000;
+if(lum>180){el.style.backgroundColor='#1e293b';el.style.borderColor='#334155';}
+else if(lum>140){el.style.backgroundColor='#1e293b';el.style.borderColor='#334155';}
+});}
+setTimeout(fix,80);setTimeout(fix,300);setTimeout(fix,800);
+new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
+})();
 </script>
 <button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>
