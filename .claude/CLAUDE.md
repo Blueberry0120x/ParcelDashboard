@@ -1,4 +1,4 @@
-# MasterSiteDashboard
+# ProjectBook-Planner
 
 ## Controller Authority
 
@@ -39,7 +39,19 @@ read the latest dispatch notes below and execute the pending tasks.
 - The Controller will verify by scanning for `[DISPATCH-DONE]` commits
   and reading the changes. Once verified, the Controller clears the dispatch.
 
-**Pending dispatch:** *(none)*
+**Pending dispatch (2026-03-25):**
+- [x] **GLOBAL-001:** Fill in Project Goal
+- [x] **GLOBAL-008:** Fill in Safety Contract
+- [x] **GLOBAL-007:** Fill in Handoff Notes
+- [x] **GLOBAL-010:** Add `Set-StrictMode -Version Latest` to PS1 files
+- [x] **GLOBAL-022:** Dev-Check section already present in CLAUDE.md
+- [x] **GLOBAL-016:** Created `UserPref.json` at project root
+- [x] Committed with `[DISPATCH-DONE]` prefix
+
+**Completed (2026-03-25):**
+- All 6 GLOBAL dispatch items resolved
+- Added `report/` folder with `.gitkeep` (controller action item #2)
+- `.gitignore` already existed (controller action item #1 was pre-done)
 
 ### Changes from Controller (2026-03-20)
 - Suite bar button colors: ParcelQuest=amber, SanDag GIS=sky, PermitFinder=rose
@@ -137,3 +149,84 @@ inspectors[]
   `window.__SITE_DEFAULTS__` at build time via `Get-InjectScript`
 - Em dashes and non-ASCII in PS1 string literals cause cp1252 parse errors —
   use plain ASCII hyphens only in PS1 files
+
+## Project Goal
+
+Interactive parcel map and pre-application checklist suite for land development feasibility. Builds site-specific zoning dashboards (setbacks, FAR, density, fees) on a Leaflet map with draggable buildings, chain dimensions, and vehicle turn templates. Compiles to two standalone HTML files (InteractiveMap + PreApp_Checklist) from modular JS/CSS sources via a PowerShell build pipeline.
+
+
+## File Encoding
+
+All source files: UTF-8, no BOM. See GLOBAL-002 in the global rules registry.
+
+
+## Branch Naming
+
+Follow GLOBAL-003: `main`, `feature/{topic}`, `fix/{topic}`, `claude/{topic}-dev{N}`.
+
+
+## Completion Protocol
+
+Before declaring any task complete:
+1. Run the project test suite or verification script
+2. Verify zero errors in output
+3. If either fails, fix the issue. Do NOT mark done until all pass.
+
+
+## Safety Contract
+
+- **Read-only:** `data/site-data.json` (`.site` key), `data/sites/*.json`, `src/**`, `reference/**`
+- **Writable:** `Output/InteractiveMap.html`, `Output/PreApp_Checklist.html`, `data/site-data.json` (`.saved` key only, via POST /save), `controller-note/`, `report/`, `UserPref.json`
+
+
+## Handoff Notes (last updated 2026-03-25)
+
+### What was completed this session
+- Westminster multi-site support: R-3 zoning config, state bleed fix, falsy-zero guards, dynamic info tables
+- Corner visibility chamfer, compass direction fix, rotation 0-360 normalization
+- Responsive merge: 4 HTML files consolidated to 2 (Mobile variants removed)
+- Controller dispatch: filled baseline sections (Project Goal, Safety Contract, Handoff Notes), added StrictMode to PS1 files, created report/ and UserPref.json
+
+### What still needs work
+- Public/private config sync (Reboot Public / Pull from Public endpoints) -- architecture approved by controller, not yet implemented
+- Canonical name decision: ProjectBook-Planner vs MasterSiteDashboard (awaiting designer)
+- Test coverage: zero automated tests currently
+
+### Known issues
+- GitHub repo name still `MasterSiteDashboard` while local folder is `ProjectBook-Planner` (rename incomplete)
+- `data/site-data.json` contains real addresses/APNs/inspector names (PII concern flagged by controller)
+
+
+## Dev-Check Quality Gate (CTRL-007)
+
+Before any milestone commit or PR merge, run a multi-persona quality review:
+- Minimum 10 consecutive clean rounds to pass
+- Covers: architecture, security, UX, performance, accessibility
+- Fix all critical/high findings before committing
+- Log the dev-check result in `report/`
+
+
+## Controller-Note Protocol (CTRL-005)
+
+### Session Start (BLOCKING)
+
+Before ANY other work, check for unread pings:
+1. Compare `controller-note/.ping` mtime vs `controller-note/.last-read` mtime
+2. If `.ping` is newer — there is unread content
+3. Announce to user: "New ping from controller — reading now"
+4. Read `controller-note/controller-upnote.md`
+5. Update `controller-note/.last-read`
+6. Respond if needed
+
+This is a BLOCKING prerequisite — no work until pings are checked.
+
+### Mid-Session Re-Scan
+
+After every major task (commit, baseline push, feature merge), re-check `.ping` before proceeding.
+
+### On Change: Write Upnote + Ping
+
+When making changes that affect cross-repo state:
+1. Append entry to `controller-note/{repo_name}-upnote.md`
+2. Touch `controller-note/.ping`
+

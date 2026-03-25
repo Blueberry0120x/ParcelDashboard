@@ -1,0 +1,33 @@
+# Environment
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+*.swp
+*.swo
+*~
+
+# Secrets
+credentials.json
+token.json
+*.secret
+
+# Build artifacts (keep Output/ tracked)
+*.tmp
+*.bak

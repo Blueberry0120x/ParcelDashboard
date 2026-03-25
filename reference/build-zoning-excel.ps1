@@ -1,3 +1,5 @@
+Set-StrictMode -Version Latest
+
 # Build ZoningCodeLibrary.xlsx -- Dynamic from site-data.json
 # Reads the active site config and generates a per-site zoning workbook.
 

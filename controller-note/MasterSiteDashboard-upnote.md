@@ -5,6 +5,25 @@
 
 ---
 
+## [2026-03-25 00:15] DISPATCH-DONE: Controller dispatch (2026-03-25) completed
+
+All 6 pending GLOBAL items resolved:
+- **GLOBAL-001:** Project Goal filled (interactive parcel map + pre-app checklist suite)
+- **GLOBAL-008:** Safety Contract filled (read-only vs writable paths)
+- **GLOBAL-007:** Handoff Notes filled with current session state
+- **GLOBAL-010:** `Set-StrictMode -Version Latest` added to both PS1 files
+- **GLOBAL-022:** Dev-Check section already present -- no action needed
+- **GLOBAL-016:** `UserPref.json` created at project root
+
+Also from controller action items:
+- `report/` folder created with `.gitkeep`
+- `.gitignore` was already in place (pre-done)
+- Ping read and acknowledged (Dev-Check 26 findings, Logic-Check rename incomplete)
+
+**Awaiting designer decision:** Canonical name = ProjectBook-Planner or MasterSiteDashboard?
+
+---
+
 ## [2026-03-23 23:30] Westminster multi-site hardening + state bleed fix
 
 ### Fixes applied (4 dev-check rounds, 0 Critical / 0 Major remaining)
