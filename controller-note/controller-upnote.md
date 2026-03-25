@@ -1,7 +1,73 @@
-# controller -- Upnote to MasterSiteDashboard
+# controller -- Upnote to ProjectBook-Planner
 
 > Controller's rolling note for this repo. Agent: check this file at session start.
 > Format: `## [YYYY-MM-DD HH:MM] Topic` per entry.
+
+---
+
+## [2026-03-25 01:45] Controller Response to Directives 1-6 -- RESPONSE
+
+**All 6 directives received and actioned. Details below.**
+
+### Directive 1: RENAME — DONE
+All controller-side references updated from `MasterSiteDashboard` to `ProjectBook-Planner`:
+- `config/launch_configs.json` — private_repo updated
+- `src/remote_launch/remote_launch.py` — fallback config key + repo updated
+- `src/models.py` — docstring example updated
+- `src/main.py` — CLI help text updated
+- `.claude/CLAUDE.md` — all 6 occurrences replaced
+- `CLAUDE.md` (root) — all 4 occurrences replaced
+- `report/global_rules_2026-03-15.md` — 2 occurrences replaced
+- Legacy alias preserved in `registry.py` and `ecosystem.json` so old name still resolves
+
+### Directive 2: PHANTOM _Mobile.html — DONE
+Removed `InteractiveMap_Mobile.html` and `PreApp_Checklist_Mobile.html` from:
+- `config/launch_configs.json`
+- `src/remote_launch/remote_launch.py` fallback config
+
+### Directive 3: ParcelDashboard as child — ACKNOWLEDGED
+Already in `launch_configs.json` as `public_repo`. Will add to global rules in next registry update.
+
+### Directive 4: repository_dispatch listener — DEFERRED
+Requires GitHub Actions workflow in NP_ClaudeAgent to listen for `upnote-updated` events. Will implement as part of scaling roadmap (Phase 2).
+
+### Directive 5: Cross-repo references — DONE (covered by #1)
+
+### Directive 6: PII risk — ACKNOWLEDGED
+Documented as accepted risk. Private repo has plaintext; public mirror scrubs. No further action unless Designer requests mitigation.
+
+### Dispatch verification
+Confirmed commit `1a30da2` with `[DISPATCH-DONE]` prefix. Dispatch cleared.
+
+**360 tests passing, 100% compliance. All clean.**
+
+---
+
+## [2026-03-24 09:45] CTRL-007 + CTRL-010: Dev-Check & Logic-Check Results -- UPDATE
+
+**Controller ran both checks on this repo today. Results below.**
+
+### Dev-Check (CTRL-007): 26 findings
+- **CRITICAL (2):** No `.gitignore` (GLOBAL-006 violation); Zero test coverage
+- **HIGH (5):** No `report/` folder (but CLAUDE.md references it); No completion protocol; No safety contract; `data/site-data.json` has real PII (addresses, APNs, inspector names); Docs reference nonexistent report paths
+- **MEDIUM (14):** Dual build systems undocumented; `tools/mobilize.py` undocumented; Naming inconsistency (3 names for 1 project); Multi-site architecture undocumented; No CI validation step
+- **LOW (5):** Minor documentation gaps
+
+### Logic-Check (CTRL-010): NEEDS REVISION (0/10 clean)
+- **CRITICAL:** Rename from MasterSiteDashboard to ProjectBook-Planner is INCOMPLETE. GitHub repo still `MasterSiteDashboard`, CLAUDE.md header still `MasterSiteDashboard`, zero occurrences of `ProjectBook-Planner` inside this project.
+- **HIGH:** `launch_configs.json` lists 2 phantom `_Mobile.html` files that don't exist in `docs/` -- CTRL-006 verification will fail.
+- **Decision needed from Designer:** Canonical name = `ProjectBook-Planner` or `MasterSiteDashboard`?
+
+### Acknowledged: Westminster multi-site upnote (2026-03-23)
+Read your upnote re: state bleed fix, falsy-zero bugs, lotSF, dynamic info tables, corner visibility, Westminster R-3 config. Good work. Acknowledged.
+
+### Action items for Planner agent
+1. Add `.gitignore` (Output/*.html, *.xlsx, node_modules/, .env, *.tmp)
+2. Add `report/` folder with `.gitkeep`
+3. Add completion protocol to CLAUDE.md
+4. Add safety contract to CLAUDE.md
+5. Remove phantom `_Mobile.html` entries from awareness (Controller will fix launch_configs.json)
+6. Await Designer decision on canonical name before renaming anything
 
 ---
 

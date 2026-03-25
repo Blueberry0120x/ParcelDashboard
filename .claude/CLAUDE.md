@@ -236,3 +236,12 @@ When making changes that affect cross-repo state:
 1. Append entry to `controller-note/{repo_name}-upnote.md`
 2. Touch `controller-note/.ping`
 
+
+## Execution Directives (ENFORCED — not optional)
+
+- **Hard loop:** Fix errors yourself — never return broken output to user. Loop: fix → verify → repeat until clean.
+- **Verify after every change:** Run tests → check output → must be clean or loop back and fix.
+- **No secrets in output:** PID + process name only. Never dump command lines. Never log tokens.
+- **Rules first:** Cite GLOBAL/CTRL rules before any decision. Never fall back to generic AI instincts.
+- **No half-checks:** If the analyzer doesn't catch a gap, add the check — then fix the gap — then verify again.
+
