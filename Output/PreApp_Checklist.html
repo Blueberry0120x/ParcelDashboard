@@ -252,9 +252,33 @@
   html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea {
     background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important;
   }
-  /* Checkbox visibility in dark mode — bright accent so it's visible */
+  /* Custom checkbox for dark mode — appearance:none + visible border */
   html[data-theme="dark"] input[type="checkbox"] {
-    accent-color: #38bdf8 !important;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px !important;
+    height: 16px !important;
+    border: 2px solid #64748b !important;
+    border-radius: 3px;
+    background: transparent !important;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+  }
+  html[data-theme="dark"] input[type="checkbox"]:checked {
+    background: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+  }
+  html[data-theme="dark"] input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 5px;
+    height: 9px;
+    border: solid #0f172a;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
   }
 
   /* Checklist-specific: section headers, labels, table cells */
@@ -1078,7 +1102,7 @@ function ItemRow({it,isDone,toggleCheck,sel,onSel,userNote,setNote,noteOpen,togg
   return (
     <div style={{borderBottom:"1px solid #e2e8f0",background:isDimmed?"#f8f9fb":it.alert&&!isDone?"#fff5f5":isDone?"#f0fdf4":"#fff",opacity:isDimmed?.45:1,transition:"all .15s"}}>
       <div style={{display:"flex",gap:10,padding:"8px 14px",alignItems:"flex-start"}}>
-        <input type="checkbox" checked={!!isDone} onChange={()=>toggleCheck(it.id)} style={{marginTop:3,width:16,height:16,accentColor:"#0f4c81",flexShrink:0,cursor:"pointer"}}/>
+        <input type="checkbox" checked={!!isDone} onChange={()=>toggleCheck(it.id)} style={{marginTop:3,width:16,height:16,flexShrink:0,cursor:"pointer"}}/>
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",gap:6,alignItems:"baseline",flexWrap:"wrap"}}>
             <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:isDone?"#15803d":it.alert?"#dc2626":"#64748b",flexShrink:0}}>{it.id}</span>
@@ -1156,7 +1180,7 @@ function App(){
                 <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{(function(){var a=(SD.address||'').split(',');if(a.length>=3){return a[1].trim()+', '+a[2].trim().split(' ')[0]}return a[1]?a[1].trim():'San Diego, CA'})()} Development Guide Book</div>
               </div>
               <div id="ck-addr-wrap" style={{display:"flex",alignItems:"center",gap:10,position:"relative",marginLeft:20}}>
-                <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,cursor:"pointer",boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}} onClick={e=>{var s=document.getElementById('ck-site-sel');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}}}>
+                <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,cursor:"pointer",boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}} onClick={e=>{var s=document.getElementById('ck-site-sel');if(s){s.style.display=s.style.display==='block'?'none':'block';}}}>
                   <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>Address <span id="ck-addr-arrow" style={{fontSize:10}}>{"\u25BE"}</span></span>
                   <span style={{fontSize:"1.05em",fontWeight:700,lineHeight:1.25,color:"#fff",whiteSpace:"nowrap"}}>{SD.address||'4335 Euclid Avenue, San Diego, CA 92105'}</span>
                 </div>
@@ -1164,7 +1188,7 @@ function App(){
                   <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>APN</span>
                   <span style={{fontSize:"1.05em",fontWeight:700,lineHeight:1.25,color:"#fff"}}>{SD.apn??'471-271-16-00'}</span>
                 </div>
-                <select id="ck-site-sel" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",minWidth:300,background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:200,marginTop:4}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}></select>
+                <select id="ck-site-sel" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",minWidth:300,background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:200,marginTop:4}} onChange={e=>{if(e.target.value&&e.target.value!=='current'){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}></select>
               </div>
             </div>
             <div style={{fontSize:10,color:"#94a3b8",marginTop:6,fontFamily:"'JetBrains Mono',monospace"}}>{SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
@@ -1271,12 +1295,13 @@ root.render(<App/>);
 window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if(box){box.style.display='block';box.textContent+='ERROR: '+m+'\nLine: '+l+', Col: '+c+'\n'+(e&&e.stack?e.stack:'')+'\n\n';}};
 </script>
 <script>
-(function(){var sel=document.getElementById('ck-site-sel');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){var sd=window.__SITE_DEFAULTS__||{};var o=document.createElement('option');o.value='';o.textContent=sd.address||'Current site';o.selected=true;sel.appendChild(o);sel.disabled=true})})();
+(function(){var sel=document.getElementById('ck-site-sel');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){var sd=window.__SITE_DEFAULTS__||{};var o=document.createElement('option');o.value='current';o.textContent=sd.address||'Current site';o.selected=true;sel.appendChild(o)})})();
 // Dark mode: fix React inline backgrounds AND text colors after render
 (function(){
 window._darkFix=fix;
 function fix(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
 document.querySelectorAll('#root *').forEach(function(el){
+if(el.tagName==='INPUT'&&el.type==='checkbox')return;
 var cs=getComputedStyle(el);
 // Fix solid backgrounds — any light bg gets forced dark
 var bg=cs.backgroundColor;
@@ -1305,6 +1330,8 @@ setTimeout(fix,80);setTimeout(fix,300);setTimeout(fix,800);
 var _fixPending=false;
 new MutationObserver(function(){if(!_fixPending){_fixPending=true;requestAnimationFrame(function(){fix();_fixPending=false;})}}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
 })();
+// Close site-switcher dropdown on click outside
+document.addEventListener('click',function(e){var w=document.getElementById('ck-addr-wrap');var s=document.getElementById('ck-site-sel');if(s&&w&&!w.contains(e.target)){s.style.display='none';}});
 </script>
 <button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';if(window._darkFix)window._darkFix();})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>

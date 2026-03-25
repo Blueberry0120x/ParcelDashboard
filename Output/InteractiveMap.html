@@ -760,12 +760,12 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                     <p>Interactive Planning &amp; Concept Design</p>
                 </div>
                 <div class="header-address-pair">
-                    <div class="header-address" id="addr-cell" style="cursor:pointer" onclick="var s=document.getElementById('site-switcher');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}">
+                    <div class="header-address" id="addr-cell" style="cursor:pointer" onclick="var s=document.getElementById('site-switcher');if(s){s.style.display=s.style.display==='block'?'none':'block';}">
                         <span class="banner-label">Address <span id="addr-arrow">&#x25BE;</span></span>
                         <span class="banner-value" id="ui-address"></span>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
-                    <select id="site-switcher" style="display:none;width:100%;min-width:300px;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+                    <select id="site-switcher" style="display:none;width:100%;min-width:300px;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" onchange="if(this.value&&this.value!=='current'){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
                     </select>
                 </div>
             </div>
@@ -3916,13 +3916,21 @@ const ResizeEngine = {
                 var sd = window.__SITE_DEFAULTS__ || {};
                 var addr = sd.address || ConfigEngine.data.address;
                 var opt = document.createElement('option');
-                opt.value = '';
+                opt.value = 'current';
                 opt.textContent = addr;
                 opt.selected = true;
                 sel.appendChild(opt);
-                sel.disabled = true;
             });
         })();
+
+        // Close site-switcher dropdown on click outside
+        document.addEventListener('click', function(e) {
+            var pair = document.querySelector('.header-address-pair');
+            var sel = document.getElementById('site-switcher');
+            if (sel && pair && !pair.contains(e.target)) {
+                sel.style.display = 'none';
+            }
+        });
     };
 
 </script>

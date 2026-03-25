@@ -90,11 +90,19 @@
                 var sd = window.__SITE_DEFAULTS__ || {};
                 var addr = sd.address || ConfigEngine.data.address;
                 var opt = document.createElement('option');
-                opt.value = '';
+                opt.value = 'current';
                 opt.textContent = addr;
                 opt.selected = true;
                 sel.appendChild(opt);
-                sel.disabled = true;
             });
         })();
+
+        // Close site-switcher dropdown on click outside
+        document.addEventListener('click', function(e) {
+            var pair = document.querySelector('.header-address-pair');
+            var sel = document.getElementById('site-switcher');
+            if (sel && pair && !pair.contains(e.target)) {
+                sel.style.display = 'none';
+            }
+        });
     };
