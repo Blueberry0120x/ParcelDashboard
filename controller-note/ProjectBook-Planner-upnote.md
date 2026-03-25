@@ -5,7 +5,33 @@
 
 ---
 
-## [2026-03-25 05:00] ESCALATION: UI issues beyond agent capability -- NEEDS CONTROLLER ASSIST
+## [2026-03-25 08:30] CONTROLLER FIX: All 3 escalated UI issues resolved -- OVERRIDE
+
+**Controller directly edited `src/` files (Designer-authorized override of Safety Contract).**
+
+### Fixes applied
+
+**1. Site address dropdown (both files)**
+- Root cause: `<select>` was a flex child in the header row — toggling `display:block` made it take column space instead of overlapping below.
+- Fix: moved select inside the address container, set `position:absolute;top:100%` so it drops below the address cell. CSS rule at `style.css:100`. Same pattern applied to checklist JSX (`ck-site-sel` inside `ck-addr-wrap`).
+- Works in both server mode (populated via `/api/sites`) and static mode (removed by catch handler).
+
+**2. Dark mode checkbox flash (checklist)**
+- Root cause: React re-renders remove inline styles, CSS attribute selectors `[style*="..."]` lose their match for ~50ms, then MutationObserver `fix()` re-applies. User sees a light-color flash.
+- Fix (two-part):
+  - Added `transition: background 80ms, color 80ms, border-color 80ms` on all `#root` elements in dark mode. Transition masks the gap.
+  - Changed MutationObserver from `setTimeout(fix,50)` to `requestAnimationFrame(fix)` with coalescing. Fires before next paint instead of arbitrary delay.
+
+**3. Header left-edge alignment (checklist vs map)**
+- Root cause: Map uses `max-width:90%;margin:0 auto` with `body padding:20px`. Checklist used `maxWidth:920px;margin:0 auto` with no body padding.
+- Fix: Changed all checklist containers from `920px` to `90%`, added `padding:20px` to checklist body. Both pages now share the same layout skeleton.
+
+### Approach-switching guidance added
+Added new section to `.claude/CLAUDE.md` so the Planner agent knows when to abandon a failing approach and try a fundamentally different one.
+
+---
+
+## ~~[2026-03-25 05:00] ESCALATION: UI issues beyond agent capability -- NEEDS CONTROLLER ASSIST~~
 
 **Planner agent has been looping on these UI issues and failing to resolve them cleanly. Requesting controller review and assist.**
 

@@ -18,7 +18,7 @@
 <style>
   html{zoom:0.9}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;padding-bottom:env(safe-area-inset-bottom);background:#f0f2f5;color:#2d3748}
+  body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;padding:20px;padding-bottom:env(safe-area-inset-bottom);background:#f0f2f5;color:#2d3748}
   input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
   input[type=number]{-moz-appearance:textfield}
   *{overflow-anchor:none}
@@ -50,6 +50,11 @@
   /* ── DARK MODE ── */
   html[data-theme="dark"] { color-scheme: dark; }
   html[data-theme="dark"] body { background: #0f172a !important; color: #e2e8f0 !important; }
+
+  /* Prevent flash on React re-render (checkbox toggle etc.) */
+  html[data-theme="dark"] #root *:not(input):not(select):not(button) {
+    transition: background 80ms ease, color 80ms ease, border-color 80ms ease;
+  }
   html[data-theme="dark"] .theme-toggle { background: #1e293b; border-color: #475569; }
 
   /* Suite bar */
@@ -267,7 +272,7 @@
 </head>
 <body>
 <div class="no-print" style="background:#0f4c81;padding:0 18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;flex-shrink:0">
-  <div style="display:flex;align-items:center;height:32px;max-width:920px;margin:0 auto">
+  <div style="display:flex;align-items:center;height:32px;max-width:90%;margin:0 auto">
     <a href="/" onclick="if(location.protocol==='file:')this.href='InteractiveMap.html'" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
     <span style="color:rgba(255,255,255,.25);padding:0 3px">|</span>
     <span style="color:#fff;border-bottom:2px solid #fff;height:32px;display:flex;align-items:center;padding:0 12px">Checklist</span>
@@ -1139,14 +1144,14 @@ function App(){
 
       {/* HEADER */}
       <div style={{background:"linear-gradient(135deg,#0c3d6b,#162c46)",padding:"18px 24px 12px",color:"#fff",borderBottom:"3px solid #f59e0b"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:920,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:"90%",margin:"0 auto"}}>
           <div>
             <div style={{fontSize:21,fontWeight:700,color:"#93c5fd"}}>Pre-Application Permit Checklist</div>
             <div style={{fontSize:11,opacity:.5,marginTop:2}}>{(function(){var a=(SD.address||'').split(',');if(a.length>=3){return a[1].trim()+', '+a[2].trim().split(' ')[0]}return a[1]?a[1].trim():'San Diego, CA'})()} Development Guide Book</div>
-            <div id="ck-addr-wrap" style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer"}} onClick={e=>{var s=document.getElementById('ck-site-sel');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}}}>
+            <div id="ck-addr-wrap" style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer",position:"relative"}} onClick={e=>{var s=document.getElementById('ck-site-sel');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}}}>
               {(SD.address||'4335 Euclid Avenue, San Diego, CA 92105')} <span id="ck-addr-arrow" style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
+              <select id="ck-site-sel" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",minWidth:300,background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:200,marginTop:4}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}></select>
             </div>
-            <select id="ck-site-sel" style={{display:"none",width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100,marginTop:4}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}></select>
             <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{SD.apn??'471-271-16-00'} {"\u2022"} {SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
           </div>
           <div style={{textAlign:"right"}}>
@@ -1154,7 +1159,7 @@ function App(){
             <div style={{fontSize:9,opacity:.4}}>{done}/{total}</div>
           </div>
         </div>
-        <div style={{maxWidth:920,margin:"10px auto 0"}}>
+        <div style={{maxWidth:"90%",margin:"10px auto 0"}}>
           <div style={{background:"rgba(255,255,255,.08)",borderRadius:5,height:7,overflow:"hidden"}}>
             <div style={{width:`${pct}%`,height:"100%",borderRadius:5,background:pct===100?"#22c55e":pct>60?"#38bdf8":"#fbbf24",transition:"width .4s"}}/>
           </div>
@@ -1174,7 +1179,7 @@ function App(){
       </div>
 
       {/* BODY */}
-      <div style={{padding:"14px 18px 50px",maxWidth:920,margin:"0 auto"}}>
+      <div style={{padding:"14px 18px 50px",maxWidth:"90%",margin:"0 auto"}}>
         <BuildingConfig bldgs={bldgs} setBldgs={setBldgsS} sel={sel} onSel={onSel} onHelp={openHelp} mapLocked={mapLocked} onToggleLock={toggleMapLock} onRefresh={refreshFromMap} isMobile={isMobile}/>
         <AdvisorySection sel={sel} bldgs={bldgs} onHelp={openHelp}/>
 
@@ -1281,7 +1286,8 @@ else if(isGray&&(cr*299+cg*587+cb*114)/1000<180){el.style.color='#94a3b8';}
 if(el.style.opacity&&parseFloat(el.style.opacity)<0.6){el.style.opacity='0.85';}
 });}
 setTimeout(fix,80);setTimeout(fix,300);setTimeout(fix,800);
-new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
+var _fixPending=false;
+new MutationObserver(function(){if(!_fixPending){_fixPending=true;requestAnimationFrame(function(){fix();_fixPending=false;})}}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
 })();
 </script>
 <button class="theme-toggle" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';localStorage.setItem('theme',t);location.reload();})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>

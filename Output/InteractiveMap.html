@@ -112,11 +112,20 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-config-wrap.collapsed .sub-toggle::after { transform: rotate(-90deg); }
 
 /* Title row — title stack inline with address+apn pair */
-.header-title-row { display: flex; align-items: center; gap: 0; }
-.header-address-pair { display: flex; align-items: center; gap: 10px; margin-left: 55px; }
+.header-title-row { display: flex; align-items: center; gap: 0; position: relative; }
+.header-address-pair { display: flex; align-items: center; gap: 10px; margin-left: 55px; position: relative; }
 .header-title-stack { display: flex; flex-direction: column; gap: 2px; }
 .header-title-stack h1 { margin: 0; white-space: nowrap; }
 .header-title-stack p  { margin: 0; color: #4a5568; }
+
+/* Site switcher dropdown — positioned below address cell */
+#site-switcher {
+    position: absolute !important;
+    top: 100%;
+    left: 0;
+    z-index: 200;
+    margin-top: 4px !important;
+}
 
 /* Address / APN cells in header */
 .header-address {
@@ -755,9 +764,9 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                         <span class="banner-value" id="ui-address"></span>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
+                    <select id="site-switcher" style="display:none;width:100%;min-width:300px;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+                    </select>
                 </div>
-                <select id="site-switcher" style="display:none;width:100%;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;z-index:100;margin-top:4px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
-                </select>
             </div>
         </div>
     </div>

@@ -98,6 +98,29 @@ All save buttons already call it:
 
 To add a new save trigger: just call `ExportEngine.save()`. Nothing else needed.
 
+## ── APPROACH-SWITCHING RULE ───────────────────────────────────────────────────
+
+**If you have tried the same strategy 3 times and it still fails, STOP and rethink.**
+
+This is a BLOCKING rule. Do not loop on a failing pattern — step back and ask:
+1. Is the **approach** wrong, not just the implementation?
+2. What would a fundamentally different solution look like?
+3. Can I use a **different layer** (CSS transition instead of JS timing, absolute
+   positioning instead of flex layout, requestAnimationFrame instead of setTimeout)?
+
+**Examples of approach-switching:**
+- CSS attribute selectors `[style*="..."]` don't reliably match React inline styles
+  → Use CSS `transition` to mask the gap + `requestAnimationFrame` for faster JS fix
+- A `<select>` inside a flex row doesn't drop down visually
+  → Use `position: absolute; top: 100%` to break out of flex flow
+- Adding more selectors/rules to fix edge cases keeps growing
+  → Add one rule at a higher abstraction level (e.g. transition on all children)
+
+**When to escalate instead:**
+- The fix requires a design decision (e.g. "should we refactor React to use CSS classes?")
+- The fix would change architecture beyond your scope
+- You've switched approach twice and both alternatives also fail
+
 ## ── CSS RULES ─────────────────────────────────────────────────────────────────
 - Before adding any CSS rule, search the file for the selector first.
 - Never duplicate a selector block — extend the existing one.

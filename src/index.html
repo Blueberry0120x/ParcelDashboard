@@ -57,9 +57,9 @@
                         <span class="banner-value" id="ui-address"></span>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
+                    <select id="site-switcher" style="display:none;width:100%;min-width:300px;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+                    </select>
                 </div>
-                <select id="site-switcher" style="display:none;width:100%;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;z-index:100;margin-top:4px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
-                </select>
             </div>
         </div>
     </div>
