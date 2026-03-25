@@ -73,36 +73,28 @@
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher dropdown (below Address header cell)
+        // Populate site switcher from __SITE_LIST__ (injected by build script)
         (function() {
             var sel = document.getElementById('site-switcher');
             if (!sel) return;
-            fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
+            var sites = window.__SITE_LIST__ || [];
+            var sd = window.__SITE_DEFAULTS__ || {};
+            var activeSite = localStorage.getItem('selected_site') || sd.siteId || '';
+            if (sites.length > 0) {
                 sites.forEach(function(s) {
                     var opt = document.createElement('option');
-                    opt.value = s.id;
+                    opt.value = s.siteId;
                     opt.textContent = s.address;
-                    if (s.active) opt.selected = true;
+                    if (s.siteId === activeSite) opt.selected = true;
                     sel.appendChild(opt);
                 });
-            }).catch(function() {
-                // Static file mode -- populate with current site from __SITE_DEFAULTS__
-                var sd = window.__SITE_DEFAULTS__ || {};
-                var addr = sd.address || ConfigEngine.data.address;
+            } else {
+                // Fallback: no site list injected
                 var opt = document.createElement('option');
-                opt.value = 'current';
-                opt.textContent = addr;
+                opt.value = sd.siteId || '';
+                opt.textContent = sd.address || ConfigEngine.data.address;
                 opt.selected = true;
                 sel.appendChild(opt);
-            });
-        })();
-
-        // Close site-switcher dropdown on click outside
-        document.addEventListener('click', function(e) {
-            var pair = document.querySelector('.header-address-pair');
-            var sel = document.getElementById('site-switcher');
-            if (sel && pair && !pair.contains(e.target)) {
-                sel.style.display = 'none';
             }
-        });
+        })();
     };

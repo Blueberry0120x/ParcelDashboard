@@ -54,6 +54,37 @@ function Get-InjectScript {
     return ""
 }
 
+# ── site list injection helper ─────────────────────────────────────────────
+# Reads all JSON files from data/sites/ and builds window.__SITE_LIST__
+# Each entry: { siteId, address, apn, file }
+function Get-SiteListScript {
+    $sitesDir = Join-Path $base "data\sites"
+    if (-not (Test-Path $sitesDir)) { return "" }
+    $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+    if ($files.Count -eq 0) { return "" }
+    $list = @()
+    foreach ($f in $files) {
+        try {
+            $raw = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            $s = $raw.site
+            if ($null -ne $s) {
+                $entry = [ordered]@{
+                    siteId  = $s.siteId
+                    address = $s.address
+                    apn     = $s.apn
+                    file    = $f.Name
+                }
+                $list += $entry
+            }
+        } catch {}
+    }
+    if ($list.Count -gt 0) {
+        $json = $list | ConvertTo-Json -Compress -Depth 5
+        return "<script>window.__SITE_LIST__ = $json;</script>"
+    }
+    return ""
+}
+
 # ── Suite nav — now inline in source HTML (suite-tabs in header / React) ───
 
 # ── Build: InteractiveMap ───────────────────────────────────────────────────
@@ -94,6 +125,13 @@ function Build-Html {
         Write-Host "  [i] No site-data.json settings found (using defaults)" -ForegroundColor DarkGray
     }
 
+    # Inject site list from data/sites/
+    $siteList = Get-SiteListScript
+    if ($siteList) {
+        $html = $html.Replace('</head>', "$siteList`n</head>")
+        Write-Host "  [+] Injected site list from data/sites/" -ForegroundColor Green
+    }
+
     # Suite nav is now inline in source HTML (suite-tabs in header)
 
     # Ensure Output dir exists and write
@@ -121,6 +159,13 @@ function Build-Checklist {
     if ($inject) {
         $html = $html.Replace('</head>', "$inject`n</head>")
         Write-Host "  [+] Injected settings from site-data.json" -ForegroundColor Green
+    }
+
+    # Inject site list from data/sites/
+    $siteList = Get-SiteListScript
+    if ($siteList) {
+        $html = $html.Replace('</head>', "$siteList`n</head>")
+        Write-Host "  [+] Injected site list from data/sites/" -ForegroundColor Green
     }
 
     # Suite nav is now inline in source HTML (suite-tabs in React header)

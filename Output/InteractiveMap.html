@@ -118,13 +118,33 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .header-title-stack h1 { margin: 0; white-space: nowrap; }
 .header-title-stack p  { margin: 0; color: #4a5568; }
 
-/* Site switcher dropdown — positioned below address cell */
-#site-switcher {
-    position: absolute !important;
-    top: 100%;
-    left: 0;
-    z-index: 200;
-    margin-top: 4px !important;
+/* Site switcher — styled as address value inside the card */
+.site-select {
+    background: transparent !important;
+    color: #fff !important;
+    border: none !important;
+    font-size: 1.05em;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    min-width: 200px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.5)'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 2px center !important;
+    background-size: 10px !important;
+    padding-right: 16px;
+}
+.site-select option {
+    background: #0c2d4a;
+    color: #fff;
+    font-weight: 600;
+    padding: 6px 8px;
 }
 
 /* Address / APN cells in header */
@@ -729,6 +749,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script>window.__SITE_DEFAULTS__ = {"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":42.5,"offsetY":15.8,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -760,13 +781,12 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                     <p>Interactive Planning &amp; Concept Design</p>
                 </div>
                 <div class="header-address-pair">
-                    <div class="header-address" id="addr-cell" style="cursor:pointer" onclick="var s=document.getElementById('site-switcher');if(s){s.style.display=s.style.display==='block'?'none':'block';}">
-                        <span class="banner-label">Address <span id="addr-arrow">&#x25BE;</span></span>
-                        <span class="banner-value" id="ui-address"></span>
+                    <div class="header-address" id="addr-cell">
+                        <span class="banner-label">Address</span>
+                        <select id="site-switcher" class="site-select" onchange="if(this.value){var sd=window.__SITE_DEFAULTS__||{};if(this.value!==sd.siteId){localStorage.setItem('selected_site',this.value);localStorage.removeItem('site_state');location.reload();}}">
+                        </select>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
-                    <select id="site-switcher" style="display:none;width:100%;min-width:300px;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" onchange="if(this.value&&this.value!=='current'){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
-                    </select>
                 </div>
             </div>
         </div>
@@ -3899,38 +3919,30 @@ const ResizeEngine = {
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher dropdown (below Address header cell)
+        // Populate site switcher from __SITE_LIST__ (injected by build script)
         (function() {
             var sel = document.getElementById('site-switcher');
             if (!sel) return;
-            fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
+            var sites = window.__SITE_LIST__ || [];
+            var sd = window.__SITE_DEFAULTS__ || {};
+            var activeSite = localStorage.getItem('selected_site') || sd.siteId || '';
+            if (sites.length > 0) {
                 sites.forEach(function(s) {
                     var opt = document.createElement('option');
-                    opt.value = s.id;
+                    opt.value = s.siteId;
                     opt.textContent = s.address;
-                    if (s.active) opt.selected = true;
+                    if (s.siteId === activeSite) opt.selected = true;
                     sel.appendChild(opt);
                 });
-            }).catch(function() {
-                // Static file mode -- populate with current site from __SITE_DEFAULTS__
-                var sd = window.__SITE_DEFAULTS__ || {};
-                var addr = sd.address || ConfigEngine.data.address;
+            } else {
+                // Fallback: no site list injected
                 var opt = document.createElement('option');
-                opt.value = 'current';
-                opt.textContent = addr;
+                opt.value = sd.siteId || '';
+                opt.textContent = sd.address || ConfigEngine.data.address;
                 opt.selected = true;
                 sel.appendChild(opt);
-            });
-        })();
-
-        // Close site-switcher dropdown on click outside
-        document.addEventListener('click', function(e) {
-            var pair = document.querySelector('.header-address-pair');
-            var sel = document.getElementById('site-switcher');
-            if (sel && pair && !pair.contains(e.target)) {
-                sel.style.display = 'none';
             }
-        });
+        })();
     };
 
 </script>
