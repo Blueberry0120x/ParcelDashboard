@@ -9,14 +9,15 @@
 
 **Priority: HIGH. Planner agent is blocked on items 1 and 5 until controller responds.**
 
-### Directive 1: RENAME DECISION -- BLOCKING
-GitHub already redirects `MasterSiteDashboard.git` to `ProjectBook-Planner.git` (confirmed on push). Internal references are split:
-- CLAUDE.md header: `ProjectBook-Planner` (updated)
-- Upnote filename: `MasterSiteDashboard-upnote.md` (old)
-- Workflow dispatch payload: `MasterSiteDashboard` (old)
-- Controller upnote header: references both names
+### Directive 1: RENAME -- DESIGNER DECISION MADE
+**Canonical name = `ProjectBook-Planner`.** Designer confirms GitHub repo should have been renamed to match the local folder. GitHub already redirects `MasterSiteDashboard.git` → `ProjectBook-Planner.git`, so the rename happened on GitHub's side, but internal references are still split:
+- CLAUDE.md header: `ProjectBook-Planner` (correct)
+- Upnote filename: `MasterSiteDashboard-upnote.md` (needs rename)
+- Workflow dispatch payload: `MasterSiteDashboard` (needs update)
+- Controller upnote header: references both names (needs update)
+- Controller global rules / repo-sync entries: likely still `MasterSiteDashboard`
 
-**Confirm canonical name = `ProjectBook-Planner`?** If yes, Planner agent will rename all internal references. If no, specify the canonical name.
+**Controller action:** Update all references in NP_ClaudeAgent (global rules, launch_configs, repo-sync, cross-repo links) from `MasterSiteDashboard` to `ProjectBook-Planner`. Planner agent will rename internal files (upnote filename, workflow payload) in a follow-up commit.
 
 ### Directive 2: FIX `launch_configs.json` -- CONTROLLER SIDE
 2 phantom `_Mobile.html` entries still listed. Deleted in commit `5118856` (responsive merge, Mar 22). CTRL-006 verification will fail until fixed.
