@@ -5,6 +5,70 @@
 
 ---
 
+## [2026-03-25 05:00] ESCALATION: UI issues beyond agent capability -- NEEDS CONTROLLER ASSIST
+
+**Planner agent has been looping on these UI issues and failing to resolve them cleanly. Requesting controller review and assist.**
+
+### What was completed successfully this session
+- Full rename: "Master Site Dashboard" -> "ProjectBook-Planner" (66 commits, 14 source files, all references)
+- Controller dispatch: all 6 GLOBAL items resolved
+- Dev-check/logic-check/security-check: 10/10 clean (code quality, naming, docs)
+- CORS restricted to localhost, innerHTML XSS fixed, CTRL-007 auto-fix loop rule added
+- Launch.cmd created (Private/Public/Both)
+- COORD dropdown moved to Align Map header row
+- 50/50 sidebar-map split, thin scrollbar, 90% zoom both files
+- Checklist header redesigned: "Pre-Application Permit Checklist" + "San Diego, CA Development Guide Book"
+
+### Outstanding issues (agent failed to resolve cleanly)
+
+**1. Site address dropdown not working in either file**
+- **Map:** Address cell has onclick to toggle a `<select id="site-switcher">` placed below the header-address-pair. In static file mode (no server), bootstrap.js removes the select and hides the arrow. But in server mode, the dropdown doesn't visually appear on click -- likely a z-index or overflow issue in the header layout.
+- **Checklist:** Same problem. `<select id="ck-site-sel">` is rendered by React JSX but the population script at bottom uses `getElementById('ck-site-sel')`. In static mode the select is removed. In server mode it should populate but the click handler on the address div may not reach the select because React re-renders the DOM.
+- **Root cause:** The dropdown approach (hidden select toggled by onclick) conflicts with React's virtual DOM in the checklist and with CSS overflow in the map header. A fundamentally different approach may be needed.
+- **Designer requirement:** "Drop down at the address itself. When you pick an address, APN and everything else changes accordingly -- ALL SETTINGS, PROPERTIES."
+
+**2. Checklist dark mode: inconsistent color switching on checkbox click**
+- The JS MutationObserver-based dark mode fixer runs on every DOM mutation. When a checkbox is toggled, React re-renders that item, the observer fires, and `fix()` re-applies dark backgrounds. But during the re-render there's a flash of light colors before `fix()` catches it.
+- The fundamental problem: React inline styles (`style={{background:"#fff"}}`) are applied AFTER the CSS cascade. CSS attribute selectors like `[style*="background: #fff"]` don't reliably match because React serializes to `rgb()` format. The JS fixer is a workaround, not a real solution.
+- **Better approach:** Either (a) modify the React source to use CSS classes instead of inline styles, (b) use CSS custom properties that dark mode overrides, or (c) wrap the entire React app in a dark-mode-aware context provider that passes dark colors to all components.
+
+**3. Left-side alignment: Map and Checklist headers don't match**
+- Map has: suite bar (full width) -> header with ProjectBook-Planner title + ADDRESS/APN cells -> property banner -> sidebar|map split
+- Checklist has: suite bar (full width) -> gradient header with title/subtitle/address/APN -> progress bar -> building config -> checklist items
+- The left edges don't align because the map uses `.header-left` with specific padding and the checklist uses `maxWidth:920px;margin:0 auto` centering.
+- **Designer requirement:** Both should have matching left-edge alignment.
+
+**4. Checklist empty dropdown box visible in header**
+- Even when the select is hidden/removed, a visual artifact (empty box with chevron) appears below the address in the checklist header. This is the React-rendered `<select>` element before the bottom script removes it. There's a race condition between React render and the cleanup script.
+
+### Approach document (what designer requested vs what was delivered)
+
+| Request | Status | Issue |
+|---------|--------|-------|
+| Dark mode on checklist (backgrounds) | Partial | JS fixer works but flashes on checkbox toggle |
+| Dark mode preserve green/red colors | Fixed | Removed blanket `*` color override, JS only changes gray text |
+| Light mode not broken | Fixed | Guard check moved inside `fix()`, theme toggle reloads page |
+| COORD dropdown inline with Align Map | Done | Works correctly |
+| COORD no duplicate label | Done | Removed cadZoneLabel span |
+| Site address dropdown on Address cell | Failed | Not working in either file |
+| Map and checklist left alignment match | Failed | Different layout systems (flex vs max-width centering) |
+| 90% zoom both files | Done | |
+| 50/50 sidebar-map split | Done | |
+| Thin scrollbar | Done | |
+| Checklist header redesign | Done | Title + subtitle + full address |
+| Checklist softer light background | Done | `#f0f2f5` body background |
+| FAB buttons equal, no rectangle | Done | |
+
+### What controller should review
+1. The React checklist needs a proper dark mode solution (not JS DOM hacking)
+2. The site switcher needs an approach that works with both static files and dev server, and survives React re-renders
+3. The header layouts need to be unified so both pages have matching left-edge alignment
+4. Consider whether the checklist should be refactored to use CSS classes instead of 100% inline styles
+
+**Planner agent status: BLOCKED on UI issues. Code quality / docs / naming / security are all clean.**
+
+---
+
 ## [2026-03-25 02:30] GLOBAL BASELINE GAP: CTRL-007 auto-fix loop rule missing -- GLOBAL_UPDATE_REQUEST
 
 ### Problem
