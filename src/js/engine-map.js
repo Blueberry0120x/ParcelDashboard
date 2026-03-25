@@ -123,12 +123,6 @@ const MapEngine = {
                 bldg.offsetX = parseFloat((clamped.cx - (f - r) / 2).toFixed(1));
                 bldg.offsetY = parseFloat((clamped.cy - (sr - sl) / 2).toFixed(1));
             }
-            // Apply snap-to-edge if enabled
-            if (state.snapEdge) {
-                const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
-                bldg.offsetX = snapped.x;
-                bldg.offsetY = snapped.y;
-            }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -141,6 +135,15 @@ const MapEngine = {
         });
         m.on('dragend', () => {
             this._isDragging = false;
+            // Apply snap on release (not during drag — avoids sticky-snap when touching other buildings)
+            if (state.snapEdge) {
+                const bldg = state.buildings[idx];
+                if (bldg) {
+                    const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
+                    bldg.offsetX = snapped.x;
+                    bldg.offsetY = snapped.y;
+                }
+            }
             SetbackEngine.drawBuilding();
             ExportEngine.save();
         });
