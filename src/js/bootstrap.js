@@ -91,8 +91,8 @@
                 // Static file mode -- show current site from embedded defaults
                 sel.innerHTML = '';
                 var opt = document.createElement('option');
-                opt.value = (sd.site && sd.site.siteId) || '';
-                opt.textContent = (sd.site && sd.site.address) || 'Current Site';
+                opt.value = sd.siteId || (sd.site && sd.site.siteId) || '';
+                opt.textContent = sd.address || (sd.site && sd.site.address) || 'Current Site';
                 opt.selected = true;
                 sel.appendChild(opt);
                 sel.disabled = true;

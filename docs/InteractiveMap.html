@@ -23,7 +23,7 @@
 /* ==========================================
    1. CORE VARIABLES & BASE
    ========================================== */
-html { zoom: 0.9; }
+html { zoom: 0.8; }
 :root {
     --primary: #0f4c81; --secondary: #e2e8f0; --accent: #d9381e;
     --text: #2d3748; --bg: #f4f7fb; --card: #ffffff;
@@ -3899,8 +3899,8 @@ const ResizeEngine = {
                 // Static file mode -- show current site from embedded defaults
                 sel.innerHTML = '';
                 var opt = document.createElement('option');
-                opt.value = (sd.site && sd.site.siteId) || '';
-                opt.textContent = (sd.site && sd.site.address) || 'Current Site';
+                opt.value = sd.siteId || (sd.site && sd.site.siteId) || '';
+                opt.textContent = sd.address || (sd.site && sd.site.address) || 'Current Site';
                 opt.selected = true;
                 sel.appendChild(opt);
                 sel.disabled = true;
