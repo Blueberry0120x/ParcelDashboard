@@ -6,7 +6,10 @@
 #   Engine_InteractiveParcelMap.cmd serve    -> compile + local server (enables direct Save Config)
 # ==========================================
 
-param([string]$Mode = "reload")
+param(
+    [string]$Mode = "reload",
+    [int]$Port = 7734
+)
 
 Set-StrictMode -Version Latest
 
@@ -32,19 +35,46 @@ $engines = @(
     "js/bootstrap.js"
 )
 
+# ── Get-SiteFile: find the .json path for a given siteId ──────────────────
+function Get-SiteFile {
+    param([string]$SiteId)
+    $sitesDir = Join-Path $base "data\sites"
+    if (-not (Test-Path $sitesDir)) { return $null }
+    $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+    foreach ($f in $files) {
+        try {
+            $raw = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($null -ne $raw.site -and "$($raw.site.siteId)" -eq $SiteId) {
+                return $f.FullName
+            }
+        } catch {}
+    }
+    return $null
+}
+
 # ── site-data.json injection helper ───────────────────────────────────────
-# Merges site-data.json.site (static) + .saved (session) into window.__SITE_DEFAULTS__
+# Reads active site file from data/sites/ (via pointer in site-data.json)
+# Merges .site (static) + .saved (session) into window.__SITE_DEFAULTS__
 # Returns the <script> tag string, or "" if nothing to inject
 function Get-InjectScript {
-    if (-not (Test-Path $siteDataFile)) { return "" }
+    $activeId = Get-ActiveSiteId
+    if (-not $activeId) { return "" }
+    $siteFile = Get-SiteFile -SiteId $activeId
+    if (-not $siteFile) { return "" }
     try {
-        $sd = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        $sd = Get-Content $siteFile -Raw -Encoding UTF8 | ConvertFrom-Json
         $merged = [ordered]@{}
-        if ($null -ne $sd.site) {
-            $sd.site.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+        $projectProp = $sd.PSObject.Properties['project']
+        if ($null -ne $projectProp -and "$($projectProp.Value)" -ne "") {
+            $merged["project"] = $projectProp.Value
         }
-        if ($null -ne $sd.saved) {
-            $sd.saved.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+        $siteProp = $sd.PSObject.Properties['site']
+        if ($null -ne $siteProp -and $null -ne $siteProp.Value) {
+            $siteProp.Value.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+        }
+        $savedProp = $sd.PSObject.Properties['saved']
+        if ($null -ne $savedProp -and $null -ne $savedProp.Value) {
+            $savedProp.Value.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
         }
         if ($merged.Count -gt 0) {
             $json = $merged | ConvertTo-Json -Compress -Depth 10
@@ -83,6 +113,80 @@ function Get-SiteListScript {
         return "<script>window.__SITE_LIST__ = $json;</script>"
     }
     return ""
+}
+
+function Resolve-SiteObject {
+    param([string]$PreferredSiteId)
+    $sitesDir = Join-Path $base "data\sites"
+    if (-not (Test-Path $sitesDir)) { return $null }
+    $fallback = $null
+    $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+    foreach ($f in $files) {
+        try {
+            $raw = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($null -eq $raw.site) { continue }
+            if ($null -eq $fallback) { $fallback = $raw.site }
+            if ($PreferredSiteId -and "$($raw.site.siteId)" -eq $PreferredSiteId) {
+                return $raw.site
+            }
+        } catch {}
+    }
+    return $fallback
+}
+
+function Get-ActiveSiteId {
+    if (-not (Test-Path $siteDataFile)) { return $null }
+    try {
+        $sd = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        # New pointer format: { "activeSiteId": "CA-EUCLID" }
+        $idProp = $sd.PSObject.Properties['activeSiteId']
+        if ($null -ne $idProp -and "$($idProp.Value)" -ne "") { return "$($idProp.Value)" }
+        # Migration fallback: top-level siteId (client payload format)
+        $topIdProp = $sd.PSObject.Properties['siteId']
+        if ($null -ne $topIdProp -and "$($topIdProp.Value)" -ne "") { return "$($topIdProp.Value)" }
+        # Migration fallback: old full-copy format had .site.siteId
+        $siteProp = $sd.PSObject.Properties['site']
+        if ($null -ne $siteProp -and $null -ne $siteProp.Value) {
+            $siteIdProp = $siteProp.Value.PSObject.Properties['siteId']
+            if ($null -ne $siteIdProp -and "$($siteIdProp.Value)" -ne "") { return "$($siteIdProp.Value)" }
+        }
+    } catch {}
+    return $null
+}
+
+function Get-SitesApiJson {
+    $sitesDir = Join-Path $base "data\sites"
+    $activeId = Get-ActiveSiteId
+    $list = @()
+    if (Test-Path $sitesDir) {
+        $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+        foreach ($f in $files) {
+            try {
+                $raw = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+                if ($null -eq $raw.site -or "$($raw.site.siteId)" -eq "") { continue }
+                $list += [ordered]@{
+                    id      = "$($raw.site.siteId)"
+                    address = "$($raw.site.address)"
+                    apn     = "$($raw.site.apn)"
+                    active  = ($activeId -eq "$($raw.site.siteId)")
+                }
+            } catch {}
+        }
+    }
+    return ($list | ConvertTo-Json -Compress -Depth 5)
+}
+
+function Activate-Site {
+    param([string]$SiteId)
+    if ([string]::IsNullOrWhiteSpace($SiteId)) { return $false }
+    $siteFile = Get-SiteFile -SiteId $SiteId
+    if (-not $siteFile) { return $false }
+    # Update pointer only -- no file copy
+    $pointer = "{`"activeSiteId`":`"$SiteId`"}"
+    [System.IO.File]::WriteAllText($siteDataFile, $pointer, [System.Text.UTF8Encoding]::new($false))
+    Build-Html | Out-Null
+    Build-Checklist | Out-Null
+    return $true
 }
 
 # ── Suite nav — now inline in source HTML (suite-tabs in header / React) ───
@@ -191,7 +295,7 @@ if ($Mode -eq "debug") {
 }
 
 if ($Mode -eq "serve") {
-    $port = 7734
+    $port = $Port
     $listener = New-Object System.Net.HttpListener
     $listener.Prefixes.Add("http://localhost:$port/")
     try { $listener.Start() } catch {
@@ -217,11 +321,11 @@ if ($Mode -eq "serve") {
             $res = $context.Response
 
             # CORS — allow browser to POST from localhost only
-            $origin = $ctx.Request.Headers["Origin"]
+            $origin = $context.Request.Headers["Origin"]
             if ($origin -match '^https?://(localhost|127\.0\.0\.1)(:\d+)?$') {
                 $res.Headers.Add("Access-Control-Allow-Origin", $origin)
             } else {
-                $res.Headers.Add("Access-Control-Allow-Origin", "http://localhost:7734")
+                $res.Headers.Add("Access-Control-Allow-Origin", "http://localhost:$port")
             }
             $res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             $res.Headers.Add("Access-Control-Allow-Headers", "Content-Type")
@@ -245,30 +349,58 @@ if ($Mode -eq "serve") {
                 } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -eq "/save") {
                     $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
                     $body   = $reader.ReadToEnd()
-                    # Preserve site key: merge incoming saved with existing site data
+                    # Write to the active site file only -- site-data.json stays as pointer
                     try {
                         $incoming = ConvertFrom-Json -InputObject $body
-                        if (Test-Path $siteDataFile) {
-                            $existing = Get-Content $siteDataFile -Raw -Encoding UTF8 | ConvertFrom-Json
-                            if ($null -ne $existing.site) {
+                        $siteIdProp = $incoming.PSObject.Properties['siteId']
+                        $targetSiteId = if ($null -ne $siteIdProp -and "$($siteIdProp.Value)" -ne "") { "$($siteIdProp.Value)" } else { Get-ActiveSiteId }
+                        if ($targetSiteId) {
+                            $siteFile = Get-SiteFile -SiteId $targetSiteId
+                            if ($siteFile) {
+                                $existing = Get-Content $siteFile -Raw -Encoding UTF8 | ConvertFrom-Json
+                                $resolvedSite = $existing.PSObject.Properties['site']
+                                $existingSite = if ($null -ne $resolvedSite) { $resolvedSite.Value } else { Resolve-SiteObject -PreferredSiteId $targetSiteId }
+                                $projectProp = $incoming.PSObject.Properties['project']
+                                $savedProp = $incoming.PSObject.Properties['saved']
+                                $checklistProp = $incoming.PSObject.Properties['checklist']
+                                $projectName = if ($null -ne $projectProp -and "$($projectProp.Value)" -ne "") { "$($projectProp.Value)" } else { "ProjectBook-Planner" }
                                 $merged = [PSCustomObject]@{
-                                    project   = $incoming.project
-                                    site      = $existing.site
-                                    saved     = $incoming.saved
-                                    checklist = $incoming.checklist
+                                    project   = $projectName
+                                    site      = $existingSite
+                                    saved     = if ($null -ne $savedProp) { $savedProp.Value } else { $null }
+                                    checklist = if ($null -ne $checklistProp) { $checklistProp.Value } else { $null }
                                 }
-                                $body = $merged | ConvertTo-Json -Depth 10
+                                $writeBody = $merged | ConvertTo-Json -Depth 10
+                                [System.IO.File]::WriteAllText($siteFile, $writeBody, [System.Text.UTF8Encoding]::new($false))
                             }
                         }
                     } catch {}
-                    [System.IO.File]::WriteAllText($siteDataFile, $body, [System.Text.UTF8Encoding]::new($false))
-                    Write-Host "  [SAVE] site-data.json updated - rebuilding..." -ForegroundColor Yellow
+                    Write-Host "  [SAVE] site saved - rebuilding..." -ForegroundColor Yellow
                     Build-Html | Out-Null
                     Build-Checklist | Out-Null
                     Write-Host "  [SAVE] Done. Refresh browser to load new defaults." -ForegroundColor Green
                     $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
                     $res.ContentType = "application/json"
                     $res.OutputStream.Write($bytes, 0, $bytes.Length)
+
+                } elseif ($req.HttpMethod -eq "GET" -and $req.Url.LocalPath -eq "/api/sites") {
+                    $res.ContentType = "application/json"
+                    $json = Get-SitesApiJson
+                    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+                    $res.OutputStream.Write($bytes, 0, $bytes.Length)
+
+                } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -match '^/api/sites/([^/]+)/activate$') {
+                    $requestedId = [System.Uri]::UnescapeDataString($Matches[1])
+                    if (Activate-Site -SiteId $requestedId) {
+                        $res.ContentType = "application/json"
+                        $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
+                        $res.OutputStream.Write($bytes, 0, $bytes.Length)
+                    } else {
+                        $res.StatusCode = 404
+                        $res.ContentType = "application/json"
+                        $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":false,"error":"site_not_found"}')
+                        $res.OutputStream.Write($bytes, 0, $bytes.Length)
+                    }
 
                 } elseif ($req.HttpMethod -eq "GET" -and $req.Url.LocalPath -eq "/checklist") {
                     $res.ContentType = "text/html; charset=utf-8"

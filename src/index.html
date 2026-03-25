@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f4c81">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f3d7;</text></svg>">
@@ -30,6 +30,10 @@
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
         <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
+        <div class="suite-bar-state">
+            <label>State</label>
+            <select id="state-filter"></select>
+        </div>
         <div class="suite-bar-ext">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink suite-bar-extlink-amber">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-sky">SanDag GIS &#x2197;</a>
@@ -48,13 +52,13 @@
         <div class="header-left">
             <div class="header-title-row">
                 <div class="header-title-stack">
-                    <h1>ProjectBook-Planner</h1>
+                    <h1 id="project-title">ProjectBook-Planner</h1>
                     <p>Interactive Planning &amp; Concept Design</p>
                 </div>
                 <div class="header-address-pair">
                     <div class="header-address" id="addr-cell">
                         <span class="banner-label">Address</span>
-                        <select id="site-switcher" class="site-select" onchange="if(this.value){var sd=window.__SITE_DEFAULTS__||{};if(this.value!==sd.siteId){localStorage.setItem('selected_site',this.value);localStorage.removeItem('site_state');location.reload();}}">
+                        <select id="site-switcher" class="site-select" onchange="if(this.value&&window.switchSite)window.switchSite(this.value)">
                         </select>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>

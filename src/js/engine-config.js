@@ -52,8 +52,8 @@ const ConfigEngine = {
         if (sd.address)         this.data.address         = sd.address;
         if (sd.apn)             this.data.apn             = sd.apn;
         if (sd.zoning)          this.data.zoning          = sd.zoning;
-        if (sd.lotWidth)        this.data.width           = sd.lotWidth;
-        if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
+        if (typeof sd.lotWidth !== 'undefined')  this.data.width = sd.lotWidth;
+        if (typeof sd.lotDepth !== 'undefined')  this.data.depth = sd.lotDepth;
         if (sd.commercialDepth != null) this.data.commercialDepth = sd.commercialDepth;
         if (sd.lotSF != null)   this.data.lotSF           = sd.lotSF;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;

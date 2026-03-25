@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f4c81">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f3d7;</text></svg>">
@@ -84,6 +84,23 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .suite-bar-extlink-rose:hover { background: rgba(251,113,133,.12); border-color: #fb7185; }
 .suite-bar-extlink-sky { color: #38bdf8; border-color: rgba(56,189,248,.5); }
 .suite-bar-extlink-sky:hover { background: rgba(56,189,248,.12); border-color: #38bdf8; }
+
+/* Suite bar state filter */
+.suite-bar-state {
+    display: flex; align-items: center; gap: 4px;
+    margin-left: 14px; padding-left: 14px;
+    border-left: 1px solid rgba(255,255,255,.2);
+}
+.suite-bar-state label { color: rgba(255,255,255,.55); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; }
+.suite-bar-state select {
+    background: rgba(255,255,255,.12); color: #fff;
+    border: 1px solid rgba(255,255,255,.3); border-radius: 4px;
+    padding: 2px 6px; font-size: 11px; font-weight: 700;
+    font-family: inherit; cursor: pointer; outline: none;
+    -webkit-appearance: none; appearance: none;
+}
+.suite-bar-state select:focus { border-color: rgba(255,255,255,.6); }
+.suite-bar-state select option { background: #0f4c81; color: #fff; }
 
 /* Suite bar dropdown */
 .suite-bar-dropdown { position: relative; display: inline-flex; }
@@ -748,7 +765,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":42.5,"offsetY":15.8,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":false,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":-29.5,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 <script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
@@ -759,6 +776,10 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
         <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
+        <div class="suite-bar-state">
+            <label>State</label>
+            <select id="state-filter"></select>
+        </div>
         <div class="suite-bar-ext">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink suite-bar-extlink-amber">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-sky">SanDag GIS &#x2197;</a>
@@ -777,13 +798,13 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
         <div class="header-left">
             <div class="header-title-row">
                 <div class="header-title-stack">
-                    <h1>ProjectBook-Planner</h1>
+                    <h1 id="project-title">ProjectBook-Planner</h1>
                     <p>Interactive Planning &amp; Concept Design</p>
                 </div>
                 <div class="header-address-pair">
                     <div class="header-address" id="addr-cell">
                         <span class="banner-label">Address</span>
-                        <select id="site-switcher" class="site-select" onchange="if(this.value){var sd=window.__SITE_DEFAULTS__||{};if(this.value!==sd.siteId){localStorage.setItem('selected_site',this.value);localStorage.removeItem('site_state');location.reload();}}">
+                        <select id="site-switcher" class="site-select" onchange="if(this.value&&window.switchSite)window.switchSite(this.value)">
                         </select>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
@@ -1188,8 +1209,8 @@ const ConfigEngine = {
         if (sd.address)         this.data.address         = sd.address;
         if (sd.apn)             this.data.apn             = sd.apn;
         if (sd.zoning)          this.data.zoning          = sd.zoning;
-        if (sd.lotWidth)        this.data.width           = sd.lotWidth;
-        if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
+        if (typeof sd.lotWidth !== 'undefined')  this.data.width = sd.lotWidth;
+        if (typeof sd.lotDepth !== 'undefined')  this.data.depth = sd.lotDepth;
         if (sd.commercialDepth != null) this.data.commercialDepth = sd.commercialDepth;
         if (sd.lotSF != null)   this.data.lotSF           = sd.lotSF;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
@@ -3849,12 +3870,53 @@ const ResizeEngine = {
        ========================================== */
     window.onload = function() {
         document.body.style.zoom = '0.9';
-        ConfigEngine.init();
-        UIEngine.init();
-        MapEngine.init();
-        SetbackEngine.initBuildingConfig();
-        ElevationTool.init();
-        ResizeEngine.init();
+        function safeRun(label, fn) {
+            try { fn(); }
+            catch (e) { console.error('[BOOTSTRAP] ' + label + ' failed:', e); }
+        }
+        function safeStorageGet(key) {
+            try { return localStorage.getItem(key); }
+            catch (e) { return null; }
+        }
+        function safeStorageSet(key, val) {
+            try { localStorage.setItem(key, val); }
+            catch (e) {}
+        }
+        function safeStorageRemove(key) {
+            try { localStorage.removeItem(key); }
+            catch (e) {}
+        }
+        function getStateFromSiteId(siteId) {
+            return siteId ? siteId.split('-')[0] : '';
+        }
+
+        window.switchSite = function(siteId) {
+            if (!siteId) return;
+            var sd = window.__SITE_DEFAULTS__ || {};
+            var stateCode = getStateFromSiteId(siteId);
+            safeStorageSet('selected_site', siteId);
+            if (stateCode) safeStorageSet('selected_state', stateCode);
+            safeStorageRemove('site_state');
+            if (siteId === sd.siteId) { location.reload(); return; }
+            if (location.protocol === 'file:') { location.reload(); return; }
+            fetch('/api/sites/' + encodeURIComponent(siteId) + '/activate', { method: 'POST' })
+                .then(function(r) { if (!r.ok) throw new Error('activate failed'); return r.text(); })
+                .then(function() { location.reload(); })
+                .catch(function() { location.reload(); });
+        };
+
+
+        safeRun('ConfigEngine.init', function() { ConfigEngine.init(); });
+        // Only run UIEngine.init if required fields are present
+        var d = (typeof ConfigEngine !== 'undefined' && ConfigEngine.data) ? ConfigEngine.data : null;
+        var required = ["address","apn","zoning","width","depth","lotSF"];
+        var missing = d ? required.filter(function(k){return !(k in d) || d[k]==null || d[k]===''}) : required;
+        if (missing.length === 0) {
+            safeRun('UIEngine.init', function() { UIEngine.init(); });
+        } else {
+            console.error('[BOOTSTRAP] UIEngine.init skipped: missing fields', missing, d);
+            // Optionally, show a user-visible error or fallback UI here
+        }
 
         // Sync toggle button states from saved config
         (function() {
@@ -3906,43 +3968,113 @@ const ResizeEngine = {
             var sel = document.getElementById('cadZoneSelect');
             if (!sel) return;
             var systems = ConfigEngine.CAD_SYSTEMS;
+            var siteState = getStateFromSiteId(ConfigEngine.data.siteId) || 'CA';
             var active = ConfigEngine.data.cadZone || 'CA_VI';
-            Object.keys(systems).forEach(function(key) {
+            Object.keys(systems).filter(function(key) {
+                return key.indexOf(siteState + '_') === 0;
+            }).forEach(function(key) {
                 var opt = document.createElement('option');
                 opt.value = key;
                 opt.textContent = systems[key].label;
                 if (key === active) opt.selected = true;
                 sel.appendChild(opt);
             });
+            if (!sel.value && sel.options.length > 0) {
+                sel.selectedIndex = 0;
+                active = sel.value;
+                var fallback = systems[active];
+                if (fallback) {
+                    ConfigEngine.cad.projection = fallback.projection;
+                    ConfigEngine.cad.proj4Def   = fallback.proj4Def;
+                    ConfigEngine.data.cadZone   = active;
+                }
+            }
             // Show active zone label
             var lbl = document.getElementById('cadZoneLabel');
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher from __SITE_LIST__ (injected by build script)
+        // Populate project title from site data
         (function() {
-            var sel = document.getElementById('site-switcher');
-            if (!sel) return;
-            var sites = window.__SITE_LIST__ || [];
             var sd = window.__SITE_DEFAULTS__ || {};
-            var activeSite = localStorage.getItem('selected_site') || sd.siteId || '';
-            if (sites.length > 0) {
-                sites.forEach(function(s) {
-                    var opt = document.createElement('option');
-                    opt.value = s.siteId;
-                    opt.textContent = s.address;
-                    if (s.siteId === activeSite) opt.selected = true;
-                    sel.appendChild(opt);
-                });
-            } else {
-                // Fallback: no site list injected
-                var opt = document.createElement('option');
-                opt.value = sd.siteId || '';
-                opt.textContent = sd.address || ConfigEngine.data.address;
-                opt.selected = true;
-                sel.appendChild(opt);
-            }
+            var h1 = document.getElementById('project-title');
+            if (h1 && sd.project) h1.textContent = sd.project;
         })();
+
+        // Populate state filter + site switcher from __SITE_LIST__ (injected by build script)
+        (function() {
+            var siteSel  = document.getElementById('site-switcher');
+            var stateSel = document.getElementById('state-filter');
+            var sites    = window.__SITE_LIST__ || [];
+            var sd       = window.__SITE_DEFAULTS__ || {};
+            var activeSite  = safeStorageGet('selected_site') || sd.siteId || '';
+            var activeState = safeStorageGet('selected_state') ||
+                              (activeSite ? activeSite.split('-')[0] : '');
+
+            function getState(siteId) { return siteId ? siteId.split('-')[0] : ''; }
+
+            function populateSites(stateFilter) {
+                if (!siteSel) return;
+                while (siteSel.firstChild) siteSel.removeChild(siteSel.firstChild);
+                var filtered = stateFilter
+                    ? sites.filter(function(s) { return getState(s.siteId) === stateFilter; })
+                    : sites;
+                if (filtered.length > 0) {
+                    if (!filtered.some(function(s) { return s.siteId === activeSite; })) {
+                        activeSite = filtered[0].siteId;
+                        safeStorageSet('selected_site', activeSite);
+                    }
+                    filtered.forEach(function(s) {
+                        var opt = document.createElement('option');
+                        opt.value = s.siteId;
+                        opt.textContent = s.address;
+                        if (s.siteId === activeSite) opt.selected = true;
+                        siteSel.appendChild(opt);
+                    });
+                } else {
+                    var opt = document.createElement('option');
+                    opt.value = sd.siteId || '';
+                    opt.textContent = sd.address || ConfigEngine.data.address;
+                    opt.selected = true;
+                    siteSel.appendChild(opt);
+                }
+            }
+
+            // Build state dropdown
+            if (stateSel && sites.length > 0) {
+                var states = [];
+                sites.forEach(function(s) {
+                    var st = getState(s.siteId);
+                    if (st && states.indexOf(st) === -1) states.push(st);
+                });
+                states.sort();
+                if (states.length > 1) {
+                    states.forEach(function(st) {
+                        var opt = document.createElement('option');
+                        opt.value = st;
+                        opt.textContent = st;
+                        if (st === activeState) opt.selected = true;
+                        stateSel.appendChild(opt);
+                    });
+                    stateSel.addEventListener('change', function() {
+                        activeState = stateSel.value;
+                        safeStorageSet('selected_state', activeState);
+                        populateSites(activeState);
+                    });
+                } else {
+                    // Only one state — hide the filter
+                    var parent = stateSel.closest('.suite-bar-state');
+                    if (parent) parent.style.display = 'none';
+                }
+            }
+
+            populateSites(activeState || null);
+        })();
+
+        safeRun('MapEngine.init', function() { MapEngine.init(); });
+        safeRun('SetbackEngine.initBuildingConfig', function() { SetbackEngine.initBuildingConfig(); });
+        safeRun('ElevationTool.init', function() { ElevationTool.init(); });
+        safeRun('ResizeEngine.init', function() { ResizeEngine.init(); });
     };
 
 </script>

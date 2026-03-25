@@ -273,7 +273,6 @@ When making changes that affect cross-repo state:
 These phrases from the Designer execute immediately — no clarification needed:
 - `dev-check` / `quality check` — run multi-persona quality review (CTRL-007)
 - `logic-check` / `validate plan` — validate a proposed plan (CTRL-010)
-- `security-check` / `check security` — run security scan (CTRL-011)
 - `check ping` / `check notes` — scan controller-note for unread pings
 - `controller dispatch` / `check with controller` — read + execute pending tasks
 - `session exit` — run exit checklist (commit/stash/upnote)
