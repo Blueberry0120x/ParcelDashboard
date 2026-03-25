@@ -16,10 +16,8 @@ Controller. Project-specific rules below take precedence for domain logic only.
 
 ### Where to check
 - Controller repo: `Blueberry0120x/NP_ClaudeAgent`
-- Compliance reports: `report/ctrl004_baseline_push_*.md`
-- Inspection reports: `report/inspection_*.md`
-- Global rules: `report/global_rules_2026-03-15.md`
-- Build plan: `report/supervisor_build_plan_*.md`
+- Compliance reports: controller pushes to `report/` when available
+- Global rules: maintained in controller repo, synced via CTRL-004 baseline
 
 ### Controller-Note Protocol (auto-notify)
 - **Upnote file:** `controller-note/ProjectBook-Planner-upnote.md` — single rolling file, newest entries at top
@@ -195,13 +193,11 @@ Before declaring any task complete:
 - Controller dispatch: filled baseline sections (Project Goal, Safety Contract, Handoff Notes), added StrictMode to PS1 files, created report/ and UserPref.json
 
 ### What still needs work
-- Public/private config sync (Reboot Public / Pull from Public endpoints) -- architecture approved by controller, not yet implemented
-- Public/private config sync endpoints (Reboot Public / Pull from Public)
+- Public/private config sync endpoints (Reboot Public / Pull from Public) -- architecture approved, not yet implemented
 - Test coverage: zero automated tests currently
 
 ### Known issues
 - `data/site-data.json` contains real addresses/APNs/inspector names (PII -- accepted risk per controller)
-- `data/site-data.json` contains real addresses/APNs/inspector names (PII concern flagged by controller)
 
 
 ## Dev-Check Quality Gate (CTRL-007)
@@ -209,7 +205,10 @@ Before declaring any task complete:
 Before any milestone commit or PR merge, run a multi-persona quality review:
 - Minimum 10 consecutive clean rounds to pass
 - Covers: architecture, security, UX, performance, accessibility
-- Fix all critical/high findings before committing
+- **Auto-fix loop:** Agent MUST fix all CRITICAL and HIGH findings automatically
+  and re-run checks until 10 consecutive clean rounds. Do NOT return to user
+  with fixable errors -- fix them, re-check, repeat. Only escalate to user
+  if a finding requires a design decision or external action.
 - Log the dev-check result in `report/`
 
 

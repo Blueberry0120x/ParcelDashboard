@@ -171,8 +171,13 @@ if ($Mode -eq "serve") {
             $req = $context.Request
             $res = $context.Response
 
-            # CORS — allow browser to POST from localhost
-            $res.Headers.Add("Access-Control-Allow-Origin",  "*")
+            # CORS — allow browser to POST from localhost only
+            $origin = $ctx.Request.Headers["Origin"]
+            if ($origin -match '^https?://(localhost|127\.0\.0\.1)(:\d+)?$') {
+                $res.Headers.Add("Access-Control-Allow-Origin", $origin)
+            } else {
+                $res.Headers.Add("Access-Control-Allow-Origin", "http://localhost:7734")
+            }
             $res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             $res.Headers.Add("Access-Control-Allow-Headers", "Content-Type")
 

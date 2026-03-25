@@ -346,7 +346,11 @@ def serve(port=7734):
                 self.end_headers()
 
         def _cors(self):
-            self.send_header("Access-Control-Allow-Origin", "*")
+            origin = self.headers.get("Origin", "")
+            if origin and (origin.startswith("http://localhost") or origin.startswith("http://127.0.0.1")):
+                self.send_header("Access-Control-Allow-Origin", origin)
+            else:
+                self.send_header("Access-Control-Allow-Origin", "http://localhost:7734")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
 

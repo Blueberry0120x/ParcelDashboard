@@ -1379,11 +1379,17 @@ const UIEngine = {
         var inspectors = sd.inspectors || [];
         if (inspTable) {
             if (inspectors.length > 0) {
-                inspTable.innerHTML = inspectors.map(function(ins) {
-                    var n = (ins.name || '').toUpperCase().replace(/[<>]/g, '');
-                    var v = (ins.val || '--').replace(/[<>]/g, '');
-                    return '<tr><th>' + n + ':</th><td>' + v + '</td></tr>';
-                }).join('');
+                inspTable.innerHTML = '';
+                inspectors.forEach(function(ins) {
+                    var tr = document.createElement('tr');
+                    var th = document.createElement('th');
+                    var td = document.createElement('td');
+                    th.textContent = (ins.name || '').toUpperCase() + ':';
+                    td.textContent = ins.val || '--';
+                    tr.appendChild(th);
+                    tr.appendChild(td);
+                    inspTable.appendChild(tr);
+                });
             } else {
                 inspTable.innerHTML = '<tr><td>No inspectors assigned</td></tr>';
             }
