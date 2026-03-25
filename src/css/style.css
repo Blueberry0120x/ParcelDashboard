@@ -651,6 +651,7 @@ html[data-theme="dark"] body { background: #0f172a !important; color: #e2e8f0 !i
 html[data-theme="dark"] .suite-bar { background: #1e293b !important; }
 html[data-theme="dark"] .header { border-color: #334155 !important; }
 html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3 { color: #93c5fd !important; }
+html[data-theme="dark"] .header-title-stack p { color: #94a3b8 !important; }
 html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea {
     background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important;
 }

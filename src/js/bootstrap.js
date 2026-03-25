@@ -86,12 +86,15 @@
                     sel.appendChild(opt);
                 });
             }).catch(function() {
-                // Static file mode -- remove dropdown, address cell is display-only
-                sel.remove();
-                var cell = document.getElementById('addr-cell');
-                if (cell) cell.style.cursor = 'default';
-                var arrow = document.getElementById('addr-arrow');
-                if (arrow) arrow.style.display = 'none';
+                // Static file mode -- populate with current site from __SITE_DEFAULTS__
+                var sd = window.__SITE_DEFAULTS__ || {};
+                var addr = sd.address || ConfigEngine.data.address;
+                var opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = addr;
+                opt.selected = true;
+                sel.appendChild(opt);
+                sel.disabled = true;
             });
         })();
     };
