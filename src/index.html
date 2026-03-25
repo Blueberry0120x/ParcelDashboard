@@ -27,9 +27,6 @@
 
     <!-- SUITE BAR -->
     <div class="suite-bar no-print">
-        <select id="site-switcher" style="background:#1a3a5c;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;max-width:200px;margin-right:8px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
-            <option value="">Loading sites...</option>
-        </select>
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
         <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
@@ -55,7 +52,13 @@
                     <p>Interactive Planning &amp; AutoLISP Export Tool</p>
                 </div>
                 <div class="header-address-pair">
-                    <div class="header-address"><span class="banner-label">Address</span><span class="banner-value" id="ui-address"></span></div>
+                    <div class="header-address" style="cursor:pointer;position:relative" onclick="document.getElementById('site-switcher').style.display=document.getElementById('site-switcher').style.display==='block'?'none':'block'">
+                        <span class="banner-label">Address &#x25BE;</span>
+                        <span class="banner-value" id="ui-address"></span>
+                        <select id="site-switcher" style="display:none;position:absolute;top:100%;left:0;width:100%;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;z-index:100" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
+                            <option value="">Loading sites...</option>
+                        </select>
+                    </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
                 </div>
             </div>

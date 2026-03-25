@@ -73,11 +73,10 @@
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher dropdown
+        // Populate site switcher dropdown (lives inside Address header cell)
         (function() {
             var sel = document.getElementById('site-switcher');
             if (!sel) return;
-            var sd = window.__SITE_DEFAULTS__ || {};
             fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
                 sel.innerHTML = '';
                 sites.forEach(function(s) {
@@ -87,16 +86,21 @@
                     if (s.active) opt.selected = true;
                     sel.appendChild(opt);
                 });
+                // Show dropdown on click is handled by onclick on parent
+                sel.onchange = function() {
+                    if (this.value) {
+                        fetch('/api/sites/' + this.value + '/activate', {method:'POST'})
+                            .then(function() { localStorage.removeItem('site_state'); location.reload(); });
+                    }
+                };
             }).catch(function() {
-                // Static file mode -- show current site from embedded defaults
-                sel.innerHTML = '';
-                var opt = document.createElement('option');
-                opt.value = sd.siteId || (sd.site && sd.site.siteId) || '';
-                opt.textContent = sd.address || (sd.site && sd.site.address) || 'Current Site';
-                opt.selected = true;
-                sel.appendChild(opt);
-                sel.disabled = true;
-                sel.title = 'Start dev server to switch sites';
+                // Static file mode -- hide dropdown, address cell is display-only
+                sel.style.display = 'none';
+                var parent = sel.parentElement;
+                if (parent) { parent.style.cursor = 'default'; parent.onclick = null; }
+                // Remove the dropdown arrow from label
+                var lbl = parent && parent.querySelector('.banner-label');
+                if (lbl) lbl.textContent = 'Address';
             });
         })();
     };

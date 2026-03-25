@@ -187,22 +187,26 @@
   html[data-theme="dark"] [style*="color: #78350f"],
   html[data-theme="dark"] [style*="color:#78350f"] { color: #f59e0b !important; }
 
-  /* React #root — blanket dark override for ALL elements, then restore colored ones via JS */
+  /* React #root — base dark + text overrides only (backgrounds handled by JS) */
   html[data-theme="dark"] #root { color: #e2e8f0 !important; background: #0f172a !important; }
-  html[data-theme="dark"] #root > div { background: #0f172a !important; color: #e2e8f0 !important; }
-  html[data-theme="dark"] #root div { color: #cbd5e1; }
-  html[data-theme="dark"] #root div,
-  html[data-theme="dark"] #root section { background-color: #1e293b; border-color: #334155; }
-  html[data-theme="dark"] #root > div,
-  html[data-theme="dark"] #root > div > div:first-child { background: #0f172a !important; }
-  html[data-theme="dark"] #root textarea { background: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-  html[data-theme="dark"] #root select { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+  html[data-theme="dark"] #root > div { background: #0f172a !important; }
+
+  /* Force all text light */
+  html[data-theme="dark"] #root * { color: #e2e8f0 !important; }
+  html[data-theme="dark"] #root h1,
+  html[data-theme="dark"] #root h2,
+  html[data-theme="dark"] #root h3,
+  html[data-theme="dark"] #root h4 { color: #93c5fd !important; }
+
+  /* Inputs, selects, textareas */
+  html[data-theme="dark"] #root textarea { background: #0f172a !important; border-color: #334155 !important; }
+  html[data-theme="dark"] #root select { background: #1e293b !important; border-color: #334155 !important; }
   html[data-theme="dark"] #root input[type="text"],
-  html[data-theme="dark"] #root input[type="number"] { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+  html[data-theme="dark"] #root input[type="number"] { background: #1e293b !important; border-color: #334155 !important; }
   html[data-theme="dark"] #root thead tr,
-  html[data-theme="dark"] #root th { background: #1e293b !important; color: #94a3b8 !important; border-color: #334155 !important; }
-  html[data-theme="dark"] #root td { border-color: #334155 !important; }
-  html[data-theme="dark"] #root button { border-color: #475569; }
+  html[data-theme="dark"] #root th { background: #1e293b !important; }
+  html[data-theme="dark"] #root td,
+  html[data-theme="dark"] #root th { border-color: #334155 !important; }
 
   /* Borders */
   html[data-theme="dark"] [style*="border-color: #e2e8f0"],
@@ -252,9 +256,9 @@
   /* Error overlay in dark mode */
   html[data-theme="dark"] #err-box { background: #1e293b !important; color: #f87171 !important; }
 
-  /* FAB */
-  html[data-theme="dark"] #fab-float { background: #1e293b !important; border-color: #334155 !important; }
-  html[data-theme="dark"] #fab-float button { background: #334155 !important; color: #e2e8f0 !important; }
+  /* FAB — transparent container, keep button colors */
+  html[data-theme="dark"] #fab-float { background: transparent !important; border: none !important; }
+  html[data-theme="dark"] #fab-float button { border: none !important; }
 
   /* Print: always light */
   @media print { html[data-theme="dark"] { color-scheme: light !important; } }
@@ -264,7 +268,6 @@
 <body>
 <div class="no-print" style="background:#0f4c81;padding:0 18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;flex-shrink:0">
   <div style="display:flex;align-items:center;height:32px;max-width:920px;margin:0 auto">
-    <select id="site-switcher" style="background:#1a3a5c;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;max-width:200px;margin-right:8px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}"><option value="">Sites...</option></select>
     <a href="/" onclick="if(location.protocol==='file:')this.href='InteractiveMap.html'" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
     <span style="color:rgba(255,255,255,.25);padding:0 3px">|</span>
     <span style="color:#fff;border-bottom:2px solid #fff;height:32px;display:flex;align-items:center;padding:0 12px">Checklist</span>
@@ -1139,7 +1142,10 @@ function App(){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:920,margin:"0 auto"}}>
           <div>
             <div style={{fontSize:9,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",opacity:.4}}>PRE-APPLICATION PERMIT CHECKLIST</div>
-            <div style={{fontSize:21,fontWeight:700,marginTop:1}}>{(SD.address||'').split(',')[0]||'4335 Euclid Avenue'}</div>
+            <div style={{fontSize:21,fontWeight:700,marginTop:1,cursor:"pointer",position:"relative"}} onClick={e=>{var s=e.currentTarget.querySelector('select');if(s&&!s.disabled)s.style.display=s.style.display==='block'?'none':'block'}}>
+              {(SD.address||'').split(',')[0]||'4335 Euclid Avenue'} <span style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
+              <select id="site-switcher" style={{display:"none",position:"absolute",top:"100%",left:0,width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}><option value="">Loading...</option></select>
+            </div>
             <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{SD.apn??'471-271-16-00'} {"\u2022"} {SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
           </div>
           <div style={{textAlign:"right"}}>
@@ -1224,10 +1230,10 @@ function App(){
             <span style={{fontSize:13}}>&#10003;</span> Auto-saved
           </div>
         )}
-        <button onClick={downloadConfig} title="Downloads preapp-checklist.json to your Downloads folder. Move it back to this same folder to keep your work synced." style={{pointerEvents:"all",background:"#475569",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
+        <button onClick={downloadConfig} title="Downloads preapp-checklist.json to your Downloads folder. Move it back to this same folder to keep your work synced." style={{pointerEvents:"all",background:"#475569",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:6,whiteSpace:"nowrap",minWidth:150}}>
           &#128190; Save Config
         </button>
-        <button onClick={printPDF} style={{pointerEvents:"all",background:"#0f4c81",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>
+        <button onClick={printPDF} style={{pointerEvents:"all",background:"#0f4c81",color:"#fff",border:"none",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:6,whiteSpace:"nowrap",minWidth:150}}>
           &#128438; Print / PDF
         </button>
       </div>
@@ -1244,7 +1250,9 @@ root.render(<App/>);
 window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if(box){box.style.display='block';box.textContent+='ERROR: '+m+'\nLine: '+l+', Col: '+c+'\n'+(e&&e.stack?e.stack:'')+'\n\n';}};
 </script>
 <script>
-(function(){var sel=document.getElementById('site-switcher');if(!sel)return;var sd=window.__SITE_DEFAULTS__||{};fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sel.innerHTML='';sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.innerHTML='';var o=document.createElement('option');o.value=sd.siteId||(sd.site&&sd.site.siteId)||'';o.textContent=sd.address||(sd.site&&sd.site.address)||'Current Site';o.selected=true;sel.appendChild(o);sel.disabled=true;sel.title='Start dev server to switch sites'})})();
+(function(){var sel=document.getElementById('site-switcher');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sel.innerHTML='';sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.style.display='none';var p=sel.parentElement;if(p){p.style.cursor='default';p.onclick=null;var arrow=p.querySelector('span[style]');if(arrow&&arrow.textContent.indexOf('\u25BE')!==-1)arrow.style.display='none'}})})();
+// Dark mode: fix React inline backgrounds after render
+(function(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;var dm={255:'#1e293b',248:'#0f172a',249:'#0f172a',241:'#1e293b',244:'#0f172a',240:'#052e16',250:'#2e1065',254:'#451a03',245:'#2e1065'};function fix(){document.querySelectorAll('#root *').forEach(function(el){var bg=getComputedStyle(el).backgroundColor;if(!bg||bg==='transparent'||bg==='rgba(0, 0, 0, 0)')return;var m=bg.match(/rgb\((\d+)/);if(m){var r=parseInt(m[1]);if(r>200)el.style.backgroundColor='#1e293b';else if(r>230)el.style.backgroundColor='#0f172a'}});};setTimeout(fix,100);setTimeout(fix,500);new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true})})();
 </script>
 <button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>
