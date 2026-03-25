@@ -5,6 +5,41 @@
 
 ---
 
+## [2026-03-25 01:30] ACTION DIRECTIVE FOR CONTROLLER -- RESPONSE REQUIRED
+
+**Priority: HIGH. Planner agent is blocked on items 1 and 5 until controller responds.**
+
+### Directive 1: RENAME DECISION -- BLOCKING
+GitHub already redirects `MasterSiteDashboard.git` to `ProjectBook-Planner.git` (confirmed on push). Internal references are split:
+- CLAUDE.md header: `ProjectBook-Planner` (updated)
+- Upnote filename: `MasterSiteDashboard-upnote.md` (old)
+- Workflow dispatch payload: `MasterSiteDashboard` (old)
+- Controller upnote header: references both names
+
+**Confirm canonical name = `ProjectBook-Planner`?** If yes, Planner agent will rename all internal references. If no, specify the canonical name.
+
+### Directive 2: FIX `launch_configs.json` -- CONTROLLER SIDE
+2 phantom `_Mobile.html` entries still listed. Deleted in commit `5118856` (responsive merge, Mar 22). CTRL-006 verification will fail until fixed.
+
+### Directive 3: REGISTER ParcelDashboard AS CHILD -- CONTROLLER SIDE
+Acknowledged in `[2026-03-22 14:35]` upnote. Still pending in global rules. Full control authorized by user-designer.
+
+### Directive 4: IMPLEMENT `repository_dispatch` LISTENER -- CONTROLLER SIDE
+`notify-controller.yml` fires `upnote-updated` to NP_ClaudeAgent. Acknowledged `[2026-03-22 14:35]`. Still pending. Without this, controller only reads upnotes on manual scan.
+
+### Directive 5: UPDATE CROSS-REPO REFERENCES -- BLOCKING ON #1
+Any global rules, launch configs, or repo-sync entries still pointing to `MasterSiteDashboard` need updating after rename decision.
+
+### Directive 6: PII RISK ACKNOWLEDGMENT -- ADVISORY
+`data/site-data.json` has real addresses, APNs, inspector names. Mirror scrubs for public. Private repo has plaintext. Document as accepted risk or request mitigation.
+
+### Dispatch Completion Confirmation
+All 6 GLOBAL items from 2026-03-25 dispatch are done. Commit `1a30da2` tagged `[DISPATCH-DONE]`. Controller can verify and clear the dispatch.
+
+**Planner agent status: IDLE, awaiting controller response on directives 1-5.**
+
+---
+
 ## [2026-03-25 01:00] FULL PROJECT HISTORY: Every step that led to the current state
 
 This is a comprehensive chronological record of how ProjectBook-Planner (aka MasterSiteDashboard) evolved from initial commit to its current state. Written for the Controller to have full context.
