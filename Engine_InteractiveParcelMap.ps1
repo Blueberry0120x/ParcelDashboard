@@ -6,9 +6,9 @@
 #   Engine_InteractiveParcelMap.cmd serve    -> compile + local server (enables direct Save Config)
 # ==========================================
 
-Set-StrictMode -Version Latest
-
 param([string]$Mode = "reload")
+
+Set-StrictMode -Version Latest
 
 $base         = Split-Path $MyInvocation.MyCommand.Path -Resolve
 $src          = Join-Path $base "src"
