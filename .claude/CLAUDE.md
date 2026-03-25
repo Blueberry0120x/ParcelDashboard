@@ -255,3 +255,11 @@ These phrases from the Designer execute immediately — no clarification needed:
 - `controller dispatch` / `check with controller` — read + execute pending tasks
 - `session exit` — run exit checklist (commit/stash/upnote)
 
+## HTML Projection (CTRL-006)
+
+If this project produces HTML output, the controller can trigger a mirror
+workflow to publish to a public GitHub Pages repo. The agent must:
+- Ensure `Output/` or `docs/` contains the latest built HTML before launch
+- Never include secrets, PII, or internal paths in public HTML
+- Verify the public mirror after push (check GitHub Pages URL)
+
