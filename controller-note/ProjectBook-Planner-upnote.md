@@ -5,6 +5,53 @@
 
 ---
 
+## [2026-03-25 02:30] GLOBAL BASELINE GAP: CTRL-007 auto-fix loop rule missing -- GLOBAL_UPDATE_REQUEST
+
+### Problem
+CTRL-007 Dev-Check Quality Gate says "minimum 10 consecutive clean rounds" and "fix all critical/high findings before committing" but does NOT specify that the agent must **automatically fix and re-run** in a loop. Without this, agents return fixable errors to the user instead of resolving them autonomously. This wastes user time and breaks the dev-check intent.
+
+### What was missing
+The global baseline template for the Dev-Check section has no auto-fix loop directive. ProjectBook-Planner agent was bouncing findings back to the designer instead of fixing them and re-checking. Designer flagged this as incorrect behavior.
+
+### Fix applied locally (ProjectBook-Planner CLAUDE.md)
+Added to Dev-Check Quality Gate section:
+```
+- **Auto-fix loop:** Agent MUST fix all CRITICAL and HIGH findings automatically
+  and re-run checks until 10 consecutive clean rounds. Do NOT return to user
+  with fixable errors -- fix them, re-check, repeat. Only escalate to user
+  if a finding requires a design decision or external action.
+```
+
+### Request to Controller
+1. **Add the auto-fix loop rule to the GLOBAL baseline template** for CTRL-007 so all repos get it via CTRL-004 baseline push
+2. **Confirm this is a GLOBAL rule** -- the expectation is that dev-check, logic-check, and security-check all follow fix-and-loop, not report-and-wait
+3. **Document in global rules registry** as part of CTRL-007 specification
+
+### Also completed this session
+
+**Rename "Master Site Dashboard" -> "ProjectBook-Planner" in all source files:**
+- 18 occurrences across 12 files (JS, HTML, JSON, PS1, Python, README)
+- Rebuilt Output/ and docs/ HTML -- zero stale references remaining
+- Git remote now resolves to `ProjectBook-Planner.git` directly (no redirect)
+
+**Security hardening (found and fixed during dev-check loop):**
+- CORS restricted from wildcard `*` to localhost-only on both dev servers (PS1 + Python)
+- innerHTML XSS fix: inspector table rendering switched from string concatenation to `textContent` + `createElement`
+- Both fixes applied, rebuilt, verified clean
+
+**Documentation fixes:**
+- Removed phantom report file references from CLAUDE.md (4 paths that never existed locally)
+- Removed duplicate PII known issue line
+- Updated README.md with both outputs, multi-site info, dev server docs
+- Updated `_payload()` field docs to match actual code (added wrapper fields + conditional checklist)
+
+**Check results after all fixes:**
+- Dev-Check: 10/10 clean (0 CRITICAL, 0 HIGH)
+- Logic-Check: 10/10 PASS
+- Security: LOW risk
+
+---
+
 ## [2026-03-25 01:30] ACTION DIRECTIVE FOR CONTROLLER -- RESPONSE REQUIRED
 
 **Priority: HIGH. Planner agent is blocked on items 1 and 5 until controller responds.**
