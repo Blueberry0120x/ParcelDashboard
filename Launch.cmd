@@ -2,30 +2,34 @@
 setlocal
 
 echo.
-echo   ProjectBook-Planner Launcher
-echo   ============================
+echo   ProjectBook-Planner
+echo   ====================
 echo.
-echo   PRIVATE (local files)
-echo     1  Interactive Map
-echo     2  PreApp Checklist
-echo.
-echo   PUBLIC (GitHub Pages mirror)
-echo     3  Interactive Map
-echo     4  PreApp Checklist
-echo.
-echo   DEV SERVER
-echo     5  Start localhost:7734 (compile + serve)
-echo.
-echo   0  Exit
+echo     1  Private  (local Output/)
+echo     2  Public   (GitHub Pages)
+echo     3  Both
 echo.
 
 set /p "choice=  Select: "
 
-if "%choice%"=="1" start "" "%~dp0Output\InteractiveMap.html"
-if "%choice%"=="2" start "" "%~dp0Output\PreApp_Checklist.html"
-if "%choice%"=="3" start "" "https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap.html"
-if "%choice%"=="4" start "" "https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html"
-if "%choice%"=="5" powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Engine_InteractiveParcelMap.ps1" serve
-if "%choice%"=="0" exit /b 0
+if "%choice%"=="1" goto PRIVATE
+if "%choice%"=="2" goto PUBLIC
+if "%choice%"=="3" goto BOTH
+goto :eof
 
-endlocal
+:PRIVATE
+start "" "%~dp0Output\InteractiveMap.html"
+start "" "%~dp0Output\PreApp_Checklist.html"
+goto :eof
+
+:PUBLIC
+start "" "https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap.html"
+start "" "https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html"
+goto :eof
+
+:BOTH
+start "" "%~dp0Output\InteractiveMap.html"
+start "" "%~dp0Output\PreApp_Checklist.html"
+start "" "https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap.html"
+start "" "https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html"
+goto :eof
