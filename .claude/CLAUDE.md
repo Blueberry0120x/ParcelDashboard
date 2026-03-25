@@ -22,7 +22,7 @@ Controller. Project-specific rules below take precedence for domain logic only.
 - Build plan: `report/supervisor_build_plan_*.md`
 
 ### Controller-Note Protocol (auto-notify)
-- **Upnote file:** `controller-note/MasterSiteDashboard-upnote.md` — single rolling file, newest entries at top
+- **Upnote file:** `controller-note/ProjectBook-Planner-upnote.md` — single rolling file, newest entries at top
 - **Auto-notify:** `.github/workflows/notify-controller.yml` fires a `repository_dispatch` event (`upnote-updated`) to `NP_ClaudeAgent` whenever `controller-note/**` changes on push to main
 - **On session start:** Always check `controller-note/` for `controller-upnote*.md` files from controller. Compare timestamps — if newer than last upnote entry, read and sync.
 - **On changes:** Always append to the rolling upnote before committing. No separate files per update.
@@ -189,11 +189,11 @@ Before declaring any task complete:
 
 ### What still needs work
 - Public/private config sync (Reboot Public / Pull from Public endpoints) -- architecture approved by controller, not yet implemented
-- Canonical name decision: ProjectBook-Planner vs MasterSiteDashboard (awaiting designer)
+- Public/private config sync endpoints (Reboot Public / Pull from Public)
 - Test coverage: zero automated tests currently
 
 ### Known issues
-- GitHub repo name still `MasterSiteDashboard` while local folder is `ProjectBook-Planner` (rename incomplete)
+- Git remote URL still points to old `MasterSiteDashboard.git` (GitHub redirects, but should update)
 - `data/site-data.json` contains real addresses/APNs/inspector names (PII concern flagged by controller)
 
 

@@ -16,6 +16,6 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${CONTROLLER_TOKEN}" \
             https://api.github.com/repos/Blueberry0120x/NP_ClaudeAgent/dispatches \
-            -d '{"event_type":"upnote-updated","client_payload":{"repo":"MasterSiteDashboard","ref":"'"${GITHUB_SHA}"'"}}'
+            -d '{"event_type":"upnote-updated","client_payload":{"repo":"ProjectBook-Planner","ref":"'"${GITHUB_SHA}"'"}}'
         env:
           CONTROLLER_TOKEN: ${{ secrets.PUBLIC_MIRROR_PAT }}

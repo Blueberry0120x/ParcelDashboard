@@ -2,15 +2,15 @@
 
 ## Overview
 
-Remote Launch HTML serves the MasterSiteDashboard application from a public
-GitHub Pages site. The private repo (`MasterSiteDashboard`) auto-mirrors
+Remote Launch HTML serves the ProjectBook-Planner application from a public
+GitHub Pages site. The private repo (`ProjectBook-Planner`) auto-mirrors
 **real data** to a public repo (`ParcelDashboard`), which serves HTML via
 GitHub Pages — accessible from any desktop browser or phone.
 
 ## Architecture
 
 ```
-MasterSiteDashboard (private)
+ProjectBook-Planner (private)
   |
   |  push to main
   |
@@ -20,9 +20,7 @@ GitHub Actions: mirror-public.yml
   |  1. Checkout full repo (fetch-depth: 0, persist-credentials: false)
   |  2. Strip dev files only (.claude/, .github/, .vscode/, .env)
   |  3. Fix cross-links (dev server routes -> static file paths)
-  |  4. Inject mobile auto-detection (userAgent + viewport width)
-  |  5. Inject dark mode toggle + comprehensive CSS overrides
-  |  6. Force-push real-data snapshot to ParcelDashboard
+  |  4. Force-push real-data snapshot to ParcelDashboard
   |
   v
 ParcelDashboard (public)
@@ -35,7 +33,7 @@ https://blueberry0120x.github.io/ParcelDashboard/
 
 ## Trigger
 
-**AUTOMATIC.** Every push to `MasterSiteDashboard:main` triggers the mirror
+**AUTOMATIC.** Every push to `ProjectBook-Planner:main` triggers the mirror
 workflow. No manual action needed. The workflow also supports `workflow_dispatch`
 for manual runs from the GitHub Actions tab.
 
@@ -44,10 +42,8 @@ for manual runs from the GitHub Actions tab.
 | Page | URL |
 |------|-----|
 | Launcher | https://blueberry0120x.github.io/ParcelDashboard/ |
-| Desktop Map | https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap.html |
-| Mobile Map | https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap_Mobile.html |
-| Desktop Checklist | https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html |
-| Mobile Checklist | https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist_Mobile.html |
+| Map | https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap.html |
+| Checklist | https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html |
 
 ## Data Policy
 
@@ -97,7 +93,7 @@ checks localStorage first, then falls back to `window.matchMedia('(prefers-color
 
 | Secret | Repo | Purpose |
 |--------|------|---------|
-| `PUBLIC_MIRROR_PAT` | MasterSiteDashboard | OAuth token with `repo` scope to push to ParcelDashboard |
+| `PUBLIC_MIRROR_PAT` | ProjectBook-Planner | OAuth token with `repo` scope to push to ParcelDashboard |
 
 **Note:** Must use `persist-credentials: false` in `actions/checkout@v4` to prevent
 the default `GITHUB_TOKEN` credential helper from overriding the custom PAT.

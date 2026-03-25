@@ -1,4 +1,4 @@
-# MasterSiteDashboard -- Agent Upnote
+# ProjectBook-Planner -- Agent Upnote
 
 > Single rolling note. Newest entries at top. Controller: check this file first.
 > Format: `## [YYYY-MM-DD HH:MM] Topic` per entry. Mark resolved items with ~~strikethrough~~.
