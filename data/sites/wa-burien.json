@@ -23,7 +23,12 @@
     "affordabilityPct": 0,
     "difPerUnit": 0,
     "difWaiverSF": 0,
+    "legalDescription": "",
+    "yearBuilt": "",
+    "occupancyGroup": "",
     "inspectors": [],
+    "planningAreas": [],
+    "overlayZones": [],
     "scopeOfWork": "",
     "parcelPolygon": [
       [

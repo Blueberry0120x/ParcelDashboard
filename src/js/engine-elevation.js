@@ -79,9 +79,7 @@ const ElevationTool = {
     clear: function() {
         this._pins.forEach(p => MapEngine.map.removeLayer(p));
         this._pins = [];
-        this._values = [];
-        var el = document.getElementById('info-avg-elev');
-        if (el) el.textContent = '--';
+        // _values and info-avg-elev are intentionally kept — clear only removes map pins
         this._deactivate();
     },
 

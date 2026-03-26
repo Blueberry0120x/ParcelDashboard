@@ -23,6 +23,9 @@
                  "affordabilityPct":  0.4,
                  "difPerUnit":  15000,
                  "difWaiverSF":  500,
+                 "legalDescription": "Lot 16, Block 4 of EUCLID MANOR, in the City of San Diego, County of San Diego, State of California, per Map No. 3482",
+                 "yearBuilt":       "1952",
+                 "occupancyGroup":  "B / R-2",
                  "inspectors":  [
                                     {
                                         "name":  "Combination",
@@ -45,7 +48,22 @@
                                         "val":  "Alejandro Ruiz (858-627-2034)"
                                     }
                                 ],
-                 "scopeOfWork":  "Redevelop a 6,250 SF commercial lot at 4335 Euclid Ave (San Diego) into a 2-story mixed-use project under CUPD-CU-2-4 zoning. Ground floor: commercial unit at the front (30' depth per frontage requirement), 9 residential units behind — organized across 4 buildings. The two buildings immediately behind the commercial space contain 2 units each. The two rear buildings facing the back alley contain 2 and 1 units respectively. Second floor is all residential. Total program: 9 residential units + 1 commercial space, within base FAR 2.0 and base density (10 DU max). Zero side setbacks per CUPD-CU-2-4. TPA designation eliminates parking, though the ground floor plan accommodates vehicle access with 20' drive aisles between buildings."
+                 "scopeOfWork":  "Redevelop a 6,250 SF commercial lot at 4335 Euclid Ave (San Diego) into a 2-story mixed-use project under CUPD-CU-2-4 zoning. Ground floor: commercial unit at the front (30' depth per frontage requirement), 9 residential units behind — organized across 4 buildings. The two buildings immediately behind the commercial space contain 2 units each. The two rear buildings facing the back alley contain 2 and 1 units respectively. Second floor is all residential. Total program: 9 residential units + 1 commercial space, within base FAR 2.0 and base density (10 DU max). Zero side setbacks per CUPD-CU-2-4. TPA designation eliminates parking, though the ground floor plan accommodates vehicle access with 20' drive aisles between buildings.",
+                 "planningAreas":  [
+                                       { "name": "COMMUNITY PLAN AREA",        "val": "MID-CITY: CITY HEIGHTS" },
+                                       { "name": "LAND USE DESIGNATION",        "val": "Commercial / Mixed Use A (73 du/ac)" },
+                                       { "name": "CCHS (HOUSING SOLUTIONS)",    "val": "Yes — FAR Tier 3: 6.5 FAR" },
+                                       { "name": "TRANSIT PRIORITY AREA (TPA)", "val": "Yes" },
+                                       { "name": "PARKING STANDARDS (PSTPA)",   "val": "Yes (0 Parking Required)" },
+                                       { "name": "MOBILITY CHOICES",            "val": "Yes — Mobility Zone 2" }
+                                   ],
+                 "overlayZones":  [
+                                      { "name": "TRANSIT AREA OVERLAY",  "val": "Yes" },
+                                      { "name": "AIRPORT INFLUENCE AREA", "val": "No" },
+                                      { "name": "COASTAL OVERLAY",        "val": "No" },
+                                      { "name": "VERY HIGH FIRE HAZARD",  "val": "No" },
+                                      { "name": "FAULT ZONE",             "val": "No" }
+                                  ]
              },
     "saved":  {
                   "lat":  32.75560223139615,

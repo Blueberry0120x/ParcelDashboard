@@ -60,12 +60,49 @@ const UIEngine = {
         _set('info-zp-side', sSb + ' FT');
         _set('info-zp-notes', sd.notes || '--');
 
-        // Project info extras (merged into PROJECT INFORMATION panel)
+        // Project info extras
+        _set('info-legal',      sd.legalDescription || '--');
+        _set('info-year-built', sd.yearBuilt || '--');
+        _set('info-occupancy',  sd.occupancyGroup || '--');
         _set('info-sl-projtype', sd.projectType || '--');
         _set('info-sl-architect', sd.architect || '--');
 
         // Scope of work
         _set('info-scope-work', sd.scopeOfWork || '--');
+
+        // Planning areas (dynamic table)
+        var planTable = document.getElementById('info-planning-table');
+        if (planTable) {
+            var areas = sd.planningAreas || [];
+            if (areas.length > 0) {
+                planTable.innerHTML = '';
+                areas.forEach(function(row) {
+                    var tr = document.createElement('tr');
+                    var th = document.createElement('th'); th.textContent = (row.name || '').toUpperCase() + ':';
+                    var td = document.createElement('td'); td.textContent = row.val || '--';
+                    tr.appendChild(th); tr.appendChild(td); planTable.appendChild(tr);
+                });
+            } else {
+                planTable.innerHTML = '<tr><td>No planning data assigned</td></tr>';
+            }
+        }
+
+        // Overlay zones (dynamic table)
+        var overlayTable = document.getElementById('info-overlay-table');
+        if (overlayTable) {
+            var zones = sd.overlayZones || [];
+            if (zones.length > 0) {
+                overlayTable.innerHTML = '';
+                zones.forEach(function(row) {
+                    var tr = document.createElement('tr');
+                    var th = document.createElement('th'); th.textContent = (row.name || '').toUpperCase() + ':';
+                    var td = document.createElement('td'); td.textContent = row.val || '--';
+                    tr.appendChild(th); tr.appendChild(td); overlayTable.appendChild(tr);
+                });
+            } else {
+                overlayTable.innerHTML = '<tr><td>No overlay zones assigned</td></tr>';
+            }
+        }
 
         // Inspector contacts (dynamic from site JSON)
         var inspTable = document.getElementById('info-inspectors-table');
