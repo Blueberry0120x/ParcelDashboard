@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f4c81">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1f3d7;</text></svg>">
@@ -85,6 +85,23 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .suite-bar-extlink-sky { color: #38bdf8; border-color: rgba(56,189,248,.5); }
 .suite-bar-extlink-sky:hover { background: rgba(56,189,248,.12); border-color: #38bdf8; }
 
+/* Suite bar state filter */
+.suite-bar-state {
+    display: flex; align-items: center; gap: 4px;
+    margin-left: 14px; padding-left: 14px;
+    border-left: 1px solid rgba(255,255,255,.2);
+}
+.suite-bar-state label { color: rgba(255,255,255,.55); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; }
+.suite-bar-state select {
+    background: rgba(255,255,255,.12); color: #fff;
+    border: 1px solid rgba(255,255,255,.3); border-radius: 4px;
+    padding: 2px 6px; font-size: 11px; font-weight: 700;
+    font-family: inherit; cursor: pointer; outline: none;
+    -webkit-appearance: none; appearance: none;
+}
+.suite-bar-state select:focus { border-color: rgba(255,255,255,.6); }
+.suite-bar-state select option { background: #0f4c81; color: #fff; }
+
 /* Suite bar dropdown */
 .suite-bar-dropdown { position: relative; display: inline-flex; }
 .suite-bar-dd-menu {
@@ -112,11 +129,40 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .building-config-wrap.collapsed .sub-toggle::after { transform: rotate(-90deg); }
 
 /* Title row — title stack inline with address+apn pair */
-.header-title-row { display: flex; align-items: center; gap: 0; }
-.header-address-pair { display: flex; align-items: center; gap: 10px; margin-left: 55px; }
+.header-title-row { display: flex; align-items: center; gap: 0; position: relative; }
+.header-address-pair { display: flex; align-items: center; gap: 10px; margin-left: 55px; position: relative; }
 .header-title-stack { display: flex; flex-direction: column; gap: 2px; }
 .header-title-stack h1 { margin: 0; white-space: nowrap; }
 .header-title-stack p  { margin: 0; color: #4a5568; }
+
+/* Site switcher — styled as address value inside the card */
+.site-select {
+    background: transparent !important;
+    color: #fff !important;
+    border: none !important;
+    font-size: 1.05em;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    min-width: 200px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M0 0l7 9 7-9z' fill='rgba(255,255,255,0.9)'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 4px center !important;
+    background-size: 14px !important;
+    padding-right: 22px;
+}
+.site-select option {
+    background: #0c2d4a;
+    color: #fff;
+    font-weight: 600;
+    padding: 6px 8px;
+}
 
 /* Address / APN cells in header */
 .header-address {
@@ -225,15 +271,15 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .btn-save-config {
     flex: 1 1 0; min-width: 100px; padding: 6px 16px; border: none; border-radius: 4px;
     font-weight: bold; font-size: 0.76em; cursor: pointer; color: white;
-    background: #475569; transition: 0.2s; white-space: nowrap; text-align: center;
+    background: #475569; transition: background 0.18s; white-space: nowrap; text-align: center;
 }
 .btn-save-config:hover { background: #334155; }
-#saveConfigBtn  { background: #0f4c81; }
+#saveConfigBtn       { background: #0f4c81; }
 #saveConfigBtn:hover { background: #0d3f6b; }
-#freeDragBtn    { background: #64748b; }
-#freeDragBtn:hover { background: #475569; }
-#snapEdgeBtn    { background: #64748b; }
-#snapEdgeBtn:hover { background: #475569; }
+#freeDragBtn         { background: #64748b; }
+#freeDragBtn:hover   { background: #475569; }
+#snapEdgeBtn         { background: #64748b; }
+#snapEdgeBtn:hover   { background: #475569; }
 .align-angle-input {
     width: 100%; text-align: right;
     border: 1px solid #cbd5e0; border-radius: 3px;
@@ -263,6 +309,22 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
 .btn-align-reset:hover { background: #4a5568; }
 .btn-align-file  { background: #805ad5; }
 .btn-align-file:hover  { background: #6b46c1; }
+
+/* FAB floating action buttons (Save Config / Print PDF) */
+.fab-btn {
+    pointer-events: all;
+    border: none; border-radius: 20px;
+    padding: 8px 0; width: 148px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap; font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+}
+.fab-btn-save  { background: #475569; }
+.fab-btn-save:hover  { background: #334155; }
+.fab-btn-print { background: #0f4c81; }
+.fab-btn-print:hover { background: #0d3f6b; }
 
 /* Building dim toggle button */
 .btn-dim-bldg        { background: #38a169 !important; color: white !important; }
@@ -664,6 +726,7 @@ html[data-theme="dark"] body { background: #0f172a !important; color: #e2e8f0 !i
 html[data-theme="dark"] .suite-bar { background: #1e293b !important; }
 html[data-theme="dark"] .header { border-color: #334155 !important; }
 html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3 { color: #93c5fd !important; }
+html[data-theme="dark"] .header-title-stack p { color: #94a3b8 !important; }
 html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea {
     background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important;
 }
@@ -687,14 +750,21 @@ html[data-theme="dark"] .sidebar-box { background: #1e293b !important; border-co
 html[data-theme="dark"] .info-bottom { background: #0f172a !important; }
 html[data-theme="dark"] .info-col-left, html[data-theme="dark"] .info-col-right { background: #1e293b !important; }
 
-/* Buttons in dark mode — better contrast */
-html[data-theme="dark"] .btn-save-config { background: #334155 !important; color: #e2e8f0 !important; }
-html[data-theme="dark"] .btn-save-config:hover { background: #475569 !important; }
+/* Buttons in dark mode — preserve individual button colors; only dim un-IDed ones */
+html[data-theme="dark"] .btn-save-config           { background: #4a5568; color: #e2e8f0; }
+html[data-theme="dark"] .btn-save-config:hover      { background: #2d3748; color: #e2e8f0; }
+html[data-theme="dark"] #saveConfigBtn              { background: #1a6bb3 !important; }
+html[data-theme="dark"] #saveConfigBtn:hover        { background: #1558a0 !important; }
+html[data-theme="dark"] .btn-dim-bldg               { background: #2f9e68 !important; }
+html[data-theme="dark"] .btn-dim-bldg:hover         { background: #27855a !important; }
+html[data-theme="dark"] #freeDragBtn                { background: #4a5568 !important; }
+html[data-theme="dark"] #snapEdgeBtn                { background: #4a5568 !important; }
 html[data-theme="dark"] .btn-accept { background: #1e40af !important; }
 html[data-theme="dark"] .btn-save-boundary { background: #15803d !important; }
 html[data-theme="dark"] .btn-lock-position { background: #b91c1c !important; }
-html[data-theme="dark"] #map-fab { background: #1e293b !important; border-color: #334155 !important; }
-html[data-theme="dark"] #map-fab button { background: #334155 !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #map-fab { background: transparent !important; border: none !important; }
+html[data-theme="dark"] .fab-btn-save { background: #475569 !important; }
+html[data-theme="dark"] .fab-btn-print { background: #1e40af !important; }
 
 /* LISP code area */
 html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e0e0e0 !important; border-color: #333 !important; }
@@ -718,7 +788,8 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":42.5,"offsetY":15.8,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -728,6 +799,10 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
         <span class="suite-bar-active">Map</span>
         <span class="suite-bar-sep">|</span>
         <a href="checklist" class="suite-bar-link" onclick="if(location.protocol==='file:')this.href='PreApp_Checklist.html'">Checklist</a>
+        <div class="suite-bar-state">
+            <label>State</label>
+            <select id="state-filter"></select>
+        </div>
         <div class="suite-bar-ext">
             <a href="https://assr.parcelquest.com/Home" target="_blank" class="suite-bar-extlink suite-bar-extlink-amber">ParcelQuest &#x2197;</a>
             <a href="https://sandiego.maps.arcgis.com/" target="_blank" class="suite-bar-extlink suite-bar-extlink-sky">SanDag GIS &#x2197;</a>
@@ -746,18 +821,17 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
         <div class="header-left">
             <div class="header-title-row">
                 <div class="header-title-stack">
-                    <h1>ProjectBook-Planner</h1>
+                    <h1 id="project-title">ProjectBook-Planner</h1>
                     <p>Interactive Planning &amp; Concept Design</p>
                 </div>
                 <div class="header-address-pair">
-                    <div class="header-address" id="addr-cell" style="cursor:pointer" onclick="var s=document.getElementById('site-switcher');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}">
-                        <span class="banner-label">Address <span id="addr-arrow">&#x25BE;</span></span>
-                        <span class="banner-value" id="ui-address"></span>
+                    <div class="header-address" id="addr-cell">
+                        <span class="banner-label">Address</span>
+                        <select id="site-switcher" class="site-select" onchange="if(this.value&&window.switchSite)window.switchSite(this.value)">
+                        </select>
                     </div>
                     <div class="header-address"><span class="banner-label">APN</span><span class="banner-value" id="header-ui-apn"></span></div>
                 </div>
-                <select id="site-switcher" style="display:none;width:100%;max-width:500px;background:#0c2d4a;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;z-index:100;margin-top:4px" onchange="if(this.value){fetch('/api/sites/'+this.value+'/activate',{method:'POST'}).then(function(){localStorage.removeItem('site_state');location.reload();})}">
-                </select>
             </div>
         </div>
     </div>
@@ -880,7 +954,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                             <input type="number" id="bldgOrientInput" class="align-angle-input" value="0.0" step="0.1">
                             <span>&#176;</span>
                         </div>
-                        <input type="range" id="bldgOrientSlider" min="-90" max="90" value="0" step="0.1">
+                        <input type="range" id="bldgOrientSlider" min="-90" max="90" value="0" step="0.1" style="width:140px;">
                         <strong>Footprint:</strong>
                         <div class="footprint-inputs">
                             <label title="W — Footprint Width (side to side)">W</label>
@@ -918,6 +992,9 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                             <label>G</label>
                             <input type="number" id="bldgStackSpacing" class="align-angle-input" value="0" min="0" step="0.5">
                             <span class="ft-label">ft</span>
+                            <button id="bldgStackDirBtn" class="anchor-btn" title="Toggle stack direction (0°=depth, 90°=width)" style="padding:2px 6px;font-size:1em;">→</button>
+                            <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="-180" max="180" step="15" title="Stack angle ° (0=depth, 90=width)">
+                            <span class="ft-label">°</span>
                         </div>
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
@@ -1083,8 +1160,8 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 <!-- Floating FAB — Save + Print -->
 <div id="map-fab" class="no-print" style="position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;">
-    <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." style="pointer-events:all;background:#475569;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128190; Save Config</button>
-    <button onclick="window.print()" style="pointer-events:all;background:#0f4c81;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Segoe UI',sans-serif;">&#128438; Print / PDF</button>
+    <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." class="fab-btn fab-btn-save">&#128190; Save Config</button>
+    <button onclick="window.print()" class="fab-btn fab-btn-print">&#128438; Print / PDF</button>
 </div>
 
 <!-- Auto-save flash badge -->
@@ -1158,8 +1235,8 @@ const ConfigEngine = {
         if (sd.address)         this.data.address         = sd.address;
         if (sd.apn)             this.data.apn             = sd.apn;
         if (sd.zoning)          this.data.zoning          = sd.zoning;
-        if (sd.lotWidth)        this.data.width           = sd.lotWidth;
-        if (sd.lotDepth)        this.data.depth           = sd.lotDepth;
+        if (typeof sd.lotWidth !== 'undefined')  this.data.width = sd.lotWidth;
+        if (typeof sd.lotDepth !== 'undefined')  this.data.depth = sd.lotDepth;
         if (sd.commercialDepth != null) this.data.commercialDepth = sd.commercialDepth;
         if (sd.lotSF != null)   this.data.lotSF           = sd.lotSF;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
@@ -1344,8 +1421,10 @@ const UIEngine = {
         const rectSqft = d.width * d.depth;
         const sqft = (d.lotSF && d.lotSF > 0) ? d.lotSF : rectSqft;
 
-        document.getElementById('ui-address').innerText      = d.address;
-        document.getElementById('header-ui-apn').innerText   = d.apn;
+        var elAddr = document.getElementById('ui-address');
+        if (elAddr) elAddr.innerText = d.address;
+        var elApn = document.getElementById('header-ui-apn');
+        if (elApn) elApn.innerText = d.apn;
         document.getElementById('ui-zoning').innerText  = d.zoning;
         document.getElementById('ui-w').innerText       = d.width;
         document.getElementById('ui-d').innerText       = d.depth;
@@ -1693,12 +1772,6 @@ const MapEngine = {
                 bldg.offsetX = parseFloat((clamped.cx - (f - r) / 2).toFixed(1));
                 bldg.offsetY = parseFloat((clamped.cy - (sr - sl) / 2).toFixed(1));
             }
-            // Apply snap-to-edge if enabled
-            if (state.snapEdge) {
-                const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
-                bldg.offsetX = snapped.x;
-                bldg.offsetY = snapped.y;
-            }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -1711,6 +1784,15 @@ const MapEngine = {
         });
         m.on('dragend', () => {
             this._isDragging = false;
+            // Apply snap on release (not during drag — avoids sticky-snap when touching other buildings)
+            if (state.snapEdge) {
+                const bldg = state.buildings[idx];
+                if (bldg) {
+                    const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
+                    bldg.offsetX = snapped.x;
+                    bldg.offsetY = snapped.y;
+                }
+            }
             SetbackEngine.drawBuilding();
             ExportEngine.save();
         });
@@ -2628,14 +2710,32 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD } = ConfigEngine.data;
         const count        = bldg.count        || 1;
         const stackSpacing = bldg.stackSpacing || 0;
+        const stackAngle   = bldg.stackAngle   || 0;
         const anchor       = bldg.anchor       || 'center';
+        const hw   = bldg.W / 2, hh = bldg.D / 2;
+        const bRad = bldg.orientation * Math.PI / 180;
+        const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
         const { halfDepth, halfWidth } = this._buildingExtents(bldg);
-        const step  = halfDepth * 2 + stackSpacing;
-        const aOff  = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
-        const xMin  = -lotD / 2 + aOff * step + halfDepth;
-        const xMax  =  lotD / 2 - (count - 1 - aOff) * step - halfDepth;
-        const yMin  = -lotW / 2 + halfWidth;
-        const yMax  =  lotW / 2 - halfWidth;
+
+        const sAngRad   = stackAngle * Math.PI / 180;
+        const sDirX     = Math.cos(sAngRad);
+        const sDirY     = Math.sin(sAngRad);
+        const halfInDir = Math.abs(hh * (bCos * sDirX + bSin * sDirY)) +
+                          Math.abs(hw * (-bSin * sDirX + bCos * sDirY));
+        const step = halfInDir * 2 + stackSpacing;
+        const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
+
+        // Compute bounding box of ALL copies relative to anchor (cx,cy)
+        const jOff0 = -aOff * step, jOffN = (count - 1 - aOff) * step;
+        const arrXMin = Math.min(jOff0 * sDirX, jOffN * sDirX) - halfDepth;
+        const arrXMax = Math.max(jOff0 * sDirX, jOffN * sDirX) + halfDepth;
+        const arrYMin = Math.min(jOff0 * sDirY, jOffN * sDirY) - halfWidth;
+        const arrYMax = Math.max(jOff0 * sDirY, jOffN * sDirY) + halfWidth;
+
+        const xMin = -lotD / 2 - arrXMin;
+        const xMax =  lotD / 2 - arrXMax;
+        const yMin = -lotW / 2 - arrYMin;
+        const yMax =  lotW / 2 - arrYMax;
         return {
             cx: Math.max(xMin <= xMax ? xMin : -lotD/2, Math.min(xMin <= xMax ? xMax : lotD/2, cx)),
             cy: Math.max(yMin <= yMax ? yMin : -lotW/2, Math.min(yMin <= yMax ? yMax : lotW/2, cy))
@@ -2727,6 +2827,11 @@ const SetbackEngine = {
         document.getElementById('bldgOffsetY').value        = (bldg.offsetY      || 0).toFixed(1);
         document.getElementById('bldgCount').value          = bldg.count         || 1;
         document.getElementById('bldgStackSpacing').value   = (bldg.stackSpacing || 0).toFixed(1);
+        const sAng   = bldg.stackAngle || 0;
+        const angEl  = document.getElementById('bldgStackAngle');
+        const dirBtn = document.getElementById('bldgStackDirBtn');
+        if (angEl)  angEl.value = sAng;
+        if (dirBtn) dirBtn.textContent = Math.abs(sAng % 180) < 1 ? '→' : Math.abs(((sAng - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
         document.getElementById('bldgStories').value        = bldg.stories       || 1;
         document.getElementById('bldgFloorHeight').value    = (bldg.floorHeight  || 9).toFixed(1);
 
@@ -2775,6 +2880,7 @@ const SetbackEngine = {
             spacing:      0,
             count:        1,
             stackSpacing: 0,
+            stackAngle:   0,
             anchor:       'center',
             stories:      src.stories     || 1,
             floorHeight:  src.floorHeight || 9
@@ -2889,19 +2995,25 @@ const SetbackEngine = {
                 MapEngine.map.removeLayer(MapEngine.buildingPolys[i].pop());
             }
 
-            const halfDepth    = Math.abs(hh * bCos) + Math.abs(hw * bSin);
-            const step         = halfDepth * 2 + stackSpacing;
+            const sAngRad      = ((bldg.stackAngle || 0) * Math.PI / 180);
+            const sDirX        = Math.cos(sAngRad);
+            const sDirY        = Math.sin(sAngRad);
+            const halfInDir    = Math.abs(hh * (bCos * sDirX + bSin * sDirY)) +
+                                 Math.abs(hw * (-bSin * sDirX + bCos * sDirY));
+            const step         = halfInDir * 2 + stackSpacing;
             const anchorOffset = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
 
             for (let j = 0; j < count; j++) {
-                const cx  = baseCx + (j - anchorOffset) * step;
+                const jOff = (j - anchorOffset) * step;
+                const cx   = baseCx + jOff * sDirX;
+                const cy_j = cy     + jOff * sDirY;
                 const raw = [
-                    { x: cx - hh, y: cy + hw }, { x: cx + hh, y: cy + hw },
-                    { x: cx + hh, y: cy - hw }, { x: cx - hh, y: cy - hw }
+                    { x: cx - hh, y: cy_j + hw }, { x: cx + hh, y: cy_j + hw },
+                    { x: cx + hh, y: cy_j - hw }, { x: cx - hh, y: cy_j - hw }
                 ];
                 const oriented = raw.map(pt => {
-                    const dx = pt.x - cx, dy = pt.y - cy;
-                    return { x: cx + dx * bCos - dy * bSin, y: cy + dx * bSin + dy * bCos };
+                    const dx = pt.x - cx, dy = pt.y - cy_j;
+                    return { x: cx + dx * bCos - dy * bSin, y: cy_j + dx * bSin + dy * bCos };
                 });
                 MapEngine.buildingPolys[i][j].setLatLngs(oriented.map(toLatLng));
             }
@@ -3278,11 +3390,11 @@ const SetbackEngine = {
                 chkEl.style.color = ok ? '#2f855a' : '#c53030';
             }
         } else {
-            // FAR not applicable for this zone (baseFAR=0)
-            set('bldgFAR',       'N/A');
-            set('bldgBuildable', 'Per zoning');
-            set('maxFARLabel',   'FAR: N/A');
-            if (chkEl) { chkEl.textContent = '\u2713 FAR not applicable'; chkEl.style.color = '#2f855a'; }
+            // FAR not applicable for this zone (baseFAR=0) — show actual but no limit
+            set('bldgFAR',       actualFAR.toFixed(2));
+            set('bldgBuildable', 'No FAR limit');
+            set('maxFARLabel',   'FAR: No limit');
+            if (chkEl) { chkEl.textContent = '\u2713 No FAR limit for this zone'; chkEl.style.color = '#2f855a'; }
         }
 
         const floorH      = active.floorHeight || 9;
@@ -3438,6 +3550,33 @@ const SetbackEngine = {
                 document.getElementById('bldgCount').value = newMaxN;
             }
             this.drawBuilding();
+        });
+
+        // Stack angle input
+        document.getElementById('bldgStackAngle').addEventListener('change', () => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            let a = parseFloat(document.getElementById('bldgStackAngle').value) || 0;
+            a = Math.max(-180, Math.min(180, a));
+            document.getElementById('bldgStackAngle').value = a;
+            bldg.stackAngle = a;
+            const dirBtn = document.getElementById('bldgStackDirBtn');
+            if (dirBtn) dirBtn.textContent = Math.abs(a % 180) < 1 ? '→' : Math.abs(((a - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
+            this.drawBuilding();
+            ExportEngine.save();
+        });
+
+        // Stack direction toggle: cycles → (0°) ↔ ↑ (90°)
+        document.getElementById('bldgStackDirBtn').addEventListener('click', () => {
+            const bldg = state.buildings[state.activeBuilding];
+            if (!bldg) return;
+            const cur  = bldg.stackAngle || 0;
+            const next = Math.abs(cur % 180) < 1 ? 90 : 0;
+            bldg.stackAngle = next;
+            document.getElementById('bldgStackAngle').value = next;
+            document.getElementById('bldgStackDirBtn').textContent = next === 0 ? '→' : '↑';
+            this.drawBuilding();
+            ExportEngine.save();
         });
 
         // Anchor buttons (per-building)
@@ -3635,6 +3774,7 @@ const ExportEngine = {
             if (el('bldgOffsetY'))      bldg.offsetY      = parseFloat(el('bldgOffsetY').value) || 0;
             if (el('bldgCount'))        bldg.count        = parseInt(el('bldgCount').value) || 1;
             if (el('bldgStackSpacing')) bldg.stackSpacing  = parseFloat(el('bldgStackSpacing').value) || 0;
+            if (el('bldgStackAngle'))   bldg.stackAngle    = parseFloat(el('bldgStackAngle').value)   || 0;
             if (el('bldgStories'))      bldg.stories      = parseInt(el('bldgStories').value) || 1;
             if (el('bldgFloorHeight'))  bldg.floorHeight  = parseFloat(el('bldgFloorHeight').value) || 9;
             var anchors = {anchorFront:'front', anchorCenter:'center', anchorRear:'rear'};
@@ -3819,12 +3959,53 @@ const ResizeEngine = {
        ========================================== */
     window.onload = function() {
         document.body.style.zoom = '0.9';
-        ConfigEngine.init();
-        UIEngine.init();
-        MapEngine.init();
-        SetbackEngine.initBuildingConfig();
-        ElevationTool.init();
-        ResizeEngine.init();
+        function safeRun(label, fn) {
+            try { fn(); }
+            catch (e) { console.error('[BOOTSTRAP] ' + label + ' failed:', e); }
+        }
+        function safeStorageGet(key) {
+            try { return localStorage.getItem(key); }
+            catch (e) { return null; }
+        }
+        function safeStorageSet(key, val) {
+            try { localStorage.setItem(key, val); }
+            catch (e) {}
+        }
+        function safeStorageRemove(key) {
+            try { localStorage.removeItem(key); }
+            catch (e) {}
+        }
+        function getStateFromSiteId(siteId) {
+            return siteId ? siteId.split('-')[0] : '';
+        }
+
+        window.switchSite = function(siteId) {
+            if (!siteId) return;
+            var sd = window.__SITE_DEFAULTS__ || {};
+            var stateCode = getStateFromSiteId(siteId);
+            safeStorageSet('selected_site', siteId);
+            if (stateCode) safeStorageSet('selected_state', stateCode);
+            safeStorageRemove('site_state');
+            if (siteId === sd.siteId) { location.reload(); return; }
+            if (location.protocol === 'file:') { location.reload(); return; }
+            fetch('/api/sites/' + encodeURIComponent(siteId) + '/activate', { method: 'POST' })
+                .then(function(r) { if (!r.ok) throw new Error('activate failed'); return r.text(); })
+                .then(function() { location.reload(); })
+                .catch(function() { location.reload(); });
+        };
+
+
+        safeRun('ConfigEngine.init', function() { ConfigEngine.init(); });
+        // Only run UIEngine.init if required fields are present
+        var d = (typeof ConfigEngine !== 'undefined' && ConfigEngine.data) ? ConfigEngine.data : null;
+        var required = ["address","apn","zoning","width","depth","lotSF"];
+        var missing = d ? required.filter(function(k){return !(k in d) || d[k]==null || d[k]===''}) : required;
+        if (missing.length === 0) {
+            safeRun('UIEngine.init', function() { UIEngine.init(); });
+        } else {
+            console.error('[BOOTSTRAP] UIEngine.init skipped: missing fields', missing, d);
+            // Optionally, show a user-visible error or fallback UI here
+        }
 
         // Sync toggle button states from saved config
         (function() {
@@ -3876,40 +4057,113 @@ const ResizeEngine = {
             var sel = document.getElementById('cadZoneSelect');
             if (!sel) return;
             var systems = ConfigEngine.CAD_SYSTEMS;
+            var siteState = getStateFromSiteId(ConfigEngine.data.siteId) || 'CA';
             var active = ConfigEngine.data.cadZone || 'CA_VI';
-            Object.keys(systems).forEach(function(key) {
+            Object.keys(systems).filter(function(key) {
+                return key.indexOf(siteState + '_') === 0;
+            }).forEach(function(key) {
                 var opt = document.createElement('option');
                 opt.value = key;
                 opt.textContent = systems[key].label;
                 if (key === active) opt.selected = true;
                 sel.appendChild(opt);
             });
+            if (!sel.value && sel.options.length > 0) {
+                sel.selectedIndex = 0;
+                active = sel.value;
+                var fallback = systems[active];
+                if (fallback) {
+                    ConfigEngine.cad.projection = fallback.projection;
+                    ConfigEngine.cad.proj4Def   = fallback.proj4Def;
+                    ConfigEngine.data.cadZone   = active;
+                }
+            }
             // Show active zone label
             var lbl = document.getElementById('cadZoneLabel');
             if (lbl && systems[active]) lbl.textContent = systems[active].label;
         })();
 
-        // Populate site switcher dropdown (below Address header cell)
+        // Populate project title from site data
         (function() {
-            var sel = document.getElementById('site-switcher');
-            if (!sel) return;
-            fetch('/api/sites').then(function(r) { return r.json(); }).then(function(sites) {
-                sites.forEach(function(s) {
-                    var opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = s.address;
-                    if (s.active) opt.selected = true;
-                    sel.appendChild(opt);
-                });
-            }).catch(function() {
-                // Static file mode -- remove dropdown, address cell is display-only
-                sel.remove();
-                var cell = document.getElementById('addr-cell');
-                if (cell) cell.style.cursor = 'default';
-                var arrow = document.getElementById('addr-arrow');
-                if (arrow) arrow.style.display = 'none';
-            });
+            var sd = window.__SITE_DEFAULTS__ || {};
+            var h1 = document.getElementById('project-title');
+            if (h1 && sd.project) h1.textContent = sd.project;
         })();
+
+        // Populate state filter + site switcher from __SITE_LIST__ (injected by build script)
+        (function() {
+            var siteSel  = document.getElementById('site-switcher');
+            var stateSel = document.getElementById('state-filter');
+            var sites    = window.__SITE_LIST__ || [];
+            var sd       = window.__SITE_DEFAULTS__ || {};
+            var activeSite  = safeStorageGet('selected_site') || sd.siteId || '';
+            var activeState = safeStorageGet('selected_state') ||
+                              (activeSite ? activeSite.split('-')[0] : '');
+
+            function getState(siteId) { return siteId ? siteId.split('-')[0] : ''; }
+
+            function populateSites(stateFilter) {
+                if (!siteSel) return;
+                while (siteSel.firstChild) siteSel.removeChild(siteSel.firstChild);
+                var filtered = stateFilter
+                    ? sites.filter(function(s) { return getState(s.siteId) === stateFilter; })
+                    : sites;
+                if (filtered.length > 0) {
+                    if (!filtered.some(function(s) { return s.siteId === activeSite; })) {
+                        activeSite = filtered[0].siteId;
+                        safeStorageSet('selected_site', activeSite);
+                    }
+                    filtered.forEach(function(s) {
+                        var opt = document.createElement('option');
+                        opt.value = s.siteId;
+                        opt.textContent = s.address;
+                        if (s.siteId === activeSite) opt.selected = true;
+                        siteSel.appendChild(opt);
+                    });
+                } else {
+                    var opt = document.createElement('option');
+                    opt.value = sd.siteId || '';
+                    opt.textContent = sd.address || ConfigEngine.data.address;
+                    opt.selected = true;
+                    siteSel.appendChild(opt);
+                }
+            }
+
+            // Build state dropdown
+            if (stateSel && sites.length > 0) {
+                var states = [];
+                sites.forEach(function(s) {
+                    var st = getState(s.siteId);
+                    if (st && states.indexOf(st) === -1) states.push(st);
+                });
+                states.sort();
+                if (states.length > 1) {
+                    states.forEach(function(st) {
+                        var opt = document.createElement('option');
+                        opt.value = st;
+                        opt.textContent = st;
+                        if (st === activeState) opt.selected = true;
+                        stateSel.appendChild(opt);
+                    });
+                    stateSel.addEventListener('change', function() {
+                        activeState = stateSel.value;
+                        safeStorageSet('selected_state', activeState);
+                        populateSites(activeState);
+                    });
+                } else {
+                    // Only one state — hide the filter
+                    var parent = stateSel.closest('.suite-bar-state');
+                    if (parent) parent.style.display = 'none';
+                }
+            }
+
+            populateSites(activeState || null);
+        })();
+
+        safeRun('MapEngine.init', function() { MapEngine.init(); });
+        safeRun('SetbackEngine.initBuildingConfig', function() { SetbackEngine.initBuildingConfig(); });
+        safeRun('ElevationTool.init', function() { ElevationTool.init(); });
+        safeRun('ResizeEngine.init', function() { ResizeEngine.init(); });
     };
 
 </script>

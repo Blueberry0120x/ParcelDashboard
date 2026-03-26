@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f4c81">
 <title>Pre-App Checklist | 4335 Euclid Ave | CUPD-CU-2-4</title>
@@ -18,7 +18,7 @@
 <style>
   html{zoom:0.9}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;padding-bottom:env(safe-area-inset-bottom);background:#f0f2f5;color:#2d3748}
+  body{font-family:'DM Sans','Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;padding:20px;padding-bottom:env(safe-area-inset-bottom);background:#f0f2f5;color:#2d3748}
   input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
   input[type=number]{-moz-appearance:textfield}
   *{overflow-anchor:none}
@@ -35,11 +35,38 @@
   @media(max-width:767px){
     body{font-size:14px}
   }
+  /* Site select — transparent inside address card */
+  .site-select, #ck-site-sel {
+    background: transparent !important;
+    color: #fff !important;
+    border: none !important;
+    font-size: 1.05em;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    min-width: 200px;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.5)'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 2px center !important;
+    background-size: 10px !important;
+    padding-right: 16px;
+  }
+  .site-select option, #ck-site-sel option {
+    background: #0c2d4a;
+    color: #fff;
+    font-weight: 600;
+    padding: 6px 8px;
+  }
+
   /* ── DARK MODE TOGGLE ── */
   .theme-toggle {
     position: fixed; top: 38px; right: 12px; z-index: 9999;
     width: 36px; height: 36px; border-radius: 50%;
-    border: 1.5px solid #e2e8f0; background: #fff;
+    border: 1.5px solid #dbe3ee; background: #fff;
     cursor: pointer; font-size: 18px; line-height: 1;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -50,6 +77,11 @@
   /* ── DARK MODE ── */
   html[data-theme="dark"] { color-scheme: dark; }
   html[data-theme="dark"] body { background: #0f172a !important; color: #e2e8f0 !important; }
+
+  /* Prevent flash on React re-render (checkbox toggle etc.) */
+  html[data-theme="dark"] #root *:not(input):not(select):not(button) {
+    transition: background 80ms ease, color 80ms ease, border-color 80ms ease;
+  }
   html[data-theme="dark"] .theme-toggle { background: #1e293b; border-color: #475569; }
 
   /* Suite bar */
@@ -128,8 +160,8 @@
   html[data-theme="dark"] [style*="background: #f0f0f0"],
   html[data-theme="dark"] [style*="background:#f0f0f0"] { background: #1e293b !important; }
 
-  html[data-theme="dark"] [style*="background: #e2e8f0"],
-  html[data-theme="dark"] [style*="background:#e2e8f0"] { background: #334155 !important; }
+  html[data-theme="dark"] [style*="background: #dbe3ee"],
+  html[data-theme="dark"] [style*="background:#dbe3ee"] { background: #334155 !important; }
 
   html[data-theme="dark"] [style*="background: #eef7ff"],
   html[data-theme="dark"] [style*="background:#eef7ff"] { background: #1e293b !important; }
@@ -148,8 +180,8 @@
   html[data-theme="dark"] [style*="linear-gradient(90deg,#faf5ff"] { background: linear-gradient(90deg,#2e1065,#1e1b4b) !important; }
 
   /* React inline style overrides — text colors */
-  html[data-theme="dark"] [style*="color: #1e293b"],
-  html[data-theme="dark"] [style*="color:#1e293b"] { color: #e2e8f0 !important; }
+  html[data-theme="dark"] [style*="color: #2d3748"],
+  html[data-theme="dark"] [style*="color:#2d3748"] { color: #e2e8f0 !important; }
 
   html[data-theme="dark"] [style*="color: #334155"],
   html[data-theme="dark"] [style*="color:#334155"] { color: #cbd5e1 !important; }
@@ -165,9 +197,6 @@
 
   html[data-theme="dark"] [style*="color: #0f4c81"],
   html[data-theme="dark"] [style*="color:#0f4c81"] { color: #93c5fd !important; }
-
-  html[data-theme="dark"] [style*="color: #2d3748"],
-  html[data-theme="dark"] [style*="color:#2d3748"] { color: #e2e8f0 !important; }
 
   html[data-theme="dark"] [style*="color: #1a202c"],
   html[data-theme="dark"] [style*="color:#1a202c"] { color: #e2e8f0 !important; }
@@ -208,14 +237,14 @@
   html[data-theme="dark"] #root th { border-color: #334155 !important; }
 
   /* Borders */
-  html[data-theme="dark"] [style*="border-color: #e2e8f0"],
-  html[data-theme="dark"] [style*="border-color:#e2e8f0"] { border-color: #334155 !important; }
+  html[data-theme="dark"] [style*="border-color: #dbe3ee"],
+  html[data-theme="dark"] [style*="border-color:#dbe3ee"] { border-color: #334155 !important; }
 
-  html[data-theme="dark"] [style*="border: 1px solid #e2e8f0"],
-  html[data-theme="dark"] [style*="border:1px solid #e2e8f0"] { border-color: #334155 !important; }
+  html[data-theme="dark"] [style*="border: 1px solid #dbe3ee"],
+  html[data-theme="dark"] [style*="border:1px solid #dbe3ee"] { border-color: #334155 !important; }
 
-  html[data-theme="dark"] [style*="border-bottom: 1px solid #e2e8f0"],
-  html[data-theme="dark"] [style*="border-bottom:1px solid #e2e8f0"] { border-bottom-color: #334155 !important; }
+  html[data-theme="dark"] [style*="border-bottom: 1px solid #dbe3ee"],
+  html[data-theme="dark"] [style*="border-bottom:1px solid #dbe3ee"] { border-bottom-color: #334155 !important; }
 
   html[data-theme="dark"] [style*="border-left: 3px solid"],
   html[data-theme="dark"] [style*="border-left:3px solid"] { border-left-color: #475569 !important; }
@@ -229,8 +258,14 @@
   html[data-theme="dark"] [style*="border-bottom: 1px solid #f1f5f9"],
   html[data-theme="dark"] [style*="border-bottom:1px solid #f1f5f9"] { border-color: #334155 !important; }
 
-  html[data-theme="dark"] [style*="border-bottom: 2px solid #e2e8f0"],
-  html[data-theme="dark"] [style*="border-bottom:2px solid #e2e8f0"] { border-color: #334155 !important; }
+  html[data-theme="dark"] [style*="border-bottom: 2px solid #dbe3ee"],
+  html[data-theme="dark"] [style*="border-bottom:2px solid #dbe3ee"] { border-color: #334155 !important; }
+
+  html[data-theme="dark"] [style*="border-top: 2px solid #dbe3ee"],
+  html[data-theme="dark"] [style*="border-top:2px solid #dbe3ee"] { border-color: #334155 !important; }
+
+  html[data-theme="dark"] [style*="border: 1.5px solid #dbe3ee"],
+  html[data-theme="dark"] [style*="border:1.5px solid #dbe3ee"] { border-color: #334155 !important; }
 
   html[data-theme="dark"] [style*="border-bottom: 1px solid #e0f2fe"],
   html[data-theme="dark"] [style*="border-bottom:1px solid #e0f2fe"] { border-color: #334155 !important; }
@@ -246,6 +281,34 @@
   /* Inputs */
   html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea {
     background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important;
+  }
+  /* Custom checkbox for dark mode — appearance:none + visible border */
+  html[data-theme="dark"] input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px !important;
+    height: 16px !important;
+    border: 2px solid #64748b !important;
+    border-radius: 3px;
+    background: transparent !important;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+  }
+  html[data-theme="dark"] input[type="checkbox"]:checked {
+    background: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+  }
+  html[data-theme="dark"] input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 5px;
+    height: 9px;
+    border: solid #0f172a;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
   }
 
   /* Checklist-specific: section headers, labels, table cells */
@@ -263,14 +326,19 @@
   @media print { html[data-theme="dark"] { color-scheme: light !important; } }
 </style>
 <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-12.5,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"W":18.5,"D":40,"offsetX":42.5,"offsetY":15.8,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
 <div class="no-print" style="background:#0f4c81;padding:0 18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;flex-shrink:0">
-  <div style="display:flex;align-items:center;height:32px;max-width:920px;margin:0 auto">
+  <div style="display:flex;align-items:center;height:32px;max-width:90%;margin:0 auto">
     <a href="/" onclick="if(location.protocol==='file:')this.href='InteractiveMap.html'" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
     <span style="color:rgba(255,255,255,.25);padding:0 3px">|</span>
     <span style="color:#fff;border-bottom:2px solid #fff;height:32px;display:flex;align-items:center;padding:0 12px">Checklist</span>
+    <div id="ck-state-wrap" style="display:flex;align-items:center;gap:4px;margin-left:14px;padding-left:14px;border-left:1px solid rgba(255,255,255,.2)">
+      <label style="color:rgba(255,255,255,.55);font-size:10px;letter-spacing:.5px;text-transform:uppercase">State</label>
+      <select id="ck-state-filter" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none"></select>
+    </div>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
       <a href="https://assr.parcelquest.com/Home" target="_blank" style="color:#fbbf24;text-decoration:none;padding:0 9px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(251,191,36,.5)">ParcelQuest &#x2197;</a>
       <a href="https://sandiego.maps.arcgis.com/" target="_blank" style="color:#38bdf8;text-decoration:none;padding:0 9px;height:20px;display:flex;align-items:center;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid rgba(56,189,248,.5)">SanDag GIS &#x2197;</a>
@@ -560,7 +628,7 @@ function HelpModal({helpKey,helpData,onClose}){
         <div style={{fontSize:12,marginBottom:8}}>Offer affordable units to earn <b>bonus units</b> above the base max (GC §65915). Highlighted rows meet your current {resiU}-unit proposal:</div>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
           <thead><tr style={{background:"#f1f5f9"}}>
-            {["Affordable DU","% of Base","Income Target","Bonus %","+Units","Total DU"].map(h=><th key={h} style={{padding:"5px 8px",textAlign:"left",fontSize:10,fontWeight:700,borderBottom:"2px solid #e2e8f0"}}>{h}</th>)}
+            {["Affordable DU","% of Base","Income Target","Bonus %","+Units","Total DU"].map(h=><th key={h} style={{padding:"5px 8px",textAlign:"left",fontSize:10,fontWeight:700,borderBottom:"2px solid #dbe3ee"}}>{h}</th>)}
           </tr></thead>
           <tbody>
             {tiers.map((t,i)=>(
@@ -588,7 +656,7 @@ function HelpModal({helpKey,helpData,onClose}){
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(15,30,50,.6)",backdropFilter:"blur(4px)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:16,maxWidth:600,width:"100%",maxHeight:"85vh",overflow:"hidden",display:"flex",flexDirection:"column",boxShadow:"0 25px 60px rgba(0,0,0,.25)"}}>
-        <div style={{padding:"16px 20px 12px",borderBottom:"2px solid #e2e8f0",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div style={{padding:"16px 20px 12px",borderBottom:"2px solid #dbe3ee",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div><div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"#64748b",marginBottom:2}}>Decision Guide</div>
           <div style={{fontSize:17,fontWeight:700,color:"#0f4c81"}}>{h.title}</div></div>
           <button onClick={onClose} style={{background:"#f1f5f9",border:"none",borderRadius:8,width:30,height:30,fontSize:16,cursor:"pointer",color:"#64748b",fontWeight:700,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{"\u00D7"}</button>
@@ -596,7 +664,7 @@ function HelpModal({helpKey,helpData,onClose}){
         <div style={{padding:"14px 20px 20px",overflowY:"auto",flex:1}}>
           {helpKey==="sdb"?renderSdb():<div style={{color:"#334155"}}>{renderMd(h.body)}</div>}
           {h.options&&helpKey!=="sdb"&&<div style={{marginTop:14}}>{Object.entries(h.options).map(([l,d])=>(
-            <div key={l} style={{marginBottom:8,padding:"10px 14px",borderRadius:10,border:"1px solid #e2e8f0",background:"#f8fafc"}}>
+            <div key={l} style={{marginBottom:8,padding:"10px 14px",borderRadius:10,border:"1px solid #dbe3ee",background:"#f8fafc"}}>
               <div style={{fontSize:12,fontWeight:700,color:"#0f4c81",marginBottom:4}}>{l}</div>
               <div style={{color:"#475569"}}>{renderMd(d)}</div>
             </div>
@@ -665,7 +733,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>
 
       {/* PATHWAY SELECTOR */}
-      <div style={{padding:"12px 16px",borderBottom:"2px solid #e2e8f0",background:"linear-gradient(90deg,#faf5ff,#f5f3ff)"}}>
+      <div style={{padding:"12px 16px",borderBottom:"2px solid #dbe3ee",background:"linear-gradient(90deg,#faf5ff,#f5f3ff)"}}>
         <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
           <span style={{fontSize:10,fontWeight:700,color:"#6b21a8",textTransform:"uppercase",letterSpacing:.8}}>Development Pathway:</span>
           <HelpIcon k="pathway" onOpen={onHelp}/>
@@ -758,7 +826,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>{/* end flex wrapper */}
 
       {/* Dashboard */}
-      <div style={{borderTop:"2px solid #e2e8f0",padding:"10px 14px 10px 43px",display:"grid",gridTemplateColumns:isMobile?"auto 1fr":"auto 1fr auto 1fr",gap:"4px 8px",fontSize:11,alignItems:"baseline"}}>
+      <div style={{borderTop:"2px solid #dbe3ee",padding:"10px 14px 10px 43px",display:"grid",gridTemplateColumns:isMobile?"auto 1fr":"auto 1fr auto 1fr",gap:"4px 8px",fontSize:11,alignItems:"baseline"}}>
         <span style={{color:"#64748b",fontWeight:600}}>Commercial:</span><span style={{fontWeight:700,fontFamily:mono}}>{commSF.toLocaleString()} SF / {commU} units</span>
         <span style={{color:"#64748b",fontWeight:600}}>Residential:</span><span style={{fontWeight:700,fontFamily:mono}}>{resiSF.toLocaleString()} SF / {resiU} units</span>
         <span style={{color:"#64748b",fontWeight:600}}>Total SF:</span><span style={{fontWeight:700,fontFamily:mono}}>{totalSF.toLocaleString()}</span>
@@ -768,7 +836,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
       </div>
 
       {/* Status badges */}
-      <div style={{borderTop:"2px solid #e2e8f0",padding:"8px 14px 8px 43px",display:"flex",gap:6,flexWrap:"wrap",fontSize:10}}>
+      <div style={{borderTop:"2px solid #dbe3ee",padding:"8px 14px 8px 43px",display:"flex",gap:6,flexWrap:"wrap",fontSize:10}}>
         <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:7,height:7,borderRadius:4,background:sb330OK?"#22c55e":"#ef4444"}}/>SB 330: {resiPct.toFixed(0)}% resi {sb330OK?"(\u2265 67%)":"(need \u2265 67%)"}</span>
         {isCCHS&&<>
           <span style={{color:"#7c3aed",fontWeight:700}}>Affordable: {affordReq} units</span>
@@ -790,16 +858,16 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
 // ═══════════════════════════════════════
 function AdvCard({id,title,isOpen,onToggle,children}){
   return (
-    <div style={{marginBottom:8,borderRadius:10,overflow:"clip",border:"1px solid #e2e8f0",background:"#fff"}}>
+    <div style={{marginBottom:8,borderRadius:10,overflow:"clip",border:"1px solid #dbe3ee",background:"#fff"}}>
       <button onClick={e=>{e.currentTarget.blur();onToggle(id)}} style={{width:"100%",padding:"10px 14px",border:"none",cursor:"pointer",fontFamily:"inherit",background:isOpen?"#f8fafc":"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left"}}>
-        <span style={{fontSize:13,fontWeight:700,color:"#1e293b"}}>{title}</span>
+        <span style={{fontSize:13,fontWeight:700,color:"#2d3748"}}>{title}</span>
         <span style={{fontSize:12,color:"#94a3b8",transition:"transform .2s",transform:isOpen?"rotate(0)":"rotate(-90deg)",display:"inline-block"}}>&#9662;</span>
       </button>
       {isOpen&&<div style={{padding:"4px 14px 14px"}} className="adv-card-body">{children}</div>}
     </div>
   );
 }
-function AB({children}){return <b style={{color:"#1e293b"}}>{children}</b>}
+function AB({children}){return <b style={{color:"#2d3748"}}>{children}</b>}
 function ANum({children}){return <span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:"#0f4c81"}}>{children}</span>}
 function AWarn({children}){return <span style={{color:"#dc2626",fontWeight:700}}>{children}</span>}
 function AGood({children}){return <span style={{color:"#16a34a",fontWeight:700}}>{children}</span>}
@@ -837,7 +905,7 @@ function AdvisorySection({sel,bldgs,onHelp}){
         </div>
       </div>
 
-      <div style={{background:"#f8fafc",padding:"10px",borderRadius:"0 0 10px 10px",border:"1px solid #e2e8f0",borderTop:"none"}}>
+      <div style={{background:"#f8fafc",padding:"10px",borderRadius:"0 0 10px 10px",border:"1px solid #dbe3ee",borderTop:"none"}}>
 
         <AdvCard id="overview" title="How This Checklist Works" isOpen={!!open["overview"]} onToggle={toggle}>
           <p>This checklist walks you through every step needed to prepare a pre-application for a mixed-use development at <AB>4335 Euclid Avenue</AB> in San Diego's City Heights neighborhood. Start at the <AB>Building Configuration</AB> above to define your project, then work through each category (A through F) below.</p>
@@ -919,9 +987,9 @@ function AdvisorySection({sel,bldgs,onHelp}){
           <div style={{overflowX:"auto",margin:"10px 0"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
               <thead><tr style={{background:"#f1f5f9"}}>
-                <th style={{padding:"6px 8px",textAlign:"left",borderBottom:"2px solid #e2e8f0",fontSize:10}}>Factor</th>
-                <th style={{padding:"6px 8px",textAlign:"left",borderBottom:"2px solid #e2e8f0",fontSize:10,color:"#7c3aed"}}>CCHS Tier 3</th>
-                <th style={{padding:"6px 8px",textAlign:"left",borderBottom:"2px solid #e2e8f0",fontSize:10,color:"#2563eb"}}>State Density Bonus</th>
+                <th style={{padding:"6px 8px",textAlign:"left",borderBottom:"2px solid #dbe3ee",fontSize:10}}>Factor</th>
+                <th style={{padding:"6px 8px",textAlign:"left",borderBottom:"2px solid #dbe3ee",fontSize:10,color:"#7c3aed"}}>CCHS Tier 3</th>
+                <th style={{padding:"6px 8px",textAlign:"left",borderBottom:"2px solid #dbe3ee",fontSize:10,color:"#2563eb"}}>State Density Bonus</th>
               </tr></thead>
               <tbody>
                 {[
@@ -981,7 +1049,7 @@ function AdvisorySection({sel,bldgs,onHelp}){
         <AdvCard id="glossary" title="Glossary" isOpen={!!open["glossary"]} onToggle={toggle}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"6px 14px"}}>
             {GLOSSARY.map(g=>(
-              <div key={g.term} style={{padding:"7px 10px",borderRadius:8,background:"#f8fafc",border:"1px solid #e2e8f0"}}>
+              <div key={g.term} style={{padding:"7px 10px",borderRadius:8,background:"#f8fafc",border:"1px solid #dbe3ee"}}>
                 <div style={{display:"flex",gap:6,alignItems:"baseline",marginBottom:3}}>
                   <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,color:"#0f4c81",flexShrink:0}}>{g.term}</span>
                   {g.full&&<span style={{fontSize:9,color:"#64748b",fontWeight:600}}>{g.full}</span>}
@@ -992,9 +1060,9 @@ function AdvisorySection({sel,bldgs,onHelp}){
           </div>
         </AdvCard>
 
-        <div style={{marginTop:8,borderRadius:10,border:"1px solid #e2e8f0",background:"#fff",overflow:"clip"}}>
+        <div style={{marginTop:8,borderRadius:10,border:"1px solid #dbe3ee",background:"#fff",overflow:"clip"}}>
           <button onClick={e=>{e.currentTarget.blur();toggle("footnotes")}} style={{width:"100%",padding:"10px 14px",border:"none",cursor:"pointer",fontFamily:"inherit",background:open["footnotes"]?"#f8fafc":"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left"}}>
-            <span style={{fontSize:13,fontWeight:700,color:"#1e293b"}}>Sources and References</span>
+            <span style={{fontSize:13,fontWeight:700,color:"#2d3748"}}>Sources and References</span>
             <span style={{fontSize:12,color:"#94a3b8",transition:"transform .2s",transform:open["footnotes"]?"rotate(0)":"rotate(-90deg)",display:"inline-block"}}>{"\u25BE"}</span>
           </button>
           {open["footnotes"]&&<div style={{padding:"0 14px 14px",fontSize:11,lineHeight:1.8,color:"#64748b"}}>
@@ -1067,9 +1135,9 @@ function ItemRow({it,isDone,toggleCheck,sel,onSel,userNote,setNote,noteOpen,togg
   const cfg=CHOICES[it.id];
   const isDimmed=cfg&&cfg.type==="dim"&&cfg.dimIf&&cfg.dimIf(sel);
   return (
-    <div style={{borderBottom:"1px solid #e2e8f0",background:isDimmed?"#f8f9fb":it.alert&&!isDone?"#fff5f5":isDone?"#f0fdf4":"#fff",opacity:isDimmed?.45:1,transition:"all .15s"}}>
+    <div style={{borderBottom:"1px solid #dbe3ee",background:isDimmed?"#f8f9fb":it.alert&&!isDone?"#fff5f5":isDone?"#f0fdf4":"#fff",opacity:isDimmed?.45:1,transition:"all .15s"}}>
       <div style={{display:"flex",gap:10,padding:"8px 14px",alignItems:"flex-start"}}>
-        <input type="checkbox" checked={!!isDone} onChange={()=>toggleCheck(it.id)} style={{marginTop:3,width:16,height:16,accentColor:"#0f4c81",flexShrink:0,cursor:"pointer"}}/>
+        <input type="checkbox" checked={!!isDone} onChange={()=>toggleCheck(it.id)} style={{marginTop:3,width:16,height:16,flexShrink:0,cursor:"pointer"}}/>
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",gap:6,alignItems:"baseline",flexWrap:"wrap"}}>
             <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:isDone?"#15803d":it.alert?"#dc2626":"#64748b",flexShrink:0}}>{it.id}</span>
@@ -1081,7 +1149,7 @@ function ItemRow({it,isDone,toggleCheck,sel,onSel,userNote,setNote,noteOpen,togg
             <button onClick={()=>toggleNote(it.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:9,color:"#94a3b8",fontFamily:"inherit",padding:0,textDecoration:"underline"}}>{noteOpen?"hide":userNote?"edit note":"+ note"}</button>
             {userNote&&!noteOpen&&<span style={{fontSize:9,color:"#64748b",marginLeft:6,fontStyle:"italic"}}>"{userNote.length>40?userNote.slice(0,40)+"...":userNote}"</span>}
           </div>
-          {noteOpen&&<textarea value={userNote||""} onChange={e=>setNote(it.id,e.target.value)} onClick={e=>e.stopPropagation()} placeholder="Your notes..." style={{marginTop:3,width:"100%",minHeight:32,padding:"5px 8px",borderRadius:6,border:"1.5px solid #e2e8f0",fontSize:11,fontFamily:"inherit",resize:"vertical",outline:"none",background:"#fafbfc",boxSizing:"border-box"}}/>}
+          {noteOpen&&<textarea value={userNote||""} onChange={e=>setNote(it.id,e.target.value)} onClick={e=>e.stopPropagation()} placeholder="Your notes..." style={{marginTop:3,width:"100%",minHeight:32,padding:"5px 8px",borderRadius:6,border:"1.5px solid #dbe3ee",fontSize:11,fontFamily:"inherit",resize:"vertical",outline:"none",background:"#fafbfc",boxSizing:"border-box"}}/>}
         </div>
         <div style={{display:"flex",gap:3,flexShrink:0,alignItems:"center",marginTop:2}}>
           {it.alert&&!isDone&&<span style={{fontSize:7,fontWeight:700,background:"#fef2f2",color:"#dc2626",padding:"2px 6px",borderRadius:8,border:"1px solid #fecaca"}}>ACTION</span>}
@@ -1134,27 +1202,38 @@ function App(){
   );
 
   return (
-    <div style={{fontFamily:"'DM Sans','Segoe UI',system-ui,sans-serif",background:"#eef1f6",minHeight:"100vh",color:"#1e293b"}}>
+    <div style={{fontFamily:"'DM Sans','Segoe UI',system-ui,sans-serif",background:"#f4f7fb",minHeight:"100vh",color:"#2d3748"}}>
       {helpOpen&&<HelpModal helpKey={helpOpen} helpData={helpData} onClose={closeHelp}/>}
 
       {/* HEADER */}
-      <div style={{background:"linear-gradient(135deg,#0c3d6b,#162c46)",padding:"18px 24px 12px",color:"#fff",borderBottom:"3px solid #f59e0b"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:920,margin:"0 auto"}}>
+      <div style={{background:"linear-gradient(135deg,#0f4c81,#162c46)",padding:"18px 24px 12px",color:"#fff",borderBottom:"3px solid #f59e0b"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,maxWidth:"90%",margin:"0 auto"}}>
           <div>
-            <div style={{fontSize:21,fontWeight:700,color:"#93c5fd"}}>Pre-Application Permit Checklist</div>
-            <div style={{fontSize:11,opacity:.5,marginTop:2}}>{(function(){var a=(SD.address||'').split(',');if(a.length>=3){return a[1].trim()+', '+a[2].trim().split(' ')[0]}return a[1]?a[1].trim():'San Diego, CA'})()} Development Guide Book</div>
-            <div id="ck-addr-wrap" style={{fontSize:16,fontWeight:700,marginTop:8,cursor:"pointer"}} onClick={e=>{var s=document.getElementById('ck-site-sel');if(s&&!s.disabled){s.style.display=s.style.display==='block'?'none':'block';}}}>
-              {(SD.address||'4335 Euclid Avenue, San Diego, CA 92105')} <span id="ck-addr-arrow" style={{fontSize:10,opacity:.4}}>{"\u25BE"}</span>
+            <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+              <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                <div style={{fontSize:28,fontWeight:700,color:"#fff",margin:"0 0 3px 0"}}>{SD.project||"ProjectBook-Planner"}</div>
+                <div style={{fontSize:16,fontWeight:600,color:"#93c5fd"}}>Pre-Application Permit Checklist</div>
+                <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{(function(){var a=(SD.address||'').split(',');if(a.length>=3){return a[1].trim()+', '+a[2].trim().split(' ')[0]}return a[1]?a[1].trim():'San Diego, CA'})()} Development Guide Book</div>
+              </div>
+              <div id="ck-addr-wrap" style={{display:"flex",alignItems:"center",gap:10,marginLeft:20}}>
+                <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}}>
+                  <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>Address</span>
+                  <select id="ck-site-sel" className="site-select" style={{background:"transparent",color:"#fff",border:"none",fontSize:"1.05em",fontWeight:700,fontFamily:"inherit",cursor:"pointer",padding:0,outline:"none",minWidth:200}} onChange={e=>{if(e.target.value&&window.switchSite)window.switchSite(e.target.value)}}></select>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}}>
+                  <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>APN</span>
+                  <span style={{fontSize:"1.05em",fontWeight:700,lineHeight:1.25,color:"#fff"}}>{SD.apn??'471-271-16-00'}</span>
+                </div>
+              </div>
             </div>
-            <select id="ck-site-sel" style={{display:"none",width:"100%",background:"#0c2d4a",color:"#fff",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,padding:"6px 8px",fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",zIndex:100,marginTop:4}} onChange={e=>{if(e.target.value){fetch('/api/sites/'+e.target.value+'/activate',{method:'POST'}).then(()=>{localStorage.removeItem('site_state');location.reload()})}}}></select>
-            <div style={{fontSize:10,opacity:.5,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{SD.apn??'471-271-16-00'} {"\u2022"} {SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
+            <div style={{fontSize:10,color:"#94a3b8",marginTop:6,fontFamily:"'JetBrains Mono',monospace"}}>{SD.zoning??'CUPD-CU-2-4'} {"\u2022"} {SD.lotWidth??50}x{SD.lotDepth??125} {"\u2022"} {(SD.lotSF??6250).toLocaleString()} SF</div>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:38,fontWeight:700,lineHeight:1,fontFamily:"'JetBrains Mono',monospace",color:pct===100?"#4ade80":pct>60?"#38bdf8":"#fbbf24"}}>{pct}<span style={{fontSize:14,opacity:.7}}>%</span></div>
             <div style={{fontSize:9,opacity:.4}}>{done}/{total}</div>
           </div>
         </div>
-        <div style={{maxWidth:920,margin:"10px auto 0"}}>
+        <div style={{maxWidth:"90%",margin:"10px auto 0"}}>
           <div style={{background:"rgba(255,255,255,.08)",borderRadius:5,height:7,overflow:"hidden"}}>
             <div style={{width:`${pct}%`,height:"100%",borderRadius:5,background:pct===100?"#22c55e":pct>60?"#38bdf8":"#fbbf24",transition:"width .4s"}}/>
           </div>
@@ -1174,7 +1253,7 @@ function App(){
       </div>
 
       {/* BODY */}
-      <div style={{padding:"14px 18px 50px",maxWidth:920,margin:"0 auto"}}>
+      <div style={{padding:"14px 18px 50px",maxWidth:"90%",margin:"0 auto"}}>
         <BuildingConfig bldgs={bldgs} setBldgs={setBldgsS} sel={sel} onSel={onSel} onHelp={openHelp} mapLocked={mapLocked} onToggleLock={toggleMapLock} onRefresh={refreshFromMap} isMobile={isMobile}/>
         <AdvisorySection sel={sel} bldgs={bldgs} onHelp={openHelp}/>
 
@@ -1198,7 +1277,7 @@ function App(){
                 {cat.sections&&cat.sections.map((sec,si)=>{
                   const sv=sec.items.filter(matchF);if(!sv.length)return null;
                   return <div key={si}>
-                    <div style={{padding:"4px 14px",background:"#f1f5f9",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:.8,color:"#475569",borderBottom:"1px solid #e2e8f0"}}>{sec.sub}</div>
+                    <div style={{padding:"4px 14px",background:"#f1f5f9",fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:.8,color:"#475569",borderBottom:"1px solid #dbe3ee"}}>{sec.sub}</div>
                     {renderItems(sec.items)}
                   </div>
                 })}
@@ -1213,9 +1292,9 @@ function App(){
             {CONTACTS.map((c,i)=><div key={i} style={{padding:"8px 14px",borderBottom:"1px solid #f1f5f9",borderRight:"1px solid #f1f5f9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
                 <div style={{fontSize:8,fontWeight:700,textTransform:"uppercase",color:"#94a3b8",letterSpacing:.5}}>{c.name}</div>
-                <div style={{fontSize:11,fontWeight:500,color:"#1e293b",marginTop:1,wordBreak:"break-all"}}>{c.val}</div>
+                <div style={{fontSize:11,fontWeight:500,color:"#2d3748",marginTop:1,wordBreak:"break-all"}}>{c.val}</div>
               </div>
-              {c.copy&&<button onClick={()=>copyText(c.val)} style={{background:copied===c.val?"#22c55e":"#e2e8f0",border:"none",borderRadius:5,padding:"3px 8px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:copied===c.val?"#fff":"#475569",transition:"all .15s",flexShrink:0}}>{copied===c.val?"Copied!":"Copy"}</button>}
+              {c.copy&&<button onClick={()=>copyText(c.val)} style={{background:copied===c.val?"#22c55e":"#dbe3ee",border:"none",borderRadius:5,padding:"3px 8px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit",color:copied===c.val?"#fff":"#475569",transition:"all .15s",flexShrink:0}}>{copied===c.val?"Copied!":"Copy"}</button>}
             </div>)}
           </div>
         </div>
@@ -1251,11 +1330,56 @@ root.render(<App/>);
 window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if(box){box.style.display='block';box.textContent+='ERROR: '+m+'\nLine: '+l+', Col: '+c+'\n'+(e&&e.stack?e.stack:'')+'\n\n';}};
 </script>
 <script>
-(function(){var sel=document.getElementById('ck-site-sel');if(!sel)return;fetch('/api/sites').then(function(r){return r.json()}).then(function(sites){sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.address;if(s.active)o.selected=true;sel.appendChild(o)})}).catch(function(){sel.remove();var w=document.getElementById('ck-addr-wrap');if(w)w.style.cursor='default';var a=document.getElementById('ck-addr-arrow');if(a)a.style.display='none'})})();
+(function(){
+  function safeStorageGet(key){try{return localStorage.getItem(key);}catch(e){return null;}}
+  function safeStorageSet(key,val){try{localStorage.setItem(key,val);}catch(e){}}
+  function safeStorageRemove(key){try{localStorage.removeItem(key);}catch(e){}}
+  function getState(id){return id?id.split('-')[0]:'';}
+  window.switchSite=function(siteId){
+    if(!siteId)return;
+    var sd=window.__SITE_DEFAULTS__||{};
+    safeStorageSet('selected_site',siteId);
+    var st=getState(siteId);if(st)safeStorageSet('selected_state',st);
+    safeStorageRemove('site_state');
+    if(siteId===sd.siteId||location.protocol==='file:'){location.reload();return;}
+    fetch('/api/sites/'+encodeURIComponent(siteId)+'/activate',{method:'POST'})
+      .then(function(r){if(!r.ok)throw new Error('activate failed');return r.text();})
+      .then(function(){location.reload();})
+      .catch(function(){location.reload();});
+  };
+  var siteSel=document.getElementById('ck-site-sel');
+  var stateSel=document.getElementById('ck-state-filter');
+  var stateWrap=document.getElementById('ck-state-wrap');
+  var sites=window.__SITE_LIST__||[];
+  var sd=window.__SITE_DEFAULTS__||{};
+  var activeSite=safeStorageGet('selected_site')||sd.siteId||'';
+  var activeState=safeStorageGet('selected_state')||(activeSite?getState(activeSite):'');
+  function populateSites(stateFilter){
+    if(!siteSel)return;
+    while(siteSel.firstChild)siteSel.removeChild(siteSel.firstChild);
+    var filtered=stateFilter?sites.filter(function(s){return getState(s.siteId)===stateFilter;}):sites;
+    if(filtered.length>0){
+      if(!filtered.some(function(s){return s.siteId===activeSite;})){activeSite=filtered[0].siteId;safeStorageSet('selected_site',activeSite);}
+      filtered.forEach(function(s){var o=document.createElement('option');o.value=s.siteId;o.textContent=s.address;if(s.siteId===activeSite)o.selected=true;siteSel.appendChild(o);});
+    }else{var o=document.createElement('option');o.value=sd.siteId||'';o.textContent=sd.address||'Current site';o.selected=true;siteSel.appendChild(o);}
+  }
+  if(stateSel&&sites.length>0){
+    var states=[];
+    sites.forEach(function(s){var st=getState(s.siteId);if(st&&states.indexOf(st)===-1)states.push(st);});
+    states.sort();
+    if(states.length>1){
+      states.forEach(function(st){var o=document.createElement('option');o.value=st;o.textContent=st;if(st===activeState)o.selected=true;stateSel.appendChild(o);});
+      stateSel.addEventListener('change',function(){activeState=stateSel.value;safeStorageSet('selected_state',activeState);populateSites(activeState);});
+    }else{if(stateWrap)stateWrap.style.display='none';}
+  }
+  populateSites(activeState||null);
+})();
 // Dark mode: fix React inline backgrounds AND text colors after render
 (function(){
+window._darkFix=fix;
 function fix(){if(document.documentElement.getAttribute('data-theme')!=='dark')return;
 document.querySelectorAll('#root *').forEach(function(el){
+if(el.tagName==='INPUT'&&el.type==='checkbox')return;
 var cs=getComputedStyle(el);
 // Fix solid backgrounds — any light bg gets forced dark
 var bg=cs.backgroundColor;
@@ -1281,9 +1405,10 @@ else if(isGray&&(cr*299+cg*587+cb*114)/1000<180){el.style.color='#94a3b8';}
 if(el.style.opacity&&parseFloat(el.style.opacity)<0.6){el.style.opacity='0.85';}
 });}
 setTimeout(fix,80);setTimeout(fix,300);setTimeout(fix,800);
-new MutationObserver(function(){setTimeout(fix,50)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});
+var _fixPending=false;
+new MutationObserver(function(){if(!_fixPending){_fixPending=true;requestAnimationFrame(function(){fix();_fixPending=false;})}}).observe(document.getElementById('root')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
 })();
 </script>
-<button class="theme-toggle" onclick="(function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';localStorage.setItem('theme',t);location.reload();})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
+<button class="theme-toggle" onclick="(function(){var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.querySelector('.theme-toggle').textContent=t==='dark'?'\u2600\ufe0f':'\ud83c\udf19';if(window._darkFix)window._darkFix();})()" aria-label="Toggle dark mode"><script>document.write(document.documentElement.getAttribute('data-theme')==='dark'?'\u2600\ufe0f':'\ud83c\udf19')</script></button>
 </body>
 </html>

@@ -20,6 +20,8 @@ $checklistSrc = Join-Path $src  "checklist.html"
 $outputDir    = Join-Path $base "Output"
 $outputMap    = Join-Path $outputDir "InteractiveMap.html"
 $outputChk    = Join-Path $outputDir "PreApp_Checklist.html"
+$docsDir      = Join-Path $base "docs"
+$publicUrl    = "https://blueberry0120x.github.io/ParcelDashboard/"
 $cssFile      = Join-Path $src  "css\style.css"
 $siteDataFile = Join-Path $base "data\site-data.json"
 
@@ -288,6 +290,13 @@ $ok = Build-Html
 if (-not $ok) { exit 1 }
 Build-Checklist | Out-Null
 
+# ── Sync Output -> docs (twin publish) ─────────────────────────────────────
+if (-not (Test-Path $docsDir)) { New-Item -ItemType Directory -Path $docsDir -Force | Out-Null }
+Copy-Item $outputMap (Join-Path $docsDir "InteractiveMap.html") -Force
+Copy-Item $outputChk (Join-Path $docsDir "PreApp_Checklist.html") -Force
+Write-Host "  [DOCS] Synced Output -> docs/ (push to main triggers public mirror)" -ForegroundColor DarkCyan
+Write-Host ""
+
 # ── Modes ──────────────────────────────────────────────────────────────────
 if ($Mode -eq "debug") {
     Write-Host "  [DEBUG] Opening in browser..." -ForegroundColor Cyan
@@ -304,14 +313,17 @@ if ($Mode -eq "serve") {
     }
 
     Write-Host "===========================================" -ForegroundColor Cyan
-    Write-Host "  [SERVE] http://localhost:$port           Map" -ForegroundColor Cyan
-    Write-Host "          http://localhost:$port/checklist  Checklist" -ForegroundColor Cyan
+    Write-Host "  [LOCAL]  http://localhost:$port           Map" -ForegroundColor Cyan
+    Write-Host "           http://localhost:$port/checklist  Checklist" -ForegroundColor Cyan
+    Write-Host "  [PUBLIC] $publicUrl" -ForegroundColor DarkCyan
+    Write-Host "           ${publicUrl}PreApp_Checklist.html" -ForegroundColor DarkCyan
     Write-Host "  Save Config writes directly to site-data.json" -ForegroundColor Green
     Write-Host "  Press Ctrl+C to stop" -ForegroundColor DarkGray
     Write-Host "===========================================" -ForegroundColor Cyan
     Write-Host ""
 
     Start-Process "http://localhost:$port/"
+    Start-Process $publicUrl
 
     try {
         while ($listener.IsListening) {

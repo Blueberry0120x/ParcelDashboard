@@ -90,7 +90,8 @@
                                         "stackSpacing":  0,
                                         "anchor":  "front",
                                         "stories":  3,
-                                        "floorHeight":  9
+                                        "floorHeight":  9,
+                                        "stackAngle":  0
                                     }
                                 ],
                   "activeBuilding":  2,
