@@ -170,7 +170,6 @@
                         <div style="display:flex;gap:5px;flex-wrap:wrap;">
                             <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
                             <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
-                            <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
                             <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
                         </div>
                     </div>
@@ -223,7 +222,6 @@
                             <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="0" max="360" step="1" title="Stack angle ° (0=→, 90=↑, 180=←, 270=↓)">
                             <span class="ft-label">°</span>
                         </div>
-                        <input type="range" id="bldgStackAngleSlider" min="0" max="360" value="0" step="1" style="width:140px;">
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
                             <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>

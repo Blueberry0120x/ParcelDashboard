@@ -124,6 +124,12 @@ const MapEngine = {
                 bldg.offsetX = parseFloat((clamped.cx - (f - r) / 2).toFixed(1));
                 bldg.offsetY = parseFloat((clamped.cy - (sr - sl) / 2).toFixed(1));
             }
+            // Magnetic snap during drag
+            if (state.snapEdge) {
+                const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
+                bldg.offsetX = snapped.x;
+                bldg.offsetY = snapped.y;
+            }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -210,12 +216,10 @@ const MapEngine = {
         const lotLeft   = lotHalfW  - sideL  - yShift;
         const lotRight  = -lotHalfW + sideR  - yShift;
 
-        // Snap building edges to lot boundary edges
+        // Snap building edges to lot boundary edges (one snap per axis per side)
         const lotYSnaps = [
-            { from: thisTop, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
+            { from: thisTop, to: lotLeft,  adj: lotLeft  - thisExt.halfWidth },
             { from: thisBot, to: lotRight, adj: lotRight + thisExt.halfWidth },
-            { from: thisTop, to: lotRight, adj: lotRight + thisExt.halfWidth },
-            { from: thisBot, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
         ];
         for (const s of lotYSnaps) {
             const d = Math.abs(s.from - s.to);
@@ -223,9 +227,7 @@ const MapEngine = {
         }
         const lotXSnaps = [
             { from: thisRight, to: lotFront, adj: lotFront - thisExt.halfDepth },
-            { from: thisLeft,  to: lotRear,  adj: lotRear + thisExt.halfDepth },
-            { from: thisLeft,  to: lotFront, adj: lotFront - thisExt.halfDepth },
-            { from: thisRight, to: lotRear,  adj: lotRear + thisExt.halfDepth },
+            { from: thisLeft,  to: lotRear,  adj: lotRear  + thisExt.halfDepth },
         ];
         for (const s of lotXSnaps) {
             const d = Math.abs(s.from - s.to);
@@ -576,7 +578,7 @@ const MapEngine = {
             onAdd: function() {
                 var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-recenter');
                 c.title = 'Recenter map to site';
-                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:18px;line-height:30px;">&#8982;</a>';
+                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:16px;line-height:30px;font-weight:bold;">&#8853;</a>';
                 L.DomEvent.on(c, 'click', function(e) {
                     L.DomEvent.preventDefault(e);
                     const state = ConfigEngine.state;

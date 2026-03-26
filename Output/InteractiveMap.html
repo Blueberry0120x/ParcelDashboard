@@ -788,7 +788,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-8.7,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40,"stackAngle":0},{"orientation":0,"W":18.5,"D":40,"offsetX":-10.8,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":false,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 <script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
@@ -939,7 +939,6 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                         <div style="display:flex;gap:5px;flex-wrap:wrap;">
                             <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
                             <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
-                            <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
                             <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
                         </div>
                     </div>
@@ -992,7 +991,6 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                             <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="0" max="360" step="1" title="Stack angle ° (0=→, 90=↑, 180=←, 270=↓)">
                             <span class="ft-label">°</span>
                         </div>
-                        <input type="range" id="bldgStackAngleSlider" min="0" max="360" value="0" step="1" style="width:140px;">
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
                             <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
@@ -1753,6 +1751,12 @@ const MapEngine = {
                 bldg.offsetX = parseFloat((clamped.cx - (f - r) / 2).toFixed(1));
                 bldg.offsetY = parseFloat((clamped.cy - (sr - sl) / 2).toFixed(1));
             }
+            // Magnetic snap during drag
+            if (state.snapEdge) {
+                const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
+                bldg.offsetX = snapped.x;
+                bldg.offsetY = snapped.y;
+            }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
                 const oy   = document.getElementById('bldgOffsetY');
@@ -1839,12 +1843,10 @@ const MapEngine = {
         const lotLeft   = lotHalfW  - sideL  - yShift;
         const lotRight  = -lotHalfW + sideR  - yShift;
 
-        // Snap building edges to lot boundary edges
+        // Snap building edges to lot boundary edges (one snap per axis per side)
         const lotYSnaps = [
-            { from: thisTop, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
+            { from: thisTop, to: lotLeft,  adj: lotLeft  - thisExt.halfWidth },
             { from: thisBot, to: lotRight, adj: lotRight + thisExt.halfWidth },
-            { from: thisTop, to: lotRight, adj: lotRight + thisExt.halfWidth },
-            { from: thisBot, to: lotLeft,  adj: lotLeft - thisExt.halfWidth },
         ];
         for (const s of lotYSnaps) {
             const d = Math.abs(s.from - s.to);
@@ -1852,9 +1854,7 @@ const MapEngine = {
         }
         const lotXSnaps = [
             { from: thisRight, to: lotFront, adj: lotFront - thisExt.halfDepth },
-            { from: thisLeft,  to: lotRear,  adj: lotRear + thisExt.halfDepth },
-            { from: thisLeft,  to: lotFront, adj: lotFront - thisExt.halfDepth },
-            { from: thisRight, to: lotRear,  adj: lotRear + thisExt.halfDepth },
+            { from: thisLeft,  to: lotRear,  adj: lotRear  + thisExt.halfDepth },
         ];
         for (const s of lotXSnaps) {
             const d = Math.abs(s.from - s.to);
@@ -2205,7 +2205,7 @@ const MapEngine = {
             onAdd: function() {
                 var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-recenter');
                 c.title = 'Recenter map to site';
-                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:18px;line-height:30px;">&#8982;</a>';
+                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:16px;line-height:30px;font-weight:bold;">&#8853;</a>';
                 L.DomEvent.on(c, 'click', function(e) {
                     L.DomEvent.preventDefault(e);
                     const state = ConfigEngine.state;

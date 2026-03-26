@@ -60,45 +60,19 @@
                   "buildings":  [
                                     {
                                         "orientation":  90,
-                                        "offsetX":  -50.8,
-                                        "offsetY":  5,
+                                        "offsetX":  -52.5,
+                                        "offsetY":  10,
                                         "count":  1,
                                         "stackSpacing":  0,
                                         "anchor":  "front",
                                         "stories":  3,
                                         "floorHeight":  9,
-                                        "W":  18.5,
-                                        "D":  40
-                                    },
-                                    {
-                                        "orientation":  0,
-                                        "offsetX":  -8.7,
-                                        "offsetY":  15.8,
-                                        "anchor":  "front",
-                                        "count":  1,
-                                        "stackSpacing":  4,
-                                        "spacing":  9,
-                                        "stories":  3,
-                                        "floorHeight":  9,
-                                        "W":  18.5,
-                                        "D":  40,
+                                        "W":  20,
+                                        "D":  30,
                                         "stackAngle":  0
-                                    },
-                                    {
-                                        "orientation":  0,
-                                        "W":  18.5,
-                                        "D":  40,
-                                        "offsetX":  -10.8,
-                                        "offsetY":  -2.7,
-                                        "spacing":  0,
-                                        "count":  1,
-                                        "stackSpacing":  0,
-                                        "anchor":  "front",
-                                        "stories":  3,
-                                        "floorHeight":  9
                                     }
                                 ],
-                  "activeBuilding":  1,
+                  "activeBuilding":  0,
                   "commFront":  true,
                   "showBldgDims":  true,
                   "hiddenDimKeys":  [
@@ -110,7 +84,7 @@
                   "mapOpacity":  70,
                   "setbacksApplied":  false,
                   "freeDrag":  true,
-                  "snapEdge":  false,
+                  "snapEdge":  true,
                   "vehicles":  [
 
                                ],

@@ -34,7 +34,7 @@
                  "architect":  "ADEC Architecture \u0026 Construction Group",
                  "cornerVisibilityTriangle":  true,
                  "densityBonus":  true,
-                 "notes":  "Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.",
+                 "notes":  "Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner.",
                  "cornerVisTriSize":  25,
                  "cornerVisCorner":  "SW",
                  "inspectors":  [
@@ -111,5 +111,43 @@
                                ],
                   "activeVehicle":  -1
               },
-    "checklist":  null
+    "checklist":  {
+                      "ck":  {
+                                 "A1":  true,
+                                 "A2":  true,
+                                 "A5":  true,
+                                 "B1":  false,
+                                 "B3":  true
+                             },
+                      "sel":  {
+
+                              },
+                      "notes":  {
+
+                                },
+                      "bldgs":  [
+                                    {
+                                        "type":  "Commercial",
+                                        "w":  18.5,
+                                        "d":  40,
+                                        "stories":  3,
+                                        "unitsPerFloor":  1
+                                    },
+                                    {
+                                        "type":  "Residential",
+                                        "w":  18.5,
+                                        "d":  40,
+                                        "stories":  3,
+                                        "unitsPerFloor":  1
+                                    },
+                                    {
+                                        "type":  "Residential",
+                                        "w":  18.5,
+                                        "d":  40,
+                                        "stories":  3,
+                                        "unitsPerFloor":  1
+                                    }
+                                ],
+                      "mapLocked":  true
+                  }
 }
