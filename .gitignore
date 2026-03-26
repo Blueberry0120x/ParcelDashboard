@@ -31,3 +31,6 @@ token.json
 # Build artifacts (keep Output/ tracked)
 *.tmp
 *.bak
+
+# Auto-generated checklist backups (server POST /backup-checklist)
+config/backup/

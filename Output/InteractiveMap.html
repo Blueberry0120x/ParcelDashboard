@@ -2205,7 +2205,7 @@ const MapEngine = {
             onAdd: function() {
                 var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-recenter');
                 c.title = 'Recenter map to site';
-                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:16px;line-height:30px;font-weight:bold;">&#8853;</a>';
+                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:22px;line-height:36px;font-weight:bold;width:36px;height:36px;display:block;text-align:center;">&#8853;</a>';
                 L.DomEvent.on(c, 'click', function(e) {
                     L.DomEvent.preventDefault(e);
                     const state = ConfigEngine.state;
