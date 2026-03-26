@@ -593,7 +593,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 .info-scope-section { margin-top: 8px; width: 100%; }
 .info-scope-text { margin: 0; padding: 8px 12px; font-size: 0.82em; line-height: 1.55;
     color: #e2e8f0; background: #1a1a1a; border: 1px solid var(--cad-border);
-    white-space: pre-wrap; word-break: break-word; }
+    white-space: pre-wrap; word-break: break-word; min-height: 80px; }
 
 /* ==========================================
    ELEVATION TOOL
@@ -777,6 +777,8 @@ html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e
     color:#e2e8f0; font-size:0.82em; padding:5px 8px; width:100%; box-sizing:border-box; font-family:inherit;
 }
 .sei-row textarea { resize:vertical; min-height:60px; }
+#sei-scope { min-height:160px; }
+#sei-notes { min-height:90px; }
 .sei-row input:focus, .sei-row textarea:focus { outline:none; border-color:#f472b6; }
 /* Dynamic array editor (inspectors / planning / overlay) */
 .sei-array-wrap { display:flex; flex-direction:column; gap:4px; }
