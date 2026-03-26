@@ -8,7 +8,7 @@
 
 param(
     [string]$Mode = "reload",
-    [int]$Port = 7830
+    [int]$Port = 3030
 )
 
 Set-StrictMode -Version Latest

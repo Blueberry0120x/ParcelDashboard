@@ -9,7 +9,7 @@ Interactive parcel map and pre-application checklist suite for land development 
 | `Output/InteractiveMap.html` | Leaflet map — draggable buildings, chain dimensions, setbacks, vehicle overlays, snap-to-edge |
 | `Output/PreApp_Checklist.html` | Pre-application checklist — State Density Bonus calculator, pathway selector, fee estimates |
 
-Both files are fully self-contained (all CSS/JS inlined). Served locally at `localhost:7830` or publicly at [ParcelDashboard (GitHub Pages)](https://blueberry0120x.github.io/ParcelDashboard/).
+Both files are fully self-contained (all CSS/JS inlined). Served locally at `localhost:3030` or publicly at [ParcelDashboard (GitHub Pages)](https://blueberry0120x.github.io/ParcelDashboard/).
 
 ## Build
 
@@ -17,7 +17,7 @@ Both files are fully self-contained (all CSS/JS inlined). Served locally at `loc
 # Compile only
 powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1
 
-# Compile + dev server (localhost:7830, live save)
+# Compile + dev server (localhost:3030, live save)
 powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1 serve
 
 # Compile + open in browser
