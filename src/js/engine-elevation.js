@@ -3,6 +3,7 @@
    ========================================== */
 const ElevationTool = {
     _pins:     [],
+    _values:   [],
     _hoverDiv: null,
     _debounce: null,
     _sampling: false,
@@ -60,12 +61,27 @@ const ElevationTool = {
                 offset: [0, -6], className: 'elev-label'
             }).addTo(MapEngine.map);
             this._pins.push(pin);
+            if (elev !== null) {
+                this._values.push(parseFloat(elev));
+                this._updateAvg();
+            }
         });
+    },
+
+    _updateAvg: function() {
+        var el = document.getElementById('info-avg-elev');
+        if (!el) return;
+        if (this._values.length === 0) { el.textContent = '--'; return; }
+        var avg = this._values.reduce(function(a, b) { return a + b; }, 0) / this._values.length;
+        el.textContent = avg.toFixed(1) + ' ft (' + this._values.length + ' pts)';
     },
 
     clear: function() {
         this._pins.forEach(p => MapEngine.map.removeLayer(p));
         this._pins = [];
+        this._values = [];
+        var el = document.getElementById('info-avg-elev');
+        if (el) el.textContent = '--';
         this._deactivate();
     },
 
