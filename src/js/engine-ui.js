@@ -64,6 +64,9 @@ const UIEngine = {
         _set('info-sl-projtype', sd.projectType || '--');
         _set('info-sl-architect', sd.architect || '--');
 
+        // Scope of work
+        _set('info-scope-work', sd.scopeOfWork || '--');
+
         // Inspector contacts (dynamic from site JSON)
         var inspTable = document.getElementById('info-inspectors-table');
         var inspectors = sd.inspectors || [];

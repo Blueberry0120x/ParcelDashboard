@@ -601,10 +601,18 @@ input:checked + .slider:before { transform: translateX(20px); }
 /* ==========================================
    5. INFO BOTTOM — aligns with sidebar/map split
    ========================================== */
-.info-bottom { display: flex; gap: 0; align-items: flex-start; margin-top: 12px; }
+.info-bottom { display: flex; flex-direction: column; gap: 0; margin-top: 12px; }
+.info-cols-grid { display: flex; gap: 0; align-items: flex-start; width: 100%; }
 .info-col-left  { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .info-col-gap   { width: 18px;  flex-shrink: 0; }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+/* Pin left-column table th widths to match (longest label = STANDARD SETBACKS) */
+.info-col-left .cad-table th { width: 205px; min-width: 205px; }
+/* Scope of work section */
+.info-scope-section { margin-top: 8px; width: 100%; }
+.info-scope-text { margin: 0; padding: 8px 12px; font-size: 0.82em; line-height: 1.55;
+    color: #e2e8f0; background: #1a1a1a; border: 1px solid var(--cad-border);
+    white-space: pre-wrap; word-break: break-word; }
 
 /* ==========================================
    ELEVATION TOOL
@@ -667,8 +675,8 @@ input:checked + .slider:before { transform: translateX(20px); }
         min-height: 36px; font-size: 0.8em;
     }
 
-    /* Info bottom: single column */
-    .info-bottom { flex-direction: column; }
+    /* Info bottom: single column on mobile */
+    .info-cols-grid { flex-direction: column; }
     .info-col-gap { display: none; }
 
     /* Property banner: allow 2-line wrapping on very small screens */
@@ -788,7 +796,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"scopeOfWork":"","lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 <script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
@@ -1082,6 +1090,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
     <!-- INFO BOTTOM — columns aligned to sidebar / map split -->
     <div class="info-bottom" id="infoBottom">
+      <div class="info-cols-grid">
         <div class="info-col-left" id="infoColLeft">
             <details open>
                 <summary>PROJECT INFORMATION</summary>
@@ -1134,6 +1143,11 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                 </table>
             </details>
         </div>
+      </div><!-- end info-cols-grid -->
+      <details class="info-scope-section" open>
+          <summary>SCOPE OF WORK</summary>
+          <p id="info-scope-work" class="info-scope-text">--</p>
+      </details>
     </div>
 
 </div><!-- end page-wrapper -->
@@ -1457,6 +1471,9 @@ const UIEngine = {
         // Project info extras (merged into PROJECT INFORMATION panel)
         _set('info-sl-projtype', sd.projectType || '--');
         _set('info-sl-architect', sd.architect || '--');
+
+        // Scope of work
+        _set('info-scope-work', sd.scopeOfWork || '--');
 
         // Inspector contacts (dynamic from site JSON)
         var inspTable = document.getElementById('info-inspectors-table');
@@ -2205,7 +2222,7 @@ const MapEngine = {
             onAdd: function() {
                 var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-recenter');
                 c.title = 'Recenter map to site';
-                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:22px;line-height:36px;font-weight:bold;width:36px;height:36px;display:block;text-align:center;">&#8853;</a>';
+                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:16px;line-height:30px;font-weight:bold;">&#8853;</a>';
                 L.DomEvent.on(c, 'click', function(e) {
                     L.DomEvent.preventDefault(e);
                     const state = ConfigEngine.state;
