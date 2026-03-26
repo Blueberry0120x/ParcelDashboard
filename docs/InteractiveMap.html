@@ -464,7 +464,7 @@ summary::after { content: "+"; font-size: 1.1em; color: white; }
 details[open] summary::after { content: "−"; }
 details[open] summary { border-bottom: 1px solid var(--cad-border); }
 
-.cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+.cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; margin-bottom: 5px; }
 .cad-table th, .cad-table td {
     padding: 4px 6px 4px 4px; border-bottom: 1px solid var(--cad-border);
     border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
@@ -788,7 +788,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner. Rear abuts R-3 residential.","cornerVisTriSize":25,"cornerVisCorner":"SW","inspectors":[],"lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-50.8,"offsetY":5,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":18.5,"D":40},{"orientation":0,"offsetX":-8.7,"offsetY":15.8,"anchor":"front","count":1,"stackSpacing":4,"spacing":9,"stories":3,"floorHeight":9,"W":18.5,"D":40,"stackAngle":0},{"orientation":0,"W":18.5,"D":40,"offsetX":-10.8,"offsetY":-2.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9}],"activeBuilding":1,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":false,"vehicles":[],"activeVehicle":-1};</script>
 <script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-burien.json"}];</script>
 </head>
 <body>
@@ -936,15 +936,11 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 class="sub-toggle" onclick="this.closest('.building-config-wrap').classList.toggle('collapsed')" style="margin:0; cursor:pointer;">Building Config</h3>
-                        <div style="display:flex;flex-direction:column;gap:3px;">
-                            <div style="display:flex;gap:5px;">
-                                <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
-                                <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
-                            </div>
-                            <div style="display:flex;gap:5px;">
-                                <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
-                                <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
-                            </div>
+                        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
+                            <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                            <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
+                            <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
                         </div>
                     </div>
                     <div class="sub-body">
@@ -992,10 +988,11 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                             <label>G</label>
                             <input type="number" id="bldgStackSpacing" class="align-angle-input" value="0" min="0" step="0.5">
                             <span class="ft-label">ft</span>
-                            <button id="bldgStackDirBtn" class="anchor-btn" title="Toggle stack direction (0°=depth, 90°=width)" style="padding:2px 6px;font-size:1em;">→</button>
-                            <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="-180" max="180" step="15" title="Stack angle ° (0=depth, 90=width)">
+                            <button id="bldgStackDirBtn" class="anchor-btn" title="Cycle stack direction: → ↑ ← ↓" style="padding:2px 6px;font-size:1em;">→</button>
+                            <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="0" max="360" step="1" title="Stack angle ° (0=→, 90=↑, 180=←, 270=↓)">
                             <span class="ft-label">°</span>
                         </div>
+                        <input type="range" id="bldgStackAngleSlider" min="0" max="360" value="0" step="1" style="width:140px;">
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
                             <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
@@ -1073,24 +1070,34 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                 </div>
             </div>
 
-            <!-- PROJECT INFORMATION -->
+        </div><!-- end sidebar -->
+
+        <!-- RESIZE DIVIDER -->
+        <div class="col-divider" id="colDivider"></div>
+
+        <!-- MAP PANEL -->
+        <div class="map-panel" id="mapPanel">
+            <div id="map"></div>
+        </div>
+
+    </div><!-- end main-container -->
+
+    <!-- INFO BOTTOM — columns aligned to sidebar / map split -->
+    <div class="info-bottom" id="infoBottom">
+        <div class="info-col-left" id="infoColLeft">
             <details open>
                 <summary>PROJECT INFORMATION</summary>
                 <table class="cad-table">
                     <tr><th>PROJECT ADDRESS:</th><td id="info-address"></td></tr>
-                    <tr><th>LEGAL DESCRIPTION:</th><td>--</td></tr>
                     <tr><th>PARCEL #:</th><td id="info-apn"></td></tr>
-                    <tr><th>YEAR BUILT:</th><td>--</td></tr>
                     <tr><th>BASE ZONE:</th><td id="info-zone"></td></tr>
-                    <tr><th>OCCUPANCY GROUP:</th><td id="info-occupancy">--</td></tr>
-                    <tr><th>AVERAGE ELEVATION:</th><td>--</td></tr>
+                    <tr><th>PROJECT TYPE:</th><td id="info-sl-projtype">--</td></tr>
+                    <tr><th>ARCHITECT:</th><td id="info-sl-architect">--</td></tr>
                     <tr><th>LOT WIDTH:</th><td id="info-w"></td></tr>
                     <tr><th>HEIGHT RESTRICTION:</th><td id="info-height">--</td></tr>
                     <tr><th>STANDARD SETBACKS:</th><td id="info-setbacks">--</td></tr>
                 </table>
             </details>
-
-            <!-- LAND COVERAGE -->
             <details open>
                 <summary>LAND COVERAGE</summary>
                 <table class="cad-table">
@@ -1107,23 +1114,10 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                     <tr><th>FAR CHECK:</th><td>--</td></tr>
                 </table>
             </details>
-
-        </div><!-- end sidebar -->
-
-        <!-- RESIZE DIVIDER -->
-        <div class="col-divider" id="colDivider"></div>
-
-        <!-- MAP PANEL -->
-        <div class="map-panel" id="mapPanel">
-            <div id="map"></div>
         </div>
-
-    </div><!-- end main-container -->
-
-    <!-- INFO BOTTOM — columns aligned to sidebar / map split -->
-    <div class="info-bottom" id="infoBottom">
-        <div class="info-col-left" id="infoColLeft">
-            <details>
+        <div class="info-col-gap" id="infoColGap"></div>
+        <div class="info-col-right" id="infoColRight">
+            <details open>
                 <summary id="info-zoning-header">ZONING PARAMETERS</summary>
                 <table class="cad-table">
                     <tr><th>BASE DENSITY:</th><td id="info-zp-density">--</td></tr>
@@ -1136,19 +1130,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                     <tr><th>NOTES:</th><td id="info-zp-notes">--</td></tr>
                 </table>
             </details>
-            <details>
-                <summary>SITE LOCATION &amp; BASE ZONE</summary>
-                <table class="cad-table">
-                    <tr><th>ZONE DESIGNATION:</th><td id="info-sl-zone">--</td></tr>
-                    <tr><th>ADDRESS:</th><td id="info-sl-address">--</td></tr>
-                    <tr><th>PROJECT TYPE:</th><td id="info-sl-projtype">--</td></tr>
-                    <tr><th>ARCHITECT:</th><td id="info-sl-architect">--</td></tr>
-                </table>
-            </details>
-        </div>
-        <div class="info-col-gap" id="infoColGap"></div>
-        <div class="info-col-right" id="infoColRight">
-            <details id="info-inspectors-section">
+            <details id="info-inspectors-section" open>
                 <summary>CITY INSPECTOR CONTACTS</summary>
                 <table class="cad-table" id="info-inspectors-table">
                 </table>
@@ -1474,9 +1456,7 @@ const UIEngine = {
         _set('info-zp-side', sSb + ' FT');
         _set('info-zp-notes', sd.notes || '--');
 
-        // Site location table
-        _set('info-sl-zone', d.zoning || '--');
-        _set('info-sl-address', d.address || '--');
+        // Project info extras (merged into PROJECT INFORMATION panel)
         _set('info-sl-projtype', sd.projectType || '--');
         _set('info-sl-architect', sd.architect || '--');
 
@@ -1702,6 +1682,7 @@ const MapEngine = {
         this.buildNorthArrow();
         this.buildHelpControl();
         this.buildDimDragToggle();
+        this.buildRecenterControl();
         this._baseLayers = { "Satellite": sat, "Street Map": street, "Topo (Esri)": topoEsri, "Topo (USGS)": topoUSGS };
         this._activeBase = sat;
         this.map.on('baselayerchange', (e) => { this._activeBase = e.layer; e.layer.setOpacity(ConfigEngine.state.mapOpacity / 100); });
@@ -1784,6 +1765,7 @@ const MapEngine = {
         });
         m.on('dragend', () => {
             this._isDragging = false;
+            const state = ConfigEngine.state;
             // Apply snap on release (not during drag — avoids sticky-snap when touching other buildings)
             if (state.snapEdge) {
                 const bldg = state.buildings[idx];
@@ -1811,6 +1793,7 @@ const MapEngine = {
             btn.style.background = ''; btn.style.color = '';
             btn.textContent = 'Free Drag';
         }
+        ExportEngine.save();
     },
 
     toggleSnapEdge: function() {
@@ -1824,6 +1807,7 @@ const MapEngine = {
             btn.style.background = ''; btn.style.color = '';
             btn.textContent = 'Snap Edge';
         }
+        ExportEngine.save();
     },
 
     _applySnap: function(idx, offsetX, offsetY) {
@@ -1846,11 +1830,14 @@ const MapEngine = {
         const lotD = ConfigEngine.data.depth;
         const lotHalfD = lotD / 2;
         const lotHalfW = lotW / 2;
-        // Lot edges in offset coordinates (relative to lot center)
-        const lotFront  = lotHalfD - front;    // front edge (max X)
-        const lotRear   = -lotHalfD + rear;    // rear edge (min X)
-        const lotLeft   = lotHalfW - sideL;    // left edge (max Y)
-        const lotRight  = -lotHalfW + sideR;   // right edge (min Y)
+        // offsetX = lx - (front-rear)/2, offsetY = ly - (sideR-sideL)/2
+        // so lot edges must be expressed in offsetX/Y space (subtract the same shift)
+        const xShift = (front - rear) / 2;
+        const yShift = (sideR - sideL) / 2;
+        const lotFront  = lotHalfD  - front  - xShift;
+        const lotRear   = -lotHalfD + rear   - xShift;
+        const lotLeft   = lotHalfW  - sideL  - yShift;
+        const lotRight  = -lotHalfW + sideR  - yShift;
 
         // Snap building edges to lot boundary edges
         const lotYSnaps = [
@@ -2209,6 +2196,30 @@ const MapEngine = {
             }
         });
         this.map.addControl(new DimDragCtrl());
+    },
+
+    buildRecenterControl: function() {
+        const self = this;
+        const RecenterCtrl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function() {
+                var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-recenter');
+                c.title = 'Recenter map to site';
+                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:18px;line-height:30px;">&#8982;</a>';
+                L.DomEvent.on(c, 'click', function(e) {
+                    L.DomEvent.preventDefault(e);
+                    const state = ConfigEngine.state;
+                    if (self.lotPoly && self.lotPoly.getBounds().isValid()) {
+                        self.map.fitBounds(self.lotPoly.getBounds(), { padding: [40, 40] });
+                    } else {
+                        self.map.setView([state.lat, state.lng], 19);
+                    }
+                });
+                L.DomEvent.disableClickPropagation(c);
+                return c;
+            }
+        });
+        this.map.addControl(new RecenterCtrl());
     },
 
     updateNorthArrow: function() {
@@ -2831,7 +2842,9 @@ const SetbackEngine = {
         const angEl  = document.getElementById('bldgStackAngle');
         const dirBtn = document.getElementById('bldgStackDirBtn');
         if (angEl)  angEl.value = sAng;
-        if (dirBtn) dirBtn.textContent = Math.abs(sAng % 180) < 1 ? '→' : Math.abs(((sAng - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
+        const angSlider = document.getElementById('bldgStackAngleSlider');
+        if (angSlider) angSlider.value = sAng;
+        if (dirBtn) dirBtn.textContent = sAng < 1 ? '→' : Math.abs(sAng - 90) < 1 ? '↑' : Math.abs(sAng - 180) < 1 ? '←' : Math.abs(sAng - 270) < 1 ? '↓' : '∠';
         document.getElementById('bldgStories').value        = bldg.stories       || 1;
         document.getElementById('bldgFloorHeight').value    = (bldg.floorHeight  || 9).toFixed(1);
 
@@ -3557,27 +3570,50 @@ const SetbackEngine = {
             const bldg = state.buildings[state.activeBuilding];
             if (!bldg) return;
             let a = parseFloat(document.getElementById('bldgStackAngle').value) || 0;
-            a = Math.max(-180, Math.min(180, a));
+            a = ((a % 360) + 360) % 360;
             document.getElementById('bldgStackAngle').value = a;
+            const sliderEl = document.getElementById('bldgStackAngleSlider');
+            if (sliderEl) sliderEl.value = a;
             bldg.stackAngle = a;
             const dirBtn = document.getElementById('bldgStackDirBtn');
-            if (dirBtn) dirBtn.textContent = Math.abs(a % 180) < 1 ? '→' : Math.abs(((a - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
+            if (dirBtn) dirBtn.textContent = a < 1 ? '→' : Math.abs(a - 90) < 1 ? '↑' : Math.abs(a - 180) < 1 ? '←' : Math.abs(a - 270) < 1 ? '↓' : '∠';
             this.drawBuilding();
             ExportEngine.save();
         });
 
-        // Stack direction toggle: cycles → (0°) ↔ ↑ (90°)
+        // Stack direction toggle: cycles → (0°) → ↑ (90°) → ← (180°) → ↓ (270°)
         document.getElementById('bldgStackDirBtn').addEventListener('click', () => {
             const bldg = state.buildings[state.activeBuilding];
             if (!bldg) return;
-            const cur  = bldg.stackAngle || 0;
-            const next = Math.abs(cur % 180) < 1 ? 90 : 0;
+            const steps = [0, 90, 180, 270];
+            const dirs  = ['→', '↑', '←', '↓'];
+            const cur   = bldg.stackAngle || 0;
+            const idx   = steps.findIndex(s => Math.abs(cur - s) < 1);
+            const next  = steps[(idx < 0 ? 0 : idx + 1) % 4];
             bldg.stackAngle = next;
             document.getElementById('bldgStackAngle').value = next;
-            document.getElementById('bldgStackDirBtn').textContent = next === 0 ? '→' : '↑';
+            const sliderEl = document.getElementById('bldgStackAngleSlider');
+            if (sliderEl) sliderEl.value = next;
+            document.getElementById('bldgStackDirBtn').textContent = dirs[steps.indexOf(next)];
             this.drawBuilding();
             ExportEngine.save();
         });
+
+        // Stack angle slider
+        const stackAngleSlider = document.getElementById('bldgStackAngleSlider');
+        if (stackAngleSlider) {
+            stackAngleSlider.addEventListener('input', () => {
+                const bldg = state.buildings[state.activeBuilding];
+                if (!bldg) return;
+                const a = parseInt(stackAngleSlider.value, 10);
+                bldg.stackAngle = a;
+                document.getElementById('bldgStackAngle').value = a;
+                const dirBtn = document.getElementById('bldgStackDirBtn');
+                if (dirBtn) dirBtn.textContent = a < 1 ? '→' : Math.abs(a - 90) < 1 ? '↑' : Math.abs(a - 180) < 1 ? '←' : Math.abs(a - 270) < 1 ? '↓' : '∠';
+                this.drawBuilding();
+            });
+            stackAngleSlider.addEventListener('change', () => { ExportEngine.save(); });
+        }
 
         // Anchor buttons (per-building)
         const anchors   = ['anchorFront', 'anchorCenter', 'anchorRear'];

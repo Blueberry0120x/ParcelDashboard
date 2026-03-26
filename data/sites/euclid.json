@@ -72,7 +72,7 @@
                                     },
                                     {
                                         "orientation":  0,
-                                        "offsetX":  -12.5,
+                                        "offsetX":  -8.7,
                                         "offsetY":  15.8,
                                         "anchor":  "front",
                                         "count":  1,
@@ -81,13 +81,14 @@
                                         "stories":  3,
                                         "floorHeight":  9,
                                         "W":  18.5,
-                                        "D":  40
+                                        "D":  40,
+                                        "stackAngle":  0
                                     },
                                     {
                                         "orientation":  0,
                                         "W":  18.5,
                                         "D":  40,
-                                        "offsetX":  -12.5,
+                                        "offsetX":  -10.8,
                                         "offsetY":  -2.7,
                                         "spacing":  0,
                                         "count":  1,
@@ -109,11 +110,49 @@
                   "mapOpacity":  70,
                   "setbacksApplied":  false,
                   "freeDrag":  true,
-                  "snapEdge":  true,
+                  "snapEdge":  false,
                   "vehicles":  [
 
                                ],
                   "activeVehicle":  -1
               },
-    "checklist":  null
+    "checklist":  {
+                      "ck":  {
+                                 "A1":  true,
+                                 "A2":  true,
+                                 "A5":  true,
+                                 "B1":  false,
+                                 "B3":  true
+                             },
+                      "sel":  {
+
+                              },
+                      "notes":  {
+
+                                },
+                      "bldgs":  [
+                                    {
+                                        "type":  "Commercial",
+                                        "w":  18.5,
+                                        "d":  40,
+                                        "stories":  3,
+                                        "unitsPerFloor":  1
+                                    },
+                                    {
+                                        "type":  "Residential",
+                                        "w":  18.5,
+                                        "d":  40,
+                                        "stories":  3,
+                                        "unitsPerFloor":  1
+                                    },
+                                    {
+                                        "type":  "Residential",
+                                        "w":  18.5,
+                                        "d":  40,
+                                        "stories":  3,
+                                        "unitsPerFloor":  1
+                                    }
+                                ],
+                      "mapLocked":  true
+                  }
 }

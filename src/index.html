@@ -167,15 +167,11 @@
                 <div class="building-config-wrap">
                     <div class="box-header" style="margin-bottom:8px;">
                         <h3 class="sub-toggle" onclick="this.closest('.building-config-wrap').classList.toggle('collapsed')" style="margin:0; cursor:pointer;">Building Config</h3>
-                        <div style="display:flex;flex-direction:column;gap:3px;">
-                            <div style="display:flex;gap:5px;">
-                                <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
-                                <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
-                            </div>
-                            <div style="display:flex;gap:5px;">
-                                <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
-                                <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
-                            </div>
+                        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                            <button id="bldgDimBtn"    class="btn-save-config btn-dim-bldg">Show Dims</button>
+                            <button id="saveConfigBtn" class="btn-save-config">Save Config</button>
+                            <button id="freeDragBtn"   class="btn-save-config" onclick="MapEngine.toggleFreeDrag()" title="Toggle free drag — remove all constraints">Free Drag</button>
+                            <button id="snapEdgeBtn"   class="btn-save-config" onclick="MapEngine.toggleSnapEdge()" title="Toggle snap-to-edge — snap to nearest edge while dragging">Snap Edge</button>
                         </div>
                     </div>
                     <div class="sub-body">
@@ -223,10 +219,11 @@
                             <label>G</label>
                             <input type="number" id="bldgStackSpacing" class="align-angle-input" value="0" min="0" step="0.5">
                             <span class="ft-label">ft</span>
-                            <button id="bldgStackDirBtn" class="anchor-btn" title="Toggle stack direction (0°=depth, 90°=width)" style="padding:2px 6px;font-size:1em;">→</button>
-                            <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="-180" max="180" step="15" title="Stack angle ° (0=depth, 90=width)">
+                            <button id="bldgStackDirBtn" class="anchor-btn" title="Cycle stack direction: → ↑ ← ↓" style="padding:2px 6px;font-size:1em;">→</button>
+                            <input type="number" id="bldgStackAngle" class="align-angle-input" value="0" min="0" max="360" step="1" title="Stack angle ° (0=→, 90=↑, 180=←, 270=↓)">
                             <span class="ft-label">°</span>
                         </div>
+                        <input type="range" id="bldgStackAngleSlider" min="0" max="360" value="0" step="1" style="width:140px;">
                         <strong>Anchor:</strong>
                         <div class="anchor-track">
                             <button id="anchorFront"  class="anchor-btn">&#8592; Front</button>
@@ -304,24 +301,34 @@
                 </div>
             </div>
 
-            <!-- PROJECT INFORMATION -->
+        </div><!-- end sidebar -->
+
+        <!-- RESIZE DIVIDER -->
+        <div class="col-divider" id="colDivider"></div>
+
+        <!-- MAP PANEL -->
+        <div class="map-panel" id="mapPanel">
+            <div id="map"></div>
+        </div>
+
+    </div><!-- end main-container -->
+
+    <!-- INFO BOTTOM — columns aligned to sidebar / map split -->
+    <div class="info-bottom" id="infoBottom">
+        <div class="info-col-left" id="infoColLeft">
             <details open>
                 <summary>PROJECT INFORMATION</summary>
                 <table class="cad-table">
                     <tr><th>PROJECT ADDRESS:</th><td id="info-address"></td></tr>
-                    <tr><th>LEGAL DESCRIPTION:</th><td>--</td></tr>
                     <tr><th>PARCEL #:</th><td id="info-apn"></td></tr>
-                    <tr><th>YEAR BUILT:</th><td>--</td></tr>
                     <tr><th>BASE ZONE:</th><td id="info-zone"></td></tr>
-                    <tr><th>OCCUPANCY GROUP:</th><td id="info-occupancy">--</td></tr>
-                    <tr><th>AVERAGE ELEVATION:</th><td>--</td></tr>
+                    <tr><th>PROJECT TYPE:</th><td id="info-sl-projtype">--</td></tr>
+                    <tr><th>ARCHITECT:</th><td id="info-sl-architect">--</td></tr>
                     <tr><th>LOT WIDTH:</th><td id="info-w"></td></tr>
                     <tr><th>HEIGHT RESTRICTION:</th><td id="info-height">--</td></tr>
                     <tr><th>STANDARD SETBACKS:</th><td id="info-setbacks">--</td></tr>
                 </table>
             </details>
-
-            <!-- LAND COVERAGE -->
             <details open>
                 <summary>LAND COVERAGE</summary>
                 <table class="cad-table">
@@ -338,23 +345,10 @@
                     <tr><th>FAR CHECK:</th><td>--</td></tr>
                 </table>
             </details>
-
-        </div><!-- end sidebar -->
-
-        <!-- RESIZE DIVIDER -->
-        <div class="col-divider" id="colDivider"></div>
-
-        <!-- MAP PANEL -->
-        <div class="map-panel" id="mapPanel">
-            <div id="map"></div>
         </div>
-
-    </div><!-- end main-container -->
-
-    <!-- INFO BOTTOM — columns aligned to sidebar / map split -->
-    <div class="info-bottom" id="infoBottom">
-        <div class="info-col-left" id="infoColLeft">
-            <details>
+        <div class="info-col-gap" id="infoColGap"></div>
+        <div class="info-col-right" id="infoColRight">
+            <details open>
                 <summary id="info-zoning-header">ZONING PARAMETERS</summary>
                 <table class="cad-table">
                     <tr><th>BASE DENSITY:</th><td id="info-zp-density">--</td></tr>
@@ -367,19 +361,7 @@
                     <tr><th>NOTES:</th><td id="info-zp-notes">--</td></tr>
                 </table>
             </details>
-            <details>
-                <summary>SITE LOCATION &amp; BASE ZONE</summary>
-                <table class="cad-table">
-                    <tr><th>ZONE DESIGNATION:</th><td id="info-sl-zone">--</td></tr>
-                    <tr><th>ADDRESS:</th><td id="info-sl-address">--</td></tr>
-                    <tr><th>PROJECT TYPE:</th><td id="info-sl-projtype">--</td></tr>
-                    <tr><th>ARCHITECT:</th><td id="info-sl-architect">--</td></tr>
-                </table>
-            </details>
-        </div>
-        <div class="info-col-gap" id="infoColGap"></div>
-        <div class="info-col-right" id="infoColRight">
-            <details id="info-inspectors-section">
+            <details id="info-inspectors-section" open>
                 <summary>CITY INSPECTOR CONTACTS</summary>
                 <table class="cad-table" id="info-inspectors-table">
                 </table>

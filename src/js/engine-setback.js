@@ -162,7 +162,9 @@ const SetbackEngine = {
         const angEl  = document.getElementById('bldgStackAngle');
         const dirBtn = document.getElementById('bldgStackDirBtn');
         if (angEl)  angEl.value = sAng;
-        if (dirBtn) dirBtn.textContent = Math.abs(sAng % 180) < 1 ? '→' : Math.abs(((sAng - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
+        const angSlider = document.getElementById('bldgStackAngleSlider');
+        if (angSlider) angSlider.value = sAng;
+        if (dirBtn) dirBtn.textContent = sAng < 1 ? '→' : Math.abs(sAng - 90) < 1 ? '↑' : Math.abs(sAng - 180) < 1 ? '←' : Math.abs(sAng - 270) < 1 ? '↓' : '∠';
         document.getElementById('bldgStories').value        = bldg.stories       || 1;
         document.getElementById('bldgFloorHeight').value    = (bldg.floorHeight  || 9).toFixed(1);
 
@@ -888,27 +890,50 @@ const SetbackEngine = {
             const bldg = state.buildings[state.activeBuilding];
             if (!bldg) return;
             let a = parseFloat(document.getElementById('bldgStackAngle').value) || 0;
-            a = Math.max(-180, Math.min(180, a));
+            a = ((a % 360) + 360) % 360;
             document.getElementById('bldgStackAngle').value = a;
+            const sliderEl = document.getElementById('bldgStackAngleSlider');
+            if (sliderEl) sliderEl.value = a;
             bldg.stackAngle = a;
             const dirBtn = document.getElementById('bldgStackDirBtn');
-            if (dirBtn) dirBtn.textContent = Math.abs(a % 180) < 1 ? '→' : Math.abs(((a - 90) % 180 + 180) % 180) < 1 ? '↑' : '∠';
+            if (dirBtn) dirBtn.textContent = a < 1 ? '→' : Math.abs(a - 90) < 1 ? '↑' : Math.abs(a - 180) < 1 ? '←' : Math.abs(a - 270) < 1 ? '↓' : '∠';
             this.drawBuilding();
             ExportEngine.save();
         });
 
-        // Stack direction toggle: cycles → (0°) ↔ ↑ (90°)
+        // Stack direction toggle: cycles → (0°) → ↑ (90°) → ← (180°) → ↓ (270°)
         document.getElementById('bldgStackDirBtn').addEventListener('click', () => {
             const bldg = state.buildings[state.activeBuilding];
             if (!bldg) return;
-            const cur  = bldg.stackAngle || 0;
-            const next = Math.abs(cur % 180) < 1 ? 90 : 0;
+            const steps = [0, 90, 180, 270];
+            const dirs  = ['→', '↑', '←', '↓'];
+            const cur   = bldg.stackAngle || 0;
+            const idx   = steps.findIndex(s => Math.abs(cur - s) < 1);
+            const next  = steps[(idx < 0 ? 0 : idx + 1) % 4];
             bldg.stackAngle = next;
             document.getElementById('bldgStackAngle').value = next;
-            document.getElementById('bldgStackDirBtn').textContent = next === 0 ? '→' : '↑';
+            const sliderEl = document.getElementById('bldgStackAngleSlider');
+            if (sliderEl) sliderEl.value = next;
+            document.getElementById('bldgStackDirBtn').textContent = dirs[steps.indexOf(next)];
             this.drawBuilding();
             ExportEngine.save();
         });
+
+        // Stack angle slider
+        const stackAngleSlider = document.getElementById('bldgStackAngleSlider');
+        if (stackAngleSlider) {
+            stackAngleSlider.addEventListener('input', () => {
+                const bldg = state.buildings[state.activeBuilding];
+                if (!bldg) return;
+                const a = parseInt(stackAngleSlider.value, 10);
+                bldg.stackAngle = a;
+                document.getElementById('bldgStackAngle').value = a;
+                const dirBtn = document.getElementById('bldgStackDirBtn');
+                if (dirBtn) dirBtn.textContent = a < 1 ? '→' : Math.abs(a - 90) < 1 ? '↑' : Math.abs(a - 180) < 1 ? '←' : Math.abs(a - 270) < 1 ? '↓' : '∠';
+                this.drawBuilding();
+            });
+            stackAngleSlider.addEventListener('change', () => { ExportEngine.save(); });
+        }
 
         // Anchor buttons (per-building)
         const anchors   = ['anchorFront', 'anchorCenter', 'anchorRear'];

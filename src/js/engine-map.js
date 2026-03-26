@@ -53,6 +53,7 @@ const MapEngine = {
         this.buildNorthArrow();
         this.buildHelpControl();
         this.buildDimDragToggle();
+        this.buildRecenterControl();
         this._baseLayers = { "Satellite": sat, "Street Map": street, "Topo (Esri)": topoEsri, "Topo (USGS)": topoUSGS };
         this._activeBase = sat;
         this.map.on('baselayerchange', (e) => { this._activeBase = e.layer; e.layer.setOpacity(ConfigEngine.state.mapOpacity / 100); });
@@ -135,6 +136,7 @@ const MapEngine = {
         });
         m.on('dragend', () => {
             this._isDragging = false;
+            const state = ConfigEngine.state;
             // Apply snap on release (not during drag — avoids sticky-snap when touching other buildings)
             if (state.snapEdge) {
                 const bldg = state.buildings[idx];
@@ -162,6 +164,7 @@ const MapEngine = {
             btn.style.background = ''; btn.style.color = '';
             btn.textContent = 'Free Drag';
         }
+        ExportEngine.save();
     },
 
     toggleSnapEdge: function() {
@@ -175,6 +178,7 @@ const MapEngine = {
             btn.style.background = ''; btn.style.color = '';
             btn.textContent = 'Snap Edge';
         }
+        ExportEngine.save();
     },
 
     _applySnap: function(idx, offsetX, offsetY) {
@@ -197,11 +201,14 @@ const MapEngine = {
         const lotD = ConfigEngine.data.depth;
         const lotHalfD = lotD / 2;
         const lotHalfW = lotW / 2;
-        // Lot edges in offset coordinates (relative to lot center)
-        const lotFront  = lotHalfD - front;    // front edge (max X)
-        const lotRear   = -lotHalfD + rear;    // rear edge (min X)
-        const lotLeft   = lotHalfW - sideL;    // left edge (max Y)
-        const lotRight  = -lotHalfW + sideR;   // right edge (min Y)
+        // offsetX = lx - (front-rear)/2, offsetY = ly - (sideR-sideL)/2
+        // so lot edges must be expressed in offsetX/Y space (subtract the same shift)
+        const xShift = (front - rear) / 2;
+        const yShift = (sideR - sideL) / 2;
+        const lotFront  = lotHalfD  - front  - xShift;
+        const lotRear   = -lotHalfD + rear   - xShift;
+        const lotLeft   = lotHalfW  - sideL  - yShift;
+        const lotRight  = -lotHalfW + sideR  - yShift;
 
         // Snap building edges to lot boundary edges
         const lotYSnaps = [
@@ -560,6 +567,30 @@ const MapEngine = {
             }
         });
         this.map.addControl(new DimDragCtrl());
+    },
+
+    buildRecenterControl: function() {
+        const self = this;
+        const RecenterCtrl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function() {
+                var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-recenter');
+                c.title = 'Recenter map to site';
+                c.innerHTML = '<a href="#" role="button" aria-label="Recenter to site" style="font-size:18px;line-height:30px;">&#8982;</a>';
+                L.DomEvent.on(c, 'click', function(e) {
+                    L.DomEvent.preventDefault(e);
+                    const state = ConfigEngine.state;
+                    if (self.lotPoly && self.lotPoly.getBounds().isValid()) {
+                        self.map.fitBounds(self.lotPoly.getBounds(), { padding: [40, 40] });
+                    } else {
+                        self.map.setView([state.lat, state.lng], 19);
+                    }
+                });
+                L.DomEvent.disableClickPropagation(c);
+                return c;
+            }
+        });
+        this.map.addControl(new RecenterCtrl());
     },
 
     updateNorthArrow: function() {

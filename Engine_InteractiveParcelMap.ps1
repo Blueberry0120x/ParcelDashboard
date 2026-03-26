@@ -178,7 +178,7 @@ function Get-SitesApiJson {
     return ($list | ConvertTo-Json -Compress -Depth 5)
 }
 
-function Activate-Site {
+function Set-ActiveSite {
     param([string]$SiteId)
     if ([string]::IsNullOrWhiteSpace($SiteId)) { return $false }
     $siteFile = Get-SiteFile -SiteId $SiteId
@@ -323,7 +323,6 @@ if ($Mode -eq "serve") {
     Write-Host ""
 
     Start-Process "http://localhost:$port/"
-    Start-Process $publicUrl
 
     try {
         while ($listener.IsListening) {
@@ -403,7 +402,7 @@ if ($Mode -eq "serve") {
 
                 } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -match '^/api/sites/([^/]+)/activate$') {
                     $requestedId = [System.Uri]::UnescapeDataString($Matches[1])
-                    if (Activate-Site -SiteId $requestedId) {
+                    if (Set-ActiveSite -SiteId $requestedId) {
                         $res.ContentType = "application/json"
                         $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
                         $res.OutputStream.Write($bytes, 0, $bytes.Length)

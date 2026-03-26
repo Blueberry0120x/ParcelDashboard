@@ -60,9 +60,7 @@ const UIEngine = {
         _set('info-zp-side', sSb + ' FT');
         _set('info-zp-notes', sd.notes || '--');
 
-        // Site location table
-        _set('info-sl-zone', d.zoning || '--');
-        _set('info-sl-address', d.address || '--');
+        // Project info extras (merged into PROJECT INFORMATION panel)
         _set('info-sl-projtype', sd.projectType || '--');
         _set('info-sl-architect', sd.architect || '--');
 

@@ -442,7 +442,7 @@ summary::after { content: "+"; font-size: 1.1em; color: white; }
 details[open] summary::after { content: "−"; }
 details[open] summary { border-bottom: 1px solid var(--cad-border); }
 
-.cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+.cad-table { width: 100%; border-collapse: collapse; font-size: 0.82em; margin-bottom: 5px; }
 .cad-table th, .cad-table td {
     padding: 4px 6px 4px 4px; border-bottom: 1px solid var(--cad-border);
     border-right: 1px solid var(--cad-border); text-align: left; vertical-align: middle;
