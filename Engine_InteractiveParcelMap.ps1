@@ -78,6 +78,8 @@ function Get-InjectScript {
         if ($null -ne $savedProp -and $null -ne $savedProp.Value) {
             $savedProp.Value.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
         }
+        # Inject the actual filename so JS can use it for downloads
+        $merged["siteFileName"] = [System.IO.Path]::GetFileName($siteFile)
         if ($merged.Count -gt 0) {
             $json = $merged | ConvertTo-Json -Compress -Depth 10
             return "<script>window.__SITE_DEFAULTS__ = $json;</script>"
@@ -417,6 +419,7 @@ if ($Mode -eq "serve") {
                     $targetId = [System.Uri]::UnescapeDataString($Matches[1])
                     $siteFile = Get-SiteFile -SiteId $targetId
                     if ($siteFile) {
+                        $bytes = $null
                         try {
                             $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
                             $updates = $reader.ReadToEnd() | ConvertFrom-Json
@@ -424,7 +427,15 @@ if ($Mode -eq "serve") {
                             $editable = @('legalDescription','yearBuilt','occupancyGroup','projectType','architect','notes','scopeOfWork','inspectors','planningAreas','overlayZones')
                             foreach ($f in $editable) {
                                 $prop = $updates.PSObject.Properties[$f]
-                                if ($null -ne $prop) { $existing.site.$f = $prop.Value }
+                                if ($null -ne $prop) {
+                                    # StrictMode-safe: use Add_NoteProperty if missing, else set value
+                                    $sitePropExists = $null -ne $existing.site.PSObject.Properties[$f]
+                                    if ($sitePropExists) {
+                                        $existing.site.PSObject.Properties[$f].Value = $prop.Value
+                                    } else {
+                                        $existing.site | Add-Member -MemberType NoteProperty -Name $f -Value $prop.Value -Force
+                                    }
+                                }
                             }
                             [System.IO.File]::WriteAllText($siteFile, ($existing | ConvertTo-Json -Depth 10), [System.Text.UTF8Encoding]::new($false))
                             Build-Html   | Out-Null
@@ -432,7 +443,7 @@ if ($Mode -eq "serve") {
                             Write-Host "  [EDIT] Site info updated + rebuilt." -ForegroundColor Cyan
                             $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
                         } catch {
-                            $bytes = [System.Text.Encoding]::UTF8.GetBytes("{`"ok`":false,`"error`":`"$_`"}")
+                            $bytes = [System.Text.Encoding]::UTF8.GetBytes("{`"ok`":false,`"error`":`"$($_.Exception.Message)`"}")
                         }
                     } else {
                         $res.StatusCode = 404
