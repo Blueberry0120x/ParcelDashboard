@@ -299,6 +299,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     white-space: nowrap; font-family: 'Segoe UI', sans-serif;
     color: #fff;
 }
+.fab-btn-edit  { background: #7e22ce; }
+.fab-btn-edit:hover  { background: #6b21a8; }
 .fab-btn-save  { background: #475569; }
 .fab-btn-save:hover  { background: #334155; }
 .fab-btn-print { background: #0f4c81; }
@@ -585,6 +587,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 /* Pin left-column table th widths to match (longest label = STANDARD SETBACKS) */
 .info-col-left .cad-table th { width: 205px; min-width: 205px; }
+/* Overlay zones: Yes/No values are short — pin td width so th gets remaining space */
+#info-overlay-table td { width: 70px; min-width: 70px; }
 /* Scope of work section */
 .info-scope-section { margin-top: 8px; width: 100%; }
 .info-scope-text { margin: 0; padding: 8px 12px; font-size: 0.82em; line-height: 1.55;
@@ -753,6 +757,43 @@ html[data-theme="dark"] .fab-btn-print { background: #1e40af !important; }
 
 /* LISP code area */
 html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e0e0e0 !important; border-color: #333 !important; }
+
+/* ==========================================
+   SITE INFO EDITOR MODAL
+   ========================================== */
+#site-edit-modal { display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.6); align-items:flex-start; justify-content:center; overflow-y:auto; padding:32px 16px; }
+#site-edit-modal.open { display:flex; }
+.sei-dialog { background:#1e293b; border:1px solid #334155; border-radius:10px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,.5); font-family:'Segoe UI',sans-serif; }
+.sei-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid #334155; }
+.sei-header h3 { margin:0; font-size:1em; font-weight:700; color:#e2e8f0; letter-spacing:.04em; }
+.sei-close { background:none; border:none; color:#94a3b8; font-size:1.4em; cursor:pointer; line-height:1; padding:0 4px; }
+.sei-close:hover { color:#f87171; }
+.sei-body { padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+.sei-section { font-size:0.72em; font-weight:700; color:#f472b6; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:2px; }
+.sei-row { display:grid; grid-template-columns:180px 1fr; align-items:start; gap:8px; }
+.sei-row label { font-size:0.8em; font-weight:600; color:#94a3b8; padding-top:6px; }
+.sei-row input, .sei-row textarea {
+    background:#0f172a; border:1px solid #475569; border-radius:4px;
+    color:#e2e8f0; font-size:0.82em; padding:5px 8px; width:100%; box-sizing:border-box; font-family:inherit;
+}
+.sei-row textarea { resize:vertical; min-height:60px; }
+.sei-row input:focus, .sei-row textarea:focus { outline:none; border-color:#f472b6; }
+/* Dynamic array editor (inspectors / planning / overlay) */
+.sei-array-wrap { display:flex; flex-direction:column; gap:4px; }
+.sei-array-row { display:grid; grid-template-columns:1fr 1fr 28px; gap:4px; align-items:center; }
+.sei-array-row input { background:#0f172a; border:1px solid #475569; border-radius:4px; color:#e2e8f0; font-size:0.8em; padding:4px 6px; }
+.sei-array-row input:focus { outline:none; border-color:#f472b6; }
+.sei-del-row { background:#7f1d1d; border:none; border-radius:3px; color:#fca5a5; font-size:0.9em; cursor:pointer; padding:0; height:24px; width:24px; }
+.sei-del-row:hover { background:#991b1b; }
+.sei-add-row { background:none; border:1px dashed #475569; border-radius:4px; color:#64748b; font-size:0.78em; cursor:pointer; padding:4px 10px; text-align:left; width:100%; margin-top:2px; }
+.sei-add-row:hover { border-color:#f472b6; color:#f472b6; }
+.sei-footer { display:flex; justify-content:flex-end; gap:8px; padding:12px 20px; border-top:1px solid #334155; }
+.sei-btn-cancel { background:#334155; border:none; border-radius:6px; color:#94a3b8; font-size:0.85em; font-weight:600; padding:8px 18px; cursor:pointer; }
+.sei-btn-cancel:hover { background:#475569; }
+.sei-btn-save { background:#be185d; border:none; border-radius:6px; color:#fff; font-size:0.85em; font-weight:700; padding:8px 18px; cursor:pointer; }
+.sei-btn-save:hover { background:#9d174d; }
+.sei-btn-save:disabled { background:#475569; color:#94a3b8; cursor:not-allowed; }
+.sei-status { font-size:0.78em; color:#94a3b8; padding-top:4px; text-align:center; min-height:16px; }
 
 /* Building config inputs & controls */
 html[data-theme="dark"] .align-angle-input { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }

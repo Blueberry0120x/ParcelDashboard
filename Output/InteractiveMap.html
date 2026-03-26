@@ -321,6 +321,8 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     white-space: nowrap; font-family: 'Segoe UI', sans-serif;
     color: #fff;
 }
+.fab-btn-edit  { background: #7e22ce; }
+.fab-btn-edit:hover  { background: #6b21a8; }
 .fab-btn-save  { background: #475569; }
 .fab-btn-save:hover  { background: #334155; }
 .fab-btn-print { background: #0f4c81; }
@@ -607,6 +609,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 /* Pin left-column table th widths to match (longest label = STANDARD SETBACKS) */
 .info-col-left .cad-table th { width: 205px; min-width: 205px; }
+/* Overlay zones: Yes/No values are short — pin td width so th gets remaining space */
+#info-overlay-table td { width: 70px; min-width: 70px; }
 /* Scope of work section */
 .info-scope-section { margin-top: 8px; width: 100%; }
 .info-scope-text { margin: 0; padding: 8px 12px; font-size: 0.82em; line-height: 1.55;
@@ -776,6 +780,43 @@ html[data-theme="dark"] .fab-btn-print { background: #1e40af !important; }
 /* LISP code area */
 html[data-theme="dark"] .lisp-output { background: #0a0a0a !important; color: #e0e0e0 !important; border-color: #333 !important; }
 
+/* ==========================================
+   SITE INFO EDITOR MODAL
+   ========================================== */
+#site-edit-modal { display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.6); align-items:flex-start; justify-content:center; overflow-y:auto; padding:32px 16px; }
+#site-edit-modal.open { display:flex; }
+.sei-dialog { background:#1e293b; border:1px solid #334155; border-radius:10px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,.5); font-family:'Segoe UI',sans-serif; }
+.sei-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid #334155; }
+.sei-header h3 { margin:0; font-size:1em; font-weight:700; color:#e2e8f0; letter-spacing:.04em; }
+.sei-close { background:none; border:none; color:#94a3b8; font-size:1.4em; cursor:pointer; line-height:1; padding:0 4px; }
+.sei-close:hover { color:#f87171; }
+.sei-body { padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+.sei-section { font-size:0.72em; font-weight:700; color:#f472b6; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:2px; }
+.sei-row { display:grid; grid-template-columns:180px 1fr; align-items:start; gap:8px; }
+.sei-row label { font-size:0.8em; font-weight:600; color:#94a3b8; padding-top:6px; }
+.sei-row input, .sei-row textarea {
+    background:#0f172a; border:1px solid #475569; border-radius:4px;
+    color:#e2e8f0; font-size:0.82em; padding:5px 8px; width:100%; box-sizing:border-box; font-family:inherit;
+}
+.sei-row textarea { resize:vertical; min-height:60px; }
+.sei-row input:focus, .sei-row textarea:focus { outline:none; border-color:#f472b6; }
+/* Dynamic array editor (inspectors / planning / overlay) */
+.sei-array-wrap { display:flex; flex-direction:column; gap:4px; }
+.sei-array-row { display:grid; grid-template-columns:1fr 1fr 28px; gap:4px; align-items:center; }
+.sei-array-row input { background:#0f172a; border:1px solid #475569; border-radius:4px; color:#e2e8f0; font-size:0.8em; padding:4px 6px; }
+.sei-array-row input:focus { outline:none; border-color:#f472b6; }
+.sei-del-row { background:#7f1d1d; border:none; border-radius:3px; color:#fca5a5; font-size:0.9em; cursor:pointer; padding:0; height:24px; width:24px; }
+.sei-del-row:hover { background:#991b1b; }
+.sei-add-row { background:none; border:1px dashed #475569; border-radius:4px; color:#64748b; font-size:0.78em; cursor:pointer; padding:4px 10px; text-align:left; width:100%; margin-top:2px; }
+.sei-add-row:hover { border-color:#f472b6; color:#f472b6; }
+.sei-footer { display:flex; justify-content:flex-end; gap:8px; padding:12px 20px; border-top:1px solid #334155; }
+.sei-btn-cancel { background:#334155; border:none; border-radius:6px; color:#94a3b8; font-size:0.85em; font-weight:600; padding:8px 18px; cursor:pointer; }
+.sei-btn-cancel:hover { background:#475569; }
+.sei-btn-save { background:#be185d; border:none; border-radius:6px; color:#fff; font-size:0.85em; font-weight:700; padding:8px 18px; cursor:pointer; }
+.sei-btn-save:hover { background:#9d174d; }
+.sei-btn-save:disabled { background:#475569; color:#94a3b8; cursor:not-allowed; }
+.sei-status { font-size:0.78em; color:#94a3b8; padding-top:4px; text-align:center; min-height:16px; }
+
 /* Building config inputs & controls */
 html[data-theme="dark"] .align-angle-input { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
 html[data-theme="dark"] .align-angle-input:disabled,
@@ -795,7 +836,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","zoning":"R-3","cadZone":"CA_V","lotWidth":155.3,"lotDepth":109.9,"lotSF":20038,"lotWidthSouth":147.5,"lotWidthNorth":155.3,"lotDepthWest":109.9,"lotDepthEast":122.85,"lotAcres":0.46,"commercialDepth":0,"baseFAR":0,"commFAR":0,"maxHeight":35,"baseHeightLimit":35,"cchsMaxHeight":0,"frontSetback":20,"rearSetback":15,"sideSetback":5,"densityPerSF":0,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"unitCount":18,"unitDensity":39.13,"projectType":"3-Story Townhome","architect":"ADEC Architecture \u0026 Construction Group","cornerVisibilityTriangle":true,"densityBonus":true,"notes":"Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner.","cornerVisTriSize":25,"cornerVisCorner":"SW","legalDescription":"","yearBuilt":"","occupancyGroup":"R-3","inspectors":[],"planningAreas":[],"overlayZones":[],"scopeOfWork":"","lat":33.75998496008465,"lng":-117.93725445670536,"rotation":90,"locked":true,"setbacks":{"front":25,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":70.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":0,"W":14,"D":25,"offsetX":5.8,"offsetY":56.7,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":3,"floorHeight":9},{"orientation":-90,"W":14,"D":25,"offsetX":-13.7,"offsetY":37.2,"spacing":0,"count":3,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"stackAngle":0}],"activeBuilding":2,"commFront":false,"showBldgDims":false,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2.0,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"legalDescription":"Lot 16, Block 4 of EUCLID MANOR, in the City of San Diego, County of San Diego, State of California, per Map No. 3482","yearBuilt":"1952","occupancyGroup":"B / R-2","inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"scopeOfWork":"Redevelop a 6,250 SF commercial lot at 4335 Euclid Ave (San Diego) into a 2-story mixed-use project under CUPD-CU-2-4 zoning. Ground floor: commercial unit at the front (30\u0027 depth per frontage requirement), 9 residential units behind — organized across 4 buildings. The two buildings immediately behind the commercial space contain 2 units each. The two rear buildings facing the back alley contain 2 and 1 units respectively. Second floor is all residential. Total program: 9 residential units + 1 commercial space, within base FAR 2.0 and base density (10 DU max). Zero side setbacks per CUPD-CU-2-4. TPA designation eliminates parking, though the ground floor plan accommodates vehicle access with 20\u0027 drive aisles between buildings.","planningAreas":[{"name":"COMMUNITY PLAN AREA","val":"MID-CITY: CITY HEIGHTS"},{"name":"LAND USE DESIGNATION","val":"Commercial / Mixed Use A (73 du/ac)"},{"name":"CCHS (HOUSING SOLUTIONS)","val":"Yes — FAR Tier 3: 6.5 FAR"},{"name":"TRANSIT PRIORITY AREA (TPA)","val":"Yes"},{"name":"PARKING STANDARDS (PSTPA)","val":"Yes (0 Parking Required)"},{"name":"MOBILITY CHOICES","val":"Yes — Mobility Zone 2"}],"overlayZones":[{"name":"TRANSIT AREA OVERLAY","val":"Yes"},{"name":"AIRPORT INFLUENCE AREA","val":"No"},{"name":"COASTAL OVERLAY","val":"No"},{"name":"VERY HIGH FIRE HAZARD","val":"No"},{"name":"FAULT ZONE","val":"No"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-52.5,"offsetY":10,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":20,"D":30,"stackAngle":0}],"activeBuilding":0,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1};</script>
 <script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-1102_Westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"ca-4335_Euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-405_126th.json"}];</script>
 </head>
 <body>
@@ -1124,9 +1165,9 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
                     <tr><th>MIN LOT / DENSITY:</th><td id="info-density-lot"></td></tr>
                     <tr><th>MAX FAR:</th><td id="info-max-far">--</td></tr>
                     <tr><th>BUILDABLE FAR:</th><td id="info-buildable-far"></td></tr>
-                    <tr><th>PROPOSED ADU(S):</th><td>--</td></tr>
-                    <tr><th>TOTAL FAR:</th><td>--</td></tr>
-                    <tr><th>FAR CHECK:</th><td>--</td></tr>
+                    <tr><th>PROPOSED FAR:</th><td id="info-proposed-far">--</td></tr>
+                    <tr><th>TOTAL FAR:</th><td id="info-total-far">--</td></tr>
+                    <tr><th>FAR CHECK:</th><td id="info-far-check">--</td></tr>
                 </table>
             </details>
         </div>
@@ -1163,10 +1204,52 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </div><!-- end page-wrapper -->
 
-<!-- Floating FAB — Save + Print -->
+<!-- Floating FAB — Edit Site Info + Save + Print -->
 <div id="map-fab" class="no-print" style="position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;">
+    <button onclick="UIEngine.openSiteEditor()" class="fab-btn fab-btn-edit">&#9998; Edit Site Info</button>
     <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." class="fab-btn fab-btn-save">&#128190; Save Config</button>
     <button onclick="window.print()" class="fab-btn fab-btn-print">&#128438; Print / PDF</button>
+</div>
+
+<!-- Site Info Editor Modal -->
+<div id="site-edit-modal" role="dialog" aria-modal="true">
+  <div class="sei-dialog">
+    <div class="sei-header">
+      <h3>&#9998; Edit Site Info &mdash; <span id="sei-site-name"></span></h3>
+      <button class="sei-close" onclick="UIEngine.closeSiteEditor()" title="Close">&times;</button>
+    </div>
+    <div class="sei-body">
+      <div class="sei-section">Project Identity</div>
+      <div class="sei-row"><label>Legal Description</label><textarea id="sei-legal" rows="2"></textarea></div>
+      <div class="sei-row"><label>Year Built</label><input id="sei-yearbuilt" type="text" /></div>
+      <div class="sei-row"><label>Occupancy Group</label><input id="sei-occupancy" type="text" /></div>
+      <div class="sei-row"><label>Project Type</label><input id="sei-projtype" type="text" /></div>
+      <div class="sei-row"><label>Architect</label><input id="sei-architect" type="text" /></div>
+
+      <div class="sei-section">Scope of Work</div>
+      <div class="sei-row"><label>Scope</label><textarea id="sei-scope" rows="4"></textarea></div>
+
+      <div class="sei-section">Notes</div>
+      <div class="sei-row"><label>Notes</label><textarea id="sei-notes" rows="2"></textarea></div>
+
+      <div class="sei-section">City Inspector Contacts</div>
+      <div id="sei-inspectors" class="sei-array-wrap"></div>
+      <button class="sei-add-row" onclick="UIEngine._seiAddRow('sei-inspectors','Role','Name (Phone)')">+ Add Inspector</button>
+
+      <div class="sei-section">Planning &amp; Transit Areas</div>
+      <div id="sei-planning" class="sei-array-wrap"></div>
+      <button class="sei-add-row" onclick="UIEngine._seiAddRow('sei-planning','Label','Value')">+ Add Row</button>
+
+      <div class="sei-section">Overlay Zones</div>
+      <div id="sei-overlay" class="sei-array-wrap"></div>
+      <button class="sei-add-row" onclick="UIEngine._seiAddRow('sei-overlay','Zone','Yes / No')">+ Add Row</button>
+    </div>
+    <div class="sei-footer">
+      <div class="sei-status" id="sei-status"></div>
+      <button class="sei-btn-cancel" onclick="UIEngine.closeSiteEditor()">Cancel</button>
+      <button class="sei-btn-save" id="sei-save-btn" onclick="UIEngine.saveSiteInfo()">Save &amp; Rebuild</button>
+    </div>
+  </div>
 </div>
 
 <!-- Auto-save flash badge -->
@@ -1684,6 +1767,99 @@ const UIEngine = {
 
         banner.removeChild(merged);
         this.initBannerDrag();
+    },
+
+    /* ── SITE INFO EDITOR ─────────────────────────────────────── */
+    openSiteEditor: function() {
+        var sd = window.__SITE_DEFAULTS__ || {};
+        document.getElementById('sei-site-name').textContent = sd.address || sd.siteId || '';
+        document.getElementById('sei-legal').value      = sd.legalDescription || '';
+        document.getElementById('sei-yearbuilt').value  = sd.yearBuilt || '';
+        document.getElementById('sei-occupancy').value  = sd.occupancyGroup || '';
+        document.getElementById('sei-projtype').value   = sd.projectType || '';
+        document.getElementById('sei-architect').value  = sd.architect || '';
+        document.getElementById('sei-scope').value      = sd.scopeOfWork || '';
+        document.getElementById('sei-notes').value      = sd.notes || '';
+        document.getElementById('sei-status').textContent = '';
+        document.getElementById('sei-save-btn').disabled = false;
+        this._seiPopulateArray('sei-inspectors', sd.inspectors || [], 'Role', 'Name (Phone)');
+        this._seiPopulateArray('sei-planning',   sd.planningAreas || [], 'Label', 'Value');
+        this._seiPopulateArray('sei-overlay',    sd.overlayZones || [], 'Zone', 'Yes / No');
+        document.getElementById('site-edit-modal').classList.add('open');
+    },
+
+    closeSiteEditor: function() {
+        document.getElementById('site-edit-modal').classList.remove('open');
+    },
+
+    _seiPopulateArray: function(containerId, arr, ph1, ph2) {
+        var wrap = document.getElementById(containerId);
+        wrap.innerHTML = '';
+        arr.forEach(function(item) {
+            UIEngine._seiAddRow(containerId, ph1, ph2, item.name || '', item.val || '');
+        });
+    },
+
+    _seiAddRow: function(containerId, ph1, ph2, name, val) {
+        var wrap = document.getElementById(containerId);
+        var row  = document.createElement('div');
+        row.className = 'sei-array-row';
+        var i1 = document.createElement('input'); i1.type = 'text'; i1.placeholder = ph1; i1.value = name || '';
+        var i2 = document.createElement('input'); i2.type = 'text'; i2.placeholder = ph2; i2.value = val  || '';
+        var btn = document.createElement('button'); btn.className = 'sei-del-row'; btn.textContent = '×';
+        btn.onclick = function() { wrap.removeChild(row); };
+        row.appendChild(i1); row.appendChild(i2); row.appendChild(btn);
+        wrap.appendChild(row);
+    },
+
+    _seiReadArray: function(containerId) {
+        var rows = document.querySelectorAll('#' + containerId + ' .sei-array-row');
+        var result = [];
+        rows.forEach(function(row) {
+            var inputs = row.querySelectorAll('input');
+            var n = (inputs[0].value || '').trim();
+            var v = (inputs[1].value || '').trim();
+            if (n || v) result.push({ name: n, val: v });
+        });
+        return result;
+    },
+
+    saveSiteInfo: function() {
+        var sd = window.__SITE_DEFAULTS__ || {};
+        var siteId = sd.siteId;
+        if (!siteId) { alert('No active site ID found.'); return; }
+        var btn = document.getElementById('sei-save-btn');
+        var status = document.getElementById('sei-status');
+        btn.disabled = true;
+        status.textContent = 'Saving…';
+        var payload = {
+            legalDescription: document.getElementById('sei-legal').value.trim(),
+            yearBuilt:        document.getElementById('sei-yearbuilt').value.trim(),
+            occupancyGroup:   document.getElementById('sei-occupancy').value.trim(),
+            projectType:      document.getElementById('sei-projtype').value.trim(),
+            architect:        document.getElementById('sei-architect').value.trim(),
+            scopeOfWork:      document.getElementById('sei-scope').value.trim(),
+            notes:            document.getElementById('sei-notes').value.trim(),
+            inspectors:       this._seiReadArray('sei-inspectors'),
+            planningAreas:    this._seiReadArray('sei-planning'),
+            overlayZones:     this._seiReadArray('sei-overlay')
+        };
+        fetch('/api/sites/' + encodeURIComponent(siteId) + '/update-site', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d.ok) {
+                status.textContent = 'Saved! Reloading…';
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                status.textContent = 'Error: ' + (d.error || 'unknown');
+                btn.disabled = false;
+            }
+        }).catch(function() {
+            status.textContent = 'Server not reachable (dev server required).';
+            btn.disabled = false;
+        });
     }
 };
 

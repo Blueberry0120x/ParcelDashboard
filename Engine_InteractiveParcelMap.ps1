@@ -413,6 +413,34 @@ if ($Mode -eq "serve") {
                         $res.OutputStream.Write($bytes, 0, $bytes.Length)
                     }
 
+                } elseif ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -match '^/api/sites/([^/]+)/update-site$') {
+                    $targetId = [System.Uri]::UnescapeDataString($Matches[1])
+                    $siteFile = Get-SiteFile -SiteId $targetId
+                    if ($siteFile) {
+                        try {
+                            $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
+                            $updates = $reader.ReadToEnd() | ConvertFrom-Json
+                            $existing = Get-Content $siteFile -Raw -Encoding UTF8 | ConvertFrom-Json
+                            $editable = @('legalDescription','yearBuilt','occupancyGroup','projectType','architect','notes','scopeOfWork','inspectors','planningAreas','overlayZones')
+                            foreach ($f in $editable) {
+                                $prop = $updates.PSObject.Properties[$f]
+                                if ($null -ne $prop) { $existing.site.$f = $prop.Value }
+                            }
+                            [System.IO.File]::WriteAllText($siteFile, ($existing | ConvertTo-Json -Depth 10), [System.Text.UTF8Encoding]::new($false))
+                            Build-Html   | Out-Null
+                            Build-Checklist | Out-Null
+                            Write-Host "  [EDIT] Site info updated + rebuilt." -ForegroundColor Cyan
+                            $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":true}')
+                        } catch {
+                            $bytes = [System.Text.Encoding]::UTF8.GetBytes("{`"ok`":false,`"error`":`"$_`"}")
+                        }
+                    } else {
+                        $res.StatusCode = 404
+                        $bytes = [System.Text.Encoding]::UTF8.GetBytes('{"ok":false,"error":"site_not_found"}')
+                    }
+                    $res.ContentType = "application/json"
+                    $res.OutputStream.Write($bytes, 0, $bytes.Length)
+
                 } elseif ($req.HttpMethod -eq "GET" -and $req.Url.LocalPath -eq "/checklist") {
                     $res.ContentType = "text/html; charset=utf-8"
                     $fileBytes = [System.IO.File]::ReadAllBytes($outputChk)

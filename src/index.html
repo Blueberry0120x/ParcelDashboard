@@ -348,9 +348,9 @@
                     <tr><th>MIN LOT / DENSITY:</th><td id="info-density-lot"></td></tr>
                     <tr><th>MAX FAR:</th><td id="info-max-far">--</td></tr>
                     <tr><th>BUILDABLE FAR:</th><td id="info-buildable-far"></td></tr>
-                    <tr><th>PROPOSED ADU(S):</th><td>--</td></tr>
-                    <tr><th>TOTAL FAR:</th><td>--</td></tr>
-                    <tr><th>FAR CHECK:</th><td>--</td></tr>
+                    <tr><th>PROPOSED FAR:</th><td id="info-proposed-far">--</td></tr>
+                    <tr><th>TOTAL FAR:</th><td id="info-total-far">--</td></tr>
+                    <tr><th>FAR CHECK:</th><td id="info-far-check">--</td></tr>
                 </table>
             </details>
         </div>
@@ -387,10 +387,52 @@
 
 </div><!-- end page-wrapper -->
 
-<!-- Floating FAB — Save + Print -->
+<!-- Floating FAB — Edit Site Info + Save + Print -->
 <div id="map-fab" class="no-print" style="position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;">
+    <button onclick="UIEngine.openSiteEditor()" class="fab-btn fab-btn-edit">&#9998; Edit Site Info</button>
     <button onclick="ExportEngine.downloadConfig()" title="Downloads site-data.json to your Downloads folder. Move it back to this same folder to keep your work synced." class="fab-btn fab-btn-save">&#128190; Save Config</button>
     <button onclick="window.print()" class="fab-btn fab-btn-print">&#128438; Print / PDF</button>
+</div>
+
+<!-- Site Info Editor Modal -->
+<div id="site-edit-modal" role="dialog" aria-modal="true">
+  <div class="sei-dialog">
+    <div class="sei-header">
+      <h3>&#9998; Edit Site Info &mdash; <span id="sei-site-name"></span></h3>
+      <button class="sei-close" onclick="UIEngine.closeSiteEditor()" title="Close">&times;</button>
+    </div>
+    <div class="sei-body">
+      <div class="sei-section">Project Identity</div>
+      <div class="sei-row"><label>Legal Description</label><textarea id="sei-legal" rows="2"></textarea></div>
+      <div class="sei-row"><label>Year Built</label><input id="sei-yearbuilt" type="text" /></div>
+      <div class="sei-row"><label>Occupancy Group</label><input id="sei-occupancy" type="text" /></div>
+      <div class="sei-row"><label>Project Type</label><input id="sei-projtype" type="text" /></div>
+      <div class="sei-row"><label>Architect</label><input id="sei-architect" type="text" /></div>
+
+      <div class="sei-section">Scope of Work</div>
+      <div class="sei-row"><label>Scope</label><textarea id="sei-scope" rows="4"></textarea></div>
+
+      <div class="sei-section">Notes</div>
+      <div class="sei-row"><label>Notes</label><textarea id="sei-notes" rows="2"></textarea></div>
+
+      <div class="sei-section">City Inspector Contacts</div>
+      <div id="sei-inspectors" class="sei-array-wrap"></div>
+      <button class="sei-add-row" onclick="UIEngine._seiAddRow('sei-inspectors','Role','Name (Phone)')">+ Add Inspector</button>
+
+      <div class="sei-section">Planning &amp; Transit Areas</div>
+      <div id="sei-planning" class="sei-array-wrap"></div>
+      <button class="sei-add-row" onclick="UIEngine._seiAddRow('sei-planning','Label','Value')">+ Add Row</button>
+
+      <div class="sei-section">Overlay Zones</div>
+      <div id="sei-overlay" class="sei-array-wrap"></div>
+      <button class="sei-add-row" onclick="UIEngine._seiAddRow('sei-overlay','Zone','Yes / No')">+ Add Row</button>
+    </div>
+    <div class="sei-footer">
+      <div class="sei-status" id="sei-status"></div>
+      <button class="sei-btn-cancel" onclick="UIEngine.closeSiteEditor()">Cancel</button>
+      <button class="sei-btn-save" id="sei-save-btn" onclick="UIEngine.saveSiteInfo()">Save &amp; Rebuild</button>
+    </div>
+  </div>
 </div>
 
 <!-- Auto-save flash badge -->

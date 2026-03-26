@@ -265,6 +265,99 @@ const UIEngine = {
 
         banner.removeChild(merged);
         this.initBannerDrag();
+    },
+
+    /* ── SITE INFO EDITOR ─────────────────────────────────────── */
+    openSiteEditor: function() {
+        var sd = window.__SITE_DEFAULTS__ || {};
+        document.getElementById('sei-site-name').textContent = sd.address || sd.siteId || '';
+        document.getElementById('sei-legal').value      = sd.legalDescription || '';
+        document.getElementById('sei-yearbuilt').value  = sd.yearBuilt || '';
+        document.getElementById('sei-occupancy').value  = sd.occupancyGroup || '';
+        document.getElementById('sei-projtype').value   = sd.projectType || '';
+        document.getElementById('sei-architect').value  = sd.architect || '';
+        document.getElementById('sei-scope').value      = sd.scopeOfWork || '';
+        document.getElementById('sei-notes').value      = sd.notes || '';
+        document.getElementById('sei-status').textContent = '';
+        document.getElementById('sei-save-btn').disabled = false;
+        this._seiPopulateArray('sei-inspectors', sd.inspectors || [], 'Role', 'Name (Phone)');
+        this._seiPopulateArray('sei-planning',   sd.planningAreas || [], 'Label', 'Value');
+        this._seiPopulateArray('sei-overlay',    sd.overlayZones || [], 'Zone', 'Yes / No');
+        document.getElementById('site-edit-modal').classList.add('open');
+    },
+
+    closeSiteEditor: function() {
+        document.getElementById('site-edit-modal').classList.remove('open');
+    },
+
+    _seiPopulateArray: function(containerId, arr, ph1, ph2) {
+        var wrap = document.getElementById(containerId);
+        wrap.innerHTML = '';
+        arr.forEach(function(item) {
+            UIEngine._seiAddRow(containerId, ph1, ph2, item.name || '', item.val || '');
+        });
+    },
+
+    _seiAddRow: function(containerId, ph1, ph2, name, val) {
+        var wrap = document.getElementById(containerId);
+        var row  = document.createElement('div');
+        row.className = 'sei-array-row';
+        var i1 = document.createElement('input'); i1.type = 'text'; i1.placeholder = ph1; i1.value = name || '';
+        var i2 = document.createElement('input'); i2.type = 'text'; i2.placeholder = ph2; i2.value = val  || '';
+        var btn = document.createElement('button'); btn.className = 'sei-del-row'; btn.textContent = '×';
+        btn.onclick = function() { wrap.removeChild(row); };
+        row.appendChild(i1); row.appendChild(i2); row.appendChild(btn);
+        wrap.appendChild(row);
+    },
+
+    _seiReadArray: function(containerId) {
+        var rows = document.querySelectorAll('#' + containerId + ' .sei-array-row');
+        var result = [];
+        rows.forEach(function(row) {
+            var inputs = row.querySelectorAll('input');
+            var n = (inputs[0].value || '').trim();
+            var v = (inputs[1].value || '').trim();
+            if (n || v) result.push({ name: n, val: v });
+        });
+        return result;
+    },
+
+    saveSiteInfo: function() {
+        var sd = window.__SITE_DEFAULTS__ || {};
+        var siteId = sd.siteId;
+        if (!siteId) { alert('No active site ID found.'); return; }
+        var btn = document.getElementById('sei-save-btn');
+        var status = document.getElementById('sei-status');
+        btn.disabled = true;
+        status.textContent = 'Saving…';
+        var payload = {
+            legalDescription: document.getElementById('sei-legal').value.trim(),
+            yearBuilt:        document.getElementById('sei-yearbuilt').value.trim(),
+            occupancyGroup:   document.getElementById('sei-occupancy').value.trim(),
+            projectType:      document.getElementById('sei-projtype').value.trim(),
+            architect:        document.getElementById('sei-architect').value.trim(),
+            scopeOfWork:      document.getElementById('sei-scope').value.trim(),
+            notes:            document.getElementById('sei-notes').value.trim(),
+            inspectors:       this._seiReadArray('sei-inspectors'),
+            planningAreas:    this._seiReadArray('sei-planning'),
+            overlayZones:     this._seiReadArray('sei-overlay')
+        };
+        fetch('/api/sites/' + encodeURIComponent(siteId) + '/update-site', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d.ok) {
+                status.textContent = 'Saved! Reloading…';
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                status.textContent = 'Error: ' + (d.error || 'unknown');
+                btn.disabled = false;
+            }
+        }).catch(function() {
+            status.textContent = 'Server not reachable (dev server required).';
+            btn.disabled = false;
+        });
     }
 };
 
