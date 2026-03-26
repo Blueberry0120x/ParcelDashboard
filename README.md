@@ -1,45 +1,75 @@
 # ProjectBook-Planner
 
-Interactive parcel map and pre-application checklist suite for land development feasibility. Multi-site support (Euclid, Westminster, Burien).
+Interactive parcel map and pre-application checklist suite for land development feasibility. Multi-site support (Euclid/San Diego CA, Westminster/Garden Grove CA, Burien WA).
 
 ## Output
 
-- `Output/InteractiveMap.html` -- Leaflet map with draggable buildings, chain dimensions, setbacks, vehicle overlays
-- `Output/PreApp_Checklist.html` -- Pre-application checklist with State Density Bonus calculator
+| File | Purpose |
+|------|---------|
+| `Output/InteractiveMap.html` | Leaflet map — draggable buildings, chain dimensions, setbacks, vehicle overlays, snap-to-edge |
+| `Output/PreApp_Checklist.html` | Pre-application checklist — State Density Bonus calculator, pathway selector, fee estimates |
+
+Both files are fully self-contained (all CSS/JS inlined). Served locally at `localhost:7734` or publicly at [ParcelDashboard (GitHub Pages)](https://blueberry0120x.github.io/ParcelDashboard/).
+
+## Build
+
+```powershell
+# Compile only
+powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1
+
+# Compile + dev server (localhost:7734, live save)
+powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1 serve
+
+# Compile + open in browser
+powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1 debug
+```
+
+Every build automatically syncs `Output/` to `docs/`. Pushing `docs/` to `main` triggers the public mirror workflow to GitHub Pages.
 
 ## Structure
 
 ```
 src/
-  index.html              <- map dev shell
-  checklist.html          <- checklist source (React, single-file)
-  css/style.css           <- all CSS
+  index.html              -- Map source shell
+  checklist.html          -- Checklist source (React/Babel)
+  css/style.css           -- All CSS (inlined at build)
   js/
-    engine-config.js      <- ConfigEngine (state + site data)
-    engine-ui.js          <- UIEngine (sidebar, info tables)
-    engine-map.js         <- MapEngine (Leaflet, buildings, dims)
-    engine-elevation.js   <- ElevationTool
-    engine-setback.js     <- SetbackEngine + building config
-    engine-export.js      <- ExportEngine (save/load/_payload)
-    engine-resize.js      <- ResizeEngine
-    bootstrap.js          <- window.onload
+    engine-config.js      -- State + site data + CAD zone lookup
+    engine-ui.js          -- Banner, info tables
+    engine-map.js         -- Leaflet, buildings, snap, vehicles, controls
+    engine-elevation.js   -- Elevation profile tool
+    engine-setback.js     -- Building config form, dimensions, FAR
+    engine-export.js      -- Save/load/_payload/LISP/image/download
+    engine-resize.js      -- Sidebar resize handle
+    bootstrap.js          -- window.onload init sequence
 data/
-  site-data.json          <- active site config (injected at build)
-  sites/                  <- per-site JSON configs
-Output/                   <- compiled single-file HTML (2 files)
-Engine_InteractiveParcelMap.ps1  <- build script
+  site-data.json          -- { "activeSiteId": "CA-EUCLID" }
+  sites/                  -- per-site JSON configs
+Output/                   -- Compiled HTML (committed)
+docs/                     -- Mirror of Output/ (GitHub Pages source)
+reference/
+  ARCHITECTURE.md         -- Full architecture reference
+Engine_InteractiveParcelMap.ps1  -- Build + dev server
 ```
 
-## Build
+## Sites
 
-```
-powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1
-```
+| Site ID | Address | Zoning |
+|---------|---------|--------|
+| CA-WESTMINSTER | 11001-11025 Westminster Ave, Garden Grove CA | R-3 |
+| CA-EUCLID | 4335 Euclid Ave, San Diego CA | CUPD-CU-2-4 |
+| WA-BURIEN | 405 SW 126th St, Burien WA | TBD |
 
-## Dev Server
+## Architecture
 
-```
-powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1 serve
-```
-
-Starts localhost:7734 with live save, site switching, and auto-rebuild.
+See [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md) for full documentation:
+- All `ConfigEngine.state` fields and defaults
+- Building object schema (every field)
+- Coordinate system (offsetX/Y, xShift/yShift, lot edges)
+- Save flow step-by-step (`ExportEngine.save()`)
+- `_payload()` serialization — every field
+- Snap logic (magnetic, lot boundary, building-to-building)
+- Build pipeline internals (all stages)
+- Bootstrap init order (exact sequence)
+- Site switching flow
+- Engine call graph and data flow diagram
