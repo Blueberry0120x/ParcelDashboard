@@ -47,6 +47,17 @@
             "lastUpdated": "2026-03-26"
         },
         {
+            "id": "CA-1905_ROHN",
+            "label": "1905 Rohn Rd",
+            "address": "1905 Rohn Rd, Escondido, CA 92025",
+            "file": "ca-1905_Rohn.json",
+            "state": "CA",
+            "city": "Escondido",
+            "zoning": "RE-20",
+            "status": "skeleton",
+            "lastUpdated": "2026-03-27"
+        },
+        {
             "id": "CA-2921_ELCAJON",
             "label": "2921-2923 El Cajon Blvd",
             "address": "2921-2923 El Cajon Blvd, San Diego, CA 92104",
