@@ -1,92 +1,193 @@
-{
-    "project": "ProjectBook-Planner",
-    "site": {
-        "siteId": "CA-1905_ROHN",
-        "address": "1905 Rohn Rd, Escondido, CA 92025",
-        "apn": "236-411-06-00",
-        "legalDescription": "-- TBD: SD County Recorder/ARCC -- search APN 236-411-06-00 at arcc-acclaim.sdcounty.ca.gov or call (619) 236-3771",
-        "yearBuilt": "~1960",
-        "occupancyGroup": "R-3",
-        "zoning": "RE-20",
-        "cadZone": "CA_VI",
-        "lotWidth": 164,
-        "lotDepth": 211,
-        "lotSF": 23962,
-        "commercialDepth": 0,
-        "baseFAR": 0,
-        "commFAR": 0,
-        "maxHeight": 0,
-        "baseHeightLimit": 0,
-        "cchsMaxHeight": 0,
-        "frontSetback": 0,
-        "rearSetback": 0,
-        "sideSetback": 0,
-        "densityPerSF": 20000,
-        "nefRatePerSF": 0,
-        "affordabilityPct": 0,
-        "difPerUnit": 0,
-        "difWaiverSF": 0,
-        "projectType": "",
-        "architect": "",
-        "scopeOfWork": "",
-        "notes": "ESCONDIDO INDEPENDENT CITY -- NOT governed by City of San Diego SDMC. All zoning refs are Escondido Municipal Code (EMC) Article 6. General Plan designation E2 (Estate Residential). Council District 4. Lot is trapezoidal/irregular -- lotWidth 164 ft and lotDepth 211 ft are bounding box estimates from GIS polygon, NOT surveyed dimensions; obtain parcel map from SDARCC for actual lot lines. Lot SF 23,962 is GIS-confirmed. Lot is conforming under RE-20 (min 20,000 SF). | TBD - A: legalDescription -- SDARCC recorder lookup by APN 236-411-06-00. yearBuilt ~1960 estimated from comparables -- confirm via SD County Assessor secured roll or ParcelQuest. | TBD - C: All zoning standards (FAR, height, setbacks) -- Escondido Municipal Code Article 6, RE-20 zone. City of Escondido Planning Dept (760) 839-4671. | TBD - D: TPA status unconfirmed -- likely NOT in TPA (no light rail proximity); verify via SANDAG GIS. CCHS does not apply (SD-specific overlay). No CCHS tier. | TBD - E: Fees -- City of Escondido Building Division fee schedule (NOT SD DSD). Impact fees per Escondido schedule. | TBD - F: Project type, architect, scope of work. | TBD - G: Inspector contacts -- City of Escondido Building Division (760) 839-4647. | TBD - H: Map rotation -- estimate from aerial. Parcel polygon irregular -- trace vertices from SD County GIS or Escondido parcel lookup (escondido.gov/209/Parcel-Lookup).",
-        "inspectors": [
-            { "name": "Building (Combination)", "val": "-- TBD: City of Escondido Building Division (760) 839-4647" },
-            { "name": "Structural", "val": "-- TBD: City of Escondido Building Division" },
-            { "name": "Electrical", "val": "-- TBD: City of Escondido Building Division" },
-            { "name": "Mechanical", "val": "-- TBD: City of Escondido Building Division" },
-            { "name": "Grading / Civil", "val": "-- TBD: City of Escondido Public Works or Engineering (760) 839-4671" }
-        ],
-        "planningAreas": [
-            { "name": "GENERAL PLAN AREA", "val": "City of Escondido -- E2 (Estate Residential)" },
-            { "name": "COUNCIL DISTRICT", "val": "District 4" },
-            { "name": "LAND USE DESIGNATION", "val": "-- TBD: Escondido General Plan (2012) land use map -- contact Planning (760) 839-4671" },
-            { "name": "TRANSIT PRIORITY AREA (TPA)", "val": "-- TBD: Likely No (no Sprinter station proximity) -- verify via SANDAG GIS" },
-            { "name": "PARKING STANDARDS (PSTPA)", "val": "-- TBD: Confirm if TPA applies" },
-            { "name": "ANIMAL OVERLAY (AO)", "val": "-- TBD: RE-20 permits animals by right; AO zone adds enhanced regs -- verify" }
-        ],
-        "overlayZones": [
-            { "name": "AIRPORT INFLUENCE AREA", "val": "No (confirmed -- SD County GIS)" },
-            { "name": "COASTAL OVERLAY", "val": "No (~18 mi inland)" },
-            { "name": "VERY HIGH FIRE HAZARD", "val": "No -- RATE: NoWildland (Escondido Fire GIS confirmed)" },
-            { "name": "FAULT ZONE (ALQUIST-PRIOLO)", "val": "No (confirmed -- CGS statewide GIS)" },
-            { "name": "FEMA FLOOD ZONE", "val": "Zone X -- minimal hazard (confirmed -- FEMA NFHL)" },
-            { "name": "CCHS (HOUSING SOLUTIONS)", "val": "N/A -- City of San Diego overlay, does not apply to Escondido" }
-        ]
-    },
-    "saved": {
-        "lat": 33.100258,
-        "lng": -117.085675,
-        "rotation": 0,
-        "locked": false,
-        "setbacks": { "front": 0, "rear": 0, "sideL": 0, "sideR": 0 },
-        "buildings": [],
-        "activeBuilding": 0,
-        "commFront": false,
-        "showBldgDims": true,
-        "hiddenDimKeys": [],
-        "chainWOffset": 0,
-        "chainDOffset": 0,
-        "mapOpacity": 70,
-        "setbacksApplied": false,
-        "freeDrag": true,
-        "snapEdge": false,
-        "vehicles": [],
-        "activeVehicle": -1
-    },
-    "parcelPolygon": [
-        [33.1000018135782, -117.085532821255],
-        [33.1001152465156, -117.086152989262],
-        [33.100451700829,  -117.086066047811],
-        [33.1003454045664, -117.085526237304],
-        [33.1003408553805, -117.085510859856],
-        [33.1003339222193, -117.085496791393],
-        [33.1003248640076, -117.085484547553],
-        [33.1003140059328, -117.085474579254],
-        [33.1003017504239, -117.085467249227],
-        [33.1002885438472, -117.085462823128],
-        [33.1002748710819, -117.08546147163],
-        [33.100261232308,  -117.085463235919],
-        [33.1000018135782, -117.085532821255]
-    ]
+﻿{
+    "project":  "ProjectBook-Planner",
+    "site":  {
+                 "siteId":  "CA-1905_ROHN",
+                 "address":  "1905 Rohn Rd, Escondido, CA 92025",
+                 "apn":  "236-411-06-00",
+                 "legalDescription":  "-- TBD: SD County Recorder/ARCC -- search APN 236-411-06-00 at arcc-acclaim.sdcounty.ca.gov or call (619) 236-3771",
+                 "yearBuilt":  "~1960",
+                 "occupancyGroup":  "R-3",
+                 "zoning":  "RE-20",
+                 "cadZone":  "CA_VI",
+                 "lotWidth":  164,
+                 "lotDepth":  211,
+                 "lotSF":  23962,
+                 "commercialDepth":  0,
+                 "baseFAR":  0,
+                 "commFAR":  0,
+                 "maxHeight":  0,
+                 "baseHeightLimit":  0,
+                 "cchsMaxHeight":  0,
+                 "frontSetback":  0,
+                 "rearSetback":  0,
+                 "sideSetback":  0,
+                 "densityPerSF":  20000,
+                 "nefRatePerSF":  0,
+                 "affordabilityPct":  0,
+                 "difPerUnit":  0,
+                 "difWaiverSF":  0,
+                 "projectType":  "",
+                 "architect":  "",
+                 "scopeOfWork":  "",
+                 "notes":  "ESCONDIDO INDEPENDENT CITY -- NOT governed by City of San Diego SDMC. All zoning refs are Escondido Municipal Code (EMC) Article 6. General Plan designation E2 (Estate Residential). Council District 4. Lot is trapezoidal/irregular -- lotWidth 164 ft and lotDepth 211 ft are bounding box estimates from GIS polygon, NOT surveyed dimensions; obtain parcel map from SDARCC for actual lot lines. Lot SF 23,962 is GIS-confirmed. Lot is conforming under RE-20 (min 20,000 SF). | TBD - A: legalDescription -- SDARCC recorder lookup by APN 236-411-06-00. yearBuilt ~1960 estimated from comparables -- confirm via SD County Assessor secured roll or ParcelQuest. | TBD - C: All zoning standards (FAR, height, setbacks) -- Escondido Municipal Code Article 6, RE-20 zone. City of Escondido Planning Dept (760) 839-4671. | TBD - D: TPA status unconfirmed -- likely NOT in TPA (no light rail proximity); verify via SANDAG GIS. CCHS does not apply (SD-specific overlay). No CCHS tier. | TBD - E: Fees -- City of Escondido Building Division fee schedule (NOT SD DSD). Impact fees per Escondido schedule. | TBD - F: Project type, architect, scope of work. | TBD - G: Inspector contacts -- City of Escondido Building Division (760) 839-4647. | TBD - H: Map rotation -- estimate from aerial. Parcel polygon irregular -- trace vertices from SD County GIS or Escondido parcel lookup (escondido.gov/209/Parcel-Lookup).",
+                 "inspectors":  [
+                                    {
+                                        "name":  "Building (Combination)",
+                                        "val":  "-- TBD: City of Escondido Building Division (760) 839-4647"
+                                    },
+                                    {
+                                        "name":  "Structural",
+                                        "val":  "-- TBD: City of Escondido Building Division"
+                                    },
+                                    {
+                                        "name":  "Electrical",
+                                        "val":  "-- TBD: City of Escondido Building Division"
+                                    },
+                                    {
+                                        "name":  "Mechanical",
+                                        "val":  "-- TBD: City of Escondido Building Division"
+                                    },
+                                    {
+                                        "name":  "Grading / Civil",
+                                        "val":  "-- TBD: City of Escondido Public Works or Engineering (760) 839-4671"
+                                    }
+                                ],
+                 "planningAreas":  [
+                                       {
+                                           "name":  "GENERAL PLAN AREA",
+                                           "val":  "City of Escondido -- E2 (Estate Residential)"
+                                       },
+                                       {
+                                           "name":  "COUNCIL DISTRICT",
+                                           "val":  "District 4"
+                                       },
+                                       {
+                                           "name":  "LAND USE DESIGNATION",
+                                           "val":  "-- TBD: Escondido General Plan (2012) land use map -- contact Planning (760) 839-4671"
+                                       },
+                                       {
+                                           "name":  "TRANSIT PRIORITY AREA (TPA)",
+                                           "val":  "-- TBD: Likely No (no Sprinter station proximity) -- verify via SANDAG GIS"
+                                       },
+                                       {
+                                           "name":  "PARKING STANDARDS (PSTPA)",
+                                           "val":  "-- TBD: Confirm if TPA applies"
+                                       },
+                                       {
+                                           "name":  "ANIMAL OVERLAY (AO)",
+                                           "val":  "-- TBD: RE-20 permits animals by right; AO zone adds enhanced regs -- verify"
+                                       }
+                                   ],
+                 "overlayZones":  [
+                                      {
+                                          "name":  "AIRPORT INFLUENCE AREA",
+                                          "val":  "No (confirmed -- SD County GIS)"
+                                      },
+                                      {
+                                          "name":  "COASTAL OVERLAY",
+                                          "val":  "No (~18 mi inland)"
+                                      },
+                                      {
+                                          "name":  "VERY HIGH FIRE HAZARD",
+                                          "val":  "No -- RATE: NoWildland (Escondido Fire GIS confirmed)"
+                                      },
+                                      {
+                                          "name":  "FAULT ZONE (ALQUIST-PRIOLO)",
+                                          "val":  "No (confirmed -- CGS statewide GIS)"
+                                      },
+                                      {
+                                          "name":  "FEMA FLOOD ZONE",
+                                          "val":  "Zone X -- minimal hazard (confirmed -- FEMA NFHL)"
+                                      },
+                                      {
+                                          "name":  "CCHS (HOUSING SOLUTIONS)",
+                                          "val":  "N/A -- City of San Diego overlay, does not apply to Escondido"
+                                      }
+                                  ],
+                 "parcelPolygon":  [
+                                       [
+                                           33.1000018135782,
+                                           -117.085532821255
+                                       ],
+                                       [
+                                           33.1001152465156,
+                                           -117.086152989262
+                                       ],
+                                       [
+                                           33.100451700829,
+                                           -117.086066047811
+                                       ],
+                                       [
+                                           33.1003454045664,
+                                           -117.085526237304
+                                       ],
+                                       [
+                                           33.1003408553805,
+                                           -117.085510859856
+                                       ],
+                                       [
+                                           33.1003339222193,
+                                           -117.085496791393
+                                       ],
+                                       [
+                                           33.1003248640076,
+                                           -117.085484547553
+                                       ],
+                                       [
+                                           33.1003140059328,
+                                           -117.085474579254
+                                       ],
+                                       [
+                                           33.1003017504239,
+                                           -117.085467249227
+                                       ],
+                                       [
+                                           33.1002885438472,
+                                           -117.085462823128
+                                       ],
+                                       [
+                                           33.1002748710819,
+                                           -117.08546147163
+                                       ],
+                                       [
+                                           33.100261232308,
+                                           -117.085463235919
+                                       ],
+                                       [
+                                           33.1000018135782,
+                                           -117.085532821255
+                                       ]
+                                   ]
+             },
+    "saved":  {
+                  "lat":  33.100258,
+                  "lng":  -117.085675,
+                  "rotation":  0,
+                  "locked":  false,
+                  "setbacks":  {
+                                   "front":  0,
+                                   "rear":  0,
+                                   "sideL":  0,
+                                   "sideR":  0
+                               },
+                  "buildings":  [
+
+                                ],
+                  "activeBuilding":  0,
+                  "commFront":  false,
+                  "showBldgDims":  true,
+                  "hiddenDimKeys":  [
+
+                                    ],
+                  "chainWOffset":  0,
+                  "chainDOffset":  0,
+                  "mapOpacity":  70,
+                  "setbacksApplied":  false,
+                  "freeDrag":  true,
+                  "snapEdge":  false,
+                  "vehicles":  [
+
+                               ],
+                  "activeVehicle":  -1
+              }
 }
