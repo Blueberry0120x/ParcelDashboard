@@ -1,4 +1,18 @@
 {
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py tools/session_guard_lite.py",
+            "timeout": 15,
+            "statusMessage": "Running session guard checks..."
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "WebFetch(domain:docs.sandiego.gov)",

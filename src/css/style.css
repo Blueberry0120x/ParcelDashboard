@@ -594,8 +594,9 @@ input:checked + .slider:before { transform: translateX(20px); }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 /* Pin left-column table th widths to match (longest label = STANDARD SETBACKS) */
 .info-col-left .cad-table th { width: 205px; min-width: 205px; }
-/* Overlay zones: Yes/No values are short — pin td width so th gets remaining space */
-#info-overlay-table td { width: 70px; min-width: 70px; }
+/* Overlay zones: let td expand for long values (TBD notes, zone references) */
+#info-overlay-table th { width: 200px; min-width: 180px; }
+#info-overlay-table td { min-width: 120px; }
 /* Scope of work section */
 .info-scope-section { margin-top: 8px; width: 100%; }
 .info-scope-text { margin: 0; padding: 8px 12px; font-size: 0.82em; line-height: 1.55;

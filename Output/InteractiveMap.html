@@ -616,8 +616,9 @@ input:checked + .slider:before { transform: translateX(20px); }
 .info-col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 /* Pin left-column table th widths to match (longest label = STANDARD SETBACKS) */
 .info-col-left .cad-table th { width: 205px; min-width: 205px; }
-/* Overlay zones: Yes/No values are short — pin td width so th gets remaining space */
-#info-overlay-table td { width: 70px; min-width: 70px; }
+/* Overlay zones: let td expand for long values (TBD notes, zone references) */
+#info-overlay-table th { width: 200px; min-width: 180px; }
+#info-overlay-table td { min-width: 120px; }
 /* Scope of work section */
 .info-scope-section { margin-top: 8px; width: 100%; }
 .info-scope-text { margin: 0; padding: 8px 12px; font-size: 0.82em; line-height: 1.55;
@@ -845,7 +846,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
-<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-4876_CANNINGTON","address":"4876 Cannington Dr, San Diego, CA 92117","apn":"362-682-03-00","legalDescription":"Lot 78, Balboa Greens Annex, Map Book 8118, City of San Diego, County of San Diego, State of California","yearBuilt":"1976","occupancyGroup":"R-3","zoning":"RS-1-7","cadZone":"CA_VI","lotWidth":50,"lotDepth":100,"lotSF":5000,"commercialDepth":0,"baseFAR":0.6,"commFAR":0,"maxHeight":30,"baseHeightLimit":30,"cchsMaxHeight":0,"frontSetback":15,"rearSetback":15,"sideSetback":5,"densityPerSF":7000,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"projectType":"","architect":"","scopeOfWork":"","notes":"TBD - B: lotWidth/lotDepth estimated 50x100 from subdivision typical -- verify via Balboa Greens Annex tract map (Map Book 8118, County Recorder). | TBD - C: baseFAR 0.6 and setbacks 15/15/5 from RS-1-7 SD Municipal Code defaults -- confirm against current code. Lot is nonconforming at 5,000 SF under RS-1-7 (min 7,000 SF). | TBD - D: CCHS applicability unconfirmed for RS zone -- check SD Planning CCHS map. Mobility Choices zone -- check SD Municipal Code Appendix A Fig A-1. Airport Influence Area -- verify MCAS Miramar ALUCP and SAN ALUCP. Fire hazard zone -- verify Cal Fire FHSZ viewer. Fault zone -- verify CGS AP Zone map. | TBD - E: NEF rate per SF -- City DSD Fee Schedule PDF. DIF per unit -- DSD DIF schedule residential category. Affordability % -- confirm if density bonus applies for this scope. | TBD - F: Project type, architect, scope of work. | TBD - G: Inspector contacts -- City DSD staff directory (Inspection Services). | TBD - H: Map rotation degrees -- estimate from aerial (how many degrees lot north is off screen-north). Parcel polygon vertices if lot is irregular.","inspectors":[{"name":"Combination","val":"-- TBD: DSD Inspection Services directory"},{"name":"Structural","val":"-- TBD: DSD Inspection Services directory"},{"name":"Electrical","val":"-- TBD: DSD Inspection Services directory"},{"name":"Mechanical","val":"-- TBD: DSD Inspection Services directory"},{"name":"Grading / Civil","val":"-- TBD: DSD Inspection Services directory"}],"planningAreas":[{"name":"COMMUNITY PLAN AREA","val":"CLAIREMONT MESA"},{"name":"LAND USE DESIGNATION","val":"Residential Low-2 (5-9 du/ac)"},{"name":"CCHS (HOUSING SOLUTIONS)","val":"-- TBD: verify SD Planning CCHS map"},{"name":"TRANSIT PRIORITY AREA (TPA)","val":"Yes"},{"name":"PARKING STANDARDS (PSTPA)","val":"Yes (0 Parking Required)"},{"name":"MOBILITY CHOICES","val":"-- TBD: SD Municipal Code Appendix A Fig A-1"}],"overlayZones":[{"name":"HEIGHT LIMIT OVERLAY","val":"Yes -- 30 ft (Clairemont Mesa, O-22049)"},{"name":"TRANSIT AREA OVERLAY","val":"No"},{"name":"AIRPORT INFLUENCE AREA","val":"-- TBD: verify MCAS Miramar / SAN ALUCP"},{"name":"COASTAL OVERLAY","val":"No"},{"name":"VERY HIGH FIRE HAZARD","val":"-- TBD: Cal Fire FHSZ viewer"},{"name":"FAULT ZONE","val":"-- TBD: CGS AP Zone map"}],"parcelPolygon":[[32.830862219121,-117.168652470328],[32.830733660942,-117.168921574475],[32.830859930042,-117.169014065260],[32.830990783819,-117.168735202345],[32.830862219121,-117.168652470328]],"lat":32.830866730073865,"lng":-117.16883137822153,"rotation":27,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":0,"W":30,"D":60,"offsetX":4.3,"offsetY":1.2,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9,"stackAngle":0}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1,"siteFileName":"ca-4876_Cannington.json"};</script>
+<script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-4876_CANNINGTON","address":"4876 Cannington Dr, San Diego, CA 92117","apn":"362-682-03-00","legalDescription":"Lot 78, Balboa Greens Annex, Map Book 8118, City of San Diego, County of San Diego, State of California","yearBuilt":"1976","occupancyGroup":"R-3","zoning":"RS-1-7","cadZone":"CA_VI","lotWidth":50,"lotDepth":100,"lotSF":5000,"commercialDepth":0,"baseFAR":0.6,"commFAR":0,"maxHeight":30,"baseHeightLimit":30,"cchsMaxHeight":0,"frontSetback":15,"rearSetback":15,"sideSetback":5,"densityPerSF":7000,"nefRatePerSF":0,"affordabilityPct":0,"difPerUnit":0,"difWaiverSF":0,"projectType":"","architect":"","scopeOfWork":"","notes":"TBD - B: lotWidth/lotDepth estimated 50x100 from subdivision typical -- verify via Balboa Greens Annex tract map (Map Book 8118, County Recorder). | TBD - C: baseFAR 0.6 and setbacks 15/15/5 from RS-1-7 SD Municipal Code defaults -- confirm against current code. Lot is nonconforming at 5,000 SF under RS-1-7 (min 7,000 SF). | TBD - D: CCHS applicability unconfirmed for RS zone -- check SD Planning CCHS map. Mobility Choices zone -- check SD Municipal Code Appendix A Fig A-1. Airport Influence Area -- verify MCAS Miramar ALUCP and SAN ALUCP. Fire hazard zone -- verify Cal Fire FHSZ viewer. Fault zone -- verify CGS AP Zone map. | TBD - E: NEF rate per SF -- City DSD Fee Schedule PDF. DIF per unit -- DSD DIF schedule residential category. Affordability % -- confirm if density bonus applies for this scope. | TBD - F: Project type, architect, scope of work. | TBD - G: Inspector contacts -- City DSD staff directory (Inspection Services). | TBD - H: Map rotation degrees -- estimate from aerial (how many degrees lot north is off screen-north). Parcel polygon vertices if lot is irregular.","inspectors":[{"name":"Combination","val":"-- TBD: DSD Inspection Services directory"},{"name":"Structural","val":"-- TBD: DSD Inspection Services directory"},{"name":"Electrical","val":"-- TBD: DSD Inspection Services directory"},{"name":"Mechanical","val":"-- TBD: DSD Inspection Services directory"},{"name":"Grading / Civil","val":"-- TBD: DSD Inspection Services directory"}],"planningAreas":[{"name":"COMMUNITY PLAN AREA","val":"CLAIREMONT MESA"},{"name":"LAND USE DESIGNATION","val":"Residential Low-2 (5-9 du/ac)"},{"name":"CCHS (HOUSING SOLUTIONS)","val":"-- TBD: verify SD Planning CCHS map"},{"name":"TRANSIT PRIORITY AREA (TPA)","val":"Yes"},{"name":"PARKING STANDARDS (PSTPA)","val":"Yes (0 Parking Required)"},{"name":"MOBILITY CHOICES","val":"-- TBD: SD Municipal Code Appendix A Fig A-1"}],"overlayZones":[{"name":"HEIGHT LIMIT OVERLAY","val":"Yes -- 30 ft (Clairemont Mesa, O-22049)"},{"name":"TRANSIT AREA OVERLAY","val":"No"},{"name":"AIRPORT INFLUENCE AREA","val":"-- TBD: verify MCAS Miramar / SAN ALUCP"},{"name":"COASTAL OVERLAY","val":"No"},{"name":"VERY HIGH FIRE HAZARD","val":"-- TBD: Cal Fire FHSZ viewer"},{"name":"FAULT ZONE","val":"-- TBD: CGS AP Zone map"}],"parcelPolygon":[[32.830862219121,-117.168652470328],[32.830733660942,-117.168921574475],[32.830859930042,-117.169014065260],[32.830990783819,-117.168735202345],[32.830862219121,-117.168652470328]],"lat":32.830866730073865,"lng":-117.16883137822153,"rotation":27,"locked":true,"setbacks":{"front":10,"rear":4,"sideL":4,"sideR":4},"buildings":[{"orientation":0,"W":30,"D":60,"offsetX":7,"offsetY":6,"spacing":0,"count":1,"stackSpacing":0,"anchor":"center","stories":1,"floorHeight":9,"stackAngle":0}],"activeBuilding":0,"commFront":false,"showBldgDims":true,"hiddenDimKeys":[],"chainWOffset":0,"chainDOffset":0,"mapOpacity":70,"setbacksApplied":true,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1,"siteFileName":"ca-4876_Cannington.json"};</script>
 <script>window.__SITE_LIST__ = [{"siteId":"CA-11001_WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-11001_Westminster.json"},{"siteId":"CA-1905_ROHN","address":"1905 Rohn Rd, Escondido, CA 92025","apn":"236-411-06-00","file":"ca-1905_Rohn.json"},{"siteId":"CA-2921_ELCAJON","address":"2921-2923 El Cajon Blvd, San Diego, CA 92104","apn":"446-232-04","file":"ca-2921_ElCajon.json"},{"siteId":"CA-4335_EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"ca-4335_Euclid.json"},{"siteId":"CA-4876_CANNINGTON","address":"4876 Cannington Dr, San Diego, CA 92117","apn":"362-682-03-00","file":"ca-4876_Cannington.json"},{"siteId":"WA-405_126TH","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-405_126th.json"}];</script>
 </head>
 <body>
@@ -1313,7 +1314,7 @@ const ConfigEngine = {
     state: {
         lat: 0, lng: 0, rotation: 0,
         isSnapping: false, locked: false, unitMode: 'SF',
-        mapOpacity: 70,
+        mapOpacity: 60,
         setbacksApplied: false,
         freeDrag:       true,
         snapEdge:       true,
@@ -1383,7 +1384,7 @@ const ConfigEngine = {
             this.state.hiddenDimKeys  = saved.hiddenDimKeys  ?? [];
             this.state.chainWOffset   = saved.chainWOffset   ?? 0;
             this.state.chainDOffset   = saved.chainDOffset   ?? 0;
-            this.state.mapOpacity     = saved.mapOpacity     ?? 70;
+            this.state.mapOpacity     = saved.mapOpacity     ?? 60;
             this.state.setbacksApplied = saved.setbacksApplied ?? false;
             this.state.freeDrag       = saved.freeDrag       ?? true;
             this.state.snapEdge       = saved.snapEdge       ?? true;
@@ -1922,7 +1923,7 @@ const UIEngine = {
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
     gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
-    dimLabels: [], showDims: false,
+    dimLabels: [], showDims: false, setbackDimLabels: [],
     bldgDimLabels: [], showBldgDims: false,
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
     chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
@@ -2657,7 +2658,7 @@ const MapEngine = {
 
         const OFF = 7;   // ft: dim line offset outward from lot edge
         const EX2 = 2;   // ft: witness line overshoot past dim line
-        const TK  = 2.2; // ft: half-length of 45deg tick
+        const TK  = 1.2; // ft: half-length of 45deg tick
         // Annotative text gap + zoom-scaled font
         const mapZoom   = this.map.getZoom();
         const fontScale = Math.max(1.0, 0.5 + mapZoom * 0.04); // grows with zoom: ~1.26 at z19, ~1.38 at z22
@@ -2715,7 +2716,7 @@ const MapEngine = {
             var screenRy = ux * sin + uy * cos;
             var labelAngle = normalize(-Math.atan2(screenRy, screenRx) * 180 / Math.PI);
             edges.push({ p1: p1, p2: p2, px: nx, py: ny, ux: ux, uy: uy,
-                text: len.toFixed(1) + ' FT', rotA: labelAngle, key: 'lot_' + i });
+                text: len.toFixed(1) + ' FT', rotA: labelAngle, key: 'lot_' + i, isPoly: true });
         }
 
         edges.forEach((e) => {
@@ -3464,7 +3465,7 @@ const SetbackEngine = {
 
         const EXT = 5;    // ft: dim line offset from building edge
         const EX2 = 2;    // ft: witness line overshoot beyond dim line
-        const TK  = 2.2;  // ft: half-length of 45deg tick mark
+        const TK  = 1.2;  // ft: half-length of 45deg tick mark
         // Annotative text offset + zoom-scaled font
         const mapZoom  = MapEngine.map.getZoom();
         const bldgFontScale = Math.max(0.68, 0.34 + mapZoom * 0.024);
@@ -3480,24 +3481,44 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD, parcelPolygon: chainPP } = ConfigEngine.data;
         var lotHD = lotD / 2, lotHW = lotW / 2;
         // For polygon sites, derive lot extents from actual polygon geometry
+        var polyLocalVerts = null;
         if (chainPP && chainPP.length > 2) {
             var cpn = chainPP.length;
             if (chainPP[cpn-1][0]===chainPP[0][0] && chainPP[cpn-1][1]===chainPP[0][1]) cpn--;
             var ccLat = 0, ccLng = 0;
             for (var ci = 0; ci < cpn; ci++) { ccLat += chainPP[ci][0]; ccLng += chainPP[ci][1]; }
             ccLat /= cpn; ccLng /= cpn;
+            polyLocalVerts = [];
             var cMinX = Infinity, cMaxX = -Infinity, cMinY = Infinity, cMaxY = -Infinity;
             for (var ci = 0; ci < cpn; ci++) {
                 var cry = (chainPP[ci][0] - ccLat) * F_LAT;
                 var crx = (chainPP[ci][1] - ccLng) * F_LNG;
                 var clx = crx * lCos + cry * lSin;
                 var cly = cry * lCos - crx * lSin;
+                polyLocalVerts.push({ x: clx, y: cly });
                 if (clx < cMinX) cMinX = clx; if (clx > cMaxX) cMaxX = clx;
                 if (cly < cMinY) cMinY = cly; if (cly > cMaxY) cMaxY = cly;
             }
             lotHD = (cMaxX - cMinX) / 2;
             lotHW = (cMaxY - cMinY) / 2;
         }
+        // Helper: find polygon extent along one axis at a given perpendicular position
+        // isX=true → scan along Y at X=pos; isX=false → scan along X at Y=pos
+        var polyExtentAt = function(pos, isX) {
+            if (!polyLocalVerts) return null;
+            var mn = Infinity, mx = -Infinity, n = polyLocalVerts.length;
+            for (var i = 0; i < n; i++) {
+                var a = polyLocalVerts[i], b = polyLocalVerts[(i+1)%n];
+                var aP = isX ? a.x : a.y, bP = isX ? b.x : b.y;
+                if ((aP - pos) * (bP - pos) > 0) continue; // both on same side
+                if (Math.abs(bP - aP) < 0.001) continue;
+                var t = (pos - aP) / (bP - aP);
+                var cross = isX ? (a.y + t*(b.y - a.y)) : (a.x + t*(b.x - a.x));
+                if (cross < mn) mn = cross;
+                if (cross > mx) mx = cross;
+            }
+            return mn < Infinity ? { min: mn, max: mx } : null;
+        };
         const dimNorm = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
         const clrDepthAngle = dimNorm(-state.rotation);
         const clrWidthAngle = dimNorm(-state.rotation - 90);
@@ -3605,6 +3626,22 @@ const SetbackEngine = {
             }
             return chainLayers;
         };
+
+        // ── For polygon sites, tighten boundary to actual polygon edge at chain position ──
+        if (polyLocalVerts && chainRefX != null) {
+            var wExt = polyExtentAt(chainRefX, true);  // Y extent at X=wRef
+            if (wExt) {
+                wChain[0].v = wExt.min;
+                wChain[wChain.length - 1].v = wExt.max;
+            }
+        }
+        if (polyLocalVerts && chainRefY != null) {
+            var dExt = polyExtentAt(chainRefY, false);  // X extent at Y=dRef
+            if (dExt) {
+                dChain[0].v = dExt.min;
+                dChain[dChain.length - 1].v = dExt.max;
+            }
+        }
 
         // ── Draw the two chain dims ──────────────────────────────────────
         // Perpendicular flips outward: if chain is on the rear/right half, push further out
@@ -4095,14 +4132,7 @@ const SetbackEngine = {
 
     drawSetbacks: function() {
         const { front, rear, sideL, sideR } = ConfigEngine.state.setbacks;
-        const { width: w, depth: h }         = ConfigEngine.data;
-
-        const setbackRect = [
-            { x: -h/2 + front, y:  w/2 - sideR },
-            { x:  h/2 - rear,  y:  w/2 - sideR },
-            { x:  h/2 - rear,  y: -w/2 + sideL },
-            { x: -h/2 + front, y: -w/2 + sideL }
-        ];
+        const { width: w, depth: h, parcelPolygon: pp } = ConfigEngine.data;
 
         const rad   = ConfigEngine.state.rotation * Math.PI / 180;
         const cos   = Math.cos(rad), sin = Math.sin(rad);
@@ -4115,7 +4145,112 @@ const SetbackEngine = {
             return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
         };
 
-        MapEngine.setbackPoly.setLatLngs(setbackRect.map(transform));
+        var setbackPts;
+
+        if (pp && pp.length > 2) {
+            // Polygon mode: inset each edge by its setback based on orientation
+            var n = pp.length;
+            if (pp[n-1][0]===pp[0][0] && pp[n-1][1]===pp[0][1]) n--;
+            var cLat = 0, cLng = 0;
+            for (var i = 0; i < n; i++) { cLat += pp[i][0]; cLng += pp[i][1]; }
+            cLat /= n; cLng /= n;
+            // Convert to local coords
+            var lv = [];
+            for (var i = 0; i < n; i++) {
+                var ry = (pp[i][0] - cLat) * F_LAT;
+                var rx = (pp[i][1] - cLng) * F_LNG;
+                lv.push({ x: rx * cos + ry * sin, y: ry * cos - rx * sin });
+            }
+            // Signed area for winding
+            var sa = 0;
+            for (var i = 0; i < n; i++) { var j=(i+1)%n; sa += lv[i].x*lv[j].y - lv[j].x*lv[i].y; }
+            var ws = sa > 0 ? 1 : -1;
+            // For each edge: compute outward normal, assign setback, offset inward
+            var offEdges = [];
+            for (var i = 0; i < n; i++) {
+                var j = (i+1) % n;
+                var dx = lv[j].x - lv[i].x, dy = lv[j].y - lv[i].y;
+                var len = Math.sqrt(dx*dx + dy*dy);
+                if (len < 0.1) continue;
+                var ux = dx/len, uy = dy/len;
+                var nx = uy * ws, ny = -ux * ws;  // outward normal
+                // Assign setback: front (-X facing), rear (+X), sideL (-Y), sideR (+Y)
+                var sb;
+                if (Math.abs(nx) > Math.abs(ny)) sb = nx < 0 ? front : rear;
+                else sb = ny < 0 ? sideL : sideR;
+                // Offset edge inward (opposite of outward normal)
+                offEdges.push({
+                    p1: { x: lv[i].x - sb*nx, y: lv[i].y - sb*ny },
+                    p2: { x: lv[j].x - sb*nx, y: lv[j].y - sb*ny },
+                    dx: dx, dy: dy
+                });
+            }
+            // Intersect consecutive offset edges to get inset vertices
+            setbackPts = [];
+            for (var i = 0; i < offEdges.length; i++) {
+                var j = (i+1) % offEdges.length;
+                var a = offEdges[i], b = offEdges[j];
+                // Line-line intersection: a.p1 + t*(a.dx,a.dy) = b.p1 + s*(b.dx,b.dy)
+                var det = a.dx * b.dy - a.dy * b.dx;
+                if (Math.abs(det) < 0.001) { setbackPts.push(a.p2); continue; }
+                var t = ((b.p1.x - a.p1.x) * b.dy - (b.p1.y - a.p1.y) * b.dx) / det;
+                setbackPts.push({ x: a.p1.x + t * a.dx, y: a.p1.y + t * a.dy });
+            }
+        } else {
+            // Rectangle mode
+            setbackPts = [
+                { x: -h/2 + front, y:  w/2 - sideR },
+                { x:  h/2 - rear,  y:  w/2 - sideR },
+                { x:  h/2 - rear,  y: -w/2 + sideL },
+                { x: -h/2 + front, y: -w/2 + sideL }
+            ];
+        }
+
+        MapEngine.setbackPoly.setLatLngs(setbackPts.map(transform));
+
+        // Clear old setback dim labels
+        MapEngine.setbackDimLabels.forEach(function(l) { MapEngine.map.removeLayer(l); });
+        MapEngine.setbackDimLabels = [];
+
+        // Draw setback-to-boundary measurement for polygon sites
+        if (pp && pp.length > 2 && offEdges && offEdges.length > 0) {
+            var mapZoom = MapEngine.map.getZoom();
+            var sbFontScale = Math.max(0.65, 0.30 + mapZoom * 0.025);
+            for (var ei = 0; ei < offEdges.length; ei++) {
+                var oe = offEdges[ei];
+                var edgeLen = Math.sqrt(oe.dx*oe.dx + oe.dy*oe.dy);
+                if (edgeLen < 1) continue;
+                var eUx = oe.dx/edgeLen, eUy = oe.dy/edgeLen;
+                var eNx = eUy * ws, eNy = -eUx * ws;
+                var sbDist = Math.abs(eNx) > Math.abs(eNy)
+                    ? (eNx < 0 ? front : rear)
+                    : (eNy < 0 ? sideL : sideR);
+                if (sbDist < 0.5) continue;
+                // Midpoint of boundary edge
+                var origIdx = ei < n ? ei : 0;
+                var nextIdx = (origIdx + 1) % n;
+                var bMidX = (lv[origIdx].x + lv[nextIdx].x) / 2;
+                var bMidY = (lv[origIdx].y + lv[nextIdx].y) / 2;
+                // Midpoint between boundary and setback (halfway inward)
+                var labelX = bMidX - eNx * sbDist / 2;
+                var labelY = bMidY - eNy * sbDist / 2;
+                // Label angle (follows edge direction)
+                var scrRx = eUx * cos - eUy * sin;
+                var scrRy = eUx * sin + eUy * cos;
+                var lblAngle = -Math.atan2(scrRy, scrRx) * 180 / Math.PI;
+                lblAngle = ((lblAngle % 180) + 180) % 180;
+                if (lblAngle >= 90) lblAngle -= 180;
+                var m = L.marker(transform({ x: labelX, y: labelY }), {
+                    icon: L.divIcon({
+                        className: '',
+                        html: '<div style="position:relative"><div class="setback-dim-label" style="font-size:' + sbFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + lblAngle.toFixed(1) + 'deg);color:#f6c90e;font-weight:bold;white-space:nowrap">' + sbDist.toFixed(0) + "'" + '</div></div>',
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    }),
+                    interactive: false
+                }).addTo(MapEngine.map);
+                MapEngine.setbackDimLabels.push(m);
+            }
+        }
     }
 };
 

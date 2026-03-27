@@ -401,7 +401,7 @@ const SetbackEngine = {
 
         const EXT = 5;    // ft: dim line offset from building edge
         const EX2 = 2;    // ft: witness line overshoot beyond dim line
-        const TK  = 2.2;  // ft: half-length of 45deg tick mark
+        const TK  = 1.2;  // ft: half-length of 45deg tick mark
         // Annotative text offset + zoom-scaled font
         const mapZoom  = MapEngine.map.getZoom();
         const bldgFontScale = Math.max(0.68, 0.34 + mapZoom * 0.024);
@@ -417,24 +417,44 @@ const SetbackEngine = {
         const { width: lotW, depth: lotD, parcelPolygon: chainPP } = ConfigEngine.data;
         var lotHD = lotD / 2, lotHW = lotW / 2;
         // For polygon sites, derive lot extents from actual polygon geometry
+        var polyLocalVerts = null;
         if (chainPP && chainPP.length > 2) {
             var cpn = chainPP.length;
             if (chainPP[cpn-1][0]===chainPP[0][0] && chainPP[cpn-1][1]===chainPP[0][1]) cpn--;
             var ccLat = 0, ccLng = 0;
             for (var ci = 0; ci < cpn; ci++) { ccLat += chainPP[ci][0]; ccLng += chainPP[ci][1]; }
             ccLat /= cpn; ccLng /= cpn;
+            polyLocalVerts = [];
             var cMinX = Infinity, cMaxX = -Infinity, cMinY = Infinity, cMaxY = -Infinity;
             for (var ci = 0; ci < cpn; ci++) {
                 var cry = (chainPP[ci][0] - ccLat) * F_LAT;
                 var crx = (chainPP[ci][1] - ccLng) * F_LNG;
                 var clx = crx * lCos + cry * lSin;
                 var cly = cry * lCos - crx * lSin;
+                polyLocalVerts.push({ x: clx, y: cly });
                 if (clx < cMinX) cMinX = clx; if (clx > cMaxX) cMaxX = clx;
                 if (cly < cMinY) cMinY = cly; if (cly > cMaxY) cMaxY = cly;
             }
             lotHD = (cMaxX - cMinX) / 2;
             lotHW = (cMaxY - cMinY) / 2;
         }
+        // Helper: find polygon extent along one axis at a given perpendicular position
+        // isX=true → scan along Y at X=pos; isX=false → scan along X at Y=pos
+        var polyExtentAt = function(pos, isX) {
+            if (!polyLocalVerts) return null;
+            var mn = Infinity, mx = -Infinity, n = polyLocalVerts.length;
+            for (var i = 0; i < n; i++) {
+                var a = polyLocalVerts[i], b = polyLocalVerts[(i+1)%n];
+                var aP = isX ? a.x : a.y, bP = isX ? b.x : b.y;
+                if ((aP - pos) * (bP - pos) > 0) continue; // both on same side
+                if (Math.abs(bP - aP) < 0.001) continue;
+                var t = (pos - aP) / (bP - aP);
+                var cross = isX ? (a.y + t*(b.y - a.y)) : (a.x + t*(b.x - a.x));
+                if (cross < mn) mn = cross;
+                if (cross > mx) mx = cross;
+            }
+            return mn < Infinity ? { min: mn, max: mx } : null;
+        };
         const dimNorm = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
         const clrDepthAngle = dimNorm(-state.rotation);
         const clrWidthAngle = dimNorm(-state.rotation - 90);
@@ -542,6 +562,22 @@ const SetbackEngine = {
             }
             return chainLayers;
         };
+
+        // ── For polygon sites, tighten boundary to actual polygon edge at chain position ──
+        if (polyLocalVerts && chainRefX != null) {
+            var wExt = polyExtentAt(chainRefX, true);  // Y extent at X=wRef
+            if (wExt) {
+                wChain[0].v = wExt.min;
+                wChain[wChain.length - 1].v = wExt.max;
+            }
+        }
+        if (polyLocalVerts && chainRefY != null) {
+            var dExt = polyExtentAt(chainRefY, false);  // X extent at Y=dRef
+            if (dExt) {
+                dChain[0].v = dExt.min;
+                dChain[dChain.length - 1].v = dExt.max;
+            }
+        }
 
         // ── Draw the two chain dims ──────────────────────────────────────
         // Perpendicular flips outward: if chain is on the rear/right half, push further out
@@ -1032,14 +1068,7 @@ const SetbackEngine = {
 
     drawSetbacks: function() {
         const { front, rear, sideL, sideR } = ConfigEngine.state.setbacks;
-        const { width: w, depth: h }         = ConfigEngine.data;
-
-        const setbackRect = [
-            { x: -h/2 + front, y:  w/2 - sideR },
-            { x:  h/2 - rear,  y:  w/2 - sideR },
-            { x:  h/2 - rear,  y: -w/2 + sideL },
-            { x: -h/2 + front, y: -w/2 + sideL }
-        ];
+        const { width: w, depth: h, parcelPolygon: pp } = ConfigEngine.data;
 
         const rad   = ConfigEngine.state.rotation * Math.PI / 180;
         const cos   = Math.cos(rad), sin = Math.sin(rad);
@@ -1052,7 +1081,112 @@ const SetbackEngine = {
             return [ConfigEngine.state.lat + ry / F_LAT, ConfigEngine.state.lng + rx / F_LNG];
         };
 
-        MapEngine.setbackPoly.setLatLngs(setbackRect.map(transform));
+        var setbackPts;
+
+        if (pp && pp.length > 2) {
+            // Polygon mode: inset each edge by its setback based on orientation
+            var n = pp.length;
+            if (pp[n-1][0]===pp[0][0] && pp[n-1][1]===pp[0][1]) n--;
+            var cLat = 0, cLng = 0;
+            for (var i = 0; i < n; i++) { cLat += pp[i][0]; cLng += pp[i][1]; }
+            cLat /= n; cLng /= n;
+            // Convert to local coords
+            var lv = [];
+            for (var i = 0; i < n; i++) {
+                var ry = (pp[i][0] - cLat) * F_LAT;
+                var rx = (pp[i][1] - cLng) * F_LNG;
+                lv.push({ x: rx * cos + ry * sin, y: ry * cos - rx * sin });
+            }
+            // Signed area for winding
+            var sa = 0;
+            for (var i = 0; i < n; i++) { var j=(i+1)%n; sa += lv[i].x*lv[j].y - lv[j].x*lv[i].y; }
+            var ws = sa > 0 ? 1 : -1;
+            // For each edge: compute outward normal, assign setback, offset inward
+            var offEdges = [];
+            for (var i = 0; i < n; i++) {
+                var j = (i+1) % n;
+                var dx = lv[j].x - lv[i].x, dy = lv[j].y - lv[i].y;
+                var len = Math.sqrt(dx*dx + dy*dy);
+                if (len < 0.1) continue;
+                var ux = dx/len, uy = dy/len;
+                var nx = uy * ws, ny = -ux * ws;  // outward normal
+                // Assign setback: front (-X facing), rear (+X), sideL (-Y), sideR (+Y)
+                var sb;
+                if (Math.abs(nx) > Math.abs(ny)) sb = nx < 0 ? front : rear;
+                else sb = ny < 0 ? sideL : sideR;
+                // Offset edge inward (opposite of outward normal)
+                offEdges.push({
+                    p1: { x: lv[i].x - sb*nx, y: lv[i].y - sb*ny },
+                    p2: { x: lv[j].x - sb*nx, y: lv[j].y - sb*ny },
+                    dx: dx, dy: dy
+                });
+            }
+            // Intersect consecutive offset edges to get inset vertices
+            setbackPts = [];
+            for (var i = 0; i < offEdges.length; i++) {
+                var j = (i+1) % offEdges.length;
+                var a = offEdges[i], b = offEdges[j];
+                // Line-line intersection: a.p1 + t*(a.dx,a.dy) = b.p1 + s*(b.dx,b.dy)
+                var det = a.dx * b.dy - a.dy * b.dx;
+                if (Math.abs(det) < 0.001) { setbackPts.push(a.p2); continue; }
+                var t = ((b.p1.x - a.p1.x) * b.dy - (b.p1.y - a.p1.y) * b.dx) / det;
+                setbackPts.push({ x: a.p1.x + t * a.dx, y: a.p1.y + t * a.dy });
+            }
+        } else {
+            // Rectangle mode
+            setbackPts = [
+                { x: -h/2 + front, y:  w/2 - sideR },
+                { x:  h/2 - rear,  y:  w/2 - sideR },
+                { x:  h/2 - rear,  y: -w/2 + sideL },
+                { x: -h/2 + front, y: -w/2 + sideL }
+            ];
+        }
+
+        MapEngine.setbackPoly.setLatLngs(setbackPts.map(transform));
+
+        // Clear old setback dim labels
+        MapEngine.setbackDimLabels.forEach(function(l) { MapEngine.map.removeLayer(l); });
+        MapEngine.setbackDimLabels = [];
+
+        // Draw setback-to-boundary measurement for polygon sites
+        if (pp && pp.length > 2 && offEdges && offEdges.length > 0) {
+            var mapZoom = MapEngine.map.getZoom();
+            var sbFontScale = Math.max(0.65, 0.30 + mapZoom * 0.025);
+            for (var ei = 0; ei < offEdges.length; ei++) {
+                var oe = offEdges[ei];
+                var edgeLen = Math.sqrt(oe.dx*oe.dx + oe.dy*oe.dy);
+                if (edgeLen < 1) continue;
+                var eUx = oe.dx/edgeLen, eUy = oe.dy/edgeLen;
+                var eNx = eUy * ws, eNy = -eUx * ws;
+                var sbDist = Math.abs(eNx) > Math.abs(eNy)
+                    ? (eNx < 0 ? front : rear)
+                    : (eNy < 0 ? sideL : sideR);
+                if (sbDist < 0.5) continue;
+                // Midpoint of boundary edge
+                var origIdx = ei < n ? ei : 0;
+                var nextIdx = (origIdx + 1) % n;
+                var bMidX = (lv[origIdx].x + lv[nextIdx].x) / 2;
+                var bMidY = (lv[origIdx].y + lv[nextIdx].y) / 2;
+                // Midpoint between boundary and setback (halfway inward)
+                var labelX = bMidX - eNx * sbDist / 2;
+                var labelY = bMidY - eNy * sbDist / 2;
+                // Label angle (follows edge direction)
+                var scrRx = eUx * cos - eUy * sin;
+                var scrRy = eUx * sin + eUy * cos;
+                var lblAngle = -Math.atan2(scrRy, scrRx) * 180 / Math.PI;
+                lblAngle = ((lblAngle % 180) + 180) % 180;
+                if (lblAngle >= 90) lblAngle -= 180;
+                var m = L.marker(transform({ x: labelX, y: labelY }), {
+                    icon: L.divIcon({
+                        className: '',
+                        html: '<div style="position:relative"><div class="setback-dim-label" style="font-size:' + sbFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + lblAngle.toFixed(1) + 'deg);color:#f6c90e;font-weight:bold;white-space:nowrap">' + sbDist.toFixed(0) + "'" + '</div></div>',
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    }),
+                    interactive: false
+                }).addTo(MapEngine.map);
+                MapEngine.setbackDimLabels.push(m);
+            }
+        }
     }
 };
 

@@ -1,3 +1,23 @@
+## [2026-03-27 12:00] CONTROLLER DISPATCH — WIP-commit uncommitted work immediately -- OVERRIDE
+
+**BLOCKING — execute before any other work.**
+
+Controller detected uncommitted changes in your working tree (GLOBAL-023 violation).
+
+**Required actions (in order):**
+1. `git status` — confirm which files are modified/untracked
+2. Review changes briefly — do NOT discard without understanding them
+3. Commit with `[WIP]` prefix if incomplete, or proper message if complete
+4. `git push` — push all commits including any unpushed ones
+5. Touch `controller-note/.ping` after done so Controller knows
+
+**Then:** continue with whatever work was in progress.
+
+This dispatch was generated because a prior agent session exited without committing (GLOBAL-023).
+All sessions MUST commit, stash, or document before exit — no exceptions.
+
+---
+
 
 
 ## [2026-03-27 11:35] REPLY: NP_ClaudeAgent repo + report/ folder -- UPDATE

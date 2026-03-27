@@ -4,7 +4,7 @@
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
     gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
-    dimLabels: [], showDims: false,
+    dimLabels: [], showDims: false, setbackDimLabels: [],
     bldgDimLabels: [], showBldgDims: false,
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
     chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
@@ -739,7 +739,7 @@ const MapEngine = {
 
         const OFF = 7;   // ft: dim line offset outward from lot edge
         const EX2 = 2;   // ft: witness line overshoot past dim line
-        const TK  = 2.2; // ft: half-length of 45deg tick
+        const TK  = 1.2; // ft: half-length of 45deg tick
         // Annotative text gap + zoom-scaled font
         const mapZoom   = this.map.getZoom();
         const fontScale = Math.max(1.0, 0.5 + mapZoom * 0.04); // grows with zoom: ~1.26 at z19, ~1.38 at z22
@@ -797,7 +797,7 @@ const MapEngine = {
             var screenRy = ux * sin + uy * cos;
             var labelAngle = normalize(-Math.atan2(screenRy, screenRx) * 180 / Math.PI);
             edges.push({ p1: p1, p2: p2, px: nx, py: ny, ux: ux, uy: uy,
-                text: len.toFixed(1) + ' FT', rotA: labelAngle, key: 'lot_' + i });
+                text: len.toFixed(1) + ' FT', rotA: labelAngle, key: 'lot_' + i, isPoly: true });
         }
 
         edges.forEach((e) => {

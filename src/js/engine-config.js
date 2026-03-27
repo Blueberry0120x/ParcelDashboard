@@ -33,7 +33,7 @@ const ConfigEngine = {
     state: {
         lat: 0, lng: 0, rotation: 0,
         isSnapping: false, locked: false, unitMode: 'SF',
-        mapOpacity: 70,
+        mapOpacity: 60,
         setbacksApplied: false,
         freeDrag:       true,
         snapEdge:       true,
@@ -103,7 +103,7 @@ const ConfigEngine = {
             this.state.hiddenDimKeys  = saved.hiddenDimKeys  ?? [];
             this.state.chainWOffset   = saved.chainWOffset   ?? 0;
             this.state.chainDOffset   = saved.chainDOffset   ?? 0;
-            this.state.mapOpacity     = saved.mapOpacity     ?? 70;
+            this.state.mapOpacity     = saved.mapOpacity     ?? 60;
             this.state.setbacksApplied = saved.setbacksApplied ?? false;
             this.state.freeDrag       = saved.freeDrag       ?? true;
             this.state.snapEdge       = saved.snapEdge       ?? true;

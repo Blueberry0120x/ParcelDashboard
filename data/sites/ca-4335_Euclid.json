@@ -136,7 +136,7 @@
                                     ],
                   "chainWOffset":  0,
                   "chainDOffset":  40,
-                  "mapOpacity":  70,
+                  "mapOpacity":  60,
                   "setbacksApplied":  false,
                   "freeDrag":  true,
                   "snapEdge":  true,

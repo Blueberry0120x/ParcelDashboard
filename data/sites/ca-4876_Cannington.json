@@ -133,18 +133,18 @@
                   "rotation":  27,
                   "locked":  true,
                   "setbacks":  {
-                                   "front":  0,
-                                   "rear":  0,
-                                   "sideL":  0,
-                                   "sideR":  0
+                                   "front":  10,
+                                   "rear":  4,
+                                   "sideL":  4,
+                                   "sideR":  4
                                },
                   "buildings":  [
                                     {
                                         "orientation":  0,
                                         "W":  30,
                                         "D":  60,
-                                        "offsetX":  4.3,
-                                        "offsetY":  1.2,
+                                        "offsetX":  7,
+                                        "offsetY":  6,
                                         "spacing":  0,
                                         "count":  1,
                                         "stackSpacing":  0,
@@ -163,7 +163,7 @@
                   "chainWOffset":  0,
                   "chainDOffset":  0,
                   "mapOpacity":  70,
-                  "setbacksApplied":  false,
+                  "setbacksApplied":  true,
                   "freeDrag":  true,
                   "snapEdge":  true,
                   "vehicles":  [
