@@ -1,0 +1,61 @@
+{
+    "_comment": "Master site registry. One entry per site. status: skeleton | partial | complete. file: relative to data/sites/. Add new sites here when creating JSON.",
+    "version": "1.0",
+    "sites": [
+        {
+            "id": "CA-4335_EUCLID",
+            "label": "4335 Euclid Ave",
+            "address": "4335 Euclid Avenue, San Diego, CA 92105",
+            "file": "ca-4335_Euclid.json",
+            "state": "CA",
+            "city": "San Diego",
+            "zoning": "CUPD-CU-2-4",
+            "status": "complete",
+            "lastUpdated": "2026-03-26"
+        },
+        {
+            "id": "CA-1102_WESTMINSTER",
+            "label": "1102 Westminster Ave",
+            "address": "1102 Westminster Ave, Venice, CA",
+            "file": "ca-1102_Westminster.json",
+            "state": "CA",
+            "city": "Los Angeles",
+            "zoning": "R3-1",
+            "status": "partial",
+            "lastUpdated": "2026-03-26"
+        },
+        {
+            "id": "WA-405_126TH",
+            "label": "405 SW 126th St",
+            "address": "405 SW 126th St, Burien, WA",
+            "file": "wa-405_126th.json",
+            "state": "WA",
+            "city": "Burien",
+            "zoning": "",
+            "status": "skeleton",
+            "lastUpdated": "2026-03-26"
+        },
+        {
+            "id": "CA-4876_CANNINGTON",
+            "label": "4876 Cannington Dr",
+            "address": "4876 Cannington Dr, San Diego, CA 92117",
+            "file": "ca-4876_Cannington.json",
+            "state": "CA",
+            "city": "San Diego",
+            "zoning": "RS-1-7",
+            "status": "skeleton",
+            "lastUpdated": "2026-03-26"
+        },
+        {
+            "id": "CA-2921_ELCAJON",
+            "label": "2921-2923 El Cajon Blvd",
+            "address": "2921-2923 El Cajon Blvd, San Diego, CA 92104",
+            "file": "ca-2921_ElCajon.json",
+            "state": "CA",
+            "city": "San Diego",
+            "zoning": "CC-3-9",
+            "status": "skeleton",
+            "lastUpdated": "2026-03-26"
+        }
+    ]
+}

@@ -355,19 +355,32 @@ const UIEngine = {
                 btn.disabled = false;
             }
         }).catch(function() {
-            // No dev server — download updated JSON with correct filename
+            // No dev server — download updated JSON with correct structure
             status.textContent = 'No server — downloading updated JSON…';
             btn.disabled = false;
             var sd = window.__SITE_DEFAULTS__ || {};
+            // Saved-state fields (managed by ExportEngine._payload) — must NOT go under site
+            var savedKeys = ['lat','lng','rotation','locked','setbacks','buildings','activeBuilding',
+                             'commFront','showBldgDims','hiddenDimKeys','chainWOffset','chainDOffset',
+                             'mapOpacity','setbacksApplied','freeDrag','snapEdge','vehicles','activeVehicle'];
+            // Meta-fields injected at build time — not actual site data
+            var metaKeys = ['siteId','siteFileName','project'];
+            var skipKeys = savedKeys.concat(metaKeys);
+            // Build site block from identity fields only
             var siteObj = {};
-            Object.keys(sd).forEach(function(k) { siteObj[k] = sd[k]; });
+            Object.keys(sd).forEach(function(k) {
+                if (skipKeys.indexOf(k) === -1) { siteObj[k] = sd[k]; }
+            });
+            // Apply edits from current form
             var editable = ['legalDescription','yearBuilt','occupancyGroup','projectType','architect','scopeOfWork','notes','inspectors','planningAreas','overlayZones'];
             editable.forEach(function(k) { if (payload[k] !== undefined) siteObj[k] = payload[k]; });
-            var out = { project: 'ProjectBook-Planner', site: siteObj };
+            // Rebuild saved block from known saved fields
+            var savedObj = {};
+            savedKeys.forEach(function(k) { if (sd[k] !== undefined) savedObj[k] = sd[k]; });
+            var out = { project: 'ProjectBook-Planner', site: siteObj, saved: savedObj };
             var blob = new Blob([JSON.stringify(out, null, 4)], { type: 'application/json' });
             var a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            // Use the actual filename from server injection so it matches data/sites/
             a.download = sd.siteFileName || (siteId.toLowerCase() + '.json');
             a.click();
             URL.revokeObjectURL(a.href);

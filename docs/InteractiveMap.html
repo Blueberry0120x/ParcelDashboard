@@ -839,7 +839,7 @@ html[data-theme="dark"] .s-hint { color: #93c5fd !important; border-color: #93c5
 </style>
     <script>(function(){var s=localStorage.getItem('theme');if(s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script>window.__SITE_DEFAULTS__ = {"project":"ProjectBook-Planner","siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","zoning":"CUPD-CU-2-4","cadZone":"CA_VI","lotWidth":50,"lotDepth":125,"lotSF":6250,"commercialDepth":30,"baseFAR":2,"commFAR":6.5,"maxHeight":50,"baseHeightLimit":45,"cchsMaxHeight":95,"frontSetback":10,"rearSetback":10,"sideSetback":0,"densityPerSF":600,"nefRatePerSF":11.78,"affordabilityPct":0.4,"difPerUnit":15000,"difWaiverSF":500,"legalDescription":"Lot 16, Block 4 of EUCLID MANOR, in the City of San Diego, County of San Diego, State of California, per Map No. 3482","yearBuilt":"1952","occupancyGroup":"B / R-2","inspectors":[{"name":"Combination","val":"Wesley Tukker (619-446-5362)"},{"name":"Structural","val":"Ricardo Ordonez (619-446-5123)"},{"name":"Electrical","val":"Richard Gable (858-573-1223)"},{"name":"Mechanical","val":"Christopher Sorchy (619-236-7033)"},{"name":"Grading","val":"Alejandro Ruiz (858-627-2034)"}],"scopeOfWork":"Redevelop a 6,250 SF commercial lot at 4335 Euclid Ave (San Diego) into a 2-story mixed-use project under CUPD-CU-2-4 zoning. Ground floor: commercial unit at the front (30\u0027 depth per frontage requirement), 9 residential units behind — organized across 4 buildings. The two buildings immediately behind the commercial space contain 2 units each. The two rear buildings facing the back alley contain 2 and 1 units respectively. Second floor is all residential. Total program: 9 residential units + 1 commercial space, within base FAR 2.0 and base density (10 DU max). Zero side setbacks per CUPD-CU-2-4. TPA designation. Please see Construction Plan for more detail.","planningAreas":[{"name":"COMMUNITY PLAN AREA","val":"MID-CITY: CITY HEIGHTS"},{"name":"LAND USE DESIGNATION","val":"Commercial / Mixed Use A (73 du/ac)"},{"name":"CCHS (HOUSING SOLUTIONS)","val":"Yes — FAR Tier 3: 6.5 FAR"},{"name":"TRANSIT PRIORITY AREA (TPA)","val":"Yes"},{"name":"PARKING STANDARDS (PSTPA)","val":"Yes (0 Parking Required)"},{"name":"MOBILITY CHOICES","val":"Yes — Mobility Zone 2"}],"overlayZones":[{"name":"TRANSIT AREA OVERLAY","val":"Yes"},{"name":"AIRPORT INFLUENCE AREA","val":"No"},{"name":"COASTAL OVERLAY","val":"No"},{"name":"VERY HIGH FIRE HAZARD","val":"No"},{"name":"FAULT ZONE","val":"No"}],"lat":32.75560223139615,"lng":-117.09194182719655,"rotation":0,"locked":true,"setbacks":{"front":0,"rear":0,"sideL":0,"sideR":0},"buildings":[{"orientation":90,"offsetX":-52.5,"offsetY":10,"count":1,"stackSpacing":0,"anchor":"front","stories":3,"floorHeight":9,"W":20,"D":30,"stackAngle":0}],"activeBuilding":0,"commFront":true,"showBldgDims":true,"hiddenDimKeys":["lot_right","lot_front"],"chainWOffset":0,"chainDOffset":40,"mapOpacity":70,"setbacksApplied":false,"freeDrag":true,"snapEdge":true,"vehicles":[],"activeVehicle":-1,"projectType":"","architect":"","notes":"","siteFileName":"ca-4335_Euclid.json"};</script>
-<script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-1102_Westminster.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"ca-4335_Euclid.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-405_126th.json"}];</script>
+<script>window.__SITE_LIST__ = [{"siteId":"CA-WESTMINSTER","address":"11001-11025 Westminster Ave, Garden Grove, CA 92843","apn":"100-151-33, 100-151-34","file":"ca-1102_Westminster.json"},{"siteId":"CA-2921_ELCAJON","address":"2921-2923 El Cajon Blvd, San Diego, CA 92104","apn":"446-232-04","file":"ca-2921_ElCajon.json"},{"siteId":"CA-EUCLID","address":"4335 Euclid Avenue, San Diego, CA 92105","apn":"471-271-16-00","file":"ca-4335_Euclid.json"},{"siteId":"CA-4876_CANNINGTON","address":"4876 Cannington Dr, San Diego, CA 92117","apn":"362-682-03-00","file":"ca-4876_Cannington.json"},{"siteId":"WA-BURIEN","address":"405 SW 126th St, Burien, WA 98146","apn":"0723049368","file":"wa-405_126th.json"}];</script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -1859,19 +1859,32 @@ const UIEngine = {
                 btn.disabled = false;
             }
         }).catch(function() {
-            // No dev server — download updated JSON with correct filename
+            // No dev server — download updated JSON with correct structure
             status.textContent = 'No server — downloading updated JSON…';
             btn.disabled = false;
             var sd = window.__SITE_DEFAULTS__ || {};
+            // Saved-state fields (managed by ExportEngine._payload) — must NOT go under site
+            var savedKeys = ['lat','lng','rotation','locked','setbacks','buildings','activeBuilding',
+                             'commFront','showBldgDims','hiddenDimKeys','chainWOffset','chainDOffset',
+                             'mapOpacity','setbacksApplied','freeDrag','snapEdge','vehicles','activeVehicle'];
+            // Meta-fields injected at build time — not actual site data
+            var metaKeys = ['siteId','siteFileName','project'];
+            var skipKeys = savedKeys.concat(metaKeys);
+            // Build site block from identity fields only
             var siteObj = {};
-            Object.keys(sd).forEach(function(k) { siteObj[k] = sd[k]; });
+            Object.keys(sd).forEach(function(k) {
+                if (skipKeys.indexOf(k) === -1) { siteObj[k] = sd[k]; }
+            });
+            // Apply edits from current form
             var editable = ['legalDescription','yearBuilt','occupancyGroup','projectType','architect','scopeOfWork','notes','inspectors','planningAreas','overlayZones'];
             editable.forEach(function(k) { if (payload[k] !== undefined) siteObj[k] = payload[k]; });
-            var out = { project: 'ProjectBook-Planner', site: siteObj };
+            // Rebuild saved block from known saved fields
+            var savedObj = {};
+            savedKeys.forEach(function(k) { if (sd[k] !== undefined) savedObj[k] = sd[k]; });
+            var out = { project: 'ProjectBook-Planner', site: siteObj, saved: savedObj };
             var blob = new Blob([JSON.stringify(out, null, 4)], { type: 'application/json' });
             var a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            // Use the actual filename from server injection so it matches data/sites/
             a.download = sd.siteFileName || (siteId.toLowerCase() + '.json');
             a.click();
             URL.revokeObjectURL(a.href);

@@ -5,6 +5,41 @@
 
 ---
 
+## [2026-03-26] ARCHITECTURE: Multi-site portfolio plan established
+
+### Context
+Designer is building a growing portfolio of development sites (San Diego, LA, WA, more).
+Agent receives addresses one at a time, looks up public records, creates skeleton JSONs,
+and iterates to completion across sessions.
+
+### Decisions made (Designer-authorized)
+- **Naming convention (LOCKED):** `{state}-{streetnumber}_{streetname}.json` / siteId uppercase
+- **Master index:** `data/sites/index.json` — registry of all sites with status (skeleton/partial/complete)
+- **Skeleton standard:** confirmed fields filled, unconfirmed strings = `"-- TBD: [what] | Source: [where]"`, numerics = 0, notes field = all pending items by checklist section
+- **Phase 1 (NOW):** flat files + index.json
+- **Phase 2 (NEXT):** folder per site (`data/sites/{num}-{street}/`) for PDF storage (parcel map, etc.)
+- **Phase 3 (FUTURE):** shared zoning/fee reference tables to eliminate duplication
+
+### Sites registered as of 2026-03-26
+| ID | Status |
+|----|--------|
+| CA-4335_EUCLID | complete |
+| CA-1102_WESTMINSTER | partial |
+| WA-405_126TH | skeleton |
+| CA-4876_CANNINGTON | skeleton |
+| CA-2921_ELCAJON | skeleton (in progress) |
+
+### Files added this session
+- `data/sites/index.json` (master registry)
+- `data/sites/ca-4876_Cannington.json` (skeleton)
+- `data/sites/ca-2921_ElCajon.json` (skeleton, pending research)
+- Memory: `project_multisite_architecture.md`
+
+### Controller action items
+- None blocking. Phase 2 folder migration should be coordinated when PDF workflow begins.
+
+---
+
 ## [2026-03-25 08:30] CONTROLLER FIX: All 3 escalated UI issues resolved -- OVERRIDE
 
 **Controller directly edited `src/` files (Designer-authorized override of Safety Contract).**
