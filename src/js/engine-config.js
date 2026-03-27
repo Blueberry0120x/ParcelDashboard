@@ -224,5 +224,18 @@ const ConfigEngine = {
         this.state.chainDOffset     = 0;
         this.state.vehicles         = [];
         this.state.activeVehicle    = -1;
+    },
+
+    // When parcelPolygon exists, snap state.lat/lng to its centroid.
+    // Call this at the start of any render that uses state.lat/lng for positioning.
+    snapToPolygonCentroid: function() {
+        var pp = this.data.parcelPolygon;
+        if (!pp || pp.length < 3) return;
+        var n = pp.length;
+        if (pp[n-1][0] === pp[0][0] && pp[n-1][1] === pp[0][1]) n--;
+        var sLat = 0, sLng = 0;
+        for (var i = 0; i < n; i++) { sLat += pp[i][0]; sLng += pp[i][1]; }
+        this.state.lat = sLat / n;
+        this.state.lng = sLng / n;
     }
 };

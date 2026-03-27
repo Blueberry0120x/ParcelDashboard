@@ -1,4 +1,4 @@
-﻿{
+{
     "project":  "ProjectBook-Planner",
     "site":  {
                  "siteId":  "CA-4876_CANNINGTON",
@@ -128,10 +128,10 @@
                                    ]
              },
     "saved":  {
-                  "lat":  32.830857,
-                  "lng":  -117.168819,
-                  "rotation":  0,
-                  "locked":  false,
+                  "lat":  32.830866730073865,
+                  "lng":  -117.16883137822153,
+                  "rotation":  27,
+                  "locked":  true,
                   "setbacks":  {
                                    "front":  0,
                                    "rear":  0,
@@ -139,7 +139,20 @@
                                    "sideR":  0
                                },
                   "buildings":  [
-
+                                    {
+                                        "orientation":  0,
+                                        "W":  30,
+                                        "D":  60,
+                                        "offsetX":  4.3,
+                                        "offsetY":  1.2,
+                                        "spacing":  0,
+                                        "count":  1,
+                                        "stackSpacing":  0,
+                                        "anchor":  "center",
+                                        "stories":  1,
+                                        "floorHeight":  9,
+                                        "stackAngle":  0
+                                    }
                                 ],
                   "activeBuilding":  0,
                   "commFront":  false,
@@ -152,10 +165,11 @@
                   "mapOpacity":  70,
                   "setbacksApplied":  false,
                   "freeDrag":  true,
-                  "snapEdge":  false,
+                  "snapEdge":  true,
                   "vehicles":  [
 
                                ],
                   "activeVehicle":  -1
-              }
+              },
+    "checklist":  null
 }

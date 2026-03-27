@@ -637,7 +637,19 @@ const MapEngine = {
 
         // Lot boundary: use actual GIS parcel polygon if available, else rectangle
         if (parcelPolygon && parcelPolygon.length > 2) {
-            this.lotPoly.setLatLngs(parcelPolygon);
+            // Convert polygon to local offsets from centroid, then render relative
+            // to state.lat/lng — same coordinate system as buildings and rectangle
+            var ppn = parcelPolygon.length;
+            var pp  = parcelPolygon;
+            if (pp[ppn-1][0]===pp[0][0] && pp[ppn-1][1]===pp[0][1]) ppn--;
+            var cLat = 0, cLng = 0;
+            for (var pi = 0; pi < ppn; pi++) { cLat += pp[pi][0]; cLng += pp[pi][1]; }
+            cLat /= ppn; cLng /= ppn;
+            var ppPts = parcelPolygon.map(function(v) {
+                return [ConfigEngine.state.lat + (v[0] - cLat),
+                        ConfigEngine.state.lng + (v[1] - cLng)];
+            });
+            this.lotPoly.setLatLngs(ppPts);
         } else {
             // Base rectangle: front-right → rear-right → rear-left → front-left
             // c1={x:-h/2,y:w/2}, c2={x:h/2,y:w/2}, c3={x:h/2,y:-w/2}, c0={x:-h/2,y:-w/2}
@@ -677,6 +689,7 @@ const MapEngine = {
                     baseLot = [{x:-h/2,y:w/2},{x:h/2-cvt,y:w/2},{x:h/2,y:w/2-cvt},{x:h/2,y:-w/2},{x:-h/2,y:-w/2}];
                 }
             }
+            this._lotLocalPts = baseLot;  // store for updateDimLabels
             this.lotPoly.setLatLngs(baseLot.map(transform));
         }
 
@@ -711,7 +724,7 @@ const MapEngine = {
         this.dimLabels = [];
         if (!this.showDims) return;
 
-        const { width: w, depth: h } = ConfigEngine.data;
+        const { width: w, depth: h, parcelPolygon } = ConfigEngine.data;
         const rot = ConfigEngine.state.rotation;
         const rad = rot * Math.PI / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
@@ -729,44 +742,77 @@ const MapEngine = {
         const TK  = 2.2; // ft: half-length of 45deg tick
         // Annotative text gap + zoom-scaled font
         const mapZoom   = this.map.getZoom();
-        const fontScale = Math.max(0.72, 0.36 + mapZoom * 0.025); // grows with zoom: ~0.84 at z19, ~0.96 at z22
+        const fontScale = Math.max(1.0, 0.5 + mapZoom * 0.04); // grows with zoom: ~1.26 at z19, ~1.38 at z22
         const mPerPx    = 40075016.686 * Math.cos(ConfigEngine.state.lat * Math.PI / 180) / Math.pow(2, mapZoom + 8);
         const ftPerPx   = mPerPx * 3.28084;
         const TO        = 10 * ftPerPx;
 
         const push = layer => { this.dimLabels.push(layer); return layer; };
         const line = (pts) => push(L.polyline(pts.map(toLL), {
-            color: '#1a202c', weight: 1.2, interactive: false, noClip: true
+            color: '#b91c1c', weight: 1.8, interactive: false, noClip: true
         }).addTo(this.map));
 
-        // Lot corners: c0=front-left, c1=front-right, c2=rear-right, c3=rear-left
-        const c0 = {x: -h/2, y: -w/2}, c1 = {x: -h/2, y:  w/2};
-        const c2 = {x:  h/2, y:  w/2}, c3 = {x:  h/2, y: -w/2};
-
-        // Each edge: two corner points, outward perpendicular, axis unit vector, label text, rotation
-        // Label rotation follows the dimension line direction, normalized upright [-90, 90)
+        // Label rotation: normalized to upright [-90, 90)
         const normalize = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
-        const wAngle = normalize(-rot - 90); // width edge → follows line
-        const dAngle = normalize(-rot);      // depth edge → follows line
 
-        const edges = [
-            { p1: c0, p2: c1, px:-1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: wAngle, key:'lot_front' },
-            { p1: c3, p2: c2, px: 1, py: 0, ux: 0, uy: 1, text: w+' FT', rotA: wAngle, key:'lot_rear'  },
-            { p1: c1, p2: c2, px: 0, py: 1, ux: 1, uy: 0, text: h+' FT', rotA: dAngle, key:'lot_right' },
-            { p1: c0, p2: c3, px: 0, py:-1, ux: 1, uy: 0, text: h+' FT', rotA: dAngle, key:'lot_left'  },
-        ];
+        // ── Unified edge computation: polygon OR rectangle (incl. chamfer) ──
+        var lotVerts;
+        if (parcelPolygon && parcelPolygon.length > 2) {
+            // Convert polygon vertices to local rotated coordinates
+            var ppn = parcelPolygon.length;
+            var pp = parcelPolygon;
+            if (pp[ppn-1][0]===pp[0][0] && pp[ppn-1][1]===pp[0][1]) ppn--;
+            var cLat = 0, cLng = 0;
+            for (var pi = 0; pi < ppn; pi++) { cLat += pp[pi][0]; cLng += pp[pi][1]; }
+            cLat /= ppn; cLng /= ppn;
+            lotVerts = [];
+            for (var pi = 0; pi < ppn; pi++) {
+                var ry_v = (pp[pi][0] - cLat) * F_LAT;
+                var rx_v = (pp[pi][1] - cLng) * F_LNG;
+                lotVerts.push({ x: rx_v * cos + ry_v * sin, y: ry_v * cos - rx_v * sin });
+            }
+        } else {
+            // Use stored lot points from render() (includes corner chamfer)
+            lotVerts = this._lotLocalPts || [{x:-h/2,y:-w/2},{x:-h/2,y:w/2},{x:h/2,y:w/2},{x:h/2,y:-w/2}];
+        }
+        // Signed area → winding direction (outward normal)
+        var N = lotVerts.length;
+        var signedArea = 0;
+        for (var i = 0; i < N; i++) {
+            var j = (i + 1) % N;
+            signedArea += lotVerts[i].x * lotVerts[j].y - lotVerts[j].x * lotVerts[i].y;
+        }
+        var outSign = signedArea > 0 ? 1 : -1;
+        // Build one edge per lot segment
+        var edges = [];
+        for (var i = 0; i < N; i++) {
+            var j = (i + 1) % N;
+            var p1 = lotVerts[i], p2 = lotVerts[j];
+            var dx = p2.x - p1.x, dy = p2.y - p1.y;
+            var len = Math.sqrt(dx*dx + dy*dy);
+            if (len < 1) continue;
+            var ux = dx / len, uy = dy / len;
+            var nx = uy * outSign, ny = -ux * outSign;
+            var screenRx = ux * cos - uy * sin;
+            var screenRy = ux * sin + uy * cos;
+            var labelAngle = normalize(-Math.atan2(screenRy, screenRx) * 180 / Math.PI);
+            edges.push({ p1: p1, p2: p2, px: nx, py: ny, ux: ux, uy: uy,
+                text: len.toFixed(1) + ' FT', rotA: labelAngle, key: 'lot_' + i });
+        }
 
         edges.forEach((e) => {
             if (this.hiddenDimKeys.has(e.key)) return;
             const layers = [];
             const pLine = pts => { const l = line(pts); layers.push(l); return l; };
 
+            // Per-edge offset (draggable) or default
+            const edgeOff = (this._propDimOffsets && this._propDimOffsets[e.key]) || OFF;
             // Dim line endpoints (offset outward from edge)
-            const d1 = { x: e.p1.x + OFF*e.px, y: e.p1.y + OFF*e.py };
-            const d2 = { x: e.p2.x + OFF*e.px, y: e.p2.y + OFF*e.py };
+            const d1 = { x: e.p1.x + edgeOff*e.px, y: e.p1.y + edgeOff*e.py };
+            const d2 = { x: e.p2.x + edgeOff*e.px, y: e.p2.y + edgeOff*e.py };
             // Extension (witness) lines from corners past dim line
-            pLine([e.p1, { x: e.p1.x + (OFF+EX2)*e.px, y: e.p1.y + (OFF+EX2)*e.py }]);
-            pLine([e.p2, { x: e.p2.x + (OFF+EX2)*e.px, y: e.p2.y + (OFF+EX2)*e.py }]);
+            pLine([e.p1, { x: e.p1.x + (edgeOff+EX2)*e.px, y: e.p1.y + (edgeOff+EX2)*e.py }]);
+            pLine([e.p2, { x: e.p2.x + (edgeOff+EX2)*e.px, y: e.p2.y + (edgeOff+EX2)*e.py }]);
             // Dim line split around text
             const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
             pLine([d1, { x: mid.x - TO*e.ux, y: mid.y - TO*e.uy }]);
@@ -777,22 +823,54 @@ const MapEngine = {
             pLine([{ x: d1.x - tkX, y: d1.y - tkY }, { x: d1.x + tkX, y: d1.y + tkY }]);
             pLine([{ x: d2.x - tkX, y: d2.y - tkY }, { x: d2.x + tkX, y: d2.y + tkY }]);
 
-            // Clickable label
-            const pos = toLL({ x: mid.x + OFF*0.15*e.px, y: mid.y + OFF*0.15*e.py });
+            // Property dim label — click dim line to drag (uses dimDragMode toggle)
             const m = L.marker(toLL(mid), {
                 icon: L.divIcon({
                     className: '',
-                    html: '<div style="position:relative"><div class="dim-label" style="font-size:' + fontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
+                    html: '<div style="position:relative"><div class="prop-dim-label" style="font-size:' + fontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + e.rotA.toFixed(1) + 'deg)">' + e.text + '</div></div>',
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 }),
                 interactive: true
             }).addTo(this.map);
             layers.push(m);
             push(m);
-            // Click to hide entire dim group — persists across redraws
-            m.on('click', () => {
-                this.hiddenDimKeys.add(e.key);
-                layers.forEach(l => this.map.removeLayer(l));
+
+            // Click line/label → drag handle for repositioning (same UX as chain dims)
+            const self = this;
+            const clickTarget = [m].concat(layers.filter(l => l instanceof L.Polyline));
+            clickTarget.forEach(target => {
+                target.options.interactive = true;
+                target.on('click', (ev) => {
+                    L.DomEvent.stop(ev.originalEvent || ev);
+                    if (self._propDimHandle) { self.map.removeLayer(self._propDimHandle); self._propDimHandle = null; self.map.dragging.enable(); return; }
+                    // Show drag handle at dim line midpoint
+                    self.map.dragging.disable();
+                    layers.forEach(ll => { if (ll._path) ll._path.classList.add('chain-dim-active'); });
+                    self._propDimHandle = L.marker(toLL(mid), {
+                        draggable: true,
+                        icon: L.divIcon({ className: '', html: '<div class="chain-drag-handle"></div>', iconSize: [20,20], iconAnchor: [10,10] })
+                    }).addTo(self.map);
+                    self._propDimHandle.on('drag', () => {
+                        // Move entire dim group: compute new perpendicular offset
+                        var loc = self._propDimHandle.getLatLng();
+                        var rlat = (loc.lat - ConfigEngine.state.lat) * F_LAT;
+                        var rlng = (loc.lng - ConfigEngine.state.lng) * F_LNG;
+                        var lx = rlng * cos + rlat * sin;
+                        var ly = rlat * cos - rlng * sin;
+                        // Project onto perpendicular axis to get new offset
+                        var proj = (lx - (e.p1.x+e.p2.x)/2) * e.px + (ly - (e.p1.y+e.p2.y)/2) * e.py;
+                        // Store per-edge offset
+                        if (!self._propDimOffsets) self._propDimOffsets = {};
+                        self._propDimOffsets[e.key] = Math.max(3, proj);
+                        self.updateDimLabels();
+                    });
+                    self._propDimHandle.on('click', (e2) => {
+                        L.DomEvent.stop(e2.originalEvent);
+                        if (self._propDimHandle) { self.map.removeLayer(self._propDimHandle); self._propDimHandle = null; }
+                        self.map.dragging.enable();
+                        layers.forEach(ll => { if (ll._path) ll._path.classList.remove('chain-dim-active'); });
+                    });
+                });
             });
         });
     },

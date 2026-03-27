@@ -320,6 +320,13 @@ h1 { color: var(--primary); margin: 0 0 3px 0; font-size: 28px; }
     cursor: pointer; user-select: none;
 }
 .dim-label:hover { opacity: 0.5; }
+.prop-dim-label {
+    font-size: 1.1em; font-weight: 900; font-family: 'Segoe UI', sans-serif;
+    color: #b91c1c; white-space: nowrap; letter-spacing: 0.4px;
+    text-shadow: 0 0 4px #fff, 0 0 4px #fff, 1px 1px 3px #fff, -1px -1px 3px #fff;
+    cursor: grab; user-select: none;
+}
+.prop-dim-label:hover { opacity: 0.7; }
 /* Chain dim lines — normal state */
 .chain-dim-line { cursor: default; }
 /* When dim drag mode is on: lines turn red, thicker hit area, pointer cursor */

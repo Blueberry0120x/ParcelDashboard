@@ -150,8 +150,10 @@ const SetbackEngine = {
     _seedInputsFromBuilding: function(idx) {
         const bldg = ConfigEngine.state.buildings[idx];
         if (!bldg) return;
-        document.getElementById('bldgOrientInput').value    = bldg.orientation.toFixed(1);
-        document.getElementById('bldgOrientSlider').value   = bldg.orientation;
+        var normOri = ((bldg.orientation % 360) + 360) % 360;
+        bldg.orientation = normOri;
+        document.getElementById('bldgOrientInput').value    = normOri.toFixed(1);
+        document.getElementById('bldgOrientSlider').value   = normOri;
         document.getElementById('bldgW').value          = (bldg.W || 30).toFixed(1);
         document.getElementById('bldgD').value          = (bldg.D || 60).toFixed(1);
         document.getElementById('bldgOffsetX').value        = (bldg.offsetX      || 0).toFixed(1);
@@ -412,16 +414,34 @@ const SetbackEngine = {
         // ── CHAIN DIMENSIONS ────────────────────────────────────────────────
         // Collects all boundary points along each axis, then draws one
         // continuous chain dim (shared witness lines at junctions).
-        const { width: lotW, depth: lotD } = ConfigEngine.data;
-        const lotHD = lotD / 2, lotHW = lotW / 2;
+        const { width: lotW, depth: lotD, parcelPolygon: chainPP } = ConfigEngine.data;
+        var lotHD = lotD / 2, lotHW = lotW / 2;
+        // For polygon sites, derive lot extents from actual polygon geometry
+        if (chainPP && chainPP.length > 2) {
+            var cpn = chainPP.length;
+            if (chainPP[cpn-1][0]===chainPP[0][0] && chainPP[cpn-1][1]===chainPP[0][1]) cpn--;
+            var ccLat = 0, ccLng = 0;
+            for (var ci = 0; ci < cpn; ci++) { ccLat += chainPP[ci][0]; ccLng += chainPP[ci][1]; }
+            ccLat /= cpn; ccLng /= cpn;
+            var cMinX = Infinity, cMaxX = -Infinity, cMinY = Infinity, cMaxY = -Infinity;
+            for (var ci = 0; ci < cpn; ci++) {
+                var cry = (chainPP[ci][0] - ccLat) * F_LAT;
+                var crx = (chainPP[ci][1] - ccLng) * F_LNG;
+                var clx = crx * lCos + cry * lSin;
+                var cly = cry * lCos - crx * lSin;
+                if (clx < cMinX) cMinX = clx; if (clx > cMaxX) cMaxX = clx;
+                if (cly < cMinY) cMinY = cly; if (cly > cMaxY) cMaxY = cly;
+            }
+            lotHD = (cMaxX - cMinX) / 2;
+            lotHW = (cMaxY - cMinY) / 2;
+        }
         const dimNorm = (a) => { a = ((a % 180) + 180) % 180; return a >= 90 ? a - 180 : a; };
         const clrDepthAngle = dimNorm(-state.rotation);
         const clrWidthAngle = dimNorm(-state.rotation - 90);
 
         // ── Collect boundary points ────────────────────────────────────────
-        // Width chain (along y): building widths + inter-bldg gaps + lot clearances
+        // Use actual lot extents (accounts for chamfer + polygon geometry)
         const wPts = [{ v: -lotHW }, { v: lotHW }];
-        // Depth chain (along x): building heights + inter-copy gaps + lot clearances
         const dPts = [{ v: -lotHD }, { v: lotHD }];
         let chainRefX = null;   // fixed x for the width chain (front edge)
         let chainRefY = null;   // fixed y for the depth chain (left edge)
@@ -794,7 +814,7 @@ const SetbackEngine = {
         inp.addEventListener('change', (e) => {
             let v = parseFloat(e.target.value);
             if (isNaN(v)) v = 0;
-            v = Math.max(-90, Math.min(90, v));
+            v = ((v % 360) + 360) % 360;
             inp.value = v.toFixed(1); sldr.value = v;
             const bldg = state.buildings[state.activeBuilding];
             if (bldg) { bldg.orientation = v; this.drawBuilding(); }

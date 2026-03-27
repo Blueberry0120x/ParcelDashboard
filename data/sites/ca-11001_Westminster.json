@@ -1,4 +1,4 @@
-﻿{
+{
     "project":  "ProjectBook-Planner",
     "site":  {
                  "siteId":  "CA-11001_WESTMINSTER",
@@ -40,7 +40,7 @@
                  "cornerVisTriSize":  25,
                  "cornerVisCorner":  "SW",
                  "densityBonus":  true,
-                 "notes":  "Combined lots 33+34 (APN 100-151-33 + 100-151-34). Zoned R-3 (Multiple-Family Residential) -- Garden Grove municipal code, NOT San Diego. Corner visibility triangle at SW corner. Density bonus applied. NOTE: filename ca-1102_Westminster.json -- \u00271102\u0027 does not match street number 11001; flag for rename to ca-11001_Westminster.json when convenient. | TBD - C: baseFAR and densityPerSF -- Garden Grove municipal code Ch 9.12 (R-3 zone standards). | TBD - E: NEF / DIF -- Garden Grove or OC fee schedules (different from SD DSD). | TBD - G: Inspector contacts -- Garden Grove Building \u0026 Safety division (714-741-5111).",
+                 "notes":  "Combined lots 33+34 (APN 100-151-33 + 100-151-34). Zoned R-3 (Multiple-Family Residential) -- Garden Grove municipal code, NOT San Diego. Corner visibility triangle at SW corner. Density bonus applied. | TBD - C: baseFAR and densityPerSF -- Garden Grove municipal code Ch 9.12 (R-3 zone standards). | TBD - G: Inspector contacts -- Garden Grove Building \u0026 Safety division (714-741-5111).",
                  "inspectors":  [
                                     {
                                         "name":  "Building (Combination)",
@@ -106,37 +106,11 @@
                                           "name":  "FEMA FLOOD ZONE",
                                           "val":  "-- TBD: FEMA FIRM map for Garden Grove"
                                       }
-                                  ],
-                 "parcelPolygon":  [
-                                       [
-                                           33.76014719,
-                                           -117.93749677
-                                       ],
-                                       [
-                                           33.76014719,
-                                           -117.93698399
-                                       ],
-                                       [
-                                           33.75980985,
-                                           -117.93698399
-                                       ],
-                                       [
-                                           33.75980985,
-                                           -117.93747102
-                                       ],
-                                       [
-                                           33.75984555,
-                                           -117.93749677
-                                       ],
-                                       [
-                                           33.76014719,
-                                           -117.93749677
-                                       ]
-                                   ]
+                                  ]
              },
     "saved":  {
-                  "lat":  33.75998496008465,
-                  "lng":  -117.93725445670536,
+                  "lat":  33.759976990200606,
+                  "lng":  -117.93725278488971,
                   "rotation":  90,
                   "locked":  true,
                   "setbacks":  {
@@ -173,7 +147,7 @@
                                         "floorHeight":  9
                                     },
                                     {
-                                        "orientation":  -90,
+                                        "orientation":  270,
                                         "W":  14,
                                         "D":  25,
                                         "offsetX":  -13.7,
@@ -189,7 +163,7 @@
                                 ],
                   "activeBuilding":  2,
                   "commFront":  false,
-                  "showBldgDims":  false,
+                  "showBldgDims":  true,
                   "hiddenDimKeys":  [
 
                                     ],
