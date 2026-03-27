@@ -134,7 +134,7 @@
                   "locked":  true,
                   "setbacks":  {
                                    "front":  10,
-                                   "rear":  4,
+                                   "rear":  0,
                                    "sideL":  4,
                                    "sideR":  4
                                },
@@ -143,7 +143,7 @@
                                         "orientation":  0,
                                         "W":  30,
                                         "D":  60,
-                                        "offsetX":  7,
+                                        "offsetX":  5,
                                         "offsetY":  6,
                                         "spacing":  0,
                                         "count":  1,

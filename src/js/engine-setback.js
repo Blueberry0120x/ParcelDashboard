@@ -38,7 +38,7 @@ const SetbackEngine = {
 
     // Clamp a building's base center so its full stack stays within the lot
     _clampToLot: function(cx, cy, bldg) {
-        const { width: lotW, depth: lotD } = ConfigEngine.data;
+        const { width: lotW, depth: lotD, parcelPolygon: pp } = ConfigEngine.data;
         const count        = bldg.count        || 1;
         const stackSpacing = bldg.stackSpacing || 0;
         const stackAngle   = bldg.stackAngle   || 0;
@@ -63,13 +63,35 @@ const SetbackEngine = {
         const arrYMin = Math.min(jOff0 * sDirY, jOffN * sDirY) - halfWidth;
         const arrYMax = Math.max(jOff0 * sDirY, jOffN * sDirY) + halfWidth;
 
-        const xMin = -lotD / 2 - arrXMin;
-        const xMax =  lotD / 2 - arrXMax;
-        const yMin = -lotW / 2 - arrYMin;
-        const yMax =  lotW / 2 - arrYMax;
+        // For polygon sites, compute actual lot extents in local coords
+        var lotHD = lotD / 2, lotHW = lotW / 2;
+        if (pp && pp.length > 2) {
+            var pn = pp.length;
+            if (pp[pn-1][0]===pp[0][0] && pp[pn-1][1]===pp[0][1]) pn--;
+            var cLat = 0, cLng = 0;
+            for (var i = 0; i < pn; i++) { cLat += pp[i][0]; cLng += pp[i][1]; }
+            cLat /= pn; cLng /= pn;
+            var F_LAT = 364566, F_LNG = 365228 * Math.cos(ConfigEngine.state.lat * Math.PI / 180);
+            var rad = ConfigEngine.state.rotation * Math.PI / 180;
+            var lc = Math.cos(rad), ls = Math.sin(rad);
+            var mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
+            for (var i = 0; i < pn; i++) {
+                var ry = (pp[i][0] - cLat) * F_LAT, rx = (pp[i][1] - cLng) * F_LNG;
+                var lx = rx * lc + ry * ls, ly = ry * lc - rx * ls;
+                if (lx < mnX) mnX = lx; if (lx > mxX) mxX = lx;
+                if (ly < mnY) mnY = ly; if (ly > mxY) mxY = ly;
+            }
+            lotHD = (mxX - mnX) / 2;
+            lotHW = (mxY - mnY) / 2;
+        }
+
+        const xMin = -lotHD - arrXMin;
+        const xMax =  lotHD - arrXMax;
+        const yMin = -lotHW - arrYMin;
+        const yMax =  lotHW - arrYMax;
         return {
-            cx: Math.max(xMin <= xMax ? xMin : -lotD/2, Math.min(xMin <= xMax ? xMax : lotD/2, cx)),
-            cy: Math.max(yMin <= yMax ? yMin : -lotW/2, Math.min(yMin <= yMax ? yMax : lotW/2, cy))
+            cx: Math.max(xMin <= xMax ? xMin : -lotHD, Math.min(xMin <= xMax ? xMax : lotHD, cx)),
+            cy: Math.max(yMin <= yMax ? yMin : -lotHW, Math.min(yMin <= yMax ? yMax : lotHW, cy))
         };
     },
 
@@ -1148,38 +1170,62 @@ const SetbackEngine = {
         MapEngine.setbackDimLabels.forEach(function(l) { MapEngine.map.removeLayer(l); });
         MapEngine.setbackDimLabels = [];
 
-        // Draw setback-to-boundary measurement for polygon sites
+        // Draw setback-to-boundary dim lines + labels for polygon sites
+        // Only one label per side (front/rear/sideL/sideR) — placed on the longest edge of that type
         if (pp && pp.length > 2 && offEdges && offEdges.length > 0) {
             var mapZoom = MapEngine.map.getZoom();
-            var sbFontScale = Math.max(0.65, 0.30 + mapZoom * 0.025);
+            var sbFontScale = Math.max(0.78, 0.36 + mapZoom * 0.025);
+            // Find longest edge per side for label placement
+            var bestEdge = {};  // key: 'front'|'rear'|'sideL'|'sideR' → {ei, len}
+            for (var ei = 0; ei < offEdges.length; ei++) {
+                var oe = offEdges[ei];
+                var edgeLen = Math.sqrt(oe.dx*oe.dx + oe.dy*oe.dy);
+                if (edgeLen < 1) continue;
+                var eUx_ = oe.dx/edgeLen, eUy_ = oe.dy/edgeLen;
+                var eNx_ = eUy_ * ws, eNy_ = -eUx_ * ws;
+                var side = Math.abs(eNx_) > Math.abs(eNy_) ? (eNx_ < 0 ? 'front' : 'rear') : (eNy_ < 0 ? 'sideL' : 'sideR');
+                if (!bestEdge[side] || edgeLen > bestEdge[side].len) bestEdge[side] = { ei: ei, len: edgeLen };
+            }
             for (var ei = 0; ei < offEdges.length; ei++) {
                 var oe = offEdges[ei];
                 var edgeLen = Math.sqrt(oe.dx*oe.dx + oe.dy*oe.dy);
                 if (edgeLen < 1) continue;
                 var eUx = oe.dx/edgeLen, eUy = oe.dy/edgeLen;
                 var eNx = eUy * ws, eNy = -eUx * ws;
+                var side = Math.abs(eNx) > Math.abs(eNy) ? (eNx < 0 ? 'front' : 'rear') : (eNy < 0 ? 'sideL' : 'sideR');
                 var sbDist = Math.abs(eNx) > Math.abs(eNy)
                     ? (eNx < 0 ? front : rear)
                     : (eNy < 0 ? sideL : sideR);
                 if (sbDist < 0.5) continue;
+                var showLabel = bestEdge[side] && bestEdge[side].ei === ei;
                 // Midpoint of boundary edge
                 var origIdx = ei < n ? ei : 0;
                 var nextIdx = (origIdx + 1) % n;
                 var bMidX = (lv[origIdx].x + lv[nextIdx].x) / 2;
                 var bMidY = (lv[origIdx].y + lv[nextIdx].y) / 2;
-                // Midpoint between boundary and setback (halfway inward)
-                var labelX = bMidX - eNx * sbDist / 2;
-                var labelY = bMidY - eNy * sbDist / 2;
-                // Label angle (follows edge direction)
-                var scrRx = eUx * cos - eUy * sin;
-                var scrRy = eUx * sin + eUy * cos;
-                var lblAngle = -Math.atan2(scrRy, scrRx) * 180 / Math.PI;
+                // Setback midpoint (inward by setback distance)
+                var sMidX = bMidX - eNx * sbDist;
+                var sMidY = bMidY - eNy * sbDist;
+                // Simple dim line from boundary midpoint to setback midpoint
+                var sbStyle = { color: '#d97706', weight: 2, interactive: false, noClip: true };
+                var dimLine = L.polyline(
+                    [transform({x: bMidX, y: bMidY}), transform({x: sMidX, y: sMidY})],
+                    sbStyle
+                ).addTo(MapEngine.map);
+                MapEngine.setbackDimLabels.push(dimLine);
+                // Label only on longest edge per side (no stacking)
+                if (!showLabel) continue;
+                var labelX = (bMidX + sMidX) / 2;
+                var labelY = (bMidY + sMidY) / 2;
+                var scrNx = -eNx * cos - (-eNy) * sin;
+                var scrNy = -eNx * sin + (-eNy) * cos;
+                var lblAngle = -Math.atan2(scrNy, scrNx) * 180 / Math.PI;
                 lblAngle = ((lblAngle % 180) + 180) % 180;
                 if (lblAngle >= 90) lblAngle -= 180;
                 var m = L.marker(transform({ x: labelX, y: labelY }), {
                     icon: L.divIcon({
                         className: '',
-                        html: '<div style="position:relative"><div class="setback-dim-label" style="font-size:' + sbFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + lblAngle.toFixed(1) + 'deg);color:#f6c90e;font-weight:bold;white-space:nowrap">' + sbDist.toFixed(0) + "'" + '</div></div>',
+                        html: '<div style="position:relative"><div class="setback-dim-label" style="font-size:' + sbFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + lblAngle.toFixed(1) + 'deg)">' + sbDist.toFixed(0) + "'" + '</div></div>',
                         iconSize: [0, 0], iconAnchor: [0, 0]
                     }),
                     interactive: false

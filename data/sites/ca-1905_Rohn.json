@@ -1,4 +1,4 @@
-﻿{
+{
     "project":  "ProjectBook-Planner",
     "site":  {
                  "siteId":  "CA-1905_ROHN",
@@ -160,10 +160,10 @@
                                    ]
              },
     "saved":  {
-                  "lat":  33.100258,
-                  "lng":  -117.085675,
+                  "lat":  33.100285562903714,
+                  "lng":  -117.08560998380194,
                   "rotation":  0,
-                  "locked":  false,
+                  "locked":  true,
                   "setbacks":  {
                                    "front":  0,
                                    "rear":  0,
@@ -171,7 +171,20 @@
                                    "sideR":  0
                                },
                   "buildings":  [
-
+                                    {
+                                        "orientation":  166.7,
+                                        "W":  30,
+                                        "D":  60,
+                                        "offsetX":  -48.7,
+                                        "offsetY":  -12.3,
+                                        "spacing":  0,
+                                        "count":  1,
+                                        "stackSpacing":  0,
+                                        "anchor":  "center",
+                                        "stories":  1,
+                                        "floorHeight":  9,
+                                        "stackAngle":  0
+                                    }
                                 ],
                   "activeBuilding":  0,
                   "commFront":  false,
@@ -184,10 +197,11 @@
                   "mapOpacity":  60,
                   "setbacksApplied":  false,
                   "freeDrag":  true,
-                  "snapEdge":  false,
+                  "snapEdge":  true,
                   "vehicles":  [
 
                                ],
                   "activeVehicle":  -1
-              }
+              },
+    "checklist":  null
 }

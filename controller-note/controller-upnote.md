@@ -1,3 +1,10 @@
+## [2026-03-27 13:15] DISPATCH — Fix GLOBAL-010 gap: Build-Checklist-Excel.ps1 missing StrictMode -- UPDATE
+
+`reference/Build-Checklist-Excel.ps1` is missing `Set-StrictMode -Version Latest`.
+Add it as line 2, after the comment header. This is the only GLOBAL gap in the entire repo.
+
+---
+
 ## [2026-03-27 12:00] CONTROLLER DISPATCH — WIP-commit uncommitted work immediately -- OVERRIDE
 
 **BLOCKING — execute before any other work.**
