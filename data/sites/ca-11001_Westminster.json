@@ -1,7 +1,7 @@
 {
     "project": "ProjectBook-Planner",
     "site": {
-        "siteId": "CA-1102_WESTMINSTER",
+        "siteId": "CA-11001_WESTMINSTER",
         "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
         "apn": "100-151-33, 100-151-34",
         "legalDescription": "-- TBD: Combined lots 33+34 -- pull full legal from OC Assessor deed record or ParcelQuest",
@@ -124,6 +124,14 @@
         "vehicles": [],
         "activeVehicle": -1
     },
+    "parcelPolygon": [
+        [33.76014719, -117.93749677],
+        [33.76014719, -117.93698399],
+        [33.75980985, -117.93698399],
+        [33.75980985, -117.93747102],
+        [33.75984555, -117.93749677],
+        [33.76014719, -117.93749677]
+    ],
     "checklist": {
         "ck": { "A1": true, "A2": true, "A5": true, "B1": false, "B3": true },
         "sel": {},
