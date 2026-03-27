@@ -58,16 +58,29 @@ src/
     bootstrap.js          -- window.onload init sequence
 
 data/
-  site-data.json          -- { "activeSiteId": "CA-EUCLID" } — active site pointer
   sites/
-    ca-westminster.json   -- { site: {...}, saved: {...} }
-    euclid.json           -- { site: {...}, saved: {...} }
-    wa-burien.json        -- { site: {...}, saved: {...} }
+    index.json            -- Master site registry (id, address, file, status)
+    ca-4335_Euclid.json   -- { site: {...}, saved: {...} }
+    ca-11001_Westminster.json
+    ca-4876_Cannington.json
+    ca-2921_ElCajon.json
+    wa-405_126th.json
 
-Output/                   -- Compiled single-file HTML (gitignored from builds? No — committed)
+Output/                   -- Compiled single-file HTML
 docs/                     -- Mirror of Output/ (triggers GitHub Pages deploy on push)
-reference/                -- This file + zoning code library + best practices
-report/                   -- Controller compliance reports (.gitkeep)
+reference/
+  ARCHITECTURE.md         -- This file
+  SITE-SETUP-GUIDE.md     -- How to set up a new site from scratch
+  site-template.json      -- Blank site JSON template
+  Site-Data-Checklist.xlsx -- Data collection checklist (Sections A-H)
+  Build-Checklist-Excel.ps1 -- Script that generated the Excel checklist
+  best-practices/         -- Agent guidance docs
+  StateRegulation/        -- Source PDFs organized by state / city
+    CA/
+      San-Diego/          -- SDMC chapters, fee schedules, IB-409/411, HCD advisories
+      Garden-Grove/       -- Westminster zoning library, assessor map, land use docs
+    WA/
+      Burien/             -- (empty — add Burien municipal code PDFs here)
 config/backup/            -- Checklist JSON backups (untracked)
 controller-note/          -- NP_ClaudeAgent cross-repo messaging
 Engine_InteractiveParcelMap.ps1  -- Build + dev server script
