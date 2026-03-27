@@ -204,7 +204,7 @@ Before declaring any task complete:
 ## Safety Contract
 
 - **Read-only:** `data/site-data.json` (`.site` key), `data/sites/*.json`, `src/**`, `reference/**`
-- **Writable:** `Output/InteractiveMap.html`, `Output/PreApp_Checklist.html`, `data/site-data.json` (`.saved` key only, via POST /save), `controller-note/`, `report/`, `UserPref.json`
+- **Writable:** `Output/InteractiveMap.html`, `Output/PreApp_Checklist.html`, `data/site-data.json` (`.saved` key only, via POST /save), `controller-note/`, `UserPref.json`
 
 
 ## Handoff Notes (last updated 2026-03-25)
@@ -213,7 +213,7 @@ Before declaring any task complete:
 - Westminster multi-site support: R-3 zoning config, state bleed fix, falsy-zero guards, dynamic info tables
 - Corner visibility chamfer, compass direction fix, rotation 0-360 normalization
 - Responsive merge: 4 HTML files consolidated to 2 (Mobile variants removed)
-- Controller dispatch: filled baseline sections (Project Goal, Safety Contract, Handoff Notes), added StrictMode to PS1 files, created report/ and UserPref.json
+- Controller dispatch: filled baseline sections (Project Goal, Safety Contract, Handoff Notes), added StrictMode to PS1 files, created UserPref.json
 
 ### What still needs work
 - Public/private config sync endpoints (Reboot Public / Pull from Public) -- architecture approved, not yet implemented
@@ -232,7 +232,7 @@ Before any milestone commit or PR merge, run a multi-persona quality review:
   and re-run checks until 10 consecutive clean rounds. Do NOT return to user
   with fixable errors -- fix them, re-check, repeat. Only escalate to user
   if a finding requires a design decision or external action.
-- Log the dev-check result in `report/`
+- Log the dev-check result as a timestamped entry in `controller-note/ProjectBook-Planner-upnote.md`
 
 
 ## Controller-Note Protocol (CTRL-005)

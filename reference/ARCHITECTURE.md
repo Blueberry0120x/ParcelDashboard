@@ -81,7 +81,7 @@ reference/
       Garden-Grove/       -- Westminster zoning library, assessor map, land use docs
     WA/
       Burien/             -- (empty — add Burien municipal code PDFs here)
-config/backup/            -- Checklist JSON backups (untracked)
+config/backup/            -- Checklist JSON backups (untracked, gitignored)
 controller-note/          -- NP_ClaudeAgent cross-repo messaging
 Engine_InteractiveParcelMap.ps1  -- Build + dev server script
 Engine_InteractiveParcelMap.cmd  -- Launcher wrapper
