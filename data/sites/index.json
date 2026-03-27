@@ -15,12 +15,12 @@
         },
         {
             "id": "CA-1102_WESTMINSTER",
-            "label": "1102 Westminster Ave",
-            "address": "1102 Westminster Ave, Venice, CA",
+            "label": "11001-11025 Westminster Ave",
+            "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
             "file": "ca-1102_Westminster.json",
             "state": "CA",
-            "city": "Los Angeles",
-            "zoning": "R3-1",
+            "city": "Garden Grove",
+            "zoning": "R-3",
             "status": "partial",
             "lastUpdated": "2026-03-26"
         },

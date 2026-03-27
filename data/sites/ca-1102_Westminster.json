@@ -1,163 +1,138 @@
 {
-    "project":  "ProjectBook-Planner",
-    "site":  {
-                 "siteId":  "CA-WESTMINSTER",
-                 "address":  "11001-11025 Westminster Ave, Garden Grove, CA 92843",
-                 "apn":  "100-151-33, 100-151-34",
-                 "zoning":  "R-3",
-                 "cadZone":  "CA_V",
-                 "lotWidth":  155.3,
-                 "lotDepth":  109.9,
-                 "lotSF":  20038,
-                 "lotWidthSouth":  147.5,
-                 "lotWidthNorth":  155.3,
-                 "lotDepthWest":  109.9,
-                 "lotDepthEast":  122.85,
-                 "lotAcres":  0.46,
-                 "commercialDepth":  0,
-                 "baseFAR":  0,
-                 "commFAR":  0,
-                 "maxHeight":  35,
-                 "baseHeightLimit":  35,
-                 "cchsMaxHeight":  0,
-                 "frontSetback":  20,
-                 "rearSetback":  15,
-                 "sideSetback":  5,
-                 "densityPerSF":  0,
-                 "nefRatePerSF":  0,
-                 "affordabilityPct":  0,
-                 "difPerUnit":  0,
-                 "difWaiverSF":  0,
-                 "unitCount":  18,
-                 "unitDensity":  39.13,
-                 "projectType":  "3-Story Townhome",
-                 "architect":  "ADEC Architecture \u0026 Construction Group",
-                 "cornerVisibilityTriangle":  true,
-                 "densityBonus":  true,
-                 "notes":  "Combined lots 33+34. Zoned R-3 (Multiple-Family Residential). Density bonus applied. Corner visibility triangle at Euclid/Westminster SW corner.",
-                 "cornerVisTriSize":  25,
-                 "cornerVisCorner":  "SW",
-                 "legalDescription":  "",
-                 "yearBuilt":  "",
-                 "occupancyGroup":  "R-3",
-                 "inspectors":  [
-
-                                ],
-                 "planningAreas":  [
-
-                                   ],
-                 "overlayZones":  [
-
-                                  ],
-                 "scopeOfWork":  ""
-             },
-    "saved":  {
-                  "lat":  33.75998496008465,
-                  "lng":  -117.93725445670536,
-                  "rotation":  90,
-                  "locked":  true,
-                  "setbacks":  {
-                                   "front":  25,
-                                   "rear":  0,
-                                   "sideL":  0,
-                                   "sideR":  0
-                               },
-                  "buildings":  [
-                                    {
-                                        "orientation":  0,
-                                        "W":  14,
-                                        "D":  25,
-                                        "offsetX":  5.8,
-                                        "offsetY":  70.7,
-                                        "spacing":  0,
-                                        "count":  1,
-                                        "stackSpacing":  0,
-                                        "anchor":  "center",
-                                        "stories":  3,
-                                        "floorHeight":  9
-                                    },
-                                    {
-                                        "orientation":  0,
-                                        "W":  14,
-                                        "D":  25,
-                                        "offsetX":  5.8,
-                                        "offsetY":  56.7,
-                                        "spacing":  0,
-                                        "count":  1,
-                                        "stackSpacing":  0,
-                                        "anchor":  "center",
-                                        "stories":  3,
-                                        "floorHeight":  9
-                                    },
-                                    {
-                                        "orientation":  -90,
-                                        "W":  14,
-                                        "D":  25,
-                                        "offsetX":  -13.7,
-                                        "offsetY":  37.2,
-                                        "spacing":  0,
-                                        "count":  3,
-                                        "stackSpacing":  0,
-                                        "anchor":  "front",
-                                        "stories":  3,
-                                        "floorHeight":  9,
-                                        "stackAngle":  0
-                                    }
-                                ],
-                  "activeBuilding":  2,
-                  "commFront":  false,
-                  "showBldgDims":  false,
-                  "hiddenDimKeys":  [
-
-                                    ],
-                  "chainWOffset":  0,
-                  "chainDOffset":  0,
-                  "mapOpacity":  70,
-                  "setbacksApplied":  false,
-                  "freeDrag":  true,
-                  "snapEdge":  true,
-                  "vehicles":  [
-
-                               ],
-                  "activeVehicle":  -1
-              },
-    "checklist":  {
-                      "ck":  {
-                                 "A1":  true,
-                                 "A2":  true,
-                                 "A5":  true,
-                                 "B1":  false,
-                                 "B3":  true
-                             },
-                      "sel":  {
-
-                              },
-                      "notes":  {
-
-                                },
-                      "bldgs":  [
-                                    {
-                                        "type":  "Commercial",
-                                        "w":  18.5,
-                                        "d":  40,
-                                        "stories":  3,
-                                        "unitsPerFloor":  1
-                                    },
-                                    {
-                                        "type":  "Residential",
-                                        "w":  18.5,
-                                        "d":  40,
-                                        "stories":  3,
-                                        "unitsPerFloor":  1
-                                    },
-                                    {
-                                        "type":  "Residential",
-                                        "w":  18.5,
-                                        "d":  40,
-                                        "stories":  3,
-                                        "unitsPerFloor":  1
-                                    }
-                                ],
-                      "mapLocked":  true
-                  }
+    "project": "ProjectBook-Planner",
+    "site": {
+        "siteId": "CA-1102_WESTMINSTER",
+        "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
+        "apn": "100-151-33, 100-151-34",
+        "legalDescription": "-- TBD: Combined lots 33+34 -- pull full legal from OC Assessor deed record or ParcelQuest",
+        "yearBuilt": "-- TBD: OC Assessor record or existing building permit history",
+        "occupancyGroup": "R-3",
+        "zoning": "R-3",
+        "cadZone": "CA_V",
+        "lotWidth": 155.3,
+        "lotDepth": 109.9,
+        "lotSF": 20038,
+        "lotWidthSouth": 147.5,
+        "lotWidthNorth": 155.3,
+        "lotDepthWest": 109.9,
+        "lotDepthEast": 122.85,
+        "lotAcres": 0.46,
+        "commercialDepth": 0,
+        "baseFAR": 0,
+        "commFAR": 0,
+        "maxHeight": 35,
+        "baseHeightLimit": 35,
+        "cchsMaxHeight": 0,
+        "frontSetback": 20,
+        "rearSetback": 15,
+        "sideSetback": 5,
+        "densityPerSF": 0,
+        "nefRatePerSF": 0,
+        "affordabilityPct": 0,
+        "difPerUnit": 0,
+        "difWaiverSF": 0,
+        "unitCount": 18,
+        "unitDensity": 39.13,
+        "projectType": "3-Story Townhome",
+        "architect": "ADEC Architecture & Construction Group",
+        "scopeOfWork": "-- TBD: Full scope narrative -- demolish existing structure, build 18-unit 3-story townhome development on combined R-3 lots with density bonus. See construction plan for detail.",
+        "cornerVisibilityTriangle": true,
+        "cornerVisTriSize": 25,
+        "cornerVisCorner": "SW",
+        "densityBonus": true,
+        "notes": "Combined lots 33+34 (APN 100-151-33 + 100-151-34). Zoned R-3 (Multiple-Family Residential) -- Garden Grove municipal code, NOT San Diego. Corner visibility triangle at SW corner. Density bonus applied. NOTE: filename ca-1102_Westminster.json -- '1102' does not match street number 11001; flag for rename to ca-11001_Westminster.json when convenient. | TBD - C: baseFAR and densityPerSF -- Garden Grove municipal code Ch 9.12 (R-3 zone standards). | TBD - E: NEF / DIF -- Garden Grove or OC fee schedules (different from SD DSD). | TBD - G: Inspector contacts -- Garden Grove Building & Safety division (714-741-5111).",
+        "inspectors": [
+            { "name": "Building (Combination)", "val": "-- TBD: Garden Grove Building & Safety -- (714) 741-5111" },
+            { "name": "Structural", "val": "-- TBD: Garden Grove Building & Safety" },
+            { "name": "Electrical", "val": "-- TBD: Garden Grove Building & Safety" },
+            { "name": "Mechanical", "val": "-- TBD: Garden Grove Building & Safety" },
+            { "name": "Grading / Civil", "val": "-- TBD: Garden Grove Public Works or OC Grading" }
+        ],
+        "planningAreas": [
+            { "name": "COMMUNITY PLAN AREA", "val": "-- TBD: Garden Grove General Plan land use map" },
+            { "name": "LAND USE DESIGNATION", "val": "-- TBD: Garden Grove General Plan" },
+            { "name": "TRANSIT PRIORITY AREA (TPA)", "val": "-- TBD: OCTA TPA map or HCD TPA lookup" },
+            { "name": "PARKING STANDARDS (PSTPA)", "val": "-- TBD: Confirm if TPA applies" },
+            { "name": "MOBILITY CHOICES", "val": "N/A -- Garden Grove (not SD Municipal Code)" }
+        ],
+        "overlayZones": [
+            { "name": "AIRPORT INFLUENCE AREA", "val": "-- TBD: John Wayne Airport (SNA) ALUCP -- check OC ALUC map" },
+            { "name": "COASTAL OVERLAY", "val": "No -- inland location" },
+            { "name": "VERY HIGH FIRE HAZARD", "val": "-- TBD: Cal Fire FHSZ viewer (osfm.fire.ca.gov)" },
+            { "name": "FAULT ZONE", "val": "-- TBD: CGS AP Zone map (maps.conservation.ca.gov/cgs/ap)" },
+            { "name": "FEMA FLOOD ZONE", "val": "-- TBD: FEMA FIRM map for Garden Grove" }
+        ]
+    },
+    "saved": {
+        "lat": 33.75998496008465,
+        "lng": -117.93725445670536,
+        "rotation": 90,
+        "locked": true,
+        "setbacks": { "front": 25, "rear": 0, "sideL": 0, "sideR": 0 },
+        "buildings": [
+            {
+                "orientation": 0,
+                "W": 14,
+                "D": 25,
+                "offsetX": 5.8,
+                "offsetY": 70.7,
+                "spacing": 0,
+                "count": 1,
+                "stackSpacing": 0,
+                "anchor": "center",
+                "stories": 3,
+                "floorHeight": 9
+            },
+            {
+                "orientation": 0,
+                "W": 14,
+                "D": 25,
+                "offsetX": 5.8,
+                "offsetY": 56.7,
+                "spacing": 0,
+                "count": 1,
+                "stackSpacing": 0,
+                "anchor": "center",
+                "stories": 3,
+                "floorHeight": 9
+            },
+            {
+                "orientation": -90,
+                "W": 14,
+                "D": 25,
+                "offsetX": -13.7,
+                "offsetY": 37.2,
+                "spacing": 0,
+                "count": 3,
+                "stackSpacing": 0,
+                "anchor": "front",
+                "stories": 3,
+                "floorHeight": 9,
+                "stackAngle": 0
+            }
+        ],
+        "activeBuilding": 2,
+        "commFront": false,
+        "showBldgDims": false,
+        "hiddenDimKeys": [],
+        "chainWOffset": 0,
+        "chainDOffset": 0,
+        "mapOpacity": 70,
+        "setbacksApplied": false,
+        "freeDrag": true,
+        "snapEdge": true,
+        "vehicles": [],
+        "activeVehicle": -1
+    },
+    "checklist": {
+        "ck": { "A1": true, "A2": true, "A5": true, "B1": false, "B3": true },
+        "sel": {},
+        "notes": {},
+        "bldgs": [
+            { "type": "Commercial", "w": 18.5, "d": 40, "stories": 3, "unitsPerFloor": 1 },
+            { "type": "Residential", "w": 18.5, "d": 40, "stories": 3, "unitsPerFloor": 1 },
+            { "type": "Residential", "w": 18.5, "d": 40, "stories": 3, "unitsPerFloor": 1 }
+        ],
+        "mapLocked": true
+    }
 }
