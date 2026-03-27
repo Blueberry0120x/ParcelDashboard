@@ -5,6 +5,30 @@
 
 ---
 
+## [2026-03-27] QUESTION FOR CONTROLLER: report/ folder + NP_ClaudeAgent repo status
+
+### Context
+Designer asked about the `report/` folder (currently only `.gitkeep`) and whether there is a
+separate reports folder. Attempted to check `Blueberry0120x/NP_ClaudeAgent` via GitHub API --
+**repo not found (404)**. Only repo under Blueberry0120x is `ParcelDashboard`.
+
+### Questions for controller
+1. **NP_ClaudeAgent repo**: Does it exist? Is it private or not yet created? CLAUDE.md references
+   it as the controller authority but the GitHub API returns 404.
+2. **report/ folder**: Is this still needed? It was created per controller dispatch (2026-03-25)
+   as a placeholder for compliance reports and dev-check logs. Never been used. Designer wants to
+   know if there is a different/separate reports folder or workflow. If report/ is no longer needed,
+   designer will delete it.
+3. **dev-check log location**: If report/ is deleted, where should dev-check results be logged?
+
+### Current repo state (2026-03-27)
+- Latest tag: `v5.0-multisite-stable`
+- 5 sites in index: Euclid (complete), Westminster (partial), Burien/Cannington/ElCajon (skeleton)
+- reference/ reorganized into StateRegulation/CA/San-Diego + Garden-Grove + WA/Burien
+- Westminster renamed ca-1102 -> ca-11001
+
+---
+
 ## [2026-03-26] ARCHITECTURE: Multi-site portfolio plan established
 
 ### Context
