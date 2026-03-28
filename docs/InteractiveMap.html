@@ -3204,7 +3204,6 @@ const SetbackEngine = {
         const arrYMax = Math.max(jOff0 * sDirY, jOffN * sDirY) + halfWidth;
 
         // For polygon sites, compute actual lot extents in local coords
-        var lotHD = lotD / 2, lotHW = lotW / 2;
         if (pp && pp.length > 2) {
             var pn = pp.length;
             if (pp[pn-1][0]===pp[0][0] && pp[pn-1][1]===pp[0][1]) pn--;
