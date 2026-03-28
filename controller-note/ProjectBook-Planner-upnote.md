@@ -5,6 +5,25 @@
 
 ---
 
+## [2026-03-28 10:00] RESOLVED: Westminster restored to stable (Option C) + cleanup dispatch done
+
+**Westminster:** Restored `ca-11001_Westminster.json` from stable tag `dad1c2a`.
+- Removed `parcelPolygon` (agent-added, never designer-approved)
+- Restored `saved.lat/lng` to original designer pin
+- Restored all building offsets to stable values (70.7, 56.7, 37.2)
+- Westminster returns to rectangle-mode rendering -- matches v0.9.0 visual
+
+**Cleanup dispatch (2026-03-28 03:42):** Completed.
+- WIP-committed dirty files: bootstrap.js offline site-switching, Launch.cmd improvements, activeSiteId flip
+- Rebuilt Output HTML with restored Westminster
+- Pushed all commits including 3 previously unpushed
+
+**StrictMode gap (GLOBAL-010):** Already present in `Build-Checklist-Excel.ps1` line 2. No action needed.
+
+**Next:** Polygon-aware coordinate system (Option B) should be a separate feature branch with visual validation before merge.
+
+---
+
 ## [2026-03-28 CRITICAL] HANDOFF: Westminster coordinate system + settings loss — NEEDS MASTER CONTROL EVALUATION
 
 > **Designer note (verbatim frustration):** *"Westminster looks different in my stable tag. You also lost all my settings for all project sites. This is fucked up."*

@@ -1,3 +1,16 @@
+## [2026-03-28 03:42] ~~CLEANUP DISPATCH — Commit dirty files + push unpushed -- GLOBAL_UPDATE~~ DONE 2026-03-28
+
+Controller repo-sync (2026-03-28) detected dirty working trees and unpushed commits.
+
+**Action required by agent:**
+1. `git status` — review uncommitted files
+2. WIP-commit or stash all dirty files
+3. `git push` any unpushed commits
+4. If on non-main branch and work is complete, merge to main
+5. Clean `__pycache__` dirs (outside .venv)
+6. Report back via upnote + ping
+
+---
 ## [2026-03-27 13:15] DISPATCH — Fix GLOBAL-010 gap: Build-Checklist-Excel.ps1 missing StrictMode -- UPDATE
 
 `reference/Build-Checklist-Excel.ps1` is missing `Set-StrictMode -Version Latest`.
@@ -53,5 +66,3 @@ Controller pushed universal skeleton and baseline updates:
 - All 7 repos now at 100% compliance
 
 **No action needed** — informational only. Your CLAUDE.md has been updated.
-
-

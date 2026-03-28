@@ -39,6 +39,19 @@
         };
 
 
+        // Offline site switching: if user selected a different site, override __SITE_DEFAULTS__
+        // with the matching entry from __ALL_SITE_DATA__ (baked in at build time).
+        // This makes file:// site-switching work without a server rebuild.
+        (function() {
+            var selectedId = safeStorageGet('selected_site');
+            if (selectedId && window.__ALL_SITE_DATA__ && window.__SITE_DEFAULTS__) {
+                var current = window.__SITE_DEFAULTS__;
+                if (current.siteId && selectedId !== current.siteId && window.__ALL_SITE_DATA__[selectedId]) {
+                    window.__SITE_DEFAULTS__ = window.__ALL_SITE_DATA__[selectedId];
+                }
+            }
+        })();
+
         safeRun('ConfigEngine.init', function() { ConfigEngine.init(); });
         // Only run UIEngine.init if required fields are present
         var d = (typeof ConfigEngine !== 'undefined' && ConfigEngine.data) ? ConfigEngine.data : null;

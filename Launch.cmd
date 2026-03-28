@@ -18,6 +18,10 @@ if "%choice%"=="3" goto BOTH
 goto :eof
 
 :PRIVATE
+echo.
+echo   [PRIVATE] No-admin mode: opening local Output files directly.
+echo   (Run Engine_InteractiveParcelMap.cmd serve -Port 3040 only if you need live API save/switching.)
+call "%~dp0Engine_InteractiveParcelMap.cmd"
 start "" "%~dp0Output\InteractiveMap.html"
 start "" "%~dp0Output\PreApp_Checklist.html"
 goto :eof
@@ -28,6 +32,9 @@ start "" "https://blueberry0120x.github.io/ParcelDashboard/PreApp_Checklist.html
 goto :eof
 
 :BOTH
+echo.
+echo   [BOTH] Opening local Output files (no-admin) + public links.
+call "%~dp0Engine_InteractiveParcelMap.cmd"
 start "" "%~dp0Output\InteractiveMap.html"
 start "" "%~dp0Output\PreApp_Checklist.html"
 start "" "https://blueberry0120x.github.io/ParcelDashboard/InteractiveMap.html"
