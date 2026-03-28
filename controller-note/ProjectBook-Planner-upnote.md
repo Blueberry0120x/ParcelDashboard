@@ -20,6 +20,8 @@
 
 **StrictMode gap (GLOBAL-010):** Already present in `Build-Checklist-Excel.ps1` line 2. No action needed.
 
+**Bug fix:** `_clampToLot()` in engine-setback.js had `var lotHD` (line 67) and `const lotHD` (line 95) in the same function — SyntaxError that broke lot clamping for ALL sites since `d7d9a24`. Removed the dead `var` declaration. Committed as `97b8b10`.
+
 **Next:** Polygon-aware coordinate system (Option B) should be a separate feature branch with visual validation before merge.
 
 ---

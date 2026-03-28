@@ -207,20 +207,22 @@ Before declaring any task complete:
 - **Writable:** `Output/InteractiveMap.html`, `Output/PreApp_Checklist.html`, `data/site-data.json` (`.saved` key only, via POST /save), `controller-note/`, `UserPref.json`
 
 
-## Handoff Notes (last updated 2026-03-25)
+## Handoff Notes (last updated 2026-03-28)
 
 ### What was completed this session
-- Westminster multi-site support: R-3 zoning config, state bleed fix, falsy-zero guards, dynamic info tables
-- Corner visibility chamfer, compass direction fix, rotation 0-360 normalization
-- Responsive merge: 4 HTML files consolidated to 2 (Mobile variants removed)
-- Controller dispatch: filled baseline sections (Project Goal, Safety Contract, Handoff Notes), added StrictMode to PS1 files, created UserPref.json
+- Westminster restored to stable tag (dad1c2a) -- removed agent-added polygon, restored original pin + all building offsets
+- Fixed var/const SyntaxError in _clampToLot (engine-setback.js) that broke lot clamping for ALL sites since d7d9a24
+- Committed + pushed dirty files from prior session: bootstrap.js offline site-switching, Launch.cmd improvements
+- Controller cleanup dispatch completed, StrictMode gap confirmed already fixed
 
 ### What still needs work
+- Polygon-aware coordinate system (Option B): decouple saved.lat/lng from polygon centroid in JS -- needed before Westminster can use polygon mode
 - Public/private config sync endpoints (Reboot Public / Pull from Public) -- architecture approved, not yet implemented
 - Test coverage: zero automated tests currently
 
 ### Known issues
 - `data/site-data.json` contains real addresses/APNs/inspector names (PII -- accepted risk per controller)
+- Westminster is rectangle-mode only; polygon ingestion deferred until Option B JS refactor is validated
 
 
 ## Dev-Check Quality Gate (CTRL-007)
