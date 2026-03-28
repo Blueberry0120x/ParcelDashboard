@@ -5,6 +5,23 @@
 
 ---
 
+## [2026-03-28 00:20] STEP 2 PROGRESS: Westminster GIS polygon ingested; Euclid source gap remains
+
+### Completed
+1. Ingested authoritative GIS polygon into `data/sites/ca-11001_Westminster.json` from:
+  - `reference/StateRegulation/CA/Garden-Grove/parcel_100-151-33_34.geojson`
+2. Rebuilt outputs/docs successfully after ingestion.
+
+### Current stable polygon status
+- Cannington: polygon present
+- Westminster: polygon present
+- Euclid: polygon missing (no authoritative Euclid GIS geometry file currently in repo)
+
+### Blocker
+Need authoritative Euclid boundary source (GeoJSON or equivalent) to complete exact-boundary parity for all three stable CA sites.
+
+---
+
 ## [2026-03-28 00:05] EVAL LOOP: 3 stable CA foundation consistency check
 
 ### Scope
