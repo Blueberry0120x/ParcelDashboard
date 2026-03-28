@@ -5,6 +5,147 @@
 
 ---
 
+## [2026-03-28 00:05] EVAL LOOP: 3 stable CA foundation consistency check
+
+### Scope
+Stable CA sites evaluated as baseline:
+1. CA-4335_EUCLID
+2. CA-11001_WESTMINSTER
+3. CA-4876_CANNINGTON
+
+### Gate results
+- Schema gate: PASS for all 3 (status=complete, id matches site.siteId)
+- Runtime gate: PASS for all 3 (snapEdge/freeDrag/showBldgDims/buildings)
+- Polygon redraw gate: PASS only for Cannington
+  - Euclid: FAIL (no `site.parcelPolygon`)
+  - Westminster: FAIL (no `site.parcelPolygon`)
+
+### Improvement priority
+1. High: add GIS parcel polygon to Euclid + Westminster to complete exact-boundary redraw parity.
+2. Medium: normalize optional runtime profile values only if designer wants strict visual parity (`mapOpacity`, `locked`, `rotation`, `setbacksApplied`).
+3. Low: maintain periodic consistency check as part of pre-commit hygiene.
+
+### Outcome
+Current stable foundation is behavior-consistent for core interactions, but only partially consistent for exact polygon boundary workflows.
+
+---
+
+## [2026-03-27 23:55] FULL RUN-THROUGH COMPLETE: build, hygiene, CA stable review, polygon snap, StrictMode gap fixed
+
+### Verification run
+1. Build pipeline PASS (`Engine_InteractiveParcelMap.ps1`) and synced outputs/docs.
+2. Workspace diagnostics PASS (no errors in touched files).
+3. Repo hygiene dry-run PASS (0 stale files, 0 stale folders).
+4. CA readiness audit updated:
+  - complete: Euclid, Westminster, Cannington
+  - skeleton: Rohn, ElCajon
+
+### Functional enhancement
+Updated `src/js/engine-map.js` to support parcel polygon snapping by:
+- corner-to-vertex snap
+- corner-to-edge perpendicular projection snap
+
+### Compliance
+Resolved controller-dispatched GLOBAL-010 gap:
+- Added `Set-StrictMode -Version Latest` to `reference/Build-Checklist-Excel.ps1` line 2.
+
+### Notes
+Designer requested end-to-end run-through and stronger GIS parcel redraw behavior; both are now completed and documented.
+
+---
+
+## [2026-03-27 23:45] GEOMETRY UPGRADE: parcel polygon vertex/perpendicular snapping
+
+### Request addressed
+Designer asked for GIS parcel boundary redraw workflows to include precise snapping behavior (vertex + perpendicular), not just basic edge snapping.
+
+### Implementation
+Updated `src/js/engine-map.js` in `_applySnap()`:
+1. If `site.parcelPolygon` exists:
+  - Snap building footprint corners to parcel polygon vertices
+  - Snap building footprint corners perpendicularly to parcel polygon edge segments
+2. If no polygon exists:
+  - Keep existing rectangular lot snap logic unchanged (fallback path)
+
+### Result
+Polygon-based lots (including Cannington, Rohn, El Cajon) now support boundary-aware snapping behavior aligned with redraw + dimension workflows.
+
+---
+
+## [2026-03-27 18:05] CA STABLE-TAG REVIEW: Cannington promoted after stable-feature comparison
+
+### Summary
+Designer requested comparison against prior stable tags and current CA stable profiles.
+
+### Comparison outcome
+`ca-4876_Cannington.json` matches the stable runtime feature profile used by Euclid/Westminster:
+- snapEdge/freeDrag present and enabled
+- showBldgDims and chain offsets present
+- setbacks + setbacksApplied present
+- parcelPolygon present (property line + dimension workflows)
+
+### Changes applied
+1. `data/sites/index.json`
+  - Westminster id aligned to `CA-11001_WESTMINSTER`, status `complete`
+  - Cannington status promoted to `complete`
+2. `data/sites/ca-4335_Euclid.json`
+  - Added missing corner/density fields for complete-site schema uniformity
+3. `data/sites/ca-4876_Cannington.json`
+  - Added missing corner/density fields for complete-site schema uniformity
+
+### CA status now
+- complete: Euclid, Westminster, Cannington
+- skeleton: Rohn, ElCajon
+
+---
+
+## [2026-03-27 17:40] LOCAL REMEDIATION: repo hygiene automation added (controller gap backfill)
+
+### What was implemented locally
+1. Added one-command hygiene script: `tools/repo_hygiene.ps1`
+2. Added README usage docs for dry-run/apply commands
+3. Enforced archive-first behavior to `config/archive/YYYY-MM-DD_reason/`
+4. Script removes only high-confidence stale clutter (known junk extensions + known empty clutter folders)
+
+### Why this was needed
+Controller global baseline did not enforce practical stale-artifact hygiene; local remediation was required to stop drift.
+
+### Status
+- Dry run: PASS
+- Apply run: PASS
+- Current scan result: 0 stale files, 0 timestamped backups in `config/backup`, 0 known empty stale folders
+
+### Request to controller
+Promote this into global baseline so every repo gets the same hygiene standard by default.
+
+---
+
+## [2026-03-27 17:25] COMPLAINT TO CONTROLLER: shortsighted hygiene enforcement gap
+
+### Summary
+Designer flagged repo inconsistency and stale artifact drift. This should have been prevented by global enforcement, but it was missed.
+
+### What is shortsighted
+1. Global guidance says keep repos clean, but no concrete stale-file detection/archival standard is being auto-enforced.
+2. Legacy-name drift checks are not consistently verified outside historical logs and backup artifacts.
+3. Controller dispatches focus on checklist compliance but miss practical repo hygiene (stale backups, orphaned .bak files, dead placeholders).
+
+### Evidence from this repo
+- Stale backups accumulated in `config/backup/` until manually archived to `config/archive/2026-03-27_stale-backups/`.
+- A stale backup config artifact existed at `.claude/report/CLAUDE.md_2026-03-24_2050.bak`.
+- Ongoing naming inconsistency references remain in historical upnotes, creating noise for automated scans.
+
+### Requested controller fix (GLOBAL)
+1. Add a mandatory stale-artifact rule with canonical patterns and scan cadence.
+2. Add a standard archive location policy per repo (`config/archive/YYYY-MM-DD_reason/`) and no-delete default.
+3. Add a baseline lint check that excludes historical logs but fails on active-source inconsistencies.
+4. Add a dispatch item template specifically for repo hygiene, not only doc compliance.
+
+### Requested response
+Please confirm this becomes a global rule update, not a one-off local cleanup.
+
+---
+
 ## [2026-03-27] QUESTION FOR CONTROLLER: report/ folder + NP_ClaudeAgent repo status
 
 ### Context

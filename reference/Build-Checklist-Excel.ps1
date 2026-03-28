@@ -1,4 +1,5 @@
 # Build Site-Data-Checklist.xlsx
+Set-StrictMode -Version Latest
 $xlPath = Join-Path $PSScriptRoot 'Site-Data-Checklist.xlsx'
 $app = $null; $wb = $null
 try {

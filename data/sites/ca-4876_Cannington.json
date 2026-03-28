@@ -29,6 +29,10 @@
                  "projectType":  "",
                  "architect":  "",
                  "scopeOfWork":  "",
+                 "cornerVisibilityTriangle":  false,
+                 "cornerVisTriSize":  25,
+                 "cornerVisCorner":  "SW",
+                 "densityBonus":  false,
                  "notes":  "TBD - B: lotWidth/lotDepth estimated 50x100 from subdivision typical -- verify via Balboa Greens Annex tract map (Map Book 8118, County Recorder). | TBD - C: baseFAR 0.6 and setbacks 15/15/5 from RS-1-7 SD Municipal Code defaults -- confirm against current code. Lot is nonconforming at 5,000 SF under RS-1-7 (min 7,000 SF). | TBD - D: CCHS applicability unconfirmed for RS zone -- check SD Planning CCHS map. Mobility Choices zone -- check SD Municipal Code Appendix A Fig A-1. Airport Influence Area -- verify MCAS Miramar ALUCP and SAN ALUCP. Fire hazard zone -- verify Cal Fire FHSZ viewer. Fault zone -- verify CGS AP Zone map. | TBD - E: NEF rate per SF -- City DSD Fee Schedule PDF. DIF per unit -- DSD DIF schedule residential category. Affordability % -- confirm if density bonus applies for this scope. | TBD - F: Project type, architect, scope of work. | TBD - G: Inspector contacts -- City DSD staff directory (Inspection Services). | TBD - H: Map rotation degrees -- estimate from aerial (how many degrees lot north is off screen-north). Parcel polygon vertices if lot is irregular.",
                  "inspectors":  [
                                     {

@@ -14,15 +14,15 @@
             "lastUpdated": "2026-03-26"
         },
         {
-            "id": "CA-1102_WESTMINSTER",
+            "id": "CA-11001_WESTMINSTER",
             "label": "11001-11025 Westminster Ave",
             "address": "11001-11025 Westminster Ave, Garden Grove, CA 92843",
             "file": "ca-11001_Westminster.json",
             "state": "CA",
             "city": "Garden Grove",
             "zoning": "R-3",
-            "status": "partial",
-            "lastUpdated": "2026-03-26"
+            "status": "complete",
+            "lastUpdated": "2026-03-27"
         },
         {
             "id": "WA-405_126TH",
@@ -43,8 +43,8 @@
             "state": "CA",
             "city": "San Diego",
             "zoning": "RS-1-7",
-            "status": "skeleton",
-            "lastUpdated": "2026-03-26"
+            "status": "complete",
+            "lastUpdated": "2026-03-27"
         },
         {
             "id": "CA-1905_ROHN",

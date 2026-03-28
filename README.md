@@ -26,6 +26,20 @@ powershell -ExecutionPolicy Bypass -File Engine_InteractiveParcelMap.ps1 debug
 
 Every build automatically syncs `Output/` to `docs/`. Pushing `docs/` to `main` triggers the public mirror workflow to GitHub Pages.
 
+## Repo Hygiene
+
+Use the cleanup script to detect and archive stale artifacts (backup/junk files) and remove known empty clutter folders.
+
+```powershell
+# Preview only (no file changes)
+powershell -ExecutionPolicy Bypass -File tools/repo_hygiene.ps1
+
+# Apply cleanup (archive-first, then remove known empty folders)
+powershell -ExecutionPolicy Bypass -File tools/repo_hygiene.ps1 -Apply -Reason stale-cleanup
+```
+
+Archive output is written to `config/archive/YYYY-MM-DD_reason/`.
+
 ## Structure
 
 ```

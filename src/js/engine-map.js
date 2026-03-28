@@ -201,37 +201,106 @@ const MapEngine = {
         const thisRight  = offsetX + thisExt.halfDepth;
         const thisLeft   = offsetX - thisExt.halfDepth;
 
-        // Snap to lot boundary edges
-        const { front, rear, sideL, sideR } = state.setbacks;
-        const lotW = ConfigEngine.data.width;
-        const lotD = ConfigEngine.data.depth;
-        const lotHalfD = lotD / 2;
-        const lotHalfW = lotW / 2;
-        // offsetX = lx - (front-rear)/2, offsetY = ly - (sideR-sideL)/2
-        // so lot edges must be expressed in offsetX/Y space (subtract the same shift)
-        const xShift = (front - rear) / 2;
-        const yShift = (sideR - sideL) / 2;
-        const lotFront  = lotHalfD  - front  - xShift;
-        const lotRear   = -lotHalfD + rear   - xShift;
-        const lotLeft   = lotHalfW  - sideL  - yShift;
-        const lotRight  = -lotHalfW + sideR  - yShift;
+        const parcelPolygon = ConfigEngine.data.parcelPolygon;
+        if (parcelPolygon && parcelPolygon.length > 2) {
+            // Polygon lot snapping: corner-to-vertex and corner-to-edge perpendicular projection.
+            var ppn = parcelPolygon.length;
+            if (parcelPolygon[ppn - 1][0] === parcelPolygon[0][0] && parcelPolygon[ppn - 1][1] === parcelPolygon[0][1]) ppn--;
+            var cLat = 0, cLng = 0;
+            for (var pi = 0; pi < ppn; pi++) { cLat += parcelPolygon[pi][0]; cLng += parcelPolygon[pi][1]; }
+            cLat /= ppn; cLng /= ppn;
 
-        // Snap building edges to lot boundary edges (one snap per axis per side)
-        const lotYSnaps = [
-            { from: thisTop, to: lotLeft,  adj: lotLeft  - thisExt.halfWidth },
-            { from: thisBot, to: lotRight, adj: lotRight + thisExt.halfWidth },
-        ];
-        for (const s of lotYSnaps) {
-            const d = Math.abs(s.from - s.to);
-            if (d < bestDistY) { bestDistY = d; snappedY = s.adj; }
-        }
-        const lotXSnaps = [
-            { from: thisRight, to: lotFront, adj: lotFront - thisExt.halfDepth },
-            { from: thisLeft,  to: lotRear,  adj: lotRear  + thisExt.halfDepth },
-        ];
-        for (const s of lotXSnaps) {
-            const d = Math.abs(s.from - s.to);
-            if (d < bestDistX) { bestDistX = d; snappedX = s.adj; }
+            const F_LAT = 364566;
+            const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+            const rad = state.rotation * Math.PI / 180;
+            const cos = Math.cos(rad), sin = Math.sin(rad);
+
+            var lotVerts = [];
+            for (var vi = 0; vi < ppn; vi++) {
+                var ry = (parcelPolygon[vi][0] - cLat) * F_LAT;
+                var rx = (parcelPolygon[vi][1] - cLng) * F_LNG;
+                lotVerts.push({ x: rx * cos + ry * sin, y: ry * cos - rx * sin });
+            }
+
+            const corners = [
+                { x: offsetX - thisExt.halfDepth, y: offsetY - thisExt.halfWidth },
+                { x: offsetX - thisExt.halfDepth, y: offsetY + thisExt.halfWidth },
+                { x: offsetX + thisExt.halfDepth, y: offsetY + thisExt.halfWidth },
+                { x: offsetX + thisExt.halfDepth, y: offsetY - thisExt.halfWidth },
+            ];
+
+            var bestPolyDist = THRESHOLD;
+            var bestPoly = null;
+            var consider = function(targetCenterX, targetCenterY) {
+                var dx = targetCenterX - offsetX;
+                var dy = targetCenterY - offsetY;
+                var d = Math.hypot(dx, dy);
+                if (d < bestPolyDist) {
+                    bestPolyDist = d;
+                    bestPoly = { x: targetCenterX, y: targetCenterY };
+                }
+            };
+
+            // Snap corner to nearest polygon vertex.
+            for (const corner of corners) {
+                for (const v of lotVerts) {
+                    consider(offsetX + (v.x - corner.x), offsetY + (v.y - corner.y));
+                }
+            }
+
+            // Snap corner perpendicularly to polygon edges.
+            for (var ei = 0; ei < lotVerts.length; ei++) {
+                var a = lotVerts[ei], b = lotVerts[(ei + 1) % lotVerts.length];
+                var ex = b.x - a.x, ey = b.y - a.y;
+                var len2 = ex * ex + ey * ey;
+                if (len2 < 1e-6) continue;
+                for (const corner of corners) {
+                    var t = ((corner.x - a.x) * ex + (corner.y - a.y) * ey) / len2;
+                    if (t <= 0 || t >= 1) continue; // perpendicular snap only on segment interior
+                    var px = a.x + t * ex, py = a.y + t * ey;
+                    consider(offsetX + (px - corner.x), offsetY + (py - corner.y));
+                }
+            }
+
+            if (bestPoly) {
+                snappedX = bestPoly.x;
+                snappedY = bestPoly.y;
+                bestDistX = 0;
+                bestDistY = 0;
+            }
+        } else {
+            // Rectangular lot snapping fallback.
+            const { front, rear, sideL, sideR } = state.setbacks;
+            const lotW = ConfigEngine.data.width;
+            const lotD = ConfigEngine.data.depth;
+            const lotHalfD = lotD / 2;
+            const lotHalfW = lotW / 2;
+            // offsetX = lx - (front-rear)/2, offsetY = ly - (sideR-sideL)/2
+            // so lot edges must be expressed in offsetX/Y space (subtract the same shift)
+            const xShift = (front - rear) / 2;
+            const yShift = (sideR - sideL) / 2;
+            const lotFront  = lotHalfD  - front  - xShift;
+            const lotRear   = -lotHalfD + rear   - xShift;
+            const lotLeft   = lotHalfW  - sideL  - yShift;
+            const lotRight  = -lotHalfW + sideR  - yShift;
+
+            // Snap building edges to lot boundary edges (one snap per axis per side)
+            const lotYSnaps = [
+                { from: thisTop, to: lotLeft,  adj: lotLeft  - thisExt.halfWidth },
+                { from: thisBot, to: lotRight, adj: lotRight + thisExt.halfWidth },
+            ];
+            for (const s of lotYSnaps) {
+                const d = Math.abs(s.from - s.to);
+                if (d < bestDistY) { bestDistY = d; snappedY = s.adj; }
+            }
+            const lotXSnaps = [
+                { from: thisRight, to: lotFront, adj: lotFront - thisExt.halfDepth },
+                { from: thisLeft,  to: lotRear,  adj: lotRear  + thisExt.halfDepth },
+            ];
+            for (const s of lotXSnaps) {
+                const d = Math.abs(s.from - s.to);
+                if (d < bestDistX) { bestDistX = d; snappedX = s.adj; }
+            }
         }
 
         // Snap to other buildings
