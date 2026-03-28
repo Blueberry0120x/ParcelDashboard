@@ -81,10 +81,18 @@ const SetbackEngine = {
                 if (lx < mnX) mnX = lx; if (lx > mxX) mxX = lx;
                 if (ly < mnY) mnY = ly; if (ly > mxY) mxY = ly;
             }
-            lotHD = (mxX - mnX) / 2;
-            lotHW = (mxY - mnY) / 2;
+            // Use actual asymmetric polygon bounds directly (not symmetric ±half)
+            const xMin = mnX - arrXMin;
+            const xMax = mxX - arrXMax;
+            const yMin = mnY - arrYMin;
+            const yMax = mxY - arrYMax;
+            return {
+                cx: Math.max(xMin <= xMax ? xMin : mnX, Math.min(xMin <= xMax ? xMax : mxX, cx)),
+                cy: Math.max(yMin <= yMax ? yMin : mnY, Math.min(yMin <= yMax ? yMax : mxY, cy))
+            };
         }
 
+        const lotHD = lotD / 2, lotHW = lotW / 2;
         const xMin = -lotHD - arrXMin;
         const xMax =  lotHD - arrXMax;
         const yMin = -lotHW - arrYMin;

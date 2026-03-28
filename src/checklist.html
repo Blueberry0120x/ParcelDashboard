@@ -357,7 +357,11 @@
 <script type="text/babel">
 const {useState,useEffect,useCallback,useRef}=React;
 function useMobile(bp=768){const[m,setM]=useState(()=>window.innerWidth<bp);useEffect(()=>{const h=()=>setM(window.innerWidth<bp);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[bp]);return m;}
-const SD = window.__SITE_DEFAULTS__ || {};
+const SITE_LIST = window.__SITE_LIST__ || [];
+const RAW_SD = window.__SITE_DEFAULTS__ || {};
+const selectedSite = (function(){try{return localStorage.getItem('selected_site');}catch(e){return null;}})();
+const fallbackSite = SITE_LIST.find(function(s){return s.siteId === (RAW_SD.siteId || selectedSite);}) || SITE_LIST[0] || {};
+const SD = Object.assign({}, fallbackSite, RAW_SD);
 
 // Seed checklist buildings from map's live localStorage state, then fall back to baked SD
 function seedFromMap(){
@@ -695,7 +699,7 @@ function BuildingConfig({bldgs,setBldgs,sel,onSel,onHelp,mapLocked,onToggleLock,
   const resiPct=totalSF>0?(resiSF/totalSF*100):0;
   const baseDMax=Math.floor(LOT/(SD.densityPerSF??600));
   const pw=sel.pathway||"";const isCCHS=pw.includes("CCHS");const isSDB=pw.includes("STATE");
-  const farLim=isCCHS?(SD.commFAR??6.5):(SD.baseFAR??2.0);
+  const farLim=isCCHS?(SD.commFAR||6.5):(SD.baseFAR||2.0);
   const farOK=far<=farLim;
   // SDB live calc from user inputs
   const sdbAffDU=parseInt(sel.sdbAffDU)||0;
@@ -1171,6 +1175,8 @@ function App(){
   const openHelp=useCallback((k,d=null)=>{setHelpOpen(k);setHelpData(d);},[]);
   const closeHelp=()=>{setHelpOpen(null);setHelpData(null);};
 
+  const pushBackup=useCallback((c,s,n,b,ml)=>{if(location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")return;try{const d={project:SD.project||"ProjectBook-Planner",address:SD.address||"",exportedAt:new Date().toISOString(),progress:{done:Object.values(c).filter(Boolean).length,total:allItemsOf(DATA).length},checklist:c,selections:s,notes:n,buildings:b,mapLocked:ml};fetch("/backup-checklist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).catch(()=>{});}catch(e){}},[]);
+
   useEffect(()=>{(()=>{try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.ck)setCk(d.ck);if(d.sel)setSel(d.sel);if(d.notes)setNotes(d.notes);if(d.bldgs)setBldgs(d.bldgs);if(d.mapLocked!=null)setMapLocked(d.mapLocked);}else{const s=seedFromMap();if(s){setBldgs(s);setMapLocked(true);}}}catch(e){}setLoaded(true)})();},[]);
   const save=useCallback((c,s,n,b,ml)=>{try{localStorage.setItem(SK,JSON.stringify({ck:c,sel:s,notes:n,bldgs:b,mapLocked:ml}))}catch(e){}pushBackup(c,s,n,b,ml);setSaveFlash(true);if(sfTimer.current)clearTimeout(sfTimer.current);sfTimer.current=setTimeout(()=>setSaveFlash(false),2000);},[pushBackup]);
   const toggleCheck=id=>{const n={...ck,[id]:!ck[id]};setCk(n);save(n,sel,notes,bldgs,mapLocked)};
@@ -1187,7 +1193,6 @@ function App(){
   const total=ai.length,done=ai.filter(i=>ck[i.id]).length,pct=total?Math.round(done/total*100):0;
   const catSt=cat=>{let items=[];if(cat.items)items=cat.items;if(cat.sections)cat.sections.forEach(s=>items.push(...s.items));const t=items.length,d=items.filter(i=>ck[i.id]).length;return{total:t,done:d,pct:t?Math.round(d/t*100):0}};
   const resetAll=()=>{if(confirm("Clear ALL progress?")){const s=seedFromMap();const b=s||DEFAULT_BLDGS;const ml=!!s;setCk({});setSel({});setNotes({});setNoteOpen({});setBldgs(b);setMapLocked(ml);save({},{},{},b,ml)}};
-  const pushBackup=useCallback((c,s,n,b,ml)=>{if(location.hostname!=="localhost"&&location.hostname!=="127.0.0.1")return;try{const d={project:SD.project||"ProjectBook-Planner",address:SD.address||"",exportedAt:new Date().toISOString(),progress:{done:Object.values(c).filter(Boolean).length,total:allItemsOf(DATA).length},checklist:c,selections:s,notes:n,buildings:b,mapLocked:ml};fetch("/backup-checklist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).catch(()=>{});}catch(e){}},[]);
   const printPDF=()=>window.print();
   const downloadConfig=()=>{save(ck,sel,notes,bldgs,mapLocked);let mapState={};try{const r=localStorage.getItem("site_state");if(r)mapState=JSON.parse(r);}catch(e){}const siteKey={};["address","apn","zoning","lotWidth","lotDepth","lotSF","commercialDepth","baseFAR","commFAR","maxHeight","baseHeightLimit","cchsMaxHeight","frontSetback","rearSetback","sideSetback","densityPerSF","nefRatePerSF","affordabilityPct","difPerUnit","difWaiverSF","inspectors"].forEach(k=>{if(SD[k]!=null)siteKey[k]=SD[k]});const merged={project:SD.project||"ProjectBook-Planner",site:siteKey,saved:mapState.saved||{},checklist:{ck,sel,notes,bldgs,mapLocked,progress:{done:Object.values(ck).filter(Boolean).length,total:allItemsOf(DATA).length}}};const blob=new Blob([JSON.stringify(merged,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="site-data.json";a.click();URL.revokeObjectURL(a.href);setSaveFlash(true);if(sfTimer.current)clearTimeout(sfTimer.current);sfTimer.current=setTimeout(()=>setSaveFlash(false),2000);};
   const copyText=t=>{navigator.clipboard.writeText(t).then(()=>{setCopied(t);setTimeout(()=>setCopied(null),1500)}).catch(()=>{})};
@@ -1216,7 +1221,9 @@ function App(){
               <div id="ck-addr-wrap" style={{display:"flex",alignItems:"center",gap:10,marginLeft:20}}>
                 <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}}>
                   <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>Address</span>
-                  <select id="ck-site-sel" className="site-select" style={{background:"transparent",color:"#fff",border:"none",fontSize:"1.05em",fontWeight:700,fontFamily:"inherit",cursor:"pointer",padding:0,outline:"none",minWidth:200}} onChange={e=>{if(e.target.value&&window.switchSite)window.switchSite(e.target.value)}}></select>
+                  <select id="ck-site-sel" className="site-select" style={{background:"transparent",color:"#fff",border:"none",fontSize:"1.05em",fontWeight:700,fontFamily:"inherit",cursor:"pointer",padding:0,outline:"none",minWidth:200}} onChange={e=>{if(e.target.value&&window.switchSite)window.switchSite(e.target.value)}}>
+                    <option value={SD.siteId||""}>{SD.address||"Current site"}</option>
+                  </select>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}}>
                   <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>APN</span>
