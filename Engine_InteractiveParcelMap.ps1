@@ -8,7 +8,7 @@
 
 param(
     [string]$Mode = "reload",
-    [int]$Port = 3030
+    [int]$Port = 3033
 )
 
 Set-StrictMode -Version Latest
@@ -115,6 +115,43 @@ function Get-SiteListScript {
     if ($list.Count -gt 0) {
         $json = $list | ConvertTo-Json -Compress -Depth 5
         return "<script>window.__SITE_LIST__ = $json;</script>"
+    }
+    return ""
+}
+
+# Builds window.__ALL_SITE_DATA__ -- full merged data for every site keyed by siteId
+# Enables file:// site-switching without a server
+function Get-AllSiteDataScript {
+    $sitesDir = Join-Path $base "data\sites"
+    if (-not (Test-Path $sitesDir)) { return "" }
+    $files = Get-ChildItem $sitesDir -Filter "*.json" -ErrorAction SilentlyContinue
+    if ($files.Count -eq 0) { return "" }
+    $allData = [ordered]@{}
+    foreach ($f in $files) {
+        try {
+            $sd = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($null -eq $sd.site -or "$($sd.site.siteId)" -eq "") { continue }
+            $siteId = "$($sd.site.siteId)"
+            $merged = [ordered]@{}
+            $projectProp = $sd.PSObject.Properties['project']
+            if ($null -ne $projectProp -and "$($projectProp.Value)" -ne "") {
+                $merged["project"] = $projectProp.Value
+            }
+            $siteProp = $sd.PSObject.Properties['site']
+            if ($null -ne $siteProp -and $null -ne $siteProp.Value) {
+                $siteProp.Value.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+            }
+            $savedProp = $sd.PSObject.Properties['saved']
+            if ($null -ne $savedProp -and $null -ne $savedProp.Value) {
+                $savedProp.Value.PSObject.Properties | ForEach-Object { $merged[$_.Name] = $_.Value }
+            }
+            $merged["siteFileName"] = $f.Name
+            $allData[$siteId] = $merged
+        } catch {}
+    }
+    if ($allData.Count -gt 0) {
+        $json = $allData | ConvertTo-Json -Compress -Depth 10
+        return "<script>window.__ALL_SITE_DATA__ = $json;</script>"
     }
     return ""
 }
@@ -240,6 +277,13 @@ function Build-Html {
         Write-Host "  [+] Injected site list from data/sites/" -ForegroundColor Green
     }
 
+    # Inject all-site data for offline (file://) site-switching
+    $allSiteData = Get-AllSiteDataScript
+    if ($allSiteData) {
+        $html = $html.Replace('</head>', "$allSiteData`n</head>")
+        Write-Host "  [+] Injected all-site data for offline switching" -ForegroundColor Green
+    }
+
     # Suite nav is now inline in source HTML (suite-tabs in header)
 
     # Ensure Output dir exists and write
@@ -274,6 +318,13 @@ function Build-Checklist {
     if ($siteList) {
         $html = $html.Replace('</head>', "$siteList`n</head>")
         Write-Host "  [+] Injected site list from data/sites/" -ForegroundColor Green
+    }
+
+    # Inject all-site data for offline (file://) site-switching
+    $allSiteData = Get-AllSiteDataScript
+    if ($allSiteData) {
+        $html = $html.Replace('</head>', "$allSiteData`n</head>")
+        Write-Host "  [+] Injected all-site data for offline switching" -ForegroundColor Green
     }
 
     # Suite nav is now inline in source HTML (suite-tabs in React header)

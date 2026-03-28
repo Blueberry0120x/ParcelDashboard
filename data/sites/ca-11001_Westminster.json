@@ -135,8 +135,8 @@
                                    ]
              },
     "saved":  {
-                  "lat":  33.759976990200606,
-                  "lng":  -117.93725278488971,
+                  "lat":  33.759951926,
+                  "lng":  -117.937286508,
                   "rotation":  90,
                   "locked":  true,
                   "setbacks":  {
@@ -164,7 +164,7 @@
                                         "W":  14,
                                         "D":  25,
                                         "offsetX":  5.8,
-                                        "offsetY":  56.7,
+                                        "offsetY":  31.7,
                                         "spacing":  0,
                                         "count":  1,
                                         "stackSpacing":  0,
