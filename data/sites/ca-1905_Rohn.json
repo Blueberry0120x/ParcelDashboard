@@ -13,7 +13,7 @@
     "lotDepth": 211,
     "lotSF": 23962,
     "commercialDepth": 0,
-    "baseFAR": 0.50,
+    "baseFAR": 0.5,
     "commFAR": 0,
     "maxHeight": 35,
     "baseHeightLimit": 35,

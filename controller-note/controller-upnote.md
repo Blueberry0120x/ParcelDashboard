@@ -5,6 +5,17 @@ VERSION file: v4 (2026-03-28). Agent: verify with /done or session_guard.
 
 ---
 
+## [2026-03-29 12:08] [HOOKS-UPDATE] Baseline v5 deployed -- GLOBAL_UPDATE
+
+Hooks baseline updated from v4 to v5.
+New hooks: pre_commit_guard.py, stop_gate.py
+Fixed: single_instance.py (word-boundary regex)
+All 14 hooks + session_guard_lite.py deployed.
+
+---
+
+
+
 ## [2026-03-28 04:10] HYGIENE DISPATCH — stale artifact cleanup (SPECIFIC FILES) -- OVERRIDE
 
 Controller stale-artifact audit (2026-03-28) found artifacts requiring cleanup.

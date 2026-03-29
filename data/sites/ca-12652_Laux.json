@@ -170,7 +170,7 @@
     "chainWOffset": 0,
     "chainDOffset": 0,
     "mapOpacity": 60,
-    "setbacksApplied": true,
+    "setbacksApplied": false,
     "freeDrag": true,
     "snapEdge": true,
     "vehicles": [],

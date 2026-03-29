@@ -5,6 +5,21 @@
 
 ---
 
+## [2026-03-29 12:00] Build pipeline upgraded: Python is now canonical
+
+**Change:** `tools/build.py` upgraded to full PS1 parity. It is now the primary build tool.
+- Fixed: activeSiteId pointer lookup, per-site file save (preserves .site), UTF-8 BOM handling
+- Added: __SITE_LIST__ + __ALL_SITE_DATA__ injection, /update-site endpoint
+- Verified: Python output identical to PS1 (same line counts, same injected globals)
+- Port: Python server uses 3040 (3034 is Hyper-V reserved on this machine)
+- PS1 remains as legacy fallback but is no longer primary
+- Architecture diagram added: `Output/architecture.html`
+- Hooks baseline v4 committed (12 hooks + upgraded session_guard_lite.py)
+
+**Impact:** Any cross-repo build automation should call `py tools/build.py` instead of PS1.
+
+---
+
 ## [2026-03-28 10:00] RESOLVED: Westminster restored to stable (Option C) + cleanup dispatch done
 
 **Westminster:** Restored `ca-11001_Westminster.json` from stable tag `dad1c2a`.

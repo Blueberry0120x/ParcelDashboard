@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProjectBook-Planner -- Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 32px;
+    line-height: 1.5;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #f8fafc;
+  }
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  /* ── Flow container ──────────────────────────────── */
+  .flow {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Step card ───────────────────────────────────── */
+  .step {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px 28px;
+    position: relative;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .step-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f1f5f9;
+  }
+  .step-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .step-body {
+    margin-left: 50px;
+    font-size: 14px;
+    color: #cbd5e1;
+  }
+  .step-body code {
+    background: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #7dd3fc;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+  }
+
+  /* ── Color themes per step ───────────────────────── */
+  .c-blue .step-num   { background: #1d4ed8; color: #fff; }
+  .c-blue             { border-left: 4px solid #3b82f6; }
+  .c-blue .step-tag   { background: #1e3a5f; color: #60a5fa; }
+
+  .c-amber .step-num  { background: #b45309; color: #fff; }
+  .c-amber            { border-left: 4px solid #f59e0b; }
+  .c-amber .step-tag  { background: #451a03; color: #fbbf24; }
+
+  .c-green .step-num  { background: #15803d; color: #fff; }
+  .c-green            { border-left: 4px solid #22c55e; }
+  .c-green .step-tag  { background: #052e16; color: #4ade80; }
+
+  .c-purple .step-num { background: #7e22ce; color: #fff; }
+  .c-purple           { border-left: 4px solid #a855f7; }
+  .c-purple .step-tag { background: #3b0764; color: #c084fc; }
+
+  .c-rose .step-num   { background: #be123c; color: #fff; }
+  .c-rose             { border-left: 4px solid #f43f5e; }
+  .c-rose .step-tag   { background: #4c0519; color: #fb7185; }
+
+  .c-cyan .step-num   { background: #0e7490; color: #fff; }
+  .c-cyan             { border-left: 4px solid #06b6d4; }
+  .c-cyan .step-tag   { background: #083344; color: #22d3ee; }
+
+  .c-sky .step-num    { background: #0369a1; color: #fff; }
+  .c-sky              { border-left: 4px solid #0ea5e9; }
+  .c-sky .step-tag    { background: #0c4a6e; color: #38bdf8; }
+
+  /* ── Arrow connector ─────────────────────────────── */
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    position: relative;
+  }
+  .arrow::before {
+    content: '';
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, #475569, #64748b);
+    position: absolute;
+  }
+  .arrow-label {
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 2px 12px;
+    font-size: 11px;
+    color: #94a3b8;
+    z-index: 1;
+    font-weight: 500;
+  }
+
+  /* ── Detail grid inside steps ────────────────────── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    margin-top: 12px;
+  }
+  .detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .detail-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .di-file { background: #1e3a5f; color: #60a5fa; }
+  .di-func { background: #052e16; color: #4ade80; }
+  .di-data { background: #451a03; color: #fbbf24; }
+  .di-api  { background: #3b0764; color: #c084fc; }
+
+  /* ── Inline flow (sub-steps) ─────────────────────── */
+  .sub-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .sub-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .sub-box strong {
+    display: block;
+    color: #f1f5f9;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+  .sub-box span {
+    color: #94a3b8;
+    font-size: 11px;
+  }
+  .sub-arrow {
+    color: #64748b;
+    font-size: 20px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── Engine table ────────────────────────────────── */
+  .engine-table {
+    width: 100%;
+    margin-top: 12px;
+    border-collapse: collapse;
+  }
+  .engine-table th {
+    text-align: left;
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #334155;
+  }
+  .engine-table td {
+    padding: 8px 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #1e293b;
+    vertical-align: top;
+  }
+  .engine-table tr:hover td { background: #0f172a; }
+  .engine-name {
+    font-weight: 600;
+    color: #7dd3fc;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+  .engine-lines {
+    color: #64748b;
+    font-size: 11px;
+    font-family: monospace;
+  }
+
+  /* ── Server route table ──────────────────────────── */
+  .route-table {
+    width: 100%;
+    margin-top: 12px;
+    border-collapse: collapse;
+  }
+  .route-table th {
+    text-align: left;
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #334155;
+  }
+  .route-table td {
+    padding: 6px 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .method-get  { color: #4ade80; font-weight: 600; font-size: 11px; }
+  .method-post { color: #fbbf24; font-weight: 600; font-size: 11px; }
+  .route-path  { font-family: 'Cascadia Code', monospace; font-size: 12px; color: #7dd3fc; }
+
+  /* ── Save flow highlight ─────────────────────────── */
+  .save-chain {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 14px;
+    overflow-x: auto;
+  }
+  .save-step {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px 16px;
+    min-width: 150px;
+    flex: 1;
+    position: relative;
+  }
+  .save-step::after {
+    content: '';
+    position: absolute;
+    right: -13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 12px solid #475569;
+    z-index: 1;
+  }
+  .save-step:last-child::after { display: none; }
+  .save-step-num {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .save-step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 2px;
+  }
+  .save-step-detail {
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .save-step-detail code {
+    background: #1e293b;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #7dd3fc;
+    font-size: 11px;
+  }
+
+  /* ── Footer ──────────────────────────────────────── */
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  /* ── Section divider ─────────────────────────────── */
+  .section-label {
+    text-align: center;
+    margin: 32px 0 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #475569;
+    font-weight: 600;
+  }
+  .section-label::before,
+  .section-label::after {
+    content: '';
+    display: inline-block;
+    width: 60px;
+    height: 1px;
+    background: #334155;
+    vertical-align: middle;
+    margin: 0 12px;
+  }
+</style>
+</head>
+<body>
+
+<h1>ProjectBook-Planner Architecture</h1>
+<p class="subtitle">Complete data flow from user input to saved state -- every step, every file, every function</p>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+
+<div class="flow">
+
+  <!-- STEP 1 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-blue">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Site Data (JSON on Disk)</div>
+      <div class="step-tag">Data Layer</div>
+    </div>
+    <div class="step-body">
+      Everything starts with JSON files. No database -- just files in <code>data/sites/</code>.
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-icon di-file">F</div>
+          <div><strong style="color:#f1f5f9">index.json</strong> -- master registry of all 7 sites (id, address, status)</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon di-file">F</div>
+          <div><strong style="color:#f1f5f9">ca-4335_Euclid.json</strong> -- one file per site with <code>.site</code> + <code>.saved</code></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon di-data">D</div>
+          <div><strong style="color:#f1f5f9">.site key</strong> -- you fill in: address, APN, zoning, setbacks, FAR, fees</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon di-data">D</div>
+          <div><strong style="color:#f1f5f9">.saved key</strong> -- auto-written: lat, lng, buildings, rotation, vehicles</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon di-file">F</div>
+          <div><strong style="color:#f1f5f9">site-data.json</strong> -- just a pointer: <code>{"activeSiteId": "CA-4335_EUCLID"}</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><span class="arrow-label">py tools/build.py</span></div>
+
+  <!-- STEP 2 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-amber">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Build Pipeline (Python)</div>
+      <div class="step-tag">tools/build.py</div>
+    </div>
+    <div class="step-body">
+      Reads JSON, inlines everything into two standalone HTML files. No bundler, no npm -- just string replacement.
+      <div class="sub-flow">
+        <div class="sub-box">
+          <strong>get_active_site_id()</strong>
+          <span>Read pointer from<br>site-data.json</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>get_site_file()</strong>
+          <span>Find matching .json<br>in data/sites/</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>get_inject_script()</strong>
+          <span>Merge .site + .saved<br>into __SITE_DEFAULTS__</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>Inline CSS + 8 JS</strong>
+          <span>Replace &lt;link&gt; and<br>&lt;script src&gt; tags</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>Write Output/</strong>
+          <span>InteractiveMap.html<br>PreApp_Checklist.html</span>
+        </div>
+      </div>
+      <div style="margin-top:12px; font-size:13px; color:#94a3b8;">
+        <strong style="color:#fbbf24;">3 globals injected into &lt;head&gt;:</strong><br>
+        <code>__SITE_DEFAULTS__</code> -- active site's merged data (fast path)<br>
+        <code>__SITE_LIST__</code> -- all sites for dropdown switcher<br>
+        <code>__ALL_SITE_DATA__</code> -- every site's full data (enables offline file:// switching)
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><span class="arrow-label">localhost:3034</span></div>
+
+  <!-- STEP 3 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-green">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Dev Server (Python HTTP)</div>
+      <div class="step-tag">Port 3034</div>
+    </div>
+    <div class="step-body">
+      Serves the compiled HTML and handles save/switch API calls. Browser talks to this.
+      <table class="route-table">
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="method-get">GET</span></td>
+            <td class="route-path">/</td>
+            <td>Serve InteractiveMap.html</td>
+          </tr>
+          <tr>
+            <td><span class="method-get">GET</span></td>
+            <td class="route-path">/checklist</td>
+            <td>Serve PreApp_Checklist.html</td>
+          </tr>
+          <tr>
+            <td><span class="method-get">GET</span></td>
+            <td class="route-path">/api/sites</td>
+            <td>List all sites + which is active</td>
+          </tr>
+          <tr>
+            <td><span class="method-post">POST</span></td>
+            <td class="route-path">/save</td>
+            <td>Write .saved to per-site file, preserve .site, rebuild HTML</td>
+          </tr>
+          <tr>
+            <td><span class="method-post">POST</span></td>
+            <td class="route-path">/api/sites/{id}/activate</td>
+            <td>Update activeSiteId pointer, rebuild HTML</td>
+          </tr>
+          <tr>
+            <td><span class="method-post">POST</span></td>
+            <td class="route-path">/api/sites/{id}/update-site</td>
+            <td>Edit whitelisted .site fields, rebuild HTML</td>
+          </tr>
+          <tr>
+            <td><span class="method-post">POST</span></td>
+            <td class="route-path">/backup-checklist</td>
+            <td>Archive checklist JSON to config/backup/</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="arrow"><span class="arrow-label">window.onload</span></div>
+
+  <!-- STEP 4 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-purple">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Browser Boot (bootstrap.js)</div>
+      <div class="step-tag">Client-Side</div>
+    </div>
+    <div class="step-body">
+      Fires on page load. Reads the injected globals, initializes all engines in order.
+      <div class="sub-flow">
+        <div class="sub-box">
+          <strong>ConfigEngine.init()</strong>
+          <span>Load state from<br>__SITE_DEFAULTS__<br>+ localStorage</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>UIEngine.init()</strong>
+          <span>Populate header,<br>zoning tables,<br>inspector cards</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>MapEngine.init()</strong>
+          <span>Leaflet map,<br>lot polygon,<br>building footprints</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>SetbackEngine</strong>
+          <span>Building config,<br>setback polygon,<br>chain dimensions</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>Elevation + Resize</strong>
+          <span>USGS elevation<br>sampler, sidebar<br>drag divider</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">8 JavaScript Engines</div>
+
+  <!-- STEP 5 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-cyan">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">Engine Breakdown</div>
+      <div class="step-tag">src/js/</div>
+    </div>
+    <div class="step-body">
+      <table class="engine-table">
+        <thead>
+          <tr><th>Engine</th><th>Lines</th><th>What it owns</th><th>Depends on</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="engine-name">ConfigEngine</span></td>
+            <td class="engine-lines">241</td>
+            <td>All mutable state. Site identity. CAD coordinate systems (CA/WA State Plane).</td>
+            <td>Nothing (pure state)</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">UIEngine</span></td>
+            <td class="engine-lines">391</td>
+            <td>Header, property banner, zoning tables, overlay zones, info cards.</td>
+            <td>ConfigEngine.data</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">MapEngine</span></td>
+            <td class="engine-lines">1,096</td>
+            <td>Leaflet map. Lot/building/vehicle polygons. Drag handlers. Snap logic.</td>
+            <td>ConfigEngine, SetbackEngine, Leaflet, proj4</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">SetbackEngine</span></td>
+            <td class="engine-lines">1,250</td>
+            <td>Setback rules. Building placement + stacking. Lot clamping. Chain dimensions.</td>
+            <td>ConfigEngine, MapEngine</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">ExportEngine</span></td>
+            <td class="engine-lines">226</td>
+            <td><strong>THE save() function.</strong> Also LISP export + image export.</td>
+            <td>ConfigEngine, MapEngine, proj4</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">ElevationTool</span></td>
+            <td class="engine-lines">112</td>
+            <td>USGS elevation API sampling. Pin placement. Average computation.</td>
+            <td>MapEngine</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">ResizeEngine</span></td>
+            <td class="engine-lines">39</td>
+            <td>Draggable sidebar divider. Map reflow on resize.</td>
+            <td>MapEngine</td>
+          </tr>
+          <tr>
+            <td><span class="engine-name">bootstrap.js</span></td>
+            <td class="engine-lines">224</td>
+            <td>Startup orchestrator. Site-switcher. Offline file:// mode.</td>
+            <td>All engines</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-label">The Save Flow (Most Important Path)</div>
+
+  <!-- STEP 6 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-rose">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div class="step-title">ExportEngine.save() -- The ONE Save Function</div>
+      <div class="step-tag">Critical Path</div>
+    </div>
+    <div class="step-body">
+      Every button that changes state calls this. It's the single write path -- no exceptions.
+
+      <div class="save-chain">
+        <div class="save-step" style="gap:12px;">
+          <div class="save-step-num">Step A</div>
+          <div class="save-step-title">Sync UI to State</div>
+          <div class="save-step-detail">Read all inputs &rarr; write to <code>ConfigEngine.state</code></div>
+        </div>
+        <div class="save-step">
+          <div class="save-step-num">Step B</div>
+          <div class="save-step-title">_payload()</div>
+          <div class="save-step-detail">Build canonical save object from state</div>
+        </div>
+        <div class="save-step">
+          <div class="save-step-num">Step C</div>
+          <div class="save-step-title">localStorage</div>
+          <div class="save-step-detail">Write <code>site_state</code> key (instant, offline)</div>
+        </div>
+        <div class="save-step">
+          <div class="save-step-num">Step D</div>
+          <div class="save-step-title">POST /save</div>
+          <div class="save-step-detail">Send to server (if localhost)</div>
+        </div>
+        <div class="save-step">
+          <div class="save-step-num">Step E</div>
+          <div class="save-step-title">Server Writes JSON</div>
+          <div class="save-step-detail">Preserve <code>.site</code>, overwrite <code>.saved</code></div>
+        </div>
+        <div class="save-step">
+          <div class="save-step-num">Step F</div>
+          <div class="save-step-title">Rebuild HTML</div>
+          <div class="save-step-detail">Both files recompiled with new state</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; font-size:13px;">
+        <strong style="color:#fb7185;">What's in _payload():</strong>
+        <div style="margin-top:6px; display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; font-size:12px; color:#94a3b8;">
+          <div><code>lat</code>, <code>lng</code>, <code>rotation</code>, <code>locked</code></div>
+          <div><code>buildings[]</code> (W, D, offset, count, stacking...)</div>
+          <div><code>setbacks</code> (front, rear, sideL, sideR)</div>
+          <div><code>vehicles[]</code>, <code>activeVehicle</code></div>
+          <div><code>commFront</code>, <code>showBldgDims</code>, <code>hiddenDimKeys</code></div>
+          <div><code>freeDrag</code>, <code>snapEdge</code>, <code>mapOpacity</code></div>
+          <div><code>chainWOffset</code>, <code>chainDOffset</code></div>
+          <div><code>checklist</code> (if present)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Site Switching</div>
+
+  <!-- STEP 7 ──────────────────────────────────────────────────────────── -->
+  <div class="step c-sky">
+    <div class="step-header">
+      <div class="step-num">7</div>
+      <div class="step-title">Site Switch Flow</div>
+      <div class="step-tag">Multi-Site</div>
+    </div>
+    <div class="step-body">
+      <div class="sub-flow">
+        <div class="sub-box">
+          <strong>User picks site</strong>
+          <span>From dropdown<br>(built from __SITE_LIST__)</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>POST /activate</strong>
+          <span>Server writes<br>{"activeSiteId": "..."}<br>to site-data.json</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>Rebuild HTML</strong>
+          <span>New site's data<br>injected into<br>__SITE_DEFAULTS__</span>
+        </div>
+        <div class="sub-arrow">&rarr;</div>
+        <div class="sub-box">
+          <strong>location.reload()</strong>
+          <span>Browser reloads,<br>bootstrap.js fires<br>with new data</span>
+        </div>
+      </div>
+      <div style="margin-top:12px; font-size:13px; color:#94a3b8;">
+        <strong style="color:#38bdf8;">Offline mode (file://):</strong> Skips server entirely. Reads from <code>__ALL_SITE_DATA__</code> directly,
+        swaps <code>ConfigEngine.state</code> in memory, and re-renders without reload.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  ProjectBook-Planner &middot; Built 2026-03-29 &middot; 7 sites &middot; 3,579 lines JS &middot; Python build pipeline
+</div>
+
+</body>
+</html>

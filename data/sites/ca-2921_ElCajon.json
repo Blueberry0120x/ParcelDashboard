@@ -1,194 +1,191 @@
-﻿{
-    "project":  "ProjectBook-Planner",
-    "site":  {
-                 "siteId":  "CA-2921_ELCAJON",
-                 "address":  "2921-2923 El Cajon Blvd, San Diego, CA 92104",
-                 "apn":  "446-232-04",
-                 "legalDescription":  "Blk 119, Lots 7 \u0026 8, University Heights D\u0027Hemecourt Map, Amended, City of San Diego, County of San Diego, State of California",
-                 "yearBuilt":  "~1950",
-                 "occupancyGroup":  "B",
-                 "zoning":  "CC-3-9",
-                 "cadZone":  "CA_VI",
-                 "lotWidth":  49,
-                 "lotDepth":  144,
-                 "lotSF":  7039,
-                 "commercialDepth":  0,
-                 "baseFAR":  2.0,
-                 "commFAR":  6.5,
-                 "maxHeight":  0,
-                 "baseHeightLimit":  0,
-                 "cchsMaxHeight":  0,
-                 "frontSetback":  10,
-                 "rearSetback":  10,
-                 "sideSetback":  0,
-                 "densityPerSF":  400,
-                 "nefRatePerSF":  0,
-                 "affordabilityPct":  0,
-                 "difPerUnit":  0,
-                 "difWaiverSF":  0,
-                 "projectType":  "",
-                 "architect":  "",
-                 "scopeOfWork":  "",
-                 "notes":  "TBD - B: lotWidth (~49 ft) and lotDepth (~144 ft) estimated from GIS polygon geometry -- verify via University Heights D\u0027Hemecourt Map tract records at County Recorder. | TBD - C: baseFAR 1.0 estimated for CC-3-9 -- confirm via SDMC Chapter 13, Article 1, Division 5. baseHeightLimit 45 ft estimated for CC zone -- confirm per SDMC. cchsMaxHeight unknown -- check CCHS Tier table for CC-3-9. All setbacks 0 estimated for CC zone -- confirm SDMC. densityPerSF 400 from Scoutred CC-3-9 entry -- confirm SDMC (1 DU per 400 SF). commercialDepth -- check SDMC min ground floor commercial depth for CC zone. | TBD - D: Mobility Choices zone -- SD Municipal Code Appendix A Fig A-1. CCHS max height cap for Tier 3 on this zone -- check SD CCHS program table. | TBD - E: nefRatePerSF -- City DSD Fee Schedule PDF. DIF per unit -- DSD DIF schedule. Affordability % -- confirm density bonus requirements. | TBD - F: Project type, architect, scope of work. Proposed occupancy (R-2 + B likely for mixed-use). | TBD - G: Inspector contacts -- City DSD staff directory (Inspection Services). May share inspectors with Euclid if same jurisdiction zone. | TBD - H: Map rotation -- estimate from aerial. Parcel polygon: appears slightly irregular (L-shape possible per GIS data) -- verify vertices.",
-                 "inspectors":  [
-                                    {
-                                        "name":  "Combination",
-                                        "val":  "-- TBD: DSD Inspection Services directory"
-                                    },
-                                    {
-                                        "name":  "Structural",
-                                        "val":  "-- TBD: DSD Inspection Services directory"
-                                    },
-                                    {
-                                        "name":  "Electrical",
-                                        "val":  "-- TBD: DSD Inspection Services directory"
-                                    },
-                                    {
-                                        "name":  "Mechanical",
-                                        "val":  "-- TBD: DSD Inspection Services directory"
-                                    },
-                                    {
-                                        "name":  "Grading / Civil",
-                                        "val":  "-- TBD: DSD Inspection Services directory"
-                                    }
-                                ],
-                 "planningAreas":  [
-                                       {
-                                           "name":  "COMMUNITY PLAN AREA",
-                                           "val":  "NORTH PARK"
-                                       },
-                                       {
-                                           "name":  "LAND USE DESIGNATION",
-                                           "val":  "-- TBD: North Park Community Plan document"
-                                       },
-                                       {
-                                           "name":  "CCHS (HOUSING SOLUTIONS)",
-                                           "val":  "Yes -- Tier 3: 6.5 FAR"
-                                       },
-                                       {
-                                           "name":  "SUSTAINABLE DEV AREA (SDA)",
-                                           "val":  "Yes"
-                                       },
-                                       {
-                                           "name":  "TRANSIT PRIORITY AREA (TPA)",
-                                           "val":  "Yes"
-                                       },
-                                       {
-                                           "name":  "PARKING STANDARDS (PSTPA)",
-                                           "val":  "Yes (0 Parking Required)"
-                                       },
-                                       {
-                                           "name":  "MOBILITY CHOICES",
-                                           "val":  "-- TBD: SD Municipal Code Appendix A Fig A-1"
-                                       }
-                                   ],
-                 "overlayZones":  [
-                                      {
-                                          "name":  "TRANSIT AREA OVERLAY (TAOZ)",
-                                          "val":  "Yes (O-19289 NS)"
-                                      },
-                                      {
-                                          "name":  "AIRPORT INFLUENCE AREA",
-                                          "val":  "Yes -- SDIA Review Area 2"
-                                      },
-                                      {
-                                          "name":  "COASTAL OVERLAY",
-                                          "val":  "No"
-                                      },
-                                      {
-                                          "name":  "VERY HIGH FIRE HAZARD",
-                                          "val":  "No"
-                                      },
-                                      {
-                                          "name":  "FAULT ZONE",
-                                          "val":  "-- TBD: CGS AP Zone map"
-                                      },
-                                      {
-                                          "name":  "FEMA FLOOD ZONE",
-                                          "val":  "Zone X (minimal hazard)"
-                                      }
-                                  ],
-                 "parcelPolygon":  [
-                                       [
-                                           32.754725990353,
-                                           -117.130891851441
-                                       ],
-                                       [
-                                           32.754725501443,
-                                           -117.130960331609
-                                       ],
-                                       [
-                                           32.754816195570,
-                                           -117.130960487206
-                                       ],
-                                       [
-                                           32.754928889165,
-                                           -117.130960683501
-                                       ],
-                                       [
-                                           32.755118533652,
-                                           -117.130961008957
-                                       ],
-                                       [
-                                           32.755119090941,
-                                           -117.130882950437
-                                       ],
-                                       [
-                                           32.755119648189,
-                                           -117.130804890848
-                                       ],
-                                       [
-                                           32.754726639196,
-                                           -117.130800961772
-                                       ],
-                                       [
-                                           32.754725990353,
-                                           -117.130891851441
-                                       ]
-                                   ]
-             },
-    "saved":  {
-                  "lat":  32.754910,
-                  "lng":  -117.130883,
-                  "rotation":  90,
-                  "locked":  false,
-                  "setbacks":  {
-                                   "front":  0,
-                                   "rear":  0,
-                                   "sideL":  0,
-                                   "sideR":  0
-                               },
-                  "buildings":  [
-                                    {
-                                        "orientation": 0,
-                                        "W": 45,
-                                        "D": 60,
-                                        "offsetX": 0,
-                                        "offsetY": 0,
-                                        "spacing": 0,
-                                        "count": 1,
-                                        "stackSpacing": 0,
-                                        "anchor": "center",
-                                        "stories": 4,
-                                        "floorHeight": 10,
-                                        "stackAngle": 0
-                                    }
-                                ],
-                  "activeBuilding":  0,
-                  "commFront":  false,
-                  "showBldgDims":  true,
-                  "hiddenDimKeys":  [
-
-                                    ],
-                  "chainWOffset":  0,
-                  "chainDOffset":  0,
-                  "mapOpacity":  60,
-                  "setbacksApplied":  false,
-                  "freeDrag":  true,
-                  "snapEdge":  false,
-                  "vehicles":  [
-
-                               ],
-                  "activeVehicle":  -1
-              }
+{
+  "project": "ProjectBook-Planner",
+  "site": {
+    "siteId": "CA-2921_ELCAJON",
+    "address": "2921-2923 El Cajon Blvd, San Diego, CA 92104",
+    "apn": "446-232-04",
+    "legalDescription": "Blk 119, Lots 7 & 8, University Heights D'Hemecourt Map, Amended, City of San Diego, County of San Diego, State of California",
+    "yearBuilt": "~1950",
+    "occupancyGroup": "B",
+    "zoning": "CC-3-9",
+    "cadZone": "CA_VI",
+    "lotWidth": 49,
+    "lotDepth": 144,
+    "lotSF": 7039,
+    "commercialDepth": 0,
+    "baseFAR": 2.0,
+    "commFAR": 6.5,
+    "maxHeight": 0,
+    "baseHeightLimit": 0,
+    "cchsMaxHeight": 0,
+    "frontSetback": 10,
+    "rearSetback": 10,
+    "sideSetback": 0,
+    "densityPerSF": 400,
+    "nefRatePerSF": 0,
+    "affordabilityPct": 0,
+    "difPerUnit": 0,
+    "difWaiverSF": 0,
+    "projectType": "",
+    "architect": "",
+    "scopeOfWork": "",
+    "notes": "TBD - B: lotWidth (~49 ft) and lotDepth (~144 ft) estimated from GIS polygon geometry -- verify via University Heights D'Hemecourt Map tract records at County Recorder. | TBD - C: baseFAR 1.0 estimated for CC-3-9 -- confirm via SDMC Chapter 13, Article 1, Division 5. baseHeightLimit 45 ft estimated for CC zone -- confirm per SDMC. cchsMaxHeight unknown -- check CCHS Tier table for CC-3-9. All setbacks 0 estimated for CC zone -- confirm SDMC. densityPerSF 400 from Scoutred CC-3-9 entry -- confirm SDMC (1 DU per 400 SF). commercialDepth -- check SDMC min ground floor commercial depth for CC zone. | TBD - D: Mobility Choices zone -- SD Municipal Code Appendix A Fig A-1. CCHS max height cap for Tier 3 on this zone -- check SD CCHS program table. | TBD - E: nefRatePerSF -- City DSD Fee Schedule PDF. DIF per unit -- DSD DIF schedule. Affordability % -- confirm density bonus requirements. | TBD - F: Project type, architect, scope of work. Proposed occupancy (R-2 + B likely for mixed-use). | TBD - G: Inspector contacts -- City DSD staff directory (Inspection Services). May share inspectors with Euclid if same jurisdiction zone. | TBD - H: Map rotation -- estimate from aerial. Parcel polygon: appears slightly irregular (L-shape possible per GIS data) -- verify vertices.",
+    "inspectors": [
+      {
+        "name": "Combination",
+        "val": "-- TBD: DSD Inspection Services directory"
+      },
+      {
+        "name": "Structural",
+        "val": "-- TBD: DSD Inspection Services directory"
+      },
+      {
+        "name": "Electrical",
+        "val": "-- TBD: DSD Inspection Services directory"
+      },
+      {
+        "name": "Mechanical",
+        "val": "-- TBD: DSD Inspection Services directory"
+      },
+      {
+        "name": "Grading / Civil",
+        "val": "-- TBD: DSD Inspection Services directory"
+      }
+    ],
+    "planningAreas": [
+      {
+        "name": "COMMUNITY PLAN AREA",
+        "val": "NORTH PARK"
+      },
+      {
+        "name": "LAND USE DESIGNATION",
+        "val": "-- TBD: North Park Community Plan document"
+      },
+      {
+        "name": "CCHS (HOUSING SOLUTIONS)",
+        "val": "Yes -- Tier 3: 6.5 FAR"
+      },
+      {
+        "name": "SUSTAINABLE DEV AREA (SDA)",
+        "val": "Yes"
+      },
+      {
+        "name": "TRANSIT PRIORITY AREA (TPA)",
+        "val": "Yes"
+      },
+      {
+        "name": "PARKING STANDARDS (PSTPA)",
+        "val": "Yes (0 Parking Required)"
+      },
+      {
+        "name": "MOBILITY CHOICES",
+        "val": "-- TBD: SD Municipal Code Appendix A Fig A-1"
+      }
+    ],
+    "overlayZones": [
+      {
+        "name": "TRANSIT AREA OVERLAY (TAOZ)",
+        "val": "Yes (O-19289 NS)"
+      },
+      {
+        "name": "AIRPORT INFLUENCE AREA",
+        "val": "Yes -- SDIA Review Area 2"
+      },
+      {
+        "name": "COASTAL OVERLAY",
+        "val": "No"
+      },
+      {
+        "name": "VERY HIGH FIRE HAZARD",
+        "val": "No"
+      },
+      {
+        "name": "FAULT ZONE",
+        "val": "-- TBD: CGS AP Zone map"
+      },
+      {
+        "name": "FEMA FLOOD ZONE",
+        "val": "Zone X (minimal hazard)"
+      }
+    ],
+    "parcelPolygon": [
+      [
+        32.754725990353,
+        -117.130891851441
+      ],
+      [
+        32.754725501443,
+        -117.130960331609
+      ],
+      [
+        32.75481619557,
+        -117.130960487206
+      ],
+      [
+        32.754928889165,
+        -117.130960683501
+      ],
+      [
+        32.755118533652,
+        -117.130961008957
+      ],
+      [
+        32.755119090941,
+        -117.130882950437
+      ],
+      [
+        32.755119648189,
+        -117.130804890848
+      ],
+      [
+        32.754726639196,
+        -117.130800961772
+      ],
+      [
+        32.754725990353,
+        -117.130891851441
+      ]
+    ]
+  },
+  "saved": {
+    "lat": 32.75491669076867,
+    "lng": -117.1308901095823,
+    "rotation": 90,
+    "locked": false,
+    "setbacks": {
+      "front": 0,
+      "rear": 0,
+      "sideL": 0,
+      "sideR": 0
+    },
+    "buildings": [
+      {
+        "orientation": 0,
+        "W": 45,
+        "D": 60,
+        "offsetX": 0,
+        "offsetY": -4.7,
+        "spacing": 0,
+        "count": 1,
+        "stackSpacing": 0,
+        "anchor": "center",
+        "stories": 4,
+        "floorHeight": 10,
+        "stackAngle": 0
+      }
+    ],
+    "activeBuilding": 0,
+    "commFront": false,
+    "showBldgDims": true,
+    "hiddenDimKeys": [],
+    "chainWOffset": 0,
+    "chainDOffset": 0,
+    "mapOpacity": 60,
+    "setbacksApplied": false,
+    "freeDrag": true,
+    "snapEdge": true,
+    "vehicles": [],
+    "activeVehicle": -1
+  },
+  "checklist": null
 }
