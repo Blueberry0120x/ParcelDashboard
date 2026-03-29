@@ -1,37 +1,35 @@
 """single_instance.py -- PreToolUse hook: enforces single remote-invoke session.
 
-Fires on Bash commands containing 'remote-invoke --start' or 'remote-control'.
-Checks if a session is already running. If so, BLOCKS the launch.
-Exit 2 = BLOCK (duplicate). Exit 0 = allow (no existing session).
+Fires only on commands that try to START a remote-invoke or remote-control session.
+Blocks if a named PID file already exists and that process is alive.
+
+Uses PID file (tools/remote_invoke_*.pid) rather than counting all claude.exe
+processes — avoids false-positives when remote sessions spawn sub-sessions.
+
+Exit 2 = BLOCK (duplicate). Exit 0 = allow.
 """
 from __future__ import annotations
 
 import json
+import os
 import re
-import subprocess
 import sys
+from pathlib import Path
 
 
-def _get_claude_pids() -> list[int]:
-    """Return PIDs of running claude.exe remote-control processes."""
+def _session_already_running(repo_root: Path, name: str) -> tuple[bool, int | None]:
+    """Check if a named remote-invoke session is alive via PID file."""
+    safe_name = re.sub(r"[^\w.-]", "_", name)
+    pid_file = repo_root / "tools" / f"remote_invoke_{safe_name}.pid"
+    if not pid_file.exists():
+        return False, None
     try:
-        r = subprocess.run(
-            ["tasklist", "/FI", "IMAGENAME eq claude.exe", "/FO", "CSV"],
-            capture_output=True, text=True, timeout=10,
-        )
-        pids = []
-        for line in r.stdout.splitlines():
-            if "claude.exe" not in line:
-                continue
-            parts = line.strip('"').split('","')
-            if len(parts) >= 2:
-                try:
-                    pids.append(int(parts[1]))
-                except ValueError:
-                    pass
-        return pids
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        return []
+        pid = int(pid_file.read_text().strip())
+        # Check if process is alive (os.kill with signal 0 = existence check)
+        os.kill(pid, 0)
+        return True, pid
+    except (ValueError, OSError):
+        return False, None
 
 
 def main() -> int:
@@ -45,33 +43,36 @@ def main() -> int:
 
     command = hook_input.get("tool_input", {}).get("command", "")
 
-    # Only intercept remote-invoke --start or remote-control launches
+    # Allow informational and control flags through
+    passthrough = ("--help", "--version", "--status", "--list",
+                   "--stop", "--reinvoke", "--no-nudge")
+    if any(f in command for f in passthrough):
+        return 0
+
+    # Only intercept actual launch commands
     is_remote_start = (
         "remote-invoke" in command and "--start" in command
     ) or (
-        "remote-control" in command and "claude" in command.lower()
+        re.search(r'\bremote-control\b', command)
+        and re.search(r'\bclaude(\.exe)?\b', command.lower())
+        and not re.search(r'(git/refs|api\s|--help)', command)
     )
-
-    # Also allow --reinvoke (which kills existing first)
-    if "--reinvoke" in command:
-        return 0
 
     if not is_remote_start:
         return 0
 
-    # Check for existing claude.exe processes (excluding current session)
-    pids = _get_claude_pids()
+    # Extract --name value if present
+    name_match = re.search(r'--name\s+(\S+)', command)
+    name = name_match.group(1) if name_match else "NP_ClaudeAgent_Controller"
 
-    # Filter: current process and its parent are not remote-control
-    # Simple heuristic: if more than 2 claude.exe processes exist,
-    # at least one is likely a remote-control session
-    # (1 = this CLI session, 2+ = potential remote sessions)
-    if len(pids) > 2:
+    # Find repo root (CLAUDE.md marker)
+    repo_root = Path(__file__).parent.parent.parent
+    running, pid = _session_already_running(repo_root, name)
+
+    if running:
         print(
-            f"BLOCKED (single-instance): {len(pids)} claude.exe process(es) "
-            f"already running (PIDs: {pids[:5]}). "
-            "Use --reinvoke to kill existing + start fresh, "
-            "or --stop first.",
+            f"BLOCKED (single-instance): session '{name}' already running (PID {pid}). "
+            "Use --reinvoke to restart or --stop to kill first.",
             file=sys.stderr,
         )
         return 2

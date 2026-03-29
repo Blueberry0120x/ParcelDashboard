@@ -80,29 +80,33 @@ def check_pings(repo_root: Path) -> bool:
 
 
 def main() -> int:
+    # Read hook input from stdin
     try:
         hook_input = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
         hook_input = {}
 
+    # Derive repo root
     project_dir = hook_input.get("project_dir", ".")
     repo_root = Path(project_dir).resolve()
 
     issues: list[str] = []
 
+    # Check stale artifacts (lightweight — skip __pycache__ which regenerates)
     stale = check_stale(repo_root)
     if stale:
         issues.append(f"{len(stale)} stale artifact(s): {', '.join(stale[:3])}")
 
+    # Check unread pings
     if check_pings(repo_root):
         issues.append("unread ping in controller-note/")
 
     if issues:
         msg = "STOP BLOCKED — fix before finishing: " + "; ".join(issues)
         print(msg, file=sys.stderr)
-        return 2
+        return 2  # Exit 2 = BLOCK
 
-    return 0
+    return 0  # Allow stop
 
 
 if __name__ == "__main__":

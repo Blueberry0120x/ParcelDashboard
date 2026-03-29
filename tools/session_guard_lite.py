@@ -98,6 +98,23 @@ def check_uncommitted(repo_root: Path) -> None:
         print(f"WARNING: {len(output.splitlines())} uncommitted file(s)")
 
 
+def check_behind_remote(repo_root: Path) -> None:
+    """Fetch and warn if current branch is behind remote."""
+    branch = _run(["git", "branch", "--show-current"], cwd=repo_root)
+    if not branch:
+        return
+    _run(["git", "fetch", "origin", branch], cwd=repo_root)
+    behind = _run(
+        ["git", "rev-list", "--count", f"HEAD..origin/{branch}"],
+        cwd=repo_root,
+    )
+    if behind and behind.isdigit() and int(behind) > 0:
+        print(
+            f"ACTION REQUIRED: Branch '{branch}' is {behind} commit(s) "
+            f"behind origin/{branch}. Run: git pull origin {branch}"
+        )
+
+
 def check_stale(repo_root: Path) -> None:
     patterns = ("*.bak", "*.old", "*.orig", "*.tmp", "*~")
     skip = {".venv", ".git", "node_modules"}
@@ -131,13 +148,19 @@ def main() -> int:
     missing = check_claude_md(repo_root)
     unread = check_pings(repo_root)
     check_uncommitted(repo_root)
+    check_behind_remote(repo_root)
     check_stale(repo_root)
 
     print("-" * 40)
-    if missing or unread:
-        reason = "rule files" if missing else "pings"
-        print(f"BLOCKED: Fix {reason} before proceeding.")
+    if missing:
+        print("BLOCKED: Fix rule files before proceeding.")
         return 1
+
+    if unread:
+        print(
+            "ACTION REQUIRED: Unread ping(s) detected. "
+            "Read controller-note/ as your FIRST action this session."
+        )
 
     print("Session guard passed.")
     return 0

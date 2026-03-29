@@ -21,17 +21,22 @@ _ISO_RE = re.compile(
 
 
 def _parse_ts(path: Path) -> datetime | None:
+    """Parse ISO timestamp from .ping or .last-read file content."""
     if not path.exists():
         return None
     try:
         text = path.read_text(encoding="utf-8").strip()
     except OSError:
         try:
-            return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+            return datetime.fromtimestamp(
+                path.stat().st_mtime, tz=timezone.utc,
+            )
         except OSError:
             return None
     if not text:
-        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        return datetime.fromtimestamp(
+            path.stat().st_mtime, tz=timezone.utc,
+        )
     m = _ISO_RE.search(text)
     if m:
         raw = m.group(1)
@@ -46,6 +51,7 @@ def _parse_ts(path: Path) -> datetime | None:
 
 
 def check_stale(repo_root: Path) -> list[str]:
+    """Return stale artifact paths (excluding pycache — gitignored)."""
     patterns = ("*.bak", "*.old", "*.orig", "*.tmp", "*~", "*.copy", "*.rej")
     skip = {".venv", ".git", "node_modules", "report"}
     found: list[str] = []
@@ -61,26 +67,41 @@ def main() -> int:
     try:
         hook_input = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
+        return 0  # Can't parse — allow
+
+    tool_name = hook_input.get("tool_name", "")
+    tool_input = hook_input.get("tool_input", {})
+
+    # Only intercept Bash calls that contain "git commit"
+    if tool_name != "Bash":
         return 0
-    if hook_input.get("tool_name") != "Bash":
-        return 0
-    if "git commit" not in hook_input.get("tool_input", {}).get("command", ""):
+    command = tool_input.get("command", "")
+    if "git commit" not in command:
         return 0
 
-    repo_root = Path(hook_input.get("project_dir", ".")).resolve()
+    project_dir = hook_input.get("project_dir", ".")
+    repo_root = Path(project_dir).resolve()
 
     stale = check_stale(repo_root)
     if stale:
-        print(f"COMMIT BLOCKED — {len(stale)} stale artifact(s): {', '.join(stale[:5])}", file=sys.stderr)
+        msg = (
+            f"COMMIT BLOCKED — {len(stale)} stale artifact(s) in active paths. "
+            f"Clean first: {', '.join(stale[:5])}"
+        )
+        print(msg, file=sys.stderr)
         return 2
 
+    # Check unread pings (content-based timestamp comparison)
     ping = repo_root / "controller-note" / ".ping"
     last_read = repo_root / "controller-note" / ".last-read"
     ping_ts = _parse_ts(ping)
     if ping_ts is not None:
         read_ts = _parse_ts(last_read)
         if read_ts is None or ping_ts > read_ts:
-            print("COMMIT BLOCKED — unread ping. Acknowledge first.", file=sys.stderr)
+            print(
+                "COMMIT BLOCKED — unread ping. Acknowledge first.",
+                file=sys.stderr,
+            )
             return 2
 
     return 0
