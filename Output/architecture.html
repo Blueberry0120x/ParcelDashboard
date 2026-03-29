@@ -713,20 +713,366 @@
 <div style="max-width:1100px;margin:48px auto 0;">
 
   <h2 style="text-align:center;font-size:22px;font-weight:700;color:#f8fafc;margin-bottom:6px;">Natural Language Flows</h2>
-  <p style="text-align:center;color:#94a3b8;font-size:14px;margin-bottom:36px;">What actually happens — in plain English — for each user journey</p>
+  <p style="text-align:center;color:#94a3b8;font-size:14px;margin-bottom:20px;">What actually happens — in plain English — for each user journey</p>
+
+  <!-- ═══ ENGINE TOOLBOX ═══════════════════════════════════════════════════ -->
+  <p class="toolbox-header">Engine Toolbox — which tool for which job</p>
+  <div class="toolbox-grid">
+    <div class="toolbox-card" style="border-top:3px solid #38bdf8;">
+      <div class="toolbox-card-name" style="color:#38bdf8;">ConfigEngine</div>
+      <div class="toolbox-card-file">engine-config.js · 241 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">The state brain.</strong> Holds all mutable state. Every other engine reads from it. Nothing talks to other engines directly — they all go through ConfigEngine.</div>
+      <div class="toolbox-card-fns">.state (session data)<br>.data (site JSON)<br>.init() called on boot</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #c084fc;">
+      <div class="toolbox-card-name" style="color:#c084fc;">MapEngine</div>
+      <div class="toolbox-card-file">engine-map.js · 1,096 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">Draws and moves everything on the Leaflet map.</strong> Owns all polygons. Handles ALL drag, snap, and lock operations. Knows all current building positions.</div>
+      <div class="toolbox-card-fns">lotPoly, bldgPolygons[]<br>dragHandler()<br>chainWOffset / chainDOffset</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #fb7185;">
+      <div class="toolbox-card-name" style="color:#fb7185;">SetbackEngine</div>
+      <div class="toolbox-card-file">engine-setback.js · 1,250 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">Enforces all setback rules + draws ALL dimension lines.</strong> Clamps buildings. Validates rules. Owns all chain dim math — witness lines, ticks, perpendicular measurement.</div>
+      <div class="toolbox-card-fns">applySetbacks()<br>updateBldgDimLabels()<br>drawChain() · polyExtentAt()</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #4ade80;">
+      <div class="toolbox-card-name" style="color:#4ade80;">ExportEngine</div>
+      <div class="toolbox-card-file">engine-export.js · 226 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">The ONLY save path.</strong> Also LISP export + image export. Dual-writes to localStorage and server JSON. Every save button calls this — nothing else saves state.</div>
+      <div class="toolbox-card-fns">save() · _payload()<br>generateLISP()<br>_pushToServer()</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #fbbf24;">
+      <div class="toolbox-card-name" style="color:#fbbf24;">UIEngine</div>
+      <div class="toolbox-card-file">engine-ui.js · 391 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">Renders the sidebar only.</strong> Zoning tables, inspector cards, property banner. Fires <em>once</em> on page load. Does not run during drag, save, or any map interaction.</div>
+      <div class="toolbox-card-fns">init() on boot<br>renderZoningTable()<br>renderInspectorCards()</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #22d3ee;">
+      <div class="toolbox-card-name" style="color:#22d3ee;">ElevationTool</div>
+      <div class="toolbox-card-file">engine-elevation.js · 112 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">Calls USGS elevation API on demand.</strong> Places elevation pins. Computes running average. Only active when elevation panel is open — completely idle otherwise.</div>
+      <div class="toolbox-card-fns">sampleElevation()<br>epqs.nationalmap.gov<br>places pins on MapEngine</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #a8a29e;">
+      <div class="toolbox-card-name" style="color:#a8a29e;">bootstrap.js</div>
+      <div class="toolbox-card-file">bootstrap.js · 224 lines</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">Boots everything in the right order.</strong> Handles the site-switcher dropdown. Manages offline file:// mode. No other engine boots itself — bootstrap.js does it all.</div>
+      <div class="toolbox-card-fns">window.onload → initAll()<br>site-switcher dropdown<br>offline __ALL_SITE_DATA__</div>
+    </div>
+    <div class="toolbox-card" style="border-top:3px solid #86efac;">
+      <div class="toolbox-card-name" style="color:#86efac;">build.py</div>
+      <div class="toolbox-card-file">tools/build.py · Python · not browser</div>
+      <div class="toolbox-card-role"><strong style="color:#f1f5f9;">NOT a browser engine.</strong> Runs server-side only. Merges JSON data + JS/CSS source files → Output HTML. Also called by the server to rebuild after each save.</div>
+      <div class="toolbox-card-fns">get_active_site_id()<br>get_inject_script()<br>POST /save rebuild handler</div>
+    </div>
+  </div>
+
+  <!-- ═══════ ENGINE CONTRACT — OWNERSHIP & BOUNDARIES ═══════ -->
+  <div class="nl-section-divider" style="color:#f87171;">ENGINE CONTRACT — WHO OWNS WHAT (BINDING RULES)</div>
+
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #f43f5e;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#be123c;color:#fff;">!</span>
+      The Toolbox Rule — One Tool Per Job, No Overlap
+    </div>
+    <div class="nl-prose">
+      <p><strong style="color:#f87171;">Why this contract exists:</strong> The system drifts because two engines (MapEngine and SetbackEngine) share coordinate math with no single owner. A "small change" in one engine's transform silently breaks the other. This contract assigns every operation to exactly one engine. If a change would cross a boundary, it must be discussed first — not just coded.</p>
+
+      <p style="background:#1e293b;border:1px solid #475569;border-radius:8px;padding:14px;margin:12px 0;"><strong style="color:#fbbf24;">The Golden Rule:</strong> If you need to cut wood, you pick up the saw. You do NOT pick up the hammer and try to bend the wood into shape. Every operation below has exactly one engine that handles it. Use the wrong engine and the system breaks.</p>
+    </div>
+  </div>
+
+  <!-- Contract Table -->
+  <div class="nl-flow" style="border-left:4px solid #f43f5e;padding:24px 28px;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#be123c;color:#fff;">1</span>
+      Exclusive Ownership Table
+    </div>
+    <table class="engine-table" style="margin-top:0;">
+      <thead>
+        <tr><th style="width:30%;">Operation</th><th style="width:20%;">Owner (ONLY)</th><th>No other engine may...</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:#f1f5f9;">Store/read any mutable state</td>
+          <td><span class="eng eng-config">ConfigEngine</span></td>
+          <td>...hold state in its own variables that survives a redraw cycle. All state goes into <code>ConfigEngine.state</code>.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Create/destroy Leaflet layers</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td>...call <code>map.addLayer()</code>, <code>layer.remove()</code>, or create Leaflet objects. SetbackEngine returns geometry data; MapEngine draws it.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Draw the lot boundary polygon</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td>...modify <code>lotPoly</code>. MapEngine.render() is the ONLY function that creates/updates the lot polygon.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Convert local coords (ft) to lat/lng</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td>...do its own lat/lng math. The conversion formula lives in MapEngine ONLY. Other engines work in local feet.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Handle drag events (marker, building, vehicle)</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td>...attach Leaflet event listeners. MapEngine handles all <code>drag</code>/<code>dragend</code> and calls other engines as needed.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Snap building to edges</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td>...move a building marker. <code>_applySnap()</code> is MapEngine-only. It reads extents from SetbackEngine but does the snap itself.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Calculate building extents (bounding box)</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...compute half-widths/half-depths. <code>_buildingExtents()</code> is SetbackEngine-only. MapEngine calls it, never reimplements it.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Clamp building inside lot</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...clamp coordinates. <code>_clampToLot()</code> is SetbackEngine-only. It returns clamped offsets; MapEngine applies them.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Draw ALL dimension lines (lot + building + chain)</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...draw dimension lines. <code>updateBldgDimLabels()</code> and lot dims are SetbackEngine. Period.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Calculate perpendicular measurements</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...measure distances. All distance math in the local rotated frame is SetbackEngine. It works in feet, not lat/lng.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Validate setback rules (front+rear &lt; depth)</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...validate setbacks. <code>applySetbacks()</code> owns all validation logic.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Stack building copies (count, spacing, angle)</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...compute stacking geometry. The loop that creates N copies at stackSpacing/stackAngle is in <code>drawBuilding()</code>.</td>
+        </tr>
+        <tr style="background:#1a0a0e;">
+          <td style="color:#fb7185;font-weight:600;">Calculate FAR / density / height</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>...do zoning math. <code>updateFAR()</code> is the only place that computes compliance checks.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Write to localStorage / POST to server</td>
+          <td><span class="eng eng-export">ExportEngine</span></td>
+          <td>...write to any persistence layer. <code>save()</code> is the ONE write path. No exceptions.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Build the canonical save object</td>
+          <td><span class="eng eng-export">ExportEngine</span></td>
+          <td>...decide what gets saved. <code>_payload()</code> is the spec. Period.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Project lat/lng to State Plane (CAD export)</td>
+          <td><span class="eng eng-export">ExportEngine</span></td>
+          <td>...call proj4 for CAD purposes. <code>generateLISP()</code> owns the proj4 transform chain.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Populate sidebar text (banner, tables, cards)</td>
+          <td><span class="eng eng-ui">UIEngine</span></td>
+          <td>...write to sidebar DOM elements. UIEngine.init() runs once on boot. No other engine touches the sidebar text.</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Call USGS elevation API</td>
+          <td><span class="eng eng-elev">ElevationTool</span></td>
+          <td>...fetch elevation data. Completely isolated. No other engine interacts with elevation.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Coordinate System Contract -->
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #f43f5e;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#be123c;color:#fff;">2</span>
+      The Coordinate Transform Contract (Root Cause of Drift)
+    </div>
+    <div class="nl-prose">
+      <p><strong style="color:#f87171;">This is the exact spot where drift happens.</strong> Two coordinate frames exist in the system. Every bug in the last month traces back to mixing them up.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0;">
+        <div style="background:#0f172a;border:2px solid #c084fc;border-radius:8px;padding:14px;">
+          <div style="color:#c084fc;font-weight:700;font-size:14px;margin-bottom:6px;">Frame A: Geographic (lat/lng)</div>
+          <div style="font-size:12px;color:#94a3b8;">
+            <strong style="color:#f1f5f9;">Owner:</strong> MapEngine ONLY<br>
+            <strong style="color:#f1f5f9;">Units:</strong> decimal degrees (WGS84)<br>
+            <strong style="color:#f1f5f9;">Origin:</strong> <code>state.lat, state.lng</code> (the pin)<br>
+            <strong style="color:#f1f5f9;">Used for:</strong> Leaflet polygons, markers, lat/lng display<br>
+            <strong style="color:#f1f5f9;">Conversion factors:</strong> F_LAT = 364,566 ft/deg, F_LNG = 365,228 * cos(lat) ft/deg<br>
+            <strong style="color:#f1f5f9;">Rule:</strong> NO other engine touches these values or does this conversion.
+          </div>
+        </div>
+        <div style="background:#0f172a;border:2px solid #fb7185;border-radius:8px;padding:14px;">
+          <div style="color:#fb7185;font-weight:700;font-size:14px;margin-bottom:6px;">Frame B: Local Rotated (feet)</div>
+          <div style="font-size:12px;color:#94a3b8;">
+            <strong style="color:#f1f5f9;">Owner:</strong> SetbackEngine (for all geometry math)<br>
+            <strong style="color:#f1f5f9;">Units:</strong> feet from lot center<br>
+            <strong style="color:#f1f5f9;">Origin:</strong> (0,0) = lot center (same point as state.lat/lng)<br>
+            <strong style="color:#f1f5f9;">Axes:</strong> +X = toward rear, +Y = toward right side<br>
+            <strong style="color:#f1f5f9;">Used for:</strong> building offsets, setback distances, chain dim positions, extents<br>
+            <strong style="color:#f1f5f9;">Rule:</strong> ALL geometry math happens here. Results handed to MapEngine for drawing.
+          </div>
+        </div>
+      </div>
+
+      <p><strong style="color:#fbbf24;">The handoff protocol (MUST follow):</strong></p>
+      <ol>
+        <li>SetbackEngine computes geometry in <strong>Frame B</strong> (local feet). It returns positions, extents, and measurements in feet.</li>
+        <li>MapEngine receives those feet values and converts to <strong>Frame A</strong> (lat/lng) using the rotation transform: <code>rx = px*cos(rot) - py*sin(rot)</code>, <code>ry = px*sin(rot) + py*cos(rot)</code>, then <code>[lat + ry/F_LAT, lng + rx/F_LNG]</code>.</li>
+        <li>MapEngine creates/updates Leaflet layers with the lat/lng values.</li>
+        <li><strong style="color:#f87171;">NEVER skip step 2.</strong> SetbackEngine must NEVER convert to lat/lng itself. MapEngine must NEVER compute extents or distances in feet itself.</li>
+      </ol>
+
+      <p><strong style="color:#fbbf24;">Polygon vertex frame (the KB-1 bug):</strong> When a <code>parcelPolygon</code> exists, the polygon vertices arrive as lat/lng (Frame A). They must be converted to Frame B (local feet relative to the pin) ONCE at the start of <code>updateBldgDimLabels()</code>, using the pin as origin — NOT the polygon centroid. The current code uses the centroid as origin, which is why KB-1 exists. The fix: convert polygon vertices to local feet using <code>state.lat/state.lng</code> as the origin, not <code>ccLat/ccLng</code>.</p>
+    </div>
+  </div>
+
+  <!-- Change Protocol -->
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #f43f5e;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#be123c;color:#fff;">3</span>
+      Change Protocol — Rules Before Modifying Any Engine
+    </div>
+    <div class="nl-prose">
+      <p>These rules exist because the system is stable when these boundaries are respected, and it drifts when they are crossed:</p>
+
+      <div style="margin:12px 0;">
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 1: One engine, one responsibility.</strong> If a function already exists in the ownership table above, do NOT reimplement it in another engine. Call the existing function. Duplication is how drift starts.
+        </div>
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 2: Frame B math stays in SetbackEngine.</strong> Any calculation involving feet, distances, perpendicular measurements, extents, or building bounding boxes is SetbackEngine territory. MapEngine does not compute distances — it draws.
+        </div>
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 3: Frame A conversion stays in MapEngine.</strong> Any conversion from feet to lat/lng (or vice versa) is MapEngine territory. SetbackEngine does not know what latitude is.
+        </div>
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 4: No "small fixes" that cross boundaries.</strong> If a fix requires both Frame A and Frame B work, it is NOT a small fix. It crosses the boundary. State the boundary crossing explicitly before writing code.
+        </div>
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 5: Test on three lots.</strong> Any change to coordinate math or dimension drawing MUST be visually verified on: (1) a simple rectangle lot, (2) a rotated rectangle lot, and (3) a polygon lot. If it works on one but breaks another, the fix is wrong.
+        </div>
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 6: ConfigEngine is passive.</strong> ConfigEngine never calls other engines. It holds data. Other engines read from it and write to it. If ConfigEngine starts having import dependencies on MapEngine or SetbackEngine, the architecture is broken.
+        </div>
+        <div style="background:#0f172a;border-left:3px solid #f87171;padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;">
+          <strong style="color:#f87171;">RULE 7: ExportEngine.save() is the ONLY write path.</strong> No engine may write to localStorage, POST to the server, or trigger a file download except through ExportEngine. This is non-negotiable.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Cheat Sheet -->
+  <div class="nl-flow" style="border-left:4px solid #f43f5e;padding:24px 28px;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#be123c;color:#fff;">4</span>
+      Debug Cheat Sheet — Where To Look When Something Breaks
+    </div>
+    <table class="engine-table" style="margin-top:0;">
+      <thead>
+        <tr><th style="width:40%;">Symptom</th><th style="width:25%;">Look in</th><th>Key function</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:#f1f5f9;">Building position/size wrong</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>drawBuilding()</code>, <code>_clampToLot()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Dimension line at wrong angle/position</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>updateBldgDimLabels()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Lot boundary shape wrong</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td><code>render()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Setback zone wrong</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>drawSetbacks()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Value not saving/restoring</td>
+          <td><span class="eng eng-export">ExportEngine</span></td>
+          <td><code>_payload()</code> or <code>ConfigEngine.init()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Snap behavior wrong</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td><code>_applySnap()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">FAR/density numbers wrong</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>updateFAR()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Banner/sidebar text wrong</td>
+          <td><span class="eng eng-ui">UIEngine</span></td>
+          <td><code>init()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Stacking layout wrong</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>drawBuilding()</code> stack loop</td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Chain dims overlapping/missing</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>updateBldgDimLabels()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Vehicle placement wrong</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td><code>drawVehicles()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Drag not working / snapping incorrectly</td>
+          <td><span class="eng eng-map">MapEngine</span></td>
+          <td><code>attachEvents()</code>, <code>_applySnap()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">Polygon lot dims cross boundary</td>
+          <td><span class="eng eng-setback">SetbackEngine</span></td>
+          <td>KB-1 + KB-2 in <code>updateBldgDimLabels()</code></td>
+        </tr>
+        <tr>
+          <td style="color:#f1f5f9;">LISP export coords wrong</td>
+          <td><span class="eng eng-export">ExportEngine</span></td>
+          <td><code>generateLISP()</code> + proj4 zone config</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <!-- ═══════ FLOW A: ADDRESS INTAKE (DETAILED — EVERY STEP) ═══════ -->
-  <div class="nl-section-divider">FLOW A: FULL ADDRESS INTAKE PROCEDURE</div>
+  <div class="nl-section-divider" style="color:#86efac;">FLOW A: FULL ADDRESS INTAKE PROCEDURE &nbsp;·&nbsp; <span class="eng eng-build" style="font-size:11px;">build.py</span>&nbsp; data setup — no browser engine runs during this step</div>
 
   <!-- A1: Starting Point -->
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A1</span>
-      Starting Point: You Have an Address
+      Starting Point — The Address Is All You Have
     </div>
     <div class="nl-prose">
-      <p>The designer gives you a street address. That's it — nothing else. No APN, no zoning, no coordinates. Just a string like <code>"2921 El Cajon Blvd, San Diego CA 92104"</code>.</p>
-      <p>Your job is to turn that one string into a fully populated JSON file with 40+ fields. Every field has a specific source. Nothing is guessed. Here's exactly how.</p>
+      <p>When a designer hands you a street address for a new site, they are typically giving you a single line: a city, a street number, and a state. Something like <code>"2921 El Cajon Blvd, San Diego CA 92104"</code>. There are no attachments. No parcel number. No zoning printout. No lot dimensions. Just that string. This is normal. This is how every site in the system started.</p>
+
+      <p>Your job — before the tool can render a single building footprint or calculate a single setback — is to transform that address into a JSON file with over forty verified fields. Each field has an authoritative source. None are guessed, assumed, or derived from memory. When the data flows from your research into the JSON, and from the JSON through the build pipeline into the browser, the feasibility numbers the designer sees must be traceable back to a primary source: an assessor record, a municipal code section, a city fee schedule PDF. That traceability is the entire point of this intake process.</p>
+
+      <p>The intake process has a fixed order. You work through nine steps in sequence because some pieces of data are required to unlock the next step. You need the APN before you can look up the polygon geometry. You need the zoning designation before you can download the right code section. You need the code section before you can fill the setback, FAR, and density fields. Follow the order not as bureaucratic procedure, but because the data has natural dependencies — each step builds on the last.</p>
+
+      <p>As you research, document everything in real time. For any field you find, write the exact value. For any field you cannot yet confirm, write the TBD string: <code>"-- TBD: [what it is] | Source: [where to get it]"</code>. This format matters. A TBD string is visually distinct in the browser UI. When the designer looks at the zoning table and sees <code>-- TBD: check CCHS tier map</code>, they know at a glance that this number has not been confirmed and they should not draw revenue conclusions from it. A zero, by contrast, looks like real data and will silently feed into every downstream calculation.</p>
+
+      <p>The site JSON has two top-level keys: <code>.site</code> and <code>.saved</code>. Understanding the difference matters from the start. The <code>.site</code> key holds the permanent public record — the facts from the assessor, the zoning code, the fee schedule. These are what the inspector contacts tab shows, what the zoning table renders, what the feasibility calculator uses. The <code>.saved</code> key holds live session state — which building footprints are currently placed, what rotation the lot is at, what setbacks are currently active on the map. The build pipeline reads both. But the live save endpoint — the one that fires every time the user clicks Save — only ever overwrites <code>.saved</code>. The <code>.site</code> data is never touched at runtime. It changes only when you manually edit the JSON file and rebuild. This separation protects your research from being overwritten by a user's session activity.</p>
     </div>
   </div>
 
@@ -737,35 +1083,32 @@
       Step 1 — Parcel Identity Lookup
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Find the APN (Assessor Parcel Number), legal description, lot size, and year built.</p>
+      <p><strong>What you are trying to find:</strong> the Assessor's Parcel Number (APN), the legally recorded lot area in square feet, the lot dimensions if available, the legal description, and the year built. These are the ground-floor facts — every other piece of research in this intake process builds on top of them.</p>
 
-      <p><strong>Open ParcelQuest</strong> (<code>assr.parcelquest.com</code>) — this is your primary parcel lookup tool. It's linked in the app's suite bar.</p>
-      <ol>
-        <li>Search by the address the designer gave you.</li>
-        <li>Verify the result is the correct parcel (check the map pin matches the street view).</li>
-        <li>Record: <strong>APN</strong> — this is the unique identifier the county uses. Format varies by state: San Diego uses <code>471-271-16-00</code>, King County uses <code>0723049368</code>.</li>
-        <li>Record: <strong>Lot area in SF</strong> — ParcelQuest shows this. This is your primary lot size number. Do NOT derive it from width x depth — that only works for perfect rectangles.</li>
-        <li>Record: <strong>Lot dimensions</strong> (width x depth) — if shown. These are approximate for rectangular lots. For irregular lots, the polygon geometry is what matters.</li>
-        <li>Record: <strong>Year built</strong> — if existing structures are on the lot.</li>
-        <li>Record: <strong>Legal description</strong> — the tract, lot, and block reference from the deed (e.g., "LOT 5 BLK 3 MAP 2105").</li>
-      </ol>
+      <p><strong>Where to start:</strong> Open <strong>ParcelQuest</strong> at <code>assr.parcelquest.com</code>. This is the primary parcel database for California counties and gives you clean assessor data with minimal navigation overhead. It is also linked in the app's suite bar. When the site loads, a search bar appears at the top and a map fills the center of the screen. Type the address the designer gave you into the search bar — include the full address, city, and state abbreviation — and press Enter. The system attempts to match the address string against the county's parcel records.</p>
 
-      <p><strong>If ParcelQuest doesn't have it</strong> (e.g., Washington state parcels), fall back to:</p>
-      <ul>
-        <li><strong>King County</strong>: <code>blue.kingcounty.com/assessor</code></li>
-        <li><strong>Orange County</strong>: <code>ocgov.com/gov/assessor</code></li>
-        <li><strong>San Diego</strong>: <code>sdarcc.com</code> (recorder/clerk)</li>
-        <li><strong>Regrid</strong>: <code>app.regrid.com</code> — commercial parcel lookup, sometimes has data ParcelQuest misses.</li>
-      </ul>
+      <p>When a result appears, examine the map carefully. The system places a pin on what it believes is the correct parcel. Before recording anything, cross-reference that pin visually with the satellite view: does the pin land on the correct building, on the correct block face, on the correct side of the street? In dense urban neighborhoods, an ambiguous or slightly off address can silently match the wrong lot — a neighboring parcel, the back unit of a duplex, or a separately recorded commercial stub. Confirm the parcel address shown in the detail panel exactly matches what the designer gave you. If there are multiple search results, a list of matches will appear; read each one's address and select only the one where the address, city, and ZIP all match precisely.</p>
+
+      <p>With the correct parcel confirmed, read the record detail panel. The first item of critical importance is the <strong>Assessor's Parcel Number, or APN</strong>. In San Diego County, this is a ten-digit number formatted with hyphens, looking like <code>469-690-20-00</code>. In King County, Washington, it is a ten-digit number with no hyphens: <code>0723049368</code>. The format varies by county but the function is identical in every jurisdiction: the APN is the unique legal identifier for this exact piece of land in the county's official records system, and it is the key used by every other government database — the zoning database, the permit tracking system, the GIS parcel layer — when looking up information about this property. Write it down exactly as displayed, including hyphens. Do not strip or reformat it.</p>
+
+      <p>Next, record the <strong>lot area in square feet</strong>. ParcelQuest shows this in the parcel detail under a label like "Lot Size," "Land Area," or "Parcel Area." This is the authoritative number for the <code>lotSF</code> field. Always use the assessor's published lot area figure — never calculate it yourself from lot width times lot depth. The reason is straightforward: most urban lots in older cities are not perfect rectangles. Their boundaries were drawn from legal descriptions, old plats, and deed calls that create slight irregularities at the corners. The assessor's recorded lot area accounts for the true survey polygon including those irregularities. If you compute width × depth, you will get a number that is close but not exactly correct, and that small discrepancy compounds into systematic errors in the density calculation (<code>floor(lotSF / densityPerSF)</code>) and the FAR ceiling calculation (<code>baseFAR × lotSF = max buildable SF</code>).</p>
+
+      <p>If the assessor record shows <strong>lot width and depth</strong> — not all records do — record those as well. They go into <code>lotWidth</code> and <code>lotDepth</code>. These two dimensions drive the rectangle placeholder that the map engine draws when no <code>parcelPolygon</code> array is provided. For a genuinely rectangular lot they are accurate; for an irregular lot they are approximate and the polygon will visually override them once it is entered.</p>
+
+      <p>Record the <strong>legal description</strong> if shown. This is the deed reference — typically a tract name, lot number, and block number from the original recorded subdivision map, for example: <code>LOT 5 BLK 3 SUBDIVISION MAP 2105</code>. The legal description matters less for the tool's direct function but is useful when ordering a title report, verifying ownership in county records, or when a city agency asks for documentation confirming the parcel's legal identity. Enter it as a string in the <code>legalDescription</code> field. If ParcelQuest does not display it, use the TBD format referencing the county recorder as the source.</p>
+
+      <p>Record <strong>yearBuilt</strong> if the record shows existing structures. This is informational for the designer — it helps them understand the context of the lot (whether existing buildings need to be demolished, whether there are potential historic preservation flags for structures over a certain age). Use a four-digit year string. If the parcel is currently vacant land, use an empty string <code>""</code>.</p>
+
+      <p><strong>When ParcelQuest does not have data for the jurisdiction:</strong> ParcelQuest covers most California counties well but has limited or no coverage of Washington state and some smaller California jurisdictions. For <strong>King County, Washington</strong> parcels, go to the King County Assessor at <code>blue.kingcounty.com/assessor/eRealProperty</code>. The search interface accepts the full address or the parcel identification number. The result shows the parcel detail including the property account number (equivalent to APN), lot area, legal description, and year built. The county GIS viewer at <code>gismaps.kingcounty.gov</code> also provides parcel information through an interactive map search. For any jurisdiction where the primary portal is unclear, <strong>Regrid</strong> at <code>app.regrid.com</code> is a reliable national fallback. Regrid aggregates county parcel data from assessor sources across the United States and often surfaces data that proprietary portals present poorly or incompletely. Search by address, click the parcel on the map, and read the detail panel on the right side of the screen.</p>
 
       <div class="nl-fields">
-        <div class="nl-field"><span class="nl-field-name">address</span> <span class="nl-field-type">string</span> Full street address with ZIP. From ParcelQuest or assessor.</div>
-        <div class="nl-field"><span class="nl-field-name">apn</span> <span class="nl-field-type">string</span> Assessor Parcel Number. From county assessor records.</div>
-        <div class="nl-field"><span class="nl-field-name">legalDescription</span> <span class="nl-field-type">string</span> Tract/lot/block from deed. From ParcelQuest "Legal" tab or county recorder.</div>
-        <div class="nl-field"><span class="nl-field-name">yearBuilt</span> <span class="nl-field-type">string</span> Year of existing structure(s). From assessor. Use "" if vacant land.</div>
-        <div class="nl-field"><span class="nl-field-name">lotSF</span> <span class="nl-field-type">number</span> Total lot area in square feet. From assessor — do NOT calculate from W x D.</div>
-        <div class="nl-field"><span class="nl-field-name">lotWidth</span> <span class="nl-field-type">number</span> Front-face width in feet. From assessor or tract map. Use 0 if irregular lot.</div>
-        <div class="nl-field"><span class="nl-field-name">lotDepth</span> <span class="nl-field-type">number</span> Front-to-rear depth in feet. From assessor or tract map. Use 0 if irregular lot.</div>
+        <div class="nl-field"><span class="nl-field-name">address</span> <span class="nl-field-type">string</span> Full street address with city, state, and ZIP. Use exactly what the assessor record displays — not what a mapping service autocompletes.</div>
+        <div class="nl-field"><span class="nl-field-name">apn</span> <span class="nl-field-type">string</span> Assessor Parcel Number. Include hyphens exactly as the county records them. Do not strip formatting — some downstream systems query by formatted APN.</div>
+        <div class="nl-field"><span class="nl-field-name">legalDescription</span> <span class="nl-field-type">string</span> Tract/lot/block from deed. From ParcelQuest "Legal" tab or county recorder. Use TBD with recorder URL if not shown in ParcelQuest.</div>
+        <div class="nl-field"><span class="nl-field-name">yearBuilt</span> <span class="nl-field-type">string</span> Four-digit year of existing structure(s). From assessor detail panel. Use "" if vacant land — not "0", which implies a year.</div>
+        <div class="nl-field"><span class="nl-field-name">lotSF</span> <span class="nl-field-type">number</span> Total lot area in square feet. Always use the assessor's recorded figure. Never compute from W × D — irregular parcels will not match.</div>
+        <div class="nl-field"><span class="nl-field-name">lotWidth</span> <span class="nl-field-type">number</span> Front-face width in feet. From assessor or original tract map. Use 0 if not available; parcelPolygon will override visually.</div>
+        <div class="nl-field"><span class="nl-field-name">lotDepth</span> <span class="nl-field-type">number</span> Front-to-rear depth in feet. From assessor or original tract map. Use 0 if not available.</div>
       </div>
     </div>
   </div>
@@ -774,53 +1117,34 @@
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A3</span>
-      Step 2 — Coordinates and Parcel Geometry
+      Step 2 — Parcel Coordinates and Boundary Geometry
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Get the exact lat/lng center of the parcel, and — for irregular lots — the full polygon boundary as an ordered list of vertex coordinates.</p>
+      <p><strong>What you are trying to find:</strong> the precise latitude and longitude of the parcel's geographic center, and — for any lot that is not a simple rectangle — the complete ordered list of GPS coordinates for every corner of the lot boundary.</p>
 
-      <p><strong>Getting the centroid (all sites):</strong></p>
-      <ol>
-        <li>Open <strong>Google Maps</strong> and search the address.</li>
-        <li>Right-click on the center of the parcel (NOT the building — the lot center).</li>
-        <li>Click the coordinates at the top of the menu — they copy to clipboard.</li>
-        <li>Format: decimal degrees WGS84, e.g., <code>32.755605, -117.091946</code>.</li>
-        <li>The first number is latitude (saved.lat), the second is longitude (saved.lng).</li>
-      </ol>
+      <p><strong>Getting the centroid latitude and longitude:</strong> Open <strong>Google Maps</strong> in a browser tab. Type the property address into the search bar and press Enter. The map will zoom to the address and place a familiar red location pin. Now — before right-clicking — mentally locate the visual center of the lot itself, not the center of the building that sits on it. The standard address pin often lands on the front door or the building's street-facing wall, which is at the front of the lot, not at its geographic midpoint. For the tool's map to center correctly on the parcel, you want the approximate geographic center of the land area. Look at the satellite view to see where the lot boundaries are, then identify the midpoint of the lot.</p>
 
-      <p><strong>Getting the parcel polygon (irregular lots only):</strong></p>
-      <p>If the lot is not a simple rectangle (flag-shaped, L-shaped, angled frontage, multiple combined parcels), you need the actual polygon boundary:</p>
-      <ol>
-        <li>Open the county GIS portal for that jurisdiction:</li>
-        <ul>
-          <li><strong>San Diego:</strong> SanDag GIS (<code>sandiego.maps.arcgis.com</code>) or SD County GIS</li>
-          <li><strong>Orange County:</strong> OC Public Works GIS or Regrid</li>
-          <li><strong>King County (WA):</strong> <code>gismaps.kingcounty.gov</code></li>
-        </ul>
-        <li>Search by APN (found in Step 1).</li>
-        <li>Identify the parcel boundary polygon on the map.</li>
-        <li>Extract every vertex as a [lat, lng] pair. Order matters: clockwise from the northwest corner.</li>
-        <li>Each vertex is a corner of the lot. Each pair of consecutive vertices defines one edge (segment).</li>
-        <li>Record the length of each segment in feet if the GIS provides it — this helps verify the polygon matches the assessor's lot dimensions.</li>
-        <li>Store as the <code>parcelPolygon</code> array in the site JSON.</li>
-      </ol>
+      <p>Right-click on that spot — the approximate center of the lot — directly on the map. A small context menu appears. At the very top of this menu, on a gray background, you will see a pair of decimal numbers such as <code>32.7556, -117.0919</code>. These are the coordinates in decimal degree format. Click this pair of numbers: Google Maps automatically copies them to your clipboard. The first number is the latitude (the north-south position, a positive value for any location in the continental United States, ranging roughly from 24 to 49 degrees). The second number is the longitude (the east-west position, a negative value for all continental US locations because they are west of the Prime Meridian, ranging roughly from -66 to -125 degrees). If you ever see a positive longitude number, something has gone wrong with the copy — discard it and try again.</p>
 
-      <p><strong>Choosing the CAD coordinate zone:</strong></p>
-      <p>The CAD zone determines how lat/lng is converted to feet (State Plane projection) when exporting to AutoCAD. Pick based on location:</p>
-      <ul>
-        <li><code>CA_VI</code> — San Diego, Imperial County</li>
-        <li><code>CA_V</code> — Los Angeles, Orange County, Ventura</li>
-        <li><code>CA_IV</code> — Fresno, San Luis Obispo</li>
-        <li><code>CA_III</code> — Sacramento, San Francisco</li>
-        <li><code>WA_N</code> — Seattle, King County, Snohomish</li>
-        <li><code>WA_S</code> — Olympia, Pierce, Thurston</li>
-      </ul>
+      <p>Paste the two numbers into the JSON as <code>saved.lat</code> (the positive number) and <code>saved.lng</code> (the negative number). Use at least six decimal places — this gives you positional accuracy to within about 11 centimeters on the ground, which is far more than sufficient for this tool's purpose. The centroid is where the Leaflet map will center when the site first loads in the browser, and it serves as the reference origin for the proj4 coordinate conversion when generating a CAD LISP export.</p>
+
+      <p><strong>Deciding whether you need polygon geometry:</strong> Every site uses one of two approaches for drawing the lot boundary — rectangle mode or polygon mode. Rectangle mode uses the lot width and depth (from the assessor record) plus a rotation angle to draw a simple four-cornered rectangle. This is the correct approach for standard residential lots that were created by a gridded subdivision plat. Polygon mode uses a full array of vertex coordinates to draw the actual lot shape regardless of complexity. You need polygon mode when the lot is non-rectangular: L-shaped, flag-shaped, pie-shaped, wider at the rear than the front, or created from a combination of multiple APN records. You also need polygon mode when the fronting street runs at an angle that makes the lot appear skewed relative to the map grid.</p>
+
+      <p>To decide which mode to use, look at the lot in satellite view. If the lot appears to be a clean, four-sided rectangle with right angles at all corners, rectangle mode is sufficient — leave <code>parcelPolygon</code> as an empty array and the tool will construct the rectangle from <code>lotWidth</code>, <code>lotDepth</code>, and the rotation you set during the alignment step. If the lot has any more complex shape, extract the polygon.</p>
+
+      <p><strong>Extracting polygon vertices from the GIS portal:</strong> Open the county GIS parcel viewer for the jurisdiction. For <strong>San Diego County</strong> parcels, use the SanDag GIS portal at <code>arcgis.com</code> under the San Diego County open data portal, or the County of San Diego's interactive parcel map. Search by APN. When the parcel is selected, the GIS viewer shows the parcel boundary as a highlighted polygon. You need the coordinates of each vertex of that polygon in order. Some GIS portals expose the vertex coordinates in the feature detail panel — look for tabs labeled "Geometry," "Coordinates," or "Attributes." Others require you to download the parcel as a GeoJSON or KML file, which you can then open in a text editor to read the coordinate array.</p>
+
+      <p>For <strong>King County, Washington</strong>, use the King County GIS parcel viewer at <code>gismaps.kingcounty.gov</code>. For <strong>Orange County</strong>, use the OC Public Works GIS parcel viewer. For any jurisdiction where the GIS portal is unclear, Regrid (Step 1 fallback) sometimes provides a polygon export option from the parcel detail panel.</p>
+
+      <p>Once you have the polygon data, format it as an ordered array of <code>[latitude, longitude]</code> pairs, one per vertex, starting from the <strong>northwest corner</strong> and proceeding <strong>clockwise</strong> around the perimeter. Each consecutive pair of coordinates defines one edge of the lot. The last vertex connects back to the first one, implicitly closing the ring. For example, a four-sided rectangular lot in San Diego might look like: <code>[[32.756, -117.092], [32.756, -117.090], [32.754, -117.090], [32.754, -117.092]]</code>. Store this array in the <code>parcelPolygon</code> field. Also save the raw GeoJSON source file to <code>reference/StateRegulation/{state}/{city}/</code> as a permanent backup that can reproduce the polygon if needed.</p>
+
+      <p><strong>Selecting the CAD coordinate zone:</strong> The <code>cadZone</code> field tells the tool which State Plane Coordinate System projection to use when converting decimal-degree GPS coordinates into surveying feet for the AutoCAD LISP export. The United States is divided into approximately 120 State Plane zones by NOAA; each zone is optimized for minimal distortion within a bounded geographic region. Pick the zone based on the parcel's location: <code>CA_VI</code> covers all of San Diego and Imperial County; <code>CA_V</code> covers Los Angeles, Orange County, and Ventura County; <code>CA_IV</code> covers Fresno, Santa Barbara, and San Luis Obispo; <code>CA_III</code> covers the San Francisco Bay Area, Sacramento Valley, and the Central Coast north of Santa Barbara; <code>WA_N</code> covers Seattle, Bellevue, Redmond, Everett, and the entire greater Puget Sound area north of and including Olympia; <code>WA_S</code> covers Thurston, Pierce, Lewis, Grays Harbor, and Pacific counties. If you are uncertain which zone applies to a specific city, search for the projected coordinate system at <code>epsg.io</code> using the city name.</p>
 
       <div class="nl-fields">
-        <div class="nl-field"><span class="nl-field-name">saved.lat</span> <span class="nl-field-type">number</span> Centroid latitude in decimal degrees. From Google Maps right-click.</div>
-        <div class="nl-field"><span class="nl-field-name">saved.lng</span> <span class="nl-field-type">number</span> Centroid longitude in decimal degrees (negative for western hemisphere).</div>
-        <div class="nl-field"><span class="nl-field-name">cadZone</span> <span class="nl-field-type">string</span> State Plane zone code. Based on geographic location, not research.</div>
-        <div class="nl-field"><span class="nl-field-name">parcelPolygon</span> <span class="nl-field-type">array</span> [[lat,lng], ...] Clockwise vertex list from NW corner. Only for irregular lots. Omit for rectangles.</div>
+        <div class="nl-field"><span class="nl-field-name">saved.lat</span> <span class="nl-field-type">number</span> Centroid latitude in decimal degrees. Six decimal places minimum. From Google Maps right-click → first number in the coordinate pair.</div>
+        <div class="nl-field"><span class="nl-field-name">saved.lng</span> <span class="nl-field-type">number</span> Centroid longitude in decimal degrees. Always negative for continental US. From Google Maps right-click → second number in the coordinate pair.</div>
+        <div class="nl-field"><span class="nl-field-name">cadZone</span> <span class="nl-field-type">string</span> State Plane projection zone code. Determined by geographic location. Must match a proj4 definition registered in ConfigEngine.</div>
+        <div class="nl-field"><span class="nl-field-name">parcelPolygon</span> <span class="nl-field-type">array</span> [[lat,lng], ...] ordered clockwise from NW corner. Required only for non-rectangular lots. Leave [] for clean rectangular lots.</div>
       </div>
     </div>
   </div>
@@ -829,46 +1153,41 @@
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A4</span>
-      Step 3 — Zoning Code Identification
+      Step 3 — Zoning Code Identification and Development Standards
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Find the zoning designation, then download and read the zoning code to extract the development standards.</p>
+      <p><strong>What you are trying to find:</strong> the official zoning designation code for the parcel, and then every specific development standard from the municipal code that applies to that zone — the setbacks, height limit, FAR, density, and commercial depth rules that together define the maximum envelope of what can be built on the lot.</p>
 
-      <p><strong>Finding the zone code:</strong></p>
-      <ol>
-        <li>Check the county GIS portal — most show a "Zoning" layer. Click the parcel to see the designation (e.g., <code>R-3</code>, <code>CUPD-CU-2-4</code>, <code>RS-1-7</code>).</li>
-        <li>Alternatively, check the city's zoning inquiry tool:</li>
-        <ul>
-          <li><strong>San Diego:</strong> ZIMS (<code>sandiego.gov</code> → Development Services → ZIMS)</li>
-          <li><strong>Garden Grove:</strong> Municode (<code>codepublishing.com</code> → Garden Grove → Chapter 9)</li>
-          <li><strong>Burien:</strong> City code (<code>codepublishing.com/WA/Burien</code>)</li>
-          <li><strong>Escondido:</strong> <code>escondido.gov</code> → Planning</li>
-        </ul>
-        <li>Record the exact zone code string. Spelling and hyphens matter — they determine which development standards table applies.</li>
-      </ol>
+      <p><strong>Finding the zone designation:</strong> The fastest method is the city's own zoning inquiry tool. For <strong>San Diego</strong>, this is the ZIMS (Zoning Inquiry Management System), accessible from the city's Development Services portal at <code>sandiego.gov</code>. Enter the street address or APN and the system returns the base zone designation and lists any overlay zones that appear in the city's records. The zone code you receive will look something like <code>CC-3-9</code> (Community Commercial, 3-story tier, 9 DU/acre), <code>RM-3-7</code> (Residential Multiple, 3 stories, 7 DU/acre), or <code>CUPD-CU-2-4</code> (Commercial Urban Planned Development). For <strong>Garden Grove</strong>, navigate to the city's Community Development GIS portal and toggle on the Zoning layer, then click the parcel to see its designation. For <strong>Burien</strong>, use the city's online parcel viewer or go directly to the municipal code at <code>codepublishing.com/WA/Burien</code> where the zoning tables are organized by zone code. For <strong>Escondido</strong>, the Planning Division administers zoning and can confirm the designation by address over the phone or through an online form on their planning portal.</p>
 
-      <p><strong>Downloading the zoning code PDF:</strong></p>
-      <ol>
-        <li>Navigate to the city's municipal code for that zone (e.g., San Diego Municipal Code Title 13, Chapter 2).</li>
-        <li>Find the section that lists development standards for that specific zone — it's usually a table with setbacks, height, FAR, and density.</li>
-        <li>Download or save the PDF to <code>reference/StateRegulation/{city}/</code> for future reference.</li>
-      </ol>
+      <p>Record the zone designation <em>exactly</em> as the city presents it, including all hyphens, letters, and numbers in the precise sequence shown. The designation is not just a label — it is the lookup key into the municipal code's regulation tables. <code>R-3</code> and <code>R-3-A</code> are different zones with different development standards. <code>CUPD-CU-2-4</code> is not the same as <code>CU-2-4</code>. Never abbreviate, interpret, or simplify the code string. Write it verbatim.</p>
 
-      <p><strong>Extracting development standards from the zoning code:</strong></p>
-      <p>The zoning code table gives you these specific numbers. Read each one carefully — they drive the entire feasibility analysis:</p>
+      <p><strong>Finding the municipal code and navigating to the right section:</strong> Navigate to the city's online municipal code. Most California and Washington cities publish their code through <strong>Municode</strong> at <code>library.municode.com</code> or through American Legal at <code>amlegal.com</code>. Search for the city by name on either platform. Once inside the city's code, you need to navigate to the zoning chapter. In San Diego this is Title 13 (Land Development Code), then the relevant article by zone type: Article 1 for general regulations, Article 2 for residential zones (RM, RT, RS zones), Academic 3 for commercial and mixed-use zones (CC, CN, CV, CR zones). In other cities the structure varies but the zoning chapter is almost always titled "Zoning," "Land Use," or "Development Code" and appears in the middle sections of the municipal code.</p>
+
+      <p>Within the zoning chapter, navigate to the specific zone you found. Each zone has a dedicated code section that contains a <strong>development standards table</strong> — typically a two-column table listing each requirement (minimum lot area, setbacks, maximum height, FAR, minimum parking) alongside the numerical standard for that zone. Some cities use a consolidated table listing all zones side-by-side; others have individual sections per zone. Either way, your goal is to find the row or column that corresponds to your zone designation and read every dimensional constraint it specifies.</p>
+
+      <p><strong>Extracting the setback values:</strong> The table lists minimum required setback distances — measured in feet from the relevant property line to the nearest wall or structural element of any new building. Record the <strong>front setback</strong> (from the front property line, which typically faces the street), the <strong>rear setback</strong> (from the rear property line, at the far end of the lot from the street), and the <strong>side setback</strong> (from the interior side yard property lines, the lines that separate the lot from its neighbors). Some zones specify different setback requirements for the two side yards, or distinguish between an interior side yard and a street-side yard (when the lot is a corner lot with street frontage on two sides). Record whatever the code specifies. If only one side setback is listed, use that value for both <code>sideL</code> and <code>sideR</code> when seeding <code>.saved.setbacks</code>.</p>
+
+      <p><strong>Extracting the FAR and height values:</strong> The <strong>Floor Area Ratio</strong> is a multiplier. A FAR of 1.5 on a 7,500 SF lot means you may build at most 11,250 SF of total floor area across all floors combined. Enter this as <code>baseFAR</code>. For purely residential zones in many California cities, there is no explicit FAR limit — density is controlled entirely by unit count and lot coverage percentage instead. In those cases, set <code>baseFAR</code> to <code>0</code>. The <code>commFAR</code> field holds the FAR applicable to the commercial portion in a mixed-use zone, or it may hold a higher bonus FAR available through a density bonus program such as California's Complete Communities Housing Solutions (CCHS). Set it to <code>0</code> if neither applies.</p>
+
+      <p>For height, record both the unadjusted base height limit and the maximum allowed height (which may be higher if bonus programs apply). The <code>baseHeightLimit</code> field holds the standard code-specified height with no bonus considerations. The <code>maxHeight</code> field holds the absolute ceiling — the highest any structure on this lot could legally reach given all available bonus programs. For San Diego sites, the <code>cchsMaxHeight</code> field holds the Complete Communities Housing Solutions maximum height for the applicable CCHS tier; for sites outside San Diego or in areas where CCHS does not apply, set this equal to <code>maxHeight</code>.</p>
+
+      <p><strong>Extracting density:</strong> In California residential zones, density is most commonly expressed as a minimum required lot area per dwelling unit. The code reads something like "minimum lot area per DU: 600 SF" or "1 unit per 2,500 SF of lot area." Whatever form it takes, convert it to the JSON's <code>densityPerSF</code> field, which holds the number of square feet of lot area required per one dwelling unit. For "1 DU per 600 SF," <code>densityPerSF = 600</code>. For "maximum 25 DU per acre," first convert: 1 acre = 43,560 SF, so 25 DU per 43,560 SF means 43,560 / 25 = 1,742 SF per unit, so <code>densityPerSF = 1742</code>. The feasibility calculator computes the base unit count as <code>floor(lotSF / densityPerSF)</code>. Set to <code>0</code> if the zone has no density rule expressed in SF per unit.</p>
+
+      <p><strong>Handling conditional rules:</strong> Zoning codes frequently write rules with conditions: "maximum height is 30 feet, except that within 300 feet of a transit stop the maximum is 65 feet." Never guess which condition applies to this specific parcel without checking. Record the conservative value (the lower height) for now, and add a TBD note in the <code>notes</code> field: <code>| TBD - C: maxHeight conditional — verify transit distance for 30/65 ft rule (SDMC §131.0430)</code>. The conditional check may require a GIS measurement, a phone call to the planning counter, or a specific map overlay that you will handle in Step 4 (A5).</p>
 
       <div class="nl-fields">
-        <div class="nl-field"><span class="nl-field-name">zoning</span> <span class="nl-field-type">string</span> Zone designation exactly as stated in municipal code. e.g., "CUPD-CU-2-4", "R-3", "RS-1-7".</div>
-        <div class="nl-field"><span class="nl-field-name">baseFAR</span> <span class="nl-field-type">number</span> Base Floor Area Ratio. How much you can build relative to lot size. lotSF x FAR = max buildable SF. Set 0 for pure residential zones with no FAR limit.</div>
-        <div class="nl-field"><span class="nl-field-name">commFAR</span> <span class="nl-field-type">number</span> Commercial or bonus FAR (e.g., CCHS Tier 3 = 6.5). Set 0 if no commercial component or bonus.</div>
-        <div class="nl-field"><span class="nl-field-name">maxHeight</span> <span class="nl-field-type">number</span> Maximum building height in feet — including any bonus (CCHS, density bonus). This is the ceiling.</div>
-        <div class="nl-field"><span class="nl-field-name">baseHeightLimit</span> <span class="nl-field-type">number</span> Base height WITHOUT bonus. Used as reference; app uses maxHeight for calculations.</div>
-        <div class="nl-field"><span class="nl-field-name">cchsMaxHeight</span> <span class="nl-field-type">number</span> CCHS (Complete Communities Housing Solutions) tier max height. San Diego only. 0 if not applicable.</div>
-        <div class="nl-field"><span class="nl-field-name">frontSetback</span> <span class="nl-field-type">number</span> Minimum front setback in feet. Distance from front property line where you cannot build.</div>
-        <div class="nl-field"><span class="nl-field-name">rearSetback</span> <span class="nl-field-type">number</span> Minimum rear setback in feet.</div>
-        <div class="nl-field"><span class="nl-field-name">sideSetback</span> <span class="nl-field-type">number</span> Minimum side setback in feet. Applied to both sides in the default config.</div>
-        <div class="nl-field"><span class="nl-field-name">densityPerSF</span> <span class="nl-field-type">number</span> Lot SF per dwelling unit. e.g., 600 means 1 unit per 600 SF. Base unit count = lotSF / densityPerSF. Set 0 if density is not SF-based.</div>
-        <div class="nl-field"><span class="nl-field-name">commercialDepth</span> <span class="nl-field-type">number</span> Minimum ground-floor commercial depth in feet (mixed-use zones). 0 for residential-only zones.</div>
+        <div class="nl-field"><span class="nl-field-name">zoning</span> <span class="nl-field-type">string</span> Zone designation verbatim from city ZIMS or municipal code. Every character, hyphen, and number matters for code lookup.</div>
+        <div class="nl-field"><span class="nl-field-name">baseFAR</span> <span class="nl-field-type">number</span> Base Floor Area Ratio (e.g., 1.5 means maxBuildableSF = lotSF × 1.5). Set 0 for residential zones with no FAR rule.</div>
+        <div class="nl-field"><span class="nl-field-name">commFAR</span> <span class="nl-field-type">number</span> Commercial component FAR or CCHS bonus FAR. e.g., 6.5 for CCHS Tier 3 in eligible SD zones. Set 0 if not applicable.</div>
+        <div class="nl-field"><span class="nl-field-name">maxHeight</span> <span class="nl-field-type">number</span> Absolute height ceiling in feet including all bonus programs. This is the value used in feasibility calculations.</div>
+        <div class="nl-field"><span class="nl-field-name">baseHeightLimit</span> <span class="nl-field-type">number</span> Standard height limit without any bonus. Reference value for the designer to understand the base vs. bonus difference.</div>
+        <div class="nl-field"><span class="nl-field-name">cchsMaxHeight</span> <span class="nl-field-type">number</span> Complete Communities Housing Solutions tier height (San Diego only). Set equal to maxHeight if CCHS does not apply.</div>
+        <div class="nl-field"><span class="nl-field-name">frontSetback</span> <span class="nl-field-type">number</span> Minimum front yard setback in feet from front property line.</div>
+        <div class="nl-field"><span class="nl-field-name">rearSetback</span> <span class="nl-field-type">number</span> Minimum rear yard setback in feet from rear property line.</div>
+        <div class="nl-field"><span class="nl-field-name">sideSetback</span> <span class="nl-field-type">number</span> Minimum interior side yard setback in feet. Applied to both sides unless the code differentiates them.</div>
+        <div class="nl-field"><span class="nl-field-name">densityPerSF</span> <span class="nl-field-type">number</span> Lot SF required per one dwelling unit. baseUnits = floor(lotSF / densityPerSF). Set 0 if density is not expressed in SF-per-unit terms.</div>
+        <div class="nl-field"><span class="nl-field-name">commercialDepth</span> <span class="nl-field-type">number</span> Required ground-floor commercial depth in feet for mixed-use zones. 0 for purely residential zones.</div>
       </div>
     </div>
   </div>
@@ -880,65 +1199,71 @@
       Step 4 — Planning Overlays and Special Districts
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Determine which overlay zones and planning designations apply to this parcel. These affect parking requirements, bonus density, height bonuses, and special review triggers.</p>
+      <p><strong>What you are trying to find:</strong> every overlay zone, special district designation, and planning-program tier that applies to this specific parcel, layered on top of the base zoning. Overlays are the hidden variables in land development feasibility. They can eliminate the parking requirement and save $30,000–$50,000 per stall in construction cost. They can unlock an extra 30 feet of height through a state housing program, adding entire additional residential floors. They can trigger a Coastal Development Permit that extends the approval timeline by 12–18 months. Or they can impose a height restriction below what the base zoning allows if the lot sits within an airport influence zone. The base zoning code you found in Step 3 tells you the standard rules. The overlays tell you which standard rules bend, which get overridden, and which additional requirements are added. You need to know all of them before any concept design work begins.</p>
 
-      <p>Each of these is a YES/NO question answered by checking a specific GIS map layer or city document. Check every one — they're stored in the <code>planningAreas[]</code> and <code>overlayZones[]</code> arrays.</p>
+      <p>Unlike the base zone — which is one definitive answer from one system — overlays require checking each category independently because they come from different databases, maintained by different agencies, and governed by different regulatory frameworks. Some are city-administered (CCHS tier, mobility zone). Some are state-administered (TPA, Coastal Commission zone). Some are federal or regional (airport influence area under the Airport Land Use Commission). Work through each one systematically.</p>
+
+      <p>For the <strong>CCHS tier</strong> check in San Diego: the Complete Communities Housing Solutions program assigns parcels to one of three tiers based on proximity to transit infrastructure and policy goals. Navigate to <code>sandiego.gov/planning/programs/housing</code> and open the Complete Communities interactive map. Zoom to the parcel's address. The map layer shows color bands for Tier 1, Tier 2, and Tier 3. Read which tier the parcel falls in. Tier 1 allows modest height bonuses above the base code limit for projects with affordable units. Tier 2 allows medium bonuses. Tier 3 — typically parcels along high-frequency transit corridors and in the most urbanized neighborhoods — unlocks the highest bonus heights and allows up to 6.5 FAR for projects that meet affordability thresholds. Record the tier as a string in the <code>planningAreas[]</code> array. Also record the community plan area name here (e.g., <code>"Mid-City: City Heights"</code>) because the community plan area name determines which fee schedule rows apply in Step 5.</p>
+
+      <p>For the <strong>Transit Priority Area (TPA)</strong> check in California: a TPA is officially defined as a half-mile radius circle centered on a major transit stop that has fixed-route bus service at 15-minute or better headways during peak commute hours, or any stop on a light rail, commuter rail, or ferry line. At SANDAG's GIS portal for San Diego, open or download the TPA boundary layer and confirm whether the parcel centroid falls within it. If yes, this is a TPA parcel. Being inside a TPA has significant feasibility implications: under San Diego Municipal Code §142.0528, residential uses are exempt from minimum parking requirements when located within a TPA. For Washington state parcels, check the Sound Transit and Metro Transit service maps to identify qualifying stops and buffer zones under Washington's Growth Management Act transit-oriented development provisions.</p>
+
+      <p>For each overlay in the grid below, record <code>true</code> if you have confirmed it applies, <code>false</code> if you have confirmed it does not apply, and <code>null</code> if you have not yet checked. The distinction between <code>false</code> and <code>null</code> is meaningful for quality control: when you audit a partial site's outstanding TBDs, every <code>null</code> overlay entry appears as an item still requiring a verification check, while <code>false</code> entries are treated as confirmed absent and do not appear in the TBD audit.</p>
 
       <div class="nl-overlay-grid">
         <div class="nl-overlay-item">
           <div class="nl-overlay-name">Community Plan Area</div>
-          <div class="nl-overlay-source">City general plan or community plan map</div>
-          <div class="nl-overlay-why">Determines which set of land use policies apply (e.g., "Mid-City: City Heights")</div>
+          <div class="nl-overlay-source">City General Plan + community plan boundary maps. Show the Zoning layer in the city GIS portal and read the "Community Plan" attribute.</div>
+          <div class="nl-overlay-why">Determines the neighborhood-specific land use policies, CCHS eligibility tier, and which DIF/NEF fee table rows apply. Also triggers CPG review requirement in some areas.</div>
         </div>
         <div class="nl-overlay-item">
           <div class="nl-overlay-name">Land Use Designation</div>
-          <div class="nl-overlay-source">Same community plan — the specific land use category (Commercial/Mixed Use A, Residential, etc.)</div>
-          <div class="nl-overlay-why">Affects allowed uses and sometimes bonus FAR</div>
+          <div class="nl-overlay-source">Community plan map layer — click the parcel and read the "Land Use Designation" attribute. Separate from the base zone code.</div>
+          <div class="nl-overlay-why">Fine-grained use classification (e.g., "Commercial/Mixed Use A" vs. "High Density Residential") — affects allowed uses and sometimes unlocks bonus FAR programs.</div>
         </div>
         <div class="nl-overlay-item">
           <div class="nl-overlay-name">CCHS Tier (San Diego only)</div>
-          <div class="nl-overlay-source">sandiego.gov/planning/programs/housing → CCHS interactive map</div>
-          <div class="nl-overlay-why">Tier 1/2/3 unlock bonus height and FAR. Tier 3 = 6.5 FAR + unlimited height in some zones</div>
+          <div class="nl-overlay-source">sandiego.gov/planning/programs/housing → Complete Communities interactive map. Zoom to parcel and read the tier color.</div>
+          <div class="nl-overlay-why">Tier 1 / 2 / 3 progressively unlock higher height limits and up to 6.5 FAR. Without knowing the tier you cannot compute maxHeight for density bonus projects.</div>
         </div>
         <div class="nl-overlay-item">
           <div class="nl-overlay-name">Transit Priority Area (TPA)</div>
-          <div class="nl-overlay-source"><strong>CA:</strong> SANDAG GIS transit layers. <strong>WA:</strong> Sound Transit / PSRC maps.</div>
-          <div class="nl-overlay-why">If YES → may qualify for reduced parking or CEQA streamlining</div>
+          <div class="nl-overlay-source">CA: SANDAG GIS "TPA" layer (½ mile from qualifying stop). WA: Sound Transit / PSRC service coverage maps.</div>
+          <div class="nl-overlay-why">YES eliminates parking minimums for residential in San Diego (SDMC §142.0528). May qualify project for CEQA statutory or categorical exemption. High financial impact.</div>
         </div>
         <div class="nl-overlay-item">
           <div class="nl-overlay-name">Parking Standards (PSTPA)</div>
-          <div class="nl-overlay-source">Derived from TPA status + use type. If TPA=Yes and residential → 0 parking required (San Diego).</div>
-          <div class="nl-overlay-why">Directly impacts how many parking stalls you need to build</div>
+          <div class="nl-overlay-source">Derived from TPA status combined with proposed use type. Residential within TPA = 0 minimum stalls required in SD.</div>
+          <div class="nl-overlay-why">Every parking stall eliminated from the required count saves $25k–$50k in construction cost. This overlay has the largest direct financial impact of any entry on this list.</div>
         </div>
         <div class="nl-overlay-item">
-          <div class="nl-overlay-name">Mobility Choices</div>
-          <div class="nl-overlay-source">San Diego Mobility Choices zoning map — shows which mobility zone (1, 2, 3)</div>
-          <div class="nl-overlay-why">Higher zone = more transit-oriented parking reductions</div>
+          <div class="nl-overlay-name">Mobility Choices Zone</div>
+          <div class="nl-overlay-source">City of San Diego Mobility Choices interactive map — color-coded zones 1 (low) through 3 (high connectivity).</div>
+          <div class="nl-overlay-why">Higher zone = additional parking reductions stacked on top of TPA baseline. Zone 3 parcels may be able to eliminate parking even for commercial uses.</div>
         </div>
         <div class="nl-overlay-item">
-          <div class="nl-overlay-name">Transit Area Overlay</div>
-          <div class="nl-overlay-source">County GIS overlay layer — buffer around transit stops/stations</div>
-          <div class="nl-overlay-why">Additional density bonus eligibility</div>
+          <div class="nl-overlay-name">Transit Area Overlay (TAO)</div>
+          <div class="nl-overlay-source">County GIS overlay layer — typically ¼ mile and ½ mile buffer polygons around transit stops.</div>
+          <div class="nl-overlay-why">An additional layer of density bonus and CEQA streamlining eligibility under state Housing Accountability Act provisions. Check whether parcel falls inside the buffer polygon.</div>
         </div>
         <div class="nl-overlay-item">
-          <div class="nl-overlay-name">Airport Influence Area</div>
-          <div class="nl-overlay-source">ALUCP (Airport Land Use Compatibility Plan) map for nearest airport</div>
-          <div class="nl-overlay-why">Height restrictions near flight paths. May limit maxHeight below zoning code allows.</div>
+          <div class="nl-overlay-name">Airport Influence Area (ALUCP)</div>
+          <div class="nl-overlay-source">Airport Land Use Commission compatibility plan for the nearest commercial or general aviation airport. San Diego: SAN, MYF, SEE, CRQ. WA: SEA, BFI, RNT.</div>
+          <div class="nl-overlay-why">Applies height restrictions within flight approach zones. The ALUCP's height limit for the parcel's RPZ or compatibility zone may be lower than the base zoning height — the more restrictive applies.</div>
         </div>
         <div class="nl-overlay-item">
-          <div class="nl-overlay-name">Coastal Overlay</div>
-          <div class="nl-overlay-source">California Coastal Commission maps (<code>documents.coastal.ca.gov</code>) or city coastal zone map</div>
-          <div class="nl-overlay-why">Requires Coastal Development Permit. Adds review layer.</div>
+          <div class="nl-overlay-name">Coastal Development Zone</div>
+          <div class="nl-overlay-source">California Coastal Commission permit jurisdiction map at documents.coastal.ca.gov/ceqa or city coastal zone GIS layer.</div>
+          <div class="nl-overlay-why">Requires a Coastal Development Permit (CDP) in addition to city permits. Adds Coastal Commission review to the approval chain. Timeline impact: 6–18 months additional processing.</div>
         </div>
         <div class="nl-overlay-item">
-          <div class="nl-overlay-name">Very High Fire Hazard Zone</div>
-          <div class="nl-overlay-source"><strong>CA:</strong> Cal Fire FHSZ viewer (<code>osfm.fire.ca.gov</code>). <strong>WA:</strong> WA DNR fire risk maps.</div>
-          <div class="nl-overlay-why">Triggers fire setbacks, sprinkler requirements, brush management zone</div>
+          <div class="nl-overlay-name">Very High Fire Hazard Severity Zone</div>
+          <div class="nl-overlay-source">CA: Cal Fire FHSZ viewer at osfm.fire.ca.gov. WA: Washington DNR fire risk maps. Check both state and locally designated zones.</div>
+          <div class="nl-overlay-why">Triggers mandatory brush management zone clearance, required automatic fire sprinklers throughout all occupancies, and defensible space requirements. Construction cost impact.</div>
         </div>
         <div class="nl-overlay-item">
-          <div class="nl-overlay-name">Fault Zone (Alquist-Priolo)</div>
-          <div class="nl-overlay-source">California Geological Survey (<code>maps.conservation.ca.gov/cgs/ap</code>)</div>
-          <div class="nl-overlay-why">Building within fault zone requires geologic investigation. May affect foundation design.</div>
+          <div class="nl-overlay-name">Alquist-Priolo Fault Zone</div>
+          <div class="nl-overlay-source">California Geological Survey fault zone map at maps.conservation.ca.gov/cgs/ap. Enter address to check.</div>
+          <div class="nl-overlay-why">Mandates a site-specific geologic investigation by a licensed engineering geologist before any occupied structure permit is issued. May require foundation design changes or setback from fault trace.</div>
         </div>
       </div>
     </div>
@@ -951,20 +1276,23 @@
       Step 5 — Fee Schedule and Development Costs
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Look up the city's fee schedule to find impact fees, enhancement fees, and affordability requirements.</p>
-      <p>Every city publishes a fee schedule PDF (usually under Development Services or Permit Center). Search for it:</p>
-      <ul>
-        <li><strong>San Diego:</strong> <code>sandiego.gov/development-services/forms-publications/fee-schedules</code></li>
-        <li><strong>Garden Grove:</strong> Community Development fee schedule</li>
-        <li><strong>Burien:</strong> City of Burien Permit Center fee schedule</li>
-        <li><strong>Washington state:</strong> No NEF equivalent — set nefRatePerSF to 0</li>
-      </ul>
+      <p><strong>What you are trying to find:</strong> the specific financial charges the city imposes on new construction — the per-square-foot enhancement fees, the per-unit impact fees, and the affordability fraction required to qualify for density bonuses. These are not optional details to fill in later. They are direct numeric inputs to the financial feasibility calculation that the pre-application checklist computes, and they often make or break a project's feasibility. It is surprisingly common for a project that looks financially viable under base zoning to become infeasible once $35,000 per unit in DIF charges are correctly applied. These numbers belong in the JSON before the designer has any serious conversation about unit counts.</p>
+
+      <p>Every city that charges development impact fees publishes an annual fee schedule document, typically a PDF, updated each fiscal year. This document is almost always available on the city's Development Services portal, Permit Center page, or Finance Department website. Searching for "<em>city name</em> development services fee schedule 2026 PDF" will usually find it within the first few results. Download the current year's version and save it to <code>reference/StateRegulation/{state}/{city}/</code> so you have the primary source accessible for the next session when a fee number needs to be verified.</p>
+
+      <p><strong>The NEF (Neighborhood Enhancement Fee)</strong> is a San Diego-specific charge that applies in designated community plan areas. It is levied per square foot of new construction gross floor area — not per unit, but per square foot of total building area. The rate is not uniform across the city; it varies by community plan area. The fee schedule PDF contains a table organized by community plan area name. Find the row corresponding to the community plan area you recorded in Step 4 (A5). The rate appears as a dollar-per-square-foot figure, such as <code>$0.41/SF</code>. Enter this value as a plain decimal number in <code>nefRatePerSF</code> (e.g., <code>0.41</code>). The pre-application checklist tool calculates total NEF as <code>buildable SF × nefRatePerSF</code> and displays the result in the fees section. For any Washington state parcel or for any California city that does not use a neighborhood enhancement fee, set <code>nefRatePerSF</code> to <code>0</code>.</p>
+
+      <p><strong>The DIF (Development Impact Fee)</strong> is charged per residential dwelling unit rather than per square foot. It represents the city's accounting of the proportionate infrastructure cost — new roads, parks, fire stations, library expansions, utility capacity improvements — attributable to the additional population generated by the new project. DIF rates in San Diego are also organized by community plan area. Open the same fee schedule PDF and find the DIF table. Locate the row for your community plan area and read the per-unit charge. Enter this as <code>difPerUnit</code> in dollars (e.g., if the fee is $21,400 per unit, enter <code>21400</code>). The checklist engine multiplies this by the number of qualifying units to produce the total DIF line item.</p>
+
+      <p><strong>The DIF waiver threshold</strong> (<code>difWaiverSF</code>) reflects a policy used by several cities and state programs to encourage the construction of smaller, more affordable units. If a dwelling unit's floor area is at or below a specified size — measured in square feet — that unit is either partially or fully exempt from the DIF. The threshold is stated in the fee schedule or in the city's development impact fee ordinance. For example, the City of San Diego exempts units at or below 500 SF from the residential DIF under certain programs. Enter the threshold size in square feet as a plain number; enter <code>0</code> if the jurisdiction has no waiver policy.</p>
+
+      <p><strong>The affordability percentage</strong> (<code>affordabilityPct</code>) is the fraction of total units in a project — expressed as a decimal between 0 and 1 — that must be designated as income-restricted affordable housing in order for the project to qualify for a state density bonus. Under California Government Code §65915, the minimum affordability set-aside ranges from 5% at the lowest bonus tier to about 24% for the maximum bonus. The specific percentage required also depends on the income level of the restricted units (very low income, low income, or moderate income — each tier has different thresholds and bonus percentages). For this JSON field, enter the baseline required percentage that applies to the most common scenario for this project type. For Washington state, the equivalent requirement comes from the State Environmental Policy Act (SEPA) exemption thresholds and local inclusionary housing ordinances, which vary by city. Record as a decimal: 10% = <code>0.10</code>, 15% = <code>0.15</code>. If no affordability requirement applies, enter <code>0</code>.</p>
 
       <div class="nl-fields">
-        <div class="nl-field"><span class="nl-field-name">nefRatePerSF</span> <span class="nl-field-type">number ($/SF)</span> Neighborhood Enhancement Fee per square foot of new construction. From the fee schedule "NEF" table. Checklist calculates: total NEF = buildable SF x rate. Set 0 if not applicable.</div>
-        <div class="nl-field"><span class="nl-field-name">difPerUnit</span> <span class="nl-field-type">number ($/unit)</span> Development Impact Fee per dwelling unit. From the fee schedule "DIF" line. Checklist calculates: total DIF = qualifying units x rate.</div>
-        <div class="nl-field"><span class="nl-field-name">difWaiverSF</span> <span class="nl-field-type">number (SF)</span> Units at or below this SF are exempt from DIF. From city affordable housing or DIF exemption policy. Set 0 if no waiver.</div>
-        <div class="nl-field"><span class="nl-field-name">affordabilityPct</span> <span class="nl-field-type">number (0-1)</span> Affordability target as decimal. 0.1 = 10% affordable units. From state density bonus law or city inclusionary housing ordinance.</div>
+        <div class="nl-field"><span class="nl-field-name">nefRatePerSF</span> <span class="nl-field-type">number ($/SF)</span> Neighborhood Enhancement Fee per SF of new construction gross floor area. From city fee schedule — NEF table by community plan area. Enter as decimal dollars. 0 if not applicable.</div>
+        <div class="nl-field"><span class="nl-field-name">difPerUnit</span> <span class="nl-field-type">number ($/unit)</span> Development Impact Fee per residential dwelling unit. From city fee schedule — DIF table by community plan area. Enter as integer dollars. 0 if not applicable.</div>
+        <div class="nl-field"><span class="nl-field-name">difWaiverSF</span> <span class="nl-field-type">number (SF)</span> Unit floor area at or below which DIF is waived. From city DIF waiver policy or fee ordinance. Enter in square feet. 0 if no waiver exists.</div>
+        <div class="nl-field"><span class="nl-field-name">affordabilityPct</span> <span class="nl-field-type">number (0–1)</span> Fraction of units required to be income-restricted affordable to qualify for density bonus. From state density bonus law or city inclusionary ordinance. e.g., 0.10 = 10%.</div>
       </div>
     </div>
   </div>
@@ -973,22 +1301,21 @@
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A7</span>
-      Step 6 — Inspector Contacts
+      Step 6 — Inspector and Agency Contacts
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Get the names and direct phone numbers of the city's plan review inspectors.</p>
-      <p>Call or email the city's Permit Center. Ask for the assigned inspectors for that area/zone:</p>
-      <ul>
-        <li><strong>Combination Inspector</strong> — primary building inspector</li>
-        <li><strong>Structural</strong> — reviews structural plans</li>
-        <li><strong>Electrical</strong></li>
-        <li><strong>Mechanical</strong> — HVAC, plumbing</li>
-        <li><strong>Grading / Civil</strong> — site grading, drainage, utilities</li>
-      </ul>
-      <p>If you can't reach them yet, use the TBD format: <code>"-- TBD: City of [X] Permit Center ([phone])"</code> so the designer knows where to call.</p>
+      <p><strong>What you are trying to find:</strong> the names and direct contact information for the city staff who will review and inspect the project at each technical discipline — building, structural, electrical, mechanical, and grading. The designer references these contacts when they need to call the plan checker with a specific code interpretation question before submitting drawings, or when they want to request a pre-application meeting. Having the right person's name and direct extension saves the designer from navigating an automated phone tree to find a human who knows the project.</p>
+
+      <p>The most reliable approach is a direct phone call to the city's <strong>Permit Center</strong> counter. For the City of San Diego, the main Development Services line is <code>(619) 446-5000</code>. For other cities, the Permit Center phone number typically appears on the first page of the fee schedule PDF you downloaded in Step 5, or on the city's Development Services landing page in large text under "Contact Us." When someone answers, introduce yourself briefly — "I'm doing pre-application research for a proposed residential project at [address, APN]" — and ask who the assigned building inspector and plan check engineers are for that address. Many cities assign inspectors geographically by district, meaning the same individual handles all permits and inspections for an entire neighborhood or zone. Some cities assign plan reviewers by project type (residential vs. commercial) and then route to a specific desk based on the submission address. The person who answers the phone will know the routing rules and can give you the assigned reviewer's name and number.</p>
+
+      <p>Record each contact in the <code>inspectors[]</code> array. Each entry is an object with two keys: <code>name</code> holds the discipline label (such as <code>"Building Inspector"</code>, <code>"Structural Plan Review"</code>, or <code>"Grading/Civil Engineer"</code>), and <code>val</code> holds the person's full name and their direct phone number (such as <code>"Maria Garcia (619-446-5123)"</code>). The array should always have at least five entries, one per discipline, populated for each site regardless of whether you have the names yet.</p>
+
+      <p>If you cannot reach a real person on the first call, or if the Permit Center tells you assignments rotate and the specific inspector isn't known until the permit is submitted, use the TBD format for the <code>val</code> field: <code>"-- TBD: call SD Permit Center (619) 446-5000"</code>. This tells the designer exactly who to call to resolve the TBD, rather than leaving a blank field that gives them no direction. Write the TBD string with the counter phone number so they can resolve it in a single call.</p>
+
+      <p>The five standard discipline rows to include for every site are: <strong>Combination Inspector</strong> — the multi-discipline building inspector who performs rough framing inspections, insulation inspections, and final occupancy sign-off; <strong>Structural</strong> — the plan check engineer who reviews structural drawings, lateral bracing, shear wall design, and foundation plans; <strong>Electrical</strong> — the reviewer for service entrance, panel sizing, branch circuits, and EV charging infrastructure; <strong>Mechanical</strong> — covers HVAC systems, plumbing, gas lines, and ventilation calculations; <strong>Grading/Civil</strong> — responsible for the site grading plan, stormwater management, drainage design, utility connections, and erosion control measures during construction. For smaller cities where one inspector or reviewer handles multiple disciplines, record that person's name in every applicable row and note in parentheses which additional disciplines they cover.</p>
 
       <div class="nl-fields">
-        <div class="nl-field"><span class="nl-field-name">inspectors[]</span> <span class="nl-field-type">array of {name, val}</span> Each entry: name = discipline ("Building Inspector"), val = "First Last (###-###-####)". Pre-populate all 5 rows even if TBD.</div>
+        <div class="nl-field"><span class="nl-field-name">inspectors[]</span> <span class="nl-field-type">array of {name, val}</span> Five entries minimum. name = discipline label. val = "First Last (area-code-number)" or TBD string with Permit Center phone. Pre-populate all rows at skeleton stage.</div>
       </div>
     </div>
   </div>
@@ -997,41 +1324,32 @@
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A8</span>
-      Step 7 — Assemble the Skeleton JSON
+      Step 7 — Assemble the Skeleton JSON File
     </div>
     <div class="nl-prose">
-      <p><strong>Goal:</strong> Combine all research into a single JSON file following the exact template structure.</p>
+      <p><strong>What you are doing:</strong> taking all the research you gathered in Steps 1 through 6 and entering it into a structured JSON file that the build pipeline reads, compiles, and injects into the browser. This is the moment all your field research becomes machine-readable data that the tool can display, calculate with, and save.</p>
 
-      <p><strong>File naming:</strong></p>
-      <ol>
-        <li>Filename: <code>{state}-{streetnumber}_{streetname}.json</code> — lowercase state, number as-is, street title-case, no spaces.</li>
-        <li>Example: <code>ca-2921_ElCajon.json</code></li>
-        <li>siteId inside the file: UPPERCASE version: <code>CA-2921_ELCAJON</code></li>
-      </ol>
+      <p><strong>Always start from the template:</strong> Open <code>reference/site-template.json</code> in VS Code. This is the canonical schema — it defines every field the system reads, using the exact key names and exactly the nested structure the JS engines expect. Every field is pre-initialized to a neutral placeholder value: empty strings <code>""</code> for text fields, <code>0</code> for numbers, <code>false</code> for booleans, <code>null</code> for conditional flags, and <code>[]</code> for arrays. Copy this file — do not rename it in place, create a copy — to <code>data/sites/</code> with the new filename. The naming convention is <code>{state-abbrev}-{street-number}_{StreetName}.json</code>, all lowercase except the street name which is title-cased, with no spaces in the filename. A property at 2921 El Cajon Blvd in California becomes <code>ca-2921_ElCajon.json</code>.</p>
 
-      <p><strong>Copy <code>reference/site-template.json</code></strong> — it has every field pre-set to 0 or "". Fill in what you found:</p>
-      <ul>
-        <li><strong>Confirmed data:</strong> Use the actual value from your research.</li>
-        <li><strong>Unconfirmed strings:</strong> Use <code>"-- TBD: [what it is] | Source: [where to get it]"</code></li>
-        <li><strong>Unconfirmed numbers:</strong> Use <code>0</code> — the app handles zero gracefully (shows "--" or "N/A").</li>
-        <li><strong>Arrays (inspectors, planningAreas, overlayZones):</strong> Pre-populate all standard rows with TBD values so the structure is ready for the designer to fill.</li>
-      </ul>
+      <p><strong>Never copy from an existing site's JSON.</strong> If you copy from <code>ca-4335_Euclid.json</code> to start a new site file, you inherit Euclid's actual lat/lng, setbacks, buildings array, rotation angle, and potentially buildings already placed on the map. You will almost certainly miss one of these fields during cleanup and the new site will open with a neighbor's data silently embedded. The template is deliberately neutral. Always use the template.</p>
 
-      <p><strong>The notes field</strong> is critical — it's the master checklist of what's still TBD:</p>
-      <pre style="background:#0f172a;padding:12px;border-radius:6px;font-size:11px;color:#94a3b8;overflow-x:auto;margin-top:8px;">
-| TBD - A: legalDescription -- County Recorder or iMap
-| TBD - C: commFAR -- verify CCHS tier bonus in zoning code §14.2
-| TBD - D: TPA -- check SANDAG transit map layer
-| TBD - E: nefRatePerSF -- city fee schedule 2026 edition
-| TBD - F: architect, scopeOfWork -- from designer
-| TBD - G: all inspectors -- call Permit Center (619) 446-5000
-| TBD - H: rotation -- estimate from aerial alignment</pre>
+      <p><strong>Set the siteId field first:</strong> Open the new file in VS Code. Find the <code>siteId</code> field — it's near the top of the JSON. Set it to the uppercase version of the filename base: for <code>ca-2921_ElCajon.json</code>, the siteId is <code>"CA-2921_ELCAJON"</code>. The build system uses this string as the lookup key when compiling <code>__SITE_LIST__</code>. When a user selects this site from the dropdown, the browser sends this exact siteId string to the server as part of the activate request. When <code>site-data.json</code> is updated to point to this site, the <code>activeSiteId</code> value must be this exact string — character for character. A mismatch between the filename convention and the siteId will cause the site-switcher to malfunction or the site to fail to activate.</p>
 
-      <p><strong>Then add to the registry:</strong></p>
-      <ol>
-        <li>Open <code>data/sites/index.json</code></li>
-        <li>Add a new entry with: id, label, address, file, state, city, zoning, status: "skeleton", lastUpdated</li>
-      </ol>
+      <p><strong>Filling the .site block with confirmed data:</strong> Work through the <code>.site</code> object field by field, from top to bottom. For every field where you have a confirmed, source-verified value from your Steps 1–6 research, enter the value directly. For every field where you do not yet have verified data — whether it requires a phone call you haven't made, a PDF you haven't downloaded yet, or a GIS check you haven't done — write the TBD string: <code>"-- TBD: [description] | Source: [specific location]"</code>. The two-part format is important: the first part names what piece of information is missing, and the second part names exactly where to find it. "TBD" alone is useless. "-- TBD: DIF per unit for Mid-City community plan area | Source: City of San Diego fee schedule 2026, Table 4B" tells the next person or the next session exactly what to look for and where. The more specific the source instruction, the faster the TBD gets resolved.</p>
+
+      <p><strong>Seeding the .saved block:</strong> The <code>.saved</code> key holds live session state. At skeleton stage, fill only the values you can confidently set right now. Set <code>lat</code> to the centroid latitude you found in Step 2. Set <code>lng</code> to the centroid longitude. Set <code>rotation</code> to <code>0</code> — you have not yet opened the map and visually aligned the lot, so 0 is the correct placeholder that means "not yet set." Copy the setback values from <code>.site</code> into <code>.saved.setbacks</code> as an object <code>{front, rear, sideL, sideR}</code> — this is intentional duplication. The map engine reads its active working setbacks from <code>.saved.setbacks</code> at runtime, not from <code>.site</code>. If you don't copy them here, the map will open with zero setbacks. Set <code>buildings</code> to an empty array <code>[]</code> and <code>locked</code> to <code>false</code>. Leave all other <code>.saved</code> fields at their template default values.</p>
+
+      <p><strong>Writing the notes field:</strong> After entering all the data you have and flagging the unknowns, write a structured summary in the <code>notes</code> field. This is your work order for the next session. Format each outstanding item as a line starting with a pipe character: <code>| TBD - {section}: {field} -- {source}</code>. The section letter corresponds to these eight categories — A: Identity, B: Lot, C: Zoning, D: Overlays, E: Fees, F: Project, G: Inspectors, H: Coordinates. For example: <code>| TBD - C: cchsMaxHeight -- check CCHS tier map at sandiego.gov/planning</code> and <code>| TBD - E: nefRatePerSF -- City Heights row, SD fee schedule 2026</code> and <code>| TBD - G: all 5 inspectors -- call SD Permit Center (619) 446-5000</code>. When you open this site in a future session, the notes field is the first thing you read. It is your complete, prioritized work order with no hunting required.</p>
+
+      <p><strong>Registering the site in index.json:</strong> Open <code>data/sites/index.json</code>. This file is the master registry that the build system reads to compile <code>window.__SITE_LIST__</code>, which populates the site-switcher dropdown in the browser. Add a new entry to the <code>sites</code> array with these fields: <code>id</code> (the siteId string you set), <code>label</code> (a short 3–6 word human name for the dropdown display, e.g., <code>"2921 El Cajon"</code>), <code>address</code> (full address string), <code>file</code> (the filename relative to the data/sites/ folder, e.g., <code>"ca-2921_ElCajon.json"</code>), <code>state</code> (two-letter abbreviation), <code>city</code> (city name), <code>zoning</code> (zone designation string), <code>status</code> (set to <code>"skeleton"</code>), and <code>lastUpdated</code> (today's date as a string). Save the file. The next build will pick up this new entry and add it to the dropdown.</p>
+
+      <div class="nl-fields">
+        <div class="nl-field"><span class="nl-field-name">siteId</span> <span class="nl-field-type">string</span> Uppercase version of the filename base. e.g., "CA-2921_ELCAJON". Must exactly match the activeSiteId pointer when this site is active.</div>
+        <div class="nl-field"><span class="nl-field-name">notes</span> <span class="nl-field-type">string</span> Pipe-delimited TBD work order by section (A–H). Written at skeleton creation. Updated after each session. Read first on every session open.</div>
+        <div class="nl-field"><span class="nl-field-name">saved.setbacks</span> <span class="nl-field-type">object</span> {front, rear, sideL, sideR} — values copied from .site at creation time. Map engine reads active setbacks from .saved, not .site.</div>
+        <div class="nl-field"><span class="nl-field-name">saved.rotation</span> <span class="nl-field-type">number</span> Degrees of lot rotation. Set to 0 at skeleton stage. Updated after visual alignment on first map load.</div>
+        <div class="nl-field"><span class="nl-field-name">index.json: status</span> <span class="nl-field-type">string</span> "skeleton" at creation. Advance to "partial" when all zoning fields are confirmed. Advance to "complete" only when all 8 sections are verified.</div>
+      </div>
     </div>
   </div>
 
@@ -1039,21 +1357,20 @@
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A9</span>
-      Step 8 — Build, Activate, and Align
+      Step 8 — Build, Activate, and Align the Map
     </div>
     <div class="nl-prose">
-      <p><strong>Build:</strong> Run <code>py tools/build.py</code>. The pipeline reads every site JSON, injects all 3 globals into the HTML, and writes the compiled output.</p>
-      <p><strong>Activate:</strong> Select the new site from the dropdown (or POST <code>/api/sites/{id}/activate</code>). The server updates the activeSiteId pointer and rebuilds.</p>
-      <p><strong>Map loads:</strong> The satellite view centers on your saved lat/lng. The lot boundary is drawn — either as a rectangle (from lotWidth x lotDepth) or as a polygon (from parcelPolygon).</p>
+      <p><strong>What you are doing:</strong> running the build pipeline to compile the new site into the browser-ready HTML, activating that site in the dev server, and then performing the first visual alignment — dragging and rotating the lot overlay until it lines up precisely with the real parcel visible in the satellite imagery. This is the moment the site goes from a JSON file on disk to a live interactive map you can work with.</p>
 
-      <p><strong>Align the boundary to the aerial:</strong></p>
-      <ol>
-        <li>Drag the center pin so the lot rectangle/polygon lines up with the aerial photo of the property.</li>
-        <li>Use the Rotation slider to rotate until the lot edges match the aerial edges.</li>
-        <li>Set the correct CAD Zone in the COORD dropdown (CA_VI for San Diego, WA_N for Seattle area, etc.).</li>
-        <li>Click <strong>Lock Position</strong> when aligned — this prevents accidental moves.</li>
-        <li>Click <strong>Save Boundary</strong> — this persists the lat/lng, rotation, and lock state.</li>
-      </ol>
+      <p><strong>Running the build:</strong> Open a terminal session in any shell at the project root — in VS Code use Ctrl+` to open the integrated terminal. The working directory should be <code>C:\Users\napham\OneDrive - Stantec\ProjectBook-Planner</code>. Run the command <code>py tools/build.py</code> and press Enter. Watch the terminal for output. The build script announces each phase as it runs: reading the active site from <code>site-data.json</code>, loading the per-site JSON from <code>data/sites/</code>, reading all site files for <code>__ALL_SITE_DATA__</code>, reading index.json for <code>__SITE_LIST__</code>, inlining CSS, inlining all eight JS engine files, and writing the two output HTML files. When it finishes successfully, the terminal prints a confirmation line and returns to the prompt with no Python traceback. If you see a <code>KeyError</code>, <code>JSONDecodeError</code>, or any Python exception, the build failed. The most common cause is a syntax error in the JSON file you just created — a missing comma after an object property, a trailing comma after the last item in an array, a missing closing brace, or a string with an unescaped double quote inside it. Open the JSON file in VS Code; VS Code highlights JSON syntax errors in the editor and in the Problems panel. Fix the error, save the JSON, and run <code>py tools/build.py</code> again.</p>
+
+      <p><strong>Starting the dev server:</strong> Run <code>py tools/build.py serve</code>. The script starts a Python HTTP server on port 3040 and prints a message like <code>Serving at http://localhost:3040 — Press Ctrl+C to stop</code>. Leave this terminal open and the server running; do not close it or press Ctrl+C during your session. Open your browser and navigate to <code>http://localhost:3040</code>. The currently active site's InteractiveMap.html will load. Note: port <strong>3034</strong> does not work on this machine because Windows Hyper-V reserves it via HTTP.sys at the kernel level. If you attempt port 3034 you will see a connection refused error. Port 3040 is the correct development URL. The server must stay running for the site-activation POST, the save-to-JSON POST, and the rebuild-after-save behavior to function.</p>
+
+      <p><strong>Activating the new site:</strong> In the browser, look at the header bar. The site selector dropdown shows the currently active site's label. Open the dropdown — it is a scrollable list populated from <code>window.__SITE_LIST__</code>, which was built from <code>data/sites/index.json</code> in the last build. Your new site should appear in this list by the label you gave it. Click its label. The browser fires a <code>POST /api/sites/{id}/activate</code> request to the Python server, where <code>{id}</code> is the siteId you set. The server receives this, reads <code>site-data.json</code> from disk, replaces the <code>activeSiteId</code> value with the new ID, writes the file back, and immediately runs a full rebuild — reloading the new site's JSON and reinjecting all three globals into both HTML output files. The server returns a 200 OK response. The browser receives the OK and calls <code>location.reload()</code>. The page refreshes completely. On reload, <code>bootstrap.js</code> executes with the new site's data in <code>window.__SITE_DEFAULTS__</code>, <code>ConfigEngine.init()</code> reads the new state, and the Leaflet map opens centered at the <code>lat</code>/<code>lng</code> you set in the JSON.</p>
+
+      <p><strong>Verifying the first load:</strong> Zoom in to the parcel until you can clearly see lot boundaries and individual buildings in the satellite imagery. If you provided a <code>parcelPolygon</code> array, a yellow boundary polygon should be drawn on the map overlay. If you are using rectangle mode (no polygon), a yellow rectangle will be drawn from the lot width and depth. Verify that the drawn boundary roughly matches the real lot shape visible in the satellite image. The match does not need to be perfect at this stage — you will refine it with the rotation slider next — but the overlay should at least be on approximately the right block. If the overlay appears in completely the wrong location, the lat/lng values you entered may be reversed, or one of them may have had a copy error. Check the JSON, correct the values, rebuild, and reload.</p>
+
+      <p><strong>Aligning the lot rotation:</strong> Use the rotation slider in the sidebar. Drag it left and right and watch the overlay rotate on the map. Zoom in closely to one corner of the parcel — pick the clearest corner where the lot boundary lines are visible in the satellite imagery. Adjust the slider until the overlay edge at that corner runs parallel to and overlapping the real lot edge in the satellite photo. Then pan to the opposite corner and verify the alignment holds there too. When all four edges (or all polygon edges for irregular lots) are visually aligned, note the rotation angle shown by the slider control. Click the <strong>Lock Position</strong> button — this sets <code>locked: true</code> in the state, preventing accidental dragging or rotation in future sessions. Click <strong>Save Boundary</strong>. This fires <code>ExportEngine.save()</code>, which writes the current lat, lng, rotation, and locked=true values to both localStorage and <code>POST /save</code> on the server. The server updates the <code>.saved</code> key in the site's JSON file (preserving <code>.site</code> untouched) and rebuilds both HTML files. After the save completes, update <code>saved.rotation</code> directly in the site JSON with the confirmed rotation value as a redundant backup — localStorage can be cleared by browser settings, and having the rotation value baked directly into the JSON means the site will load pre-aligned even from a fresh browser.</p>
     </div>
   </div>
 
@@ -1061,29 +1378,29 @@
   <div class="nl-flow nl-detailed" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
       <span class="nl-num" style="background:#1d4ed8;color:#fff;">A10</span>
-      Step 9 — Iterate Until Complete
+      Step 9 — Iterate Until Every Field Is Confirmed
     </div>
     <div class="nl-prose">
-      <p>Sites are never done in one session. The designer feeds missing data over days or weeks. Each session:</p>
-      <ol>
-        <li>Check the <strong>notes</strong> field — it lists every TBD item by checklist section (A–H).</li>
-        <li>Designer provides new data (e.g., "the zoning is actually CC-3-9, here's the code PDF").</li>
-        <li>Agent updates the site JSON with confirmed values — replaces TBD strings with real data.</li>
-        <li>Rebuild. Verify the changes appear in the UI.</li>
-        <li>Cross off completed items in the notes field.</li>
-        <li>Update <code>index.json</code>: change status from "skeleton" to "partial" (some TBDs remain) or "complete" (all confirmed).</li>
-      </ol>
+      <p>A skeleton site is a placeholder. Its coordinates position the map correctly. Its zoning fields may already be correct if you obtained the code the same day. But in most cases, many fields will still carry TBD strings after the first session. This is normal and expected. Real-world data does not arrive all at once. It arrives in fragments, over days, sometimes weeks: a planning counter call yields the inspector names two days later; the fee schedule posted on the city website turns out to be last fiscal year's version and you wait for the updated PDF; the designer confirms the project program at the third pre-design meeting and you can finally fill in the <code>scopeOfWork</code>, <code>numUnits</code>, and <code>architect</code> fields; an overlay status request to the planning department takes three business days to get a written response.</p>
+
+      <p>Every time a new piece of confirmed data arrives, the update cycle is the same four-step sequence. First, open the site's JSON file in VS Code. You can navigate directly to it at <code>data/sites/{filename}.json</code> in the VS Code file explorer, or use Ctrl+P and type the filename. Second, find the TBD field. You can search the file using Ctrl+F and typing <code>-- TBD</code> to jump to each TBD entry in order. Replace the TBD string with the confirmed value — a number, a verified string, or true/false for a boolean flag. Save the JSON file. Third, in the terminal, run <code>py tools/build.py</code> and wait for the success message. Fourth, go to the browser and hard-refresh (Ctrl+Shift+R, or Ctrl+F5 on Windows — this bypasses cache and loads the freshly built HTML). Navigate to the section of the UI that displays the field you just updated — the zoning table in the sidebar, the fees section of the pre-application checklist, the inspector contacts card. Confirm the updated value now shows correctly in the rendered output.</p>
+
+      <p>If the browser still shows the old TBD value after a rebuild and hard-refresh, run through this diagnosis: confirm the build script printed a success message with no errors (JSON syntax issues will cause silent partial builds in some edge cases); confirm you saved the JSON file before running the build; confirm you ran a hard-refresh, not a regular refresh; check the browser developer console for JavaScript errors that might indicate a failed data injection. If all these check out and the value is still wrong, re-examine the JSON to confirm you edited the correct field in the correct section — it is possible to edit the right key name in the wrong context (e.g., updating the field in <code>.saved</code> when it belongs in <code>.site</code>).</p>
+
+      <p>As you close out confirmed items, update the <code>notes</code> field in the JSON. Remove or strikethrough the TBD lines for fields you have resolved. This keeps the notes field as a live, accurate work order rather than a historical log of everything that was ever unknown. When you have confirmed everything in the C section (zoning: setbacks, FAR, height, density), advance the <code>status</code> in <code>data/sites/index.json</code> for this site from <code>"skeleton"</code> to <code>"partial"</code>. A partial site is one whose zoning math is trustworthy — the feasibility calculations for unit count and buildable area can be meaningfully discussed with the designer — but whose fees, contacts, or overlay TBDs may still have some open items.</p>
+
+      <p>A site reaches <code>"complete"</code> status when every field in all eight sections — A through H — has been confirmed against a primary source, the notes field has no remaining TBD items, the overlay checks have all been resolved to <code>true</code> or <code>false</code> (no <code>null</code> entries remain), and a final review confirms the numbers make sense in context for this parcel. At that point: update <code>status</code> to <code>"complete"</code> in <code>index.json</code>, set <code>lastUpdated</code> to today's date, rebuild, and reload the browser for a final verification pass. The site is now ready for concept design massing. Every feasibility calculation the tool generates — unit count, buildable area, FAR, fee estimates, setback polygons on the map — is grounded in verified data from primary sources, not estimates or assumptions. The designer can proceed with confidence that the numbers reflect the real site.</p>
 
       <div style="margin-top:14px;">
         <strong>Status lifecycle:</strong><br>
         <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:#451a03;color:#fbbf24;font-size:12px;font-weight:600;margin:3px;">skeleton</span>
-        Just address + coordinates. Many TBDs.
+        Address + coordinates only. Many TBD fields. Map loads and positions correctly.
         <br>
         <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:#431407;color:#fb923c;font-size:12px;font-weight:600;margin:3px;">partial</span>
-        Zoning filled, some sections still TBD.
+        Zoning section confirmed. Fees, overlays, or contacts still have TBDs.
         <br>
         <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:#052e16;color:#4ade80;font-size:12px;font-weight:600;margin:3px;">complete</span>
-        All 8 checklist sections confirmed. Ready for concept design.
+        All 8 sections confirmed. Zero TBDs. Ready for concept design.
       </div>
     </div>
   </div>
@@ -1093,31 +1410,32 @@
     <div class="nl-flow-title">
       <span class="nl-num">B</span>
       Daily Work — Placing Buildings
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-map">MapEngine</span><span class="eng eng-setback">SetbackEngine</span><span class="eng eng-export">ExportEngine</span></span>
     </div>
     <div class="nl-chain">
       <div class="nl-node">
         <div class="nl-node-label">Open app</div>
-        <div class="nl-node-sub">py tools/build.py serve<br>localhost:3040</div>
+        <div class="nl-node-sub"><span class="eng eng-build">build.py</span><br>py tools/build.py serve<br>localhost:3040</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Map loads</div>
-        <div class="nl-node-sub">Last saved buildings<br>rendered on lot</div>
+        <div class="nl-node-sub"><span class="eng eng-boot">bootstrap.js</span> → <span class="eng eng-map">MapEngine</span><br>Last saved buildings<br>rendered on lot</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Drag building pin</div>
-        <div class="nl-node-sub">MapEngine snaps to lot edges<br>SetbackEngine clamps to boundary<br>Chain dims update live</div>
+        <div class="nl-node-sub"><span class="eng eng-map">MapEngine</span> snaps edges<br><span class="eng eng-setback">SetbackEngine</span> clamps<br>chain dims redraw live</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Adjust width / depth</div>
-        <div class="nl-node-sub">Type in sidebar inputs<br>Building footprint redraws instantly</div>
+        <div class="nl-node-sub"><span class="eng eng-config">ConfigEngine</span> state updated<br><span class="eng eng-map">MapEngine</span> redraws footprint</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Click Save Config</div>
-        <div class="nl-node-sub">ExportEngine.save()<br>Writes to localStorage + POST /save</div>
+        <div class="nl-node-sub"><span class="eng eng-export">ExportEngine</span>.save()<br>localStorage + POST /save</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-result">
@@ -1132,26 +1450,27 @@
     <div class="nl-flow-title">
       <span class="nl-num">C</span>
       Changing Setbacks
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-setback">SetbackEngine</span><span class="eng eng-export">ExportEngine</span></span>
     </div>
     <div class="nl-chain">
       <div class="nl-node">
         <div class="nl-node-label">Edit setback inputs</div>
-        <div class="nl-node-sub">Front / Rear / Side L / Side R<br>in Concept Design panel</div>
+        <div class="nl-node-sub"><span class="eng eng-config">ConfigEngine</span>.state.setbacks<br>Front / Rear / Side L / Side R</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Click Save Setbacks</div>
-        <div class="nl-node-sub">SetbackEngine.applySetbacks()<br>validates: front+rear &lt; lot depth</div>
+        <div class="nl-node-sub"><span class="eng eng-setback">SetbackEngine</span>.applySetbacks()<br>validates: front+rear &lt; lot depth</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Setback polygon redraws</div>
-        <div class="nl-node-sub">Yellow dashed outline shrinks inward<br>Buildings re-clamped to new zone</div>
+        <div class="nl-node-sub"><span class="eng eng-map">MapEngine</span> redraws outline<br><span class="eng eng-setback">SetbackEngine</span> re-clamps bldgs</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">ExportEngine.save()</div>
-        <div class="nl-node-sub">New setback values written<br>to ConfigEngine.state.setbacks</div>
+        <div class="nl-node-sub"><span class="eng eng-export">ExportEngine</span> writes<br>to <span class="eng eng-config">ConfigEngine</span>.state.setbacks</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-result">
@@ -1166,21 +1485,22 @@
     <div class="nl-flow-title">
       <span class="nl-num">D</span>
       Exporting to AutoCAD (LISP)
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-export">ExportEngine</span><span class="eng eng-map">MapEngine</span></span>
     </div>
     <div class="nl-chain">
       <div class="nl-node">
         <div class="nl-node-label">Set CAD Zone</div>
-        <div class="nl-node-sub">Pick CA State Plane VI<br>from COORD dropdown<br>(now saves on change)</div>
+        <div class="nl-node-sub"><span class="eng eng-config">ConfigEngine</span>.cad.cadZone<br>CA/WA State Plane code<br>saved on change</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Align map boundary</div>
-        <div class="nl-node-sub">Drag lot corners<br>Set rotation angle<br>Lock position</div>
+        <div class="nl-node-sub"><span class="eng eng-map">MapEngine</span> drag handles<br>Set rotation → lock position</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
         <div class="nl-node-label">Click Export LISP</div>
-        <div class="nl-node-sub">ExportEngine.generateLISP()<br>lot corners → proj4 → CAD coords</div>
+        <div class="nl-node-sub"><span class="eng eng-export">ExportEngine</span>.generateLISP()<br><span class="eng eng-map">MapEngine</span>.lotPoly → proj4 → CAD</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
@@ -1200,11 +1520,12 @@
     <div class="nl-flow-title">
       <span class="nl-num">E</span>
       Switching Between Sites
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-boot">bootstrap.js</span><span class="eng eng-config">ConfigEngine</span></span>
     </div>
     <div class="nl-chain">
       <div class="nl-node">
         <div class="nl-node-label">Pick site from dropdown</div>
-        <div class="nl-node-sub">Address selector in header<br>(populated from __SITE_LIST__)</div>
+        <div class="nl-node-sub"><span class="eng eng-boot">bootstrap.js</span><br>populated from __SITE_LIST__</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
@@ -1234,11 +1555,12 @@
     <div class="nl-flow-title">
       <span class="nl-num">F</span>
       What Happens When Save Fails
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-export">ExportEngine</span></span>
     </div>
     <div class="nl-chain">
       <div class="nl-node">
         <div class="nl-node-label">User clicks Save</div>
-        <div class="nl-node-sub">ExportEngine.save() fires</div>
+        <div class="nl-node-sub"><span class="eng eng-export">ExportEngine</span>.save() fires</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
@@ -1268,6 +1590,7 @@
     <div class="nl-flow-title">
       <span class="nl-num">G</span>
       Sampling Elevation
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-elev">ElevationTool</span><span class="eng eng-map">MapEngine</span></span>
     </div>
     <div class="nl-chain">
       <div class="nl-node">
@@ -1474,6 +1797,260 @@
     font-size: 11px;
     color: #64748b;
   }
+
+  /* ── Engine attribution badges ───────────────────── */
+  .eng {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .eng-config  { background:#0c4a6e; color:#38bdf8; }
+  .eng-map     { background:#3b0764; color:#c084fc; }
+  .eng-setback { background:#4c0519; color:#fb7185; }
+  .eng-export  { background:#052e16; color:#4ade80; }
+  .eng-ui      { background:#451a03; color:#fbbf24; }
+  .eng-elev    { background:#083344; color:#22d3ee; }
+  .eng-boot    { background:#1c1917; color:#a8a29e; }
+  .eng-build   { background:#052e01; color:#86efac; }
+
+  /* ── Engine toolbox cards ────────────────────────── */
+  .toolbox-header {
+    text-align: center;
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+  .toolbox-header::before,
+  .toolbox-header::after {
+    content: '';
+    display: inline-block;
+    width: 60px;
+    height: 1px;
+    background: #334155;
+    vertical-align: middle;
+    margin: 0 12px;
+  }
+  .toolbox-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 0 0 36px;
+  }
+  .toolbox-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .toolbox-card-name {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .toolbox-card-file {
+    font-size: 10px;
+    color: #64748b;
+    margin-bottom: 8px;
+    font-family: 'Cascadia Code', monospace;
+  }
+  .toolbox-card-role {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .toolbox-card-fns {
+    font-size: 10px;
+    color: #64748b;
+    font-family: 'Cascadia Code', monospace;
+    line-height: 1.7;
+  }
+</style>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- SYSTEM DETAIL FLOWS                                                     -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+
+<div style="max-width:1100px;margin:48px auto 0;">
+
+  <h2 style="text-align:center;font-size:22px;font-weight:700;color:#f8fafc;margin-bottom:6px;">System Detail — How the Engine Works Inside</h2>
+  <p style="text-align:center;color:#94a3b8;font-size:14px;margin-bottom:36px;">The mechanics behind chain dimensions, the save pipeline, and LISP export — plus known bugs and their root causes</p>
+
+  <!-- ─── H1: Chain Dimension System ──────────────────────────────────── -->
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #a855f7;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#7e22ce;color:#fff;">H1</span>
+      Chain Dimension System — How Measurements Are Drawn
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-setback">SetbackEngine</span></span>
+    </div>
+    <div class="nl-prose">
+      <p>Every dimension line you see on the map is drawn by <code>SetbackEngine.updateBldgDimLabels()</code> in <code>engine-setback.js</code>. This function is called after every building drag, after every setback change, and after every redraw. It removes all previously drawn dim layers and redraws the entire system from scratch each time.</p>
+
+      <p><strong>The local coordinate system:</strong> All geometry is computed in a rotated local frame aligned to the lot. The lot rotation angle (<code>state.rotation</code> in degrees) defines this frame. Two scale factors convert between geographic degrees and feet: <code>F_LAT = 364,566 ft/degree</code> (constant), and <code>F_LNG = 365,228 × cos(lat) ft/degree</code> (varies by latitude). In this local frame, the positive X axis points toward the lot's rear, and the positive Y axis points toward the lot's right side. The lot center is the origin <code>(0, 0)</code> at <code>state.lat, state.lng</code>. Converting a local point <code>(px, py)</code> back to a Leaflet <code>[lat, lng]</code> uses: <code>rx = px × cos(rot) − py × sin(rot)</code>, <code>ry = px × sin(rot) + py × cos(rot)</code>, then <code>[lat + ry/F_LAT, lng + rx/F_LNG]</code>.</p>
+
+      <p><strong>The chain concept:</strong> Instead of drawing individual per-building dimensions (one line for each building's width, one for its depth), the system draws a single continuous chain across the full lot width and a separate chain across the full lot depth. Each chain is an ordered list of boundary points along one axis. The distance between consecutive points in the list becomes one labeled dimension segment. Shared boundaries between buildings create one witness line that serves both adjacent segments simultaneously — this is what makes it a chain rather than a collection of individual dims.</p>
+
+      <p><strong>Collecting boundary points:</strong> Two arrays are assembled before drawing begins. <code>dPts</code> holds X positions along the depth axis: it starts with the rear lot edge (<code>−lotHalfDepth</code>) and the front lot edge (<code>+lotHalfDepth</code>), then adds the front and rear edges of every building copy. <code>wPts</code> holds Y positions along the width axis: it starts with the left and right lot edges, then adds the left and right edges of every building. Building edges are <code>cx ± halfDepth</code> and <code>cy ± halfWidth</code>, where <code>halfDepth</code> and <code>halfWidth</code> are the axis-aligned half-extents of the building's bounding box in local space, computed by <code>_buildingExtents()</code>. After collecting all points, both arrays are deduplicated and sorted. The sorted, deduplicated array is the complete chain for that axis.</p>
+
+      <p><strong>Perpendicular measurement guarantee:</strong> Because building positions and lot boundaries are all expressed in the same rotated local frame, every distance between consecutive chain points is an exact perpendicular measurement — the distance from one face to the next face measured at a right angle to both faces. This is correct regardless of the lot's geographic rotation angle. A distance of <code>18.0 ft</code> in the depth chain means the gap between those two surfaces, measured perpendicular to the lot's depth axis, is exactly 18.0 feet.</p>
+
+      <p><strong>Drawing each chain segment:</strong> The inner function <code>drawChain(chain, refCoord, isX, perpX, perpY, rotDeg, prefix)</code> draws one complete chain. <code>refCoord</code> is the perpendicular position at which the dim line runs — for the depth chain, this is an X position offset from the first building's left edge; for the width chain, it is a Y position offset from the first building's front edge. <code>perpX, perpY</code> is the unit vector pointing away from the lot in the direction the dim lines are drawn (either <code>+X, 0</code> or <code>0, +Y</code> depending on which side the chain is on). For each adjacent pair of boundary points, the function draws: two short dim line segments split around the text label position, two 45° tick marks at the ends of the segment, and a text label showing the distance in feet. The label is placed at the midpoint of the segment, rotated to align with the axis (<code>rotDeg</code> is <code>−state.rotation</code> so the text stays readable in the browser).</p>
+
+      <p><strong>Witness lines:</strong> At every boundary position in the chain, a short line is drawn perpendicular to the chain direction, extending from the building/lot edge out to the dim line position plus a 2-foot overshoot (<code>EXT = 5 ft</code> offset plus <code>EX2 = 2 ft</code> overshoot). This witness line is only drawn if at least one of its adjacent segments is visible (not hidden). Witness lines anchor each measurement visually to the exact surface being measured.</p>
+
+      <p><strong>Chain repositioning (drag):</strong> The user can drag a chain dim line perpendicular to its direction to reposition it for clarity. Dragging updates <code>MapEngine.chainWOffset</code> or <code>MapEngine.chainDOffset</code> in real time. These offsets are snapped to lot edges and building boundaries as the user drags, so the chain dim naturally "docks" at relevant measurement positions. The offsets are saved as part of <code>_payload()</code> and persist across rebuilds.</p>
+
+      <p><strong>Click-to-hide:</strong> Clicking any dim segment label hides that segment by adding its key to <code>MapEngine.hiddenDimKeys</code> (a Set). The key format is <code>chain_w_3</code> (width chain, segment index 3) or <code>chain_d_1</code> (depth chain, segment index 1). On the next redraw, segments with a key in <code>hiddenDimKeys</code> are skipped. The hidden set is persisted in <code>_payload().saved.hiddenDimKeys</code> as an array. On load, it is restored into a <code>new Set()</code> in <code>MapEngine</code>.</p>
+
+      <div class="nl-fields">
+        <div class="nl-field"><span class="nl-field-name">EXT = 5 ft</span> <span class="nl-field-type">const</span> Perpendicular offset from the building edge to the dim line. The dim line runs 5 ft outside the nearest building face.</div>
+        <div class="nl-field"><span class="nl-field-name">EX2 = 2 ft</span> <span class="nl-field-type">const</span> Additional witness line overshoot beyond the dim line. Witness lines extend from the building edge to EXT+EX2 = 7 ft total.</div>
+        <div class="nl-field"><span class="nl-field-name">TK = 1.2 ft</span> <span class="nl-field-type">const</span> Half-length of the 45° end tick marks on each dim segment.</div>
+        <div class="nl-field"><span class="nl-field-name">chainWOffset</span> <span class="nl-field-type">number (ft)</span> User drag offset for the width chain's perpendicular position. 0 = default (first building front edge). Saved in .saved.</div>
+        <div class="nl-field"><span class="nl-field-name">chainDOffset</span> <span class="nl-field-type">number (ft)</span> User drag offset for the depth chain's perpendicular position. 0 = default (first building left edge). Saved in .saved.</div>
+        <div class="nl-field"><span class="nl-field-name">hiddenDimKeys</span> <span class="nl-field-type">Set&lt;string&gt;</span> Set of dim segment keys suppressed by user click. Format: "chain_w_N" or "chain_d_N". Saved as array in .saved.hiddenDimKeys.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── H2: Save Architecture Detail ────────────────────────────────── -->
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #f59e0b;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#b45309;color:#fff;">H2</span>
+      Save Architecture — The Single Write Path
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-export">ExportEngine</span></span>
+    </div>
+    <div class="nl-prose">
+      <p>The entire application has exactly one save function: <code>ExportEngine.save()</code> in <code>engine-export.js</code>. No other code path writes state anywhere. Every button — Save Setbacks, Save Config, Save Boundary, the FAB button, the Lock toggle — all route to this one function. This guarantees that no matter which action the user takes, the save logic is applied consistently and no path is missed.</p>
+
+      <p><strong>Step A — Sync UI inputs to state:</strong> Before reading <code>ConfigEngine.state</code>, the function reads every active UI input element and writes its current value back into the state. This handles the case where the user has typed into an input but hasn't pressed Enter — the value would otherwise be in the DOM but not yet in the state object. The function syncs: all four setback inputs, all active building inputs (W, D, offsetX, offsetY, count, stackSpacing, stackAngle, orientation, stories, floorHeight, anchor), the commercial front toggle, and all MapEngine UI state (showBldgDims, hiddenDimKeys, chainWOffset, chainDOffset). After this sync, <code>ConfigEngine.state</code> is the authoritative, complete, current state of the application.</p>
+
+      <p><strong>Step B — Build the payload via <code>_payload()</code>:</strong> This private method reads <code>ConfigEngine.state</code> and constructs the canonical save object. <code>_payload()</code> is the single source of truth — every field that must survive a page reload must appear here. It is the only place in the codebase that decides what gets saved. The payload wraps everything inside a <code>.saved</code> key along with metadata fields (<code>project</code>, <code>siteId</code>). If a checklist state exists in localStorage under a <code>preapp_*</code> key, it is appended as <code>.checklist</code> — this allows the single save event to capture cross-tool state atomically.</p>
+
+      <p><strong>Step C — Write to localStorage:</strong> The payload is serialized to JSON and written to <code>localStorage['site_state']</code>. This write happens synchronously and completes in microseconds. It is the offline fallback — if the server is unreachable, or if the user is running in <code>file://</code> mode without the server, this is the only save path. On the next page load, <code>ConfigEngine.init()</code> reads from <code>localStorage['site_state']</code> and restores the full state without needing any server communication. The localStorage key is a single flat string — not namespaced by site — so switching to a different site replaces the key entirely. Historical state for other sites in localStorage is not maintained; the JSON file on disk is the permanent record.</p>
+
+      <p><strong>Step D — POST to dev server:</strong> If the page hostname is <code>localhost</code> or <code>127.0.0.1</code>, the payload is sent as a <code>POST /save</code> JSON request to the Python dev server at port 3040. The server receives the payload, reads the current site JSON file from <code>data/sites/</code> using the <code>siteId</code> in the payload, reads the existing <code>.site</code> key from the current file, and writes a new file with the same <code>.site</code> content plus the incoming <code>.saved</code> block overwritten. This is an atomic write: the server writes to a temp file first, then renames it over the original — the existing site JSON is never partially overwritten. After the write, the server immediately rebuilds both HTML output files so the injected <code>__SITE_DEFAULTS__</code> global in the HTML is current.</p>
+
+      <p><strong>Step E — Flash badge:</strong> On success, the "Saved" flash badge appears in the top-right corner of the map for 2 seconds. On server error (non-2xx response, or network failure), the badge turns red and shows "Save failed: [reason]" for 4 seconds. The badge resets after the timeout. localStorage was already written in Step C, so even after a server error the state is not lost.</p>
+
+      <p><strong>What is NOT saved:</strong> The <code>.site</code> key — all the static parcel data filled during the intake process. The live save path never touches it. Changing setbacks, moving buildings, adjusting rotation — none of these touch <code>address</code>, <code>apn</code>, <code>zoning</code>, <code>baseFAR</code>, <code>frontSetback</code>, or any other <code>.site</code> field. Those can only be changed by manually editing the JSON file and running the build.</p>
+
+      <div class="nl-fields">
+        <div class="nl-field"><span class="nl-field-name">localStorage['site_state']</span> <span class="nl-field-type">string (JSON)</span> Serialized _payload(). Written synchronously before the server POST. Restored by ConfigEngine.init() on page load. One key — no per-site namespacing.</div>
+        <div class="nl-field"><span class="nl-field-name">POST /save body</span> <span class="nl-field-type">JSON</span> Same _payload() object. Server reads .siteId to find the target JSON file, preserves .site, overwrites .saved, rebuilds HTML.</div>
+        <div class="nl-field"><span class="nl-field-name">Atomic write</span> <span class="nl-field-type">server behavior</span> Server writes payload to {filename}.tmp first, then renames to {filename}.json. The site JSON is never in a half-written state.</div>
+        <div class="nl-field"><span class="nl-field-name">_payload() is the spec</span> <span class="nl-field-type">rule</span> Adding any new piece of state to the app requires adding it to _payload() FIRST. Then add it to ConfigEngine.init() restore block. Then add it to the relevant redraw call.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── H3: LISP Export ──────────────────────────────────────────────── -->
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #22c55e;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#15803d;color:#fff;">H3</span>
+      LISP Export — From GPS Coordinates to AutoCAD Feet
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-export">ExportEngine</span><span class="eng eng-map">MapEngine</span></span>
+    </div>
+    <div class="nl-prose">
+      <p>The LISP export converts the lot boundary polygon drawn on the Leaflet map into an AutoLISP script that AutoCAD can execute to draw the same boundary at real-world surveying coordinates. The function is <code>ExportEngine.generateLISP()</code> in <code>engine-export.js</code>.</p>
+
+      <p><strong>Step 1 — Get the lot polygon vertices:</strong> <code>MapEngine.lotPoly</code> is the Leaflet polygon that draws the lot boundary (yellow outline) on the map. Calling <code>MapEngine.lotPoly.getLatLngs()[0]</code> returns the current array of <code>[lat, lng]</code> Leaflet LatLng objects for every corner of the polygon. For a rectangle lot, this is four points. For a polygon site with <code>parcelPolygon</code>, it is however many vertices the polygon has. These coordinates are in WGS84 decimal degrees — the same coordinate system GPS uses.</p>
+
+      <p><strong>Step 2 — Register the proj4 projection:</strong> <code>proj4.defs(ConfigEngine.cad.projection, ConfigEngine.cad.proj4Def)</code> registers the State Plane projection string into the proj4 library so it can be used in the conversion. <code>ConfigEngine.cad.projection</code> is a human-readable identifier like <code>"CA_VI_FT"</code>, and <code>ConfigEngine.cad.proj4Def</code> is the full PROJ.4 definition string for that zone (e.g., for California Zone VI: <code>+proj=lcc +lat_1=32.78... +units=us-ft +no_defs</code>). Both are looked up from <code>ConfigEngine.CAD_SYSTEMS[cadZone]</code> using the <code>cadZone</code> field from the site JSON.</p>
+
+      <p><strong>Step 3 — Project each vertex from WGS84 to State Plane:</strong> For each lot corner, <code>proj4("WGS84", ConfigEngine.cad.projection, [pt.lng, pt.lat])</code> takes the GPS decimal-degree coordinates and returns a two-element array of <code>[easting, northing]</code> in US survey feet. Note that proj4 takes the inputs in <code>[longitude, latitude]</code> order (X first, Y second) — not the Leaflet convention of latitude-first. The returned values are real-world State Plane coordinates in survey feet, matching what would appear on a licensed surveyor's boundary map for this parcel.</p>
+
+      <p><strong>Step 4 — Format the AutoLISP script:</strong> The output is a text string of AutoLISP commands. The header comments embed the APN, rotation angle, and coordinate system name as a reference record. The body is a single <code>(command "_pline" ...)</code> call. Each vertex is written as a quoted <code>"easting,northing"</code> coordinate pair — AutoCAD's pline command accepts coordinates in this format when entered as a string literal. The last argument is <code>"c"</code> (close), which connects the last vertex back to the first to close the polyline ring. Two final lines call <code>_zoom e</code> (zoom extents) and print a success message to the AutoCAD command line.</p>
+
+      <p><strong>Step 5 — Deliver the output:</strong> The LISP string is placed into the <code>#outputCoords</code> textarea so the user can copy it. A copy of the state (APN, address, lat, lng, rotation, setbacks, LISP text) is written to <code>localStorage['last_lisp_export']</code>. The full save chain (<code>this.save()</code>) fires to persist the current map state. Then a JSON file is downloaded as <code>site-calibration_{APN}.json</code> containing the same state snapshot — this serves as a portable record of what was exported and when.</p>
+
+      <p><strong>What the accuracy depends on:</strong> The LISP coordinates are only as accurate as the lot polygon visible in the map. For a rectangle site, the polygon is derived from <code>lotWidth × lotDepth</code> and the rotation and lat/lng you set. The accuracy depends entirely on how precisely you aligned the polygon to the aerial: the center pin position determines the absolute coordinates, and the rotation angle determines the orientation. For a polygon site with a <code>parcelPolygon</code> array sourced from the GIS portal, the vertices are from the county's recorded survey, and the alignment depends on how well <code>saved.lat/lng</code> and <code>saved.rotation</code> match the polygon centroid and orientation.</p>
+
+      <p><strong>Pasting into AutoCAD:</strong> Open AutoCAD. Type <code>APPLOAD</code>, paste the LISP text into a temp .lsp file and load it — or use the AutoCAD command line directly and paste. AutoCAD draws the closed polyline at State Plane coordinates. The polyline's corners should match the parcel corners on any licensed survey for this site within the precision of the alignment step.</p>
+
+      <div class="nl-fields">
+        <div class="nl-field"><span class="nl-field-name">proj4("WGS84", zone, [lng, lat])</span> <span class="nl-field-type">function call</span> Projects GPS decimal degrees → State Plane survey feet. Note: proj4 takes [lng, lat] (X before Y), not Leaflet's [lat, lng].</div>
+        <div class="nl-field"><span class="nl-field-name">cadZone</span> <span class="nl-field-type">string (site JSON)</span> Determines the State Plane zone. Set once during address intake. Must be correct for the LISP coordinates to land on the right location in AutoCAD.</div>
+        <div class="nl-field"><span class="nl-field-name">lotPoly.getLatLngs()[0]</span> <span class="nl-field-type">Leaflet API</span> Returns the polygon vertex array currently drawn on the map — 4 corners for rectangle mode, N corners for polygon mode. This is what gets projected.</div>
+        <div class="nl-field"><span class="nl-field-name">_zoom e</span> <span class="nl-field-type">AutoCAD command</span> Appended to the LISP script. Zooms AutoCAD extents to show the newly drawn boundary. Optional but useful for confirming the draw landed correctly.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── H4: Known Bugs ───────────────────────────────────────────────── -->
+  <div class="nl-flow nl-detailed" style="border-left:4px solid #f43f5e;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#be123c;color:#fff;">H4</span>
+      Known Bugs — Chain Dims on Slanted and Polygon Lots
+      <span style="margin-left:auto;display:flex;gap:5px;"><span class="eng eng-setback">SetbackEngine</span><span style="font-size:11px;color:#64748b;align-self:center;">bug report</span></span>
+    </div>
+    <div class="nl-prose">
+      <p>Two active, confirmed bugs affect the chain dimension system for lots that are rotated to non-axis-aligned angles (not 0°, 90°, 180°, 270°) and for lots that use a <code>parcelPolygon</code> array. Both bugs are in <code>SetbackEngine.updateBldgDimLabels()</code>. Cannington works despite being slanted because it is a simple polygon whose visual result happens to be acceptable with the current offset error. El Cajon fails visibly because it is an irregular polygon whose GIS-derived vertices expose the coordinate system mismatch precisely.</p>
+
+      <hr style="border-color:#334155;margin:18px 0;">
+
+      <p><strong style="color:#f87171;">Bug KB-1 — Polygon extent query uses the wrong origin (polygon centroid vs. pin position)</strong></p>
+
+      <p>The chain dim system needs to know the polygon boundary extent at the X position (or Y position) where the chain line runs. This is done by <code>polyExtentAt(pos, isX)</code>, which receives a position and scans across the polygon vertex array to find the min/max crossing point.</p>
+
+      <p>The problem is that <code>polyLocalVerts</code> — the polygon vertex array — is computed in a coordinate frame centered on the polygon's geographic centroid (<code>ccLat, ccLng</code>). The centroid is computed inside <code>updateBldgDimLabels()</code> by averaging all polygon vertices. But the position values being queried — <code>chainRefX</code> and <code>chainRefY</code> — are in a coordinate frame centered on <code>state.lat, state.lng</code>, which is the pin the user placed on the map. These two origins can differ by several feet, on any lot where the designer did not place the pin at the exact polygon centroid.</p>
+
+      <p>When <code>polyExtentAt(chainRefX, true)</code> is called and the two origins are offset, the function is querying the Y extent of the polygon at an X position that is displaced from where it should be. If the lot is rectangular this mismatch has no visual effect because the polygon spans the full width regardless of where along the depth axis you query. For an irregular polygon — one where the width varies depending on where you are along the depth axis — the returned extent is wrong. The chain endpoints land at the wrong Y positions, causing the chain to visually extend outside the polygon boundary on one side or to fall short on the other.</p>
+
+      <p><strong style="color:#fbbf24;">Root cause code (engine-setback.js, updateBldgDimLabels):</strong></p>
+      <pre style="background:#0f172a;padding:12px;border-radius:6px;font-size:11px;color:#94a3b8;overflow-x:auto;margin:10px 0;">
+// polyLocalVerts are relative to ccLat/ccLng (polygon centroid)
+polyLocalVerts.push({ x: clx, y: cly });   // centroid-relative
+
+// BUT chainRefX is relative to state.lat/state.lng (the pin)
+chainRefX = cxFirst - halfDepth;           // pin-relative
+
+// MISMATCH: querying centroid-frame polygon with pin-frame position
+var wExt = polyExtentAt(chainRefX, true);  // WRONG when centroid != pin</pre>
+
+      <p><strong style="color:#86efac;">Fix required:</strong> After computing <code>polyLocalVerts</code>, apply an offset that translates from the centroid frame to the pin frame. Compute the centroid's position in local coordinates relative to the pin: <code>dcLat = (ccLat − state.lat) × F_LAT</code>, <code>dcLng = (ccLng − state.lng) × F_LNG</code>, then rotate into local axes and add to every vertex. With this fix, <code>polyLocalVerts[i].x</code> would be in the same coordinate system as <code>chainRefX</code>, and <code>polyExtentAt</code> would return a correct result. <em>Status: not yet fixed. Fix must be validated on Westminster, Cannington, and El Cajon simultaneously.</em></p>
+
+      <hr style="border-color:#334155;margin:18px 0;">
+
+      <p><strong style="color:#f87171;">Bug KB-2 — Witness lines cross the property boundary with no clipping</strong></p>
+
+      <p>Every boundary position in a chain (lot edges and building edges) has a witness line drawn from it, perpendicular to the chain direction, extending outward from the lot. The witness line extends <code>EXT + EX2 = 7 ft</code> total from the boundary position in the perpendicular direction. There is no check that this extension stays within the lot polygon.</p>
+
+      <p>For the depth chain (which runs along the lot depth axis), witness lines extend in the ± Y direction (the lot width axis). The witness lines at the two lot edges — front and rear — extend outward and appear correctly outside the lot. But the witness lines at intermediate building edges also extend 7 ft in the Y direction from their X position. If a building is at a non-zero Y offset, or if the lot is an irregular polygon where the boundary at that Y offset is not far enough from the building, the witness line will extend past the property line.</p>
+
+      <p>For the width chain (which runs along the lot width axis), witness lines extend in the ± X direction. When a building is near the front or rear of the lot, the witness line at the lot's front/rear edge also extends outward, and those extensions appear in front of or behind the lot polygon boundary — visually crossing the property line.</p>
+
+      <p><strong style="color:#fbbf24;">Why this is wrong:</strong> The property line is a legal boundary. Any dimension line that crosses it is visually ambiguous — it could suggest a measurement reference point outside the parcel. The rule is that no dimension annotation element should cross a property line. In professional plan drafting, witness lines terminate at or slightly outside the property boundary and never re-enter the lot from the outside.</p>
+
+      <p><strong style="color:#86efac;">Fix required:</strong> The witness line endpoint must be clamped so it does not cross the nearest property boundary. For rectangle lots, the boundary positions are known exactly (<code>±lotHD</code>, <code>±lotHW</code>) and the clamp is simple. For polygon lots, the boundary position at the witness line's position on the chain must be looked up via <code>polyExtentAt</code> (once KB-1 is fixed so the frame is correct), and the witness line endpoint trimmed to that boundary value plus a small overshoot. <em>Status: not yet fixed. Depends on KB-1 fix for correct behavior on polygon sites.</em></p>
+
+      <div class="nl-fields">
+        <div class="nl-field"><span class="nl-field-name">Cannington</span> <span class="nl-field-type">affected</span> Polygon site. Works visually because the lot is nearly rectangular and the pin offset from centroid is small. Bug KB-1 exists but is not visible at normal zoom.</div>
+        <div class="nl-field"><span class="nl-field-name">El Cajon</span> <span class="nl-field-type">BROKEN</span> Irregular polygon. Pin position diverges from polygon centroid. KB-1 causes chain endpoints to land outside the polygon. KB-2 causes witness lines to cross the boundary.</div>
+        <div class="nl-field"><span class="nl-field-name">Westminster</span> <span class="nl-field-type">known unstable</span> GIS polygon ingested without pin realignment (commit b5c91c5). Pin and centroid are offset. Requires master control visual validation against stable tag v0.9.0 before fix.</div>
+        <div class="nl-field"><span class="nl-field-name">KB-1 fix location</span> <span class="nl-field-type">engine-setback.js</span> In updateBldgDimLabels(), after the polyLocalVerts loop. Add centroid→pin offset translation to all vertices before calling polyExtentAt.</div>
+        <div class="nl-field"><span class="nl-field-name">KB-2 fix location</span> <span class="nl-field-type">engine-setback.js</span> In drawChain(). Witness line endpoint must be clamped to the polygon/lot boundary at the chain position. Requires KB-1 is fixed first for polygon sites.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  /* ── system detail section uses same nl-flow styles ── */
 </style>
 
 <div class="footer" style="margin-top:48px;">

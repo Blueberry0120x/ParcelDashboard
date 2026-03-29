@@ -3,6 +3,54 @@
 > Single rolling note. Newest entries at top. Controller: check this file first.
 > Format: `## [YYYY-MM-DD HH:MM] Topic` per entry. Mark resolved items with ~~strikethrough~~.
 
+## [2026-03-29 22:00] SESSION SELF-EVAL — Engine Contract + 12 Skills + 7 Fixes
+
+### What was done
+1. **Engine Contract** added to `Output/architecture.html` (ownership table, coordinate frames, 7 rules, debug cheat sheet) + condensed version in `CLAUDE.md`
+2. **12 project skills** created in `.claude/skills/`:
+   - `engine-lookup` — operation ownership lookup before coding
+   - `engine-contract` — 7 binding rules preventing drift
+   - `debug-symptom` — symptom → engine/function mapping
+   - `gis-intake` — full address intake procedure
+   - `data-parse` — JSON → build → browser data flow
+   - `dimensions` — chain dims, witness lines, perpendicular math
+   - `dim-merge` — NEW feature: combine adjacent dim segments
+   - `save-flow` — full save chain (6 steps)
+   - `lot-boundary` — rectangle/polygon modes, clamping, snapping
+   - `map-sync` — coordinates, drag, site switching, checklist sync
+   - `lisp-export` — GPS → proj4 → AutoCAD LISP
+   - `setback-dims` — bold yellow setback distance labels
+
+### Bugs fixed
+3. **Dim zoom-out disappearance** — text gap `TO` exceeded edge length at low zoom. Clamped to 30% of segment.
+4. **Red boundary dims not showing on load** — `showDims` defaulted to `false`. Now defaults `true`.
+5. **Checklist site sync** — checklist now reads `__ALL_SITE_DATA__` when localStorage `selected_site` differs from baked data. Two-way sync works.
+6. **Hidden/merged/dragged dims not saving** — 3 missing `ExportEngine.save()` calls added.
+7. **Laux lot dimensions wrong** — was 60x120 (assumed), corrected to 70x103 from assessor tract map Book 231 Page 54.
+8. **Laux setbacks wrong** — `.saved` had 4/10/4/4, corrected to match `.site` zoning values 20/10/5/5.
+9. **Rectangle setback dims missing** — `drawSetbacks()` only had polygon branch. Added rectangle branch with bold yellow labels.
+
+### New features
+10. **Dim merge button** — blue toggle below drag button. Click segments to combine adjacent dims into one measurement. Witness lines at merge points removed. Persisted in `_payload().mergedDimKeys`.
+11. **LISP export enhanced** — now includes drawing setup (units, coord system code), per-vertex CAD coords + GPS lat/lng, address/APN/rotation header.
+
+### Version tag comparison (all stable tags audited)
+- Save flow: unchanged since v1.1-stable (same 6 steps)
+- Engine ownership: unchanged since dev4-stable (same 8 files)
+- Drift root cause confirmed: polygon support (v5.0+) added Frame A math inside SetbackEngine without documenting the crossing
+- `_clampToLot` grew from 18→65 lines (polygon + stackAngle), `updateBldgDimLabels` from 67→210 lines (polyExtentAt)
+
+### Errors made this session
+- Entered Laux lot as 60x120 without reading tract map (was 70x103). Fixed.
+- Changed proj4 to US Survey Feet when AutoCAD uses international feet. Reverted. All US zones use intl ft (0.3048).
+
+### Pending
+- KB-1 (polygon centroid vs pin origin) — not fixed, documented in architecture.html H4
+- KB-2 (witness lines cross boundary) — not fixed, depends on KB-1
+- Assessor map stored: `reference/assessor-maps/231-54_OrangeCounty_Laux.pdf`
+
+---
+
 ---
 
 ## [2026-03-29 12:00] Build pipeline upgraded: Python is now canonical

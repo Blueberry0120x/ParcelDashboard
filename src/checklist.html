@@ -359,9 +359,18 @@ const {useState,useEffect,useCallback,useRef}=React;
 function useMobile(bp=768){const[m,setM]=useState(()=>window.innerWidth<bp);useEffect(()=>{const h=()=>setM(window.innerWidth<bp);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[bp]);return m;}
 const SITE_LIST = window.__SITE_LIST__ || [];
 const RAW_SD = window.__SITE_DEFAULTS__ || {};
+const ALL_DATA = window.__ALL_SITE_DATA__ || {};
 const selectedSite = (function(){try{return localStorage.getItem('selected_site');}catch(e){return null;}})();
-const fallbackSite = SITE_LIST.find(function(s){return s.siteId === (RAW_SD.siteId || selectedSite);}) || SITE_LIST[0] || {};
-const SD = Object.assign({}, fallbackSite, RAW_SD);
+// If user selected a different site on the map, use that site's data from __ALL_SITE_DATA__
+const EFFECTIVE_SD = (function(){
+  if (selectedSite && selectedSite !== RAW_SD.siteId && ALL_DATA[selectedSite]) {
+    var d = ALL_DATA[selectedSite];
+    return Object.assign({}, d.site || {}, d.saved || {}, {siteId: selectedSite});
+  }
+  return RAW_SD;
+})();
+const fallbackSite = SITE_LIST.find(function(s){return s.siteId === (EFFECTIVE_SD.siteId || selectedSite);}) || SITE_LIST[0] || {};
+const SD = Object.assign({}, fallbackSite, EFFECTIVE_SD);
 
 // Seed checklist buildings from map's live localStorage state, then fall back to baked SD
 function seedFromMap(){
@@ -1342,11 +1351,10 @@ window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if
   function getState(id){return id?id.split('-')[0]:'';}
   window.switchSite=function(siteId){
     if(!siteId)return;
-    var sd=window.__SITE_DEFAULTS__||{};
     safeStorageSet('selected_site',siteId);
     var st=getState(siteId);if(st)safeStorageSet('selected_state',st);
     safeStorageRemove('site_state');
-    if(siteId===sd.siteId||location.protocol==='file:'){location.reload();return;}
+    if(location.protocol==='file:'){location.reload();return;}
     fetch('/api/sites/'+encodeURIComponent(siteId)+'/activate',{method:'POST'})
       .then(function(r){if(!r.ok)throw new Error('activate failed');return r.text();})
       .then(function(){location.reload();})

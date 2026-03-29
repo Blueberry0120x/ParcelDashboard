@@ -574,6 +574,17 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .leaflet-control-dim-drag.dim-drag-active a:hover { background: #c53030; }
 
+/* Dim merge control */
+.leaflet-control-dim-merge a { color: #4a5568; cursor: pointer; }
+.leaflet-control-dim-merge a:hover { color: #1a202c; background: #f0f0f0; }
+.leaflet-control-dim-merge.dim-merge-active a {
+    color: #fff; background: #2b6cb0;
+}
+.leaflet-control-dim-merge.dim-merge-active a:hover { background: #2c5282; }
+.dim-merge-mode-on .chain-dim-line { stroke: #2b6cb0 !important; cursor: pointer; }
+.dim-merge-mode-on .chain-dim-line:hover { stroke: #2c5282 !important; }
+.dim-merged { color: #2b6cb0 !important; font-weight: 700; }
+
 /* Banner merge / split */
 .banner-stat.merge-ready {
     background: rgba(255,255,255,0.18) !important;

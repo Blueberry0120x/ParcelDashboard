@@ -6,18 +6,46 @@ const ExportEngine = {
         const latlngs = MapEngine.lotPoly.getLatLngs()[0];
         proj4.defs(ConfigEngine.cad.projection, ConfigEngine.cad.proj4Def);
 
-        let out = ";; ==========================================\n";
-        out += ";; AUTOLISP BOUNDARY SCRIPT - " + ConfigEngine.data.apn + "\n";
-        out += ";; Rotation Angle: " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
         var cadZone = ConfigEngine.data.cadZone || "CA_VI";
         var cadLabel = (ConfigEngine.CAD_SYSTEMS[cadZone] || {}).label || ConfigEngine.cad.projection;
-        out += ";; System: " + cadLabel + " (Intl Ft)\n";
-        out += ";; ==========================================\n\n(command \"_pline\"\n";
+        // AutoCAD Map 3D coordinate system codes
+        var acad_cs = { CA_VI: "CAHP-VIF", CA_V: "CAHP-VF", CA_IV: "CAHP-IVF", CA_III: "CAHP-IIIF", WA_N: "WAHP-NF", WA_S: "WAHP-SF" };
+        var csCode = acad_cs[cadZone] || "CAHP-VIF";
+
+        let out = ";; ==========================================\n";
+        out += ";; AUTOLISP BOUNDARY SCRIPT\n";
+        out += ";; ==========================================\n";
+        out += ";; APN:        " + ConfigEngine.data.apn + "\n";
+        out += ";; Address:    " + ConfigEngine.data.address + "\n";
+        out += ";; Rotation:   " + ConfigEngine.state.rotation.toFixed(1) + " degrees\n";
+        out += ";; Coord Sys:  " + cadLabel + "\n";
+        out += ";; Center:     " + ConfigEngine.state.lat.toFixed(8) + ", " + ConfigEngine.state.lng.toFixed(8) + " (lat, lng)\n";
+        out += ";; ==========================================\n";
+        out += ";;\n;; VERTEX COORDINATES\n;;\n";
 
         const ptNames = ["Pt 1 (Front Left)", "Pt 2 (Back Left)", "Pt 3 (Back Right)", "Pt 4 (Front Right)"];
+        var coordLines = [];
         latlngs.forEach((pt, i) => {
             const ca = proj4("WGS84", ConfigEngine.cad.projection, [pt.lng, pt.lat]);
-            out += "  \"" + ca[0].toFixed(4) + "," + ca[1].toFixed(4) + "\"   ;; " + ptNames[i] + "\n";
+            var label = i < ptNames.length ? ptNames[i] : "Pt " + (i + 1);
+            out += ";;   " + label + "\n";
+            out += ";;     CAD:  E " + ca[0].toFixed(4) + "  N " + ca[1].toFixed(4) + "\n";
+            out += ";;     GPS:  " + pt.lat.toFixed(8) + ", " + pt.lng.toFixed(8) + "\n";
+            coordLines.push("  \"" + ca[0].toFixed(4) + "," + ca[1].toFixed(4) + "\"");
+        });
+        out += ";;\n;; ==========================================\n\n";
+        out += ";; --- DRAWING SETUP ---\n";
+        out += "(command \"_-units\" \"4\" \"8\" \"2\" \"4\" \"0.0\" \"y\")\n";
+        out += ";; Units: Architectural (Feet-Inches)\n";
+        out += "(setvar \"LUNITS\" 4)  ;; Architectural\n";
+        out += "(setvar \"INSUNITS\" 2)  ;; Feet\n";
+        out += ";; Coordinate system: " + csCode + " (" + cadLabel + ")\n";
+        out += "(if (= (type ade-prefsetval) 'SUBR) (ade-prefsetval \"DefaultCoordinateSystem\" \"" + csCode + "\"))\n";
+        out += "(princ \"\\nDrawing units: Feet | Coord sys: " + csCode + "\")\n\n";
+        out += ";; --- LOT BOUNDARY ---\n";
+        out += "(command \"_pline\"\n";
+        coordLines.forEach(function(cl, i) {
+            out += cl + "   ;; " + (i < ptNames.length ? ptNames[i] : "Pt " + (i + 1)) + "\n";
         });
         out += "  \"c\"\n)\n(command \"_zoom\" \"e\")\n(princ \"\\nLot Plotted.\")\n(princ)";
         document.getElementById('outputCoords').value = out;
@@ -105,7 +133,8 @@ const ExportEngine = {
         // Sync MapEngine UI state -> ConfigEngine.state (single source of truth)
         if (typeof MapEngine !== 'undefined') {
             if (MapEngine.showBldgDims != null)  s.showBldgDims  = MapEngine.showBldgDims;
-            if (MapEngine.hiddenDimKeys)         s.hiddenDimKeys = [...MapEngine.hiddenDimKeys];
+            if (MapEngine.hiddenDimKeys)         s.hiddenDimKeys  = [...MapEngine.hiddenDimKeys];
+            if (MapEngine.mergedDimKeys)         s.mergedDimKeys  = [...MapEngine.mergedDimKeys];
             if (MapEngine.chainWOffset != null)  s.chainWOffset  = MapEngine.chainWOffset;
             if (MapEngine.chainDOffset != null)  s.chainDOffset  = MapEngine.chainDOffset;
         }
@@ -138,6 +167,7 @@ const ExportEngine = {
                 commFront:      s.commFront,
                 showBldgDims:   s.showBldgDims  ?? false,
                 hiddenDimKeys:  s.hiddenDimKeys  ? [...s.hiddenDimKeys] : [],
+                mergedDimKeys:  s.mergedDimKeys  ? [...s.mergedDimKeys] : [],
                 chainWOffset:   s.chainWOffset  ?? 0,
                 chainDOffset:   s.chainDOffset  ?? 0,
                 mapOpacity:     s.mapOpacity,

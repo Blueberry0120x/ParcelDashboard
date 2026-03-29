@@ -4,13 +4,15 @@
 const MapEngine = {
     map: null, dragMarker: null, lotPoly: null, commPoly: null,
     gridLayer: null, setbackPoly: null, buildingPolys: [], buildingMarkers: [],
-    dimLabels: [], showDims: false, setbackDimLabels: [],
+    dimLabels: [], showDims: true, setbackDimLabels: [],
     bldgDimLabels: [], showBldgDims: false,
     hiddenDimKeys: new Set(),  // persists across redraws; cleared on dim toggle
+    mergedDimKeys: new Set(),  // segments merged into predecessor — draws one combined dim
     chainWOffset: 0, chainDOffset: 0,  // perpendicular offsets for chain dim repositioning
     _isDragging: false,        // true during any drag — suppresses dim rebuild and save
     _saveTimer:  null,         // debounce handle for ExportEngine.save()
     dimDragMode: false,        // when true, clicking dim lines activates drag handle
+    dimMergeMode: false,       // when true, clicking dim segments merges them with neighbor
     // Vehicle overlay
     vehiclePolys: [], vehicleMarkers: [], vehicleLabels: [],
     VEHICLE_TYPES: {
@@ -641,6 +643,38 @@ const MapEngine = {
             }
         });
         this.map.addControl(new DimDragCtrl());
+
+        // Merge dims toggle — click segments to combine adjacent ones
+        const DimMergeCtrl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-dim-merge');
+                c.innerHTML = '<a href="#" title="Merge dimensions — click adjacent dim segments to combine them into one measurement. Click again to unmerge." role="button" aria-label="Toggle dimension merge">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<line x1="3" y1="12" x2="21" y2="12"/>' +
+                    '<line x1="3" y1="6" x2="3" y2="18"/>' +
+                    '<line x1="21" y1="6" x2="21" y2="18"/>' +
+                    '<line x1="12" y1="9" x2="12" y2="15" stroke-dasharray="2 2" opacity="0.5"/>' +
+                    '<path d="M8 9l4 3-4 3" fill="none"/>' +
+                    '</svg></a>';
+                L.DomEvent.disableClickPropagation(c);
+                c.querySelector('a').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self.dimMergeMode = !self.dimMergeMode;
+                    c.classList.toggle('dim-merge-active', self.dimMergeMode);
+                    self.map.getContainer().classList.toggle('dim-merge-mode-on', self.dimMergeMode);
+                    if (self.dimMergeMode && !self.showBldgDims) {
+                        self.showBldgDims = true;
+                        self.showDims = true;
+                        const dimBtn = document.getElementById('bldgDimBtn');
+                        if (dimBtn) { dimBtn.classList.add('active'); dimBtn.textContent = 'Hide Dims'; }
+                    }
+                    if (typeof SetbackEngine !== 'undefined') SetbackEngine.updateBldgDimLabels();
+                });
+                return c;
+            }
+        });
+        this.map.addControl(new DimMergeCtrl());
     },
 
     buildRecenterControl: function() {
@@ -885,10 +919,12 @@ const MapEngine = {
             // Extension (witness) lines from corners past dim line
             pLine([e.p1, { x: e.p1.x + (edgeOff+EX2)*e.px, y: e.p1.y + (edgeOff+EX2)*e.py }]);
             pLine([e.p2, { x: e.p2.x + (edgeOff+EX2)*e.px, y: e.p2.y + (edgeOff+EX2)*e.py }]);
-            // Dim line split around text
+            // Dim line split around text — clamp gap to 30% of edge so dims stay visible when zoomed out
             const mid = { x: (d1.x+d2.x)/2, y: (d1.y+d2.y)/2 };
-            pLine([d1, { x: mid.x - TO*e.ux, y: mid.y - TO*e.uy }]);
-            pLine([{ x: mid.x + TO*e.ux, y: mid.y + TO*e.uy }, d2]);
+            const edgeLen = Math.sqrt((d2.x-d1.x)*(d2.x-d1.x)+(d2.y-d1.y)*(d2.y-d1.y));
+            const gap = Math.min(TO, edgeLen * 0.3);
+            pLine([d1, { x: mid.x - gap*e.ux, y: mid.y - gap*e.uy }]);
+            pLine([{ x: mid.x + gap*e.ux, y: mid.y + gap*e.uy }, d2]);
             // 45-deg ticks
             const tkX = (e.ux + e.px) * 0.7071 * TK;
             const tkY = (e.uy + e.py) * 0.7071 * TK;

@@ -137,6 +137,51 @@ This is a BLOCKING rule. Do not loop on a failing pattern — step back and ask:
 - Dead code: when a design changes (e.g. individual dims → chain dims),
   remove unused helpers immediately — don't leave them for cleanup later.
 
+## ── ENGINE CONTRACT (BINDING — NO EXCEPTIONS) ────────────────────────────────
+
+Full visual version: `Output/architecture.html` → Engine Contract section.
+
+### Ownership (one engine per job — no overlap)
+
+| Operation | Owner ONLY |
+|---|---|
+| Store/read mutable state | ConfigEngine |
+| Create/destroy Leaflet layers | MapEngine |
+| Draw lot boundary polygon | MapEngine.render() |
+| Convert local ft ↔ lat/lng | MapEngine (Frame A) |
+| Handle drag events | MapEngine |
+| Snap building to edges | MapEngine._applySnap() |
+| Calculate building extents | SetbackEngine._buildingExtents() |
+| Clamp building inside lot | SetbackEngine._clampToLot() |
+| Draw ALL dimension lines | SetbackEngine.updateBldgDimLabels() |
+| Perpendicular measurements | SetbackEngine (Frame B) |
+| Validate setback rules | SetbackEngine.applySetbacks() |
+| Stack building copies | SetbackEngine.drawBuilding() |
+| Calculate FAR/density/height | SetbackEngine.updateFAR() |
+| Write to localStorage/server | ExportEngine.save() |
+| Build canonical save object | ExportEngine._payload() |
+| Populate sidebar text | UIEngine.init() |
+
+### Two Coordinate Frames (root cause of past drift)
+
+- **Frame A (Geographic):** lat/lng in decimal degrees. Owner: MapEngine ONLY.
+  Origin = `state.lat, state.lng`. Scale: F_LAT = 364,566 ft/deg, F_LNG varies.
+- **Frame B (Local Rotated):** feet from lot center. Owner: SetbackEngine.
+  Origin = (0,0) = lot center. +X = rear, +Y = right side.
+
+**Handoff:** SetbackEngine computes in Frame B (feet) → returns to MapEngine →
+MapEngine converts to Frame A (lat/lng) → draws on Leaflet. NEVER reverse this.
+
+### Rules
+
+1. **One engine, one responsibility.** Never reimplement an existing function.
+2. **Frame B math stays in SetbackEngine.** Distances, extents, perpendicular = SetbackEngine.
+3. **Frame A conversion stays in MapEngine.** ft↔lat/lng = MapEngine only.
+4. **No "small fixes" that cross frame boundaries** without explicitly stating the crossing.
+5. **Test on 3 lots** after any coord/dim change: simple rect, rotated rect, polygon.
+6. **ConfigEngine is passive.** It never imports or calls other engines.
+7. **ExportEngine.save() is the ONLY write path.** No exceptions.
+
 ## ── SITE-DATA.JSON ARCHITECTURE ───────────────────────────────────────────────
 
 `data/site-data.json` has TWO top-level keys with different lifecycles:

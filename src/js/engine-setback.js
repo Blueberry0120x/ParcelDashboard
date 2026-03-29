@@ -541,25 +541,35 @@ const SetbackEngine = {
             const chainLayers = [];
             const dimStyle = { color: '#1a202c', weight: 2, opacity: 1, interactive: true, noClip: true, className: 'chain-dim-line' };
 
-            // Witness lines at every boundary — only draw if an adjacent segment is visible
-            chain.forEach((seg, j) => {
-                const leftKey  = j > 0 ? prefix + '_' + (j - 1) : null;
-                const rightKey = j < chain.length - 1 ? prefix + '_' + j : null;
-                const leftVis  = leftKey  && !MapEngine.hiddenDimKeys.has(leftKey);
-                const rightVis = rightKey && !MapEngine.hiddenDimKeys.has(rightKey);
-                if (!leftVis && !rightVis) return;
-                const p = isX ? { x: seg.v, y: refCoord } : { x: refCoord, y: seg.v };
+            // Dim segments between adjacent boundaries — with merge support
+            // Build merged runs: consecutive segments in mergedDimKeys are combined
+            var segRuns = [];
+            for (let i = 0; i < chain.length - 1; i++) {
+                const dimKey = prefix + '_' + i;
+                if (MapEngine.hiddenDimKeys.has(dimKey)) continue;
+                if (MapEngine.mergedDimKeys.has(dimKey) && segRuns.length > 0) {
+                    segRuns[segRuns.length - 1].endIdx = i + 1;
+                    segRuns[segRuns.length - 1].keys.push(dimKey);
+                } else {
+                    segRuns.push({ startIdx: i, endIdx: i + 1, keys: [dimKey] });
+                }
+            }
+
+            // Witness lines — only at run endpoints (start/end of each merged run), not internal merge points
+            var witnessIndices = new Set();
+            segRuns.forEach(run => { witnessIndices.add(run.startIdx); witnessIndices.add(run.endIdx); });
+            witnessIndices.forEach(j => {
+                if (j < 0 || j >= chain.length) return;
+                const p = isX ? { x: chain[j].v, y: refCoord } : { x: refCoord, y: chain[j].v };
                 const l = push(L.polyline([toLatLng(p), toLatLng({ x: p.x + (EXT+EX2)*perpX, y: p.y + (EXT+EX2)*perpY })], dimStyle).addTo(MapEngine.map));
                 chainLayers.push(l);
             });
 
-            // Dim segments between adjacent boundaries
-            for (let i = 0; i < chain.length - 1; i++) {
-                const v1 = chain[i].v, v2 = chain[i + 1].v;
+            for (let ri = 0; ri < segRuns.length; ri++) {
+                const run = segRuns[ri];
+                const v1 = chain[run.startIdx].v, v2 = chain[run.endIdx].v;
                 const dist = Math.abs(v2 - v1);
                 if (dist < 0.5) continue;
-                const dimKey = prefix + '_' + i;
-                if (MapEngine.hiddenDimKeys.has(dimKey)) continue;
 
                 const p1 = isX ? { x: v1, y: refCoord } : { x: refCoord, y: v1 };
                 const p2 = isX ? { x: v2, y: refCoord } : { x: refCoord, y: v2 };
@@ -573,25 +583,44 @@ const SetbackEngine = {
                 const layers = [];
                 const pLine = pts => { const l = push(L.polyline(pts.map(toLatLng), dimStyle).addTo(MapEngine.map)); layers.push(l); chainLayers.push(l); };
 
-                // Dim line split around label
-                pLine([d1, { x: mid.x - TO*ux, y: mid.y - TO*uy }]);
-                pLine([{ x: mid.x + TO*ux, y: mid.y + TO*uy }, d2]);
+                // Dim line split around label — clamp gap to 30% of segment so dims stay visible when zoomed out
+                const segGap = Math.min(TO, dist * 0.3);
+                pLine([d1, { x: mid.x - segGap*ux, y: mid.y - segGap*uy }]);
+                pLine([{ x: mid.x + segGap*ux, y: mid.y + segGap*uy }, d2]);
                 // Ticks
                 pLine([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
                 pLine([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
-                // Label
+                // Label — show merged indicator if multiple segments combined
+                const isMerged = run.keys.length > 1;
+                const labelText = dist.toFixed(1) + "'" + (isMerged ? ' \u2194' : '');
                 const m = push(L.marker(toLatLng(mid), {
                     icon: L.divIcon({
                         className: '',
-                        html: '<div style="position:relative"><div class="dim-label" style="font-size:' + bldgFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + dist.toFixed(1) + "'" + '</div></div>',
+                        html: '<div style="position:relative"><div class="dim-label' + (isMerged ? ' dim-merged' : '') + '" style="font-size:' + bldgFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + rotDeg + 'deg)">' + labelText + '</div></div>',
                         iconSize: [0, 0], iconAnchor: [0, 0]
                     }),
                     interactive: true
                 }).addTo(MapEngine.map));
                 layers.push(m); chainLayers.push(m);
                 m.on('click', () => {
-                    MapEngine.hiddenDimKeys.add(dimKey);
-                    SetbackEngine.updateBldgDimLabels();
+                    if (MapEngine.dimMergeMode) {
+                        // In merge mode: toggle merge on the first key of this run
+                        const firstKey = run.keys[0];
+                        if (run.keys.length > 1) {
+                            // Already merged — unmerge all
+                            run.keys.forEach(k => MapEngine.mergedDimKeys.delete(k));
+                        } else {
+                            // Merge this segment into previous (mark it as merged)
+                            MapEngine.mergedDimKeys.add(firstKey);
+                        }
+                        ExportEngine.save();
+                        SetbackEngine.updateBldgDimLabels();
+                    } else {
+                        // Normal mode: hide
+                        run.keys.forEach(k => MapEngine.hiddenDimKeys.add(k));
+                        ExportEngine.save();
+                        SetbackEngine.updateBldgDimLabels();
+                    }
                 });
             }
             return chainLayers;
@@ -734,6 +763,7 @@ const SetbackEngine = {
                         if (activeHandle) { MapEngine.map.removeLayer(activeHandle); activeHandle = null; }
                         MapEngine.map.dragging.enable();
                         getLayers().forEach(ll => { if (ll._path) ll._path.classList.remove('chain-dim-active'); });
+                        ExportEngine.save();
                         self.updateBldgDimLabels();
                     };
                 });
@@ -1069,8 +1099,9 @@ const SetbackEngine = {
             const on = !MapEngine.showBldgDims;
             MapEngine.showBldgDims = on;
             MapEngine.showDims     = on;
-            // Reset hidden dims when toggling — fresh slate each toggle cycle
+            // Reset hidden + merged dims when toggling — fresh slate each toggle cycle
             MapEngine.hiddenDimKeys.clear();
+            MapEngine.mergedDimKeys.clear();
             const btn = document.getElementById('bldgDimBtn');
             btn.classList.toggle('active', on);
             btn.textContent = on ? 'Hide Dims' : 'Show Dims';
@@ -1079,10 +1110,12 @@ const SetbackEngine = {
         });
 
         // Restore dim toggle + hidden keys from saved config
+        // Lot boundary dims (red) always show; building chain dims follow saved toggle
         const dimsOn = state.showBldgDims || false;
         MapEngine.showBldgDims = dimsOn;
-        MapEngine.showDims     = dimsOn;
+        MapEngine.showDims     = true;
         if (state.hiddenDimKeys) state.hiddenDimKeys.forEach(k => MapEngine.hiddenDimKeys.add(k));
+        if (state.mergedDimKeys) state.mergedDimKeys.forEach(k => MapEngine.mergedDimKeys.add(k));
         if (state.chainWOffset != null) MapEngine.chainWOffset = state.chainWOffset;
         if (state.chainDOffset != null) MapEngine.chainDOffset = state.chainDOffset;
         const dimBtn = document.getElementById('bldgDimBtn');
@@ -1181,6 +1214,45 @@ const SetbackEngine = {
         // Clear old setback dim labels
         MapEngine.setbackDimLabels.forEach(function(l) { MapEngine.map.removeLayer(l); });
         MapEngine.setbackDimLabels = [];
+
+        // Draw setback dim labels for rectangle sites
+        if (!(pp && pp.length > 2)) {
+            var mapZoom = MapEngine.map.getZoom();
+            var sbFontScale = Math.max(0.78, 0.36 + mapZoom * 0.025);
+            var sbStyle = { color: '#d97706', weight: 1.5, dashArray: '4 3', interactive: false, noClip: true };
+            var sides = [
+                { label: 'F', dist: front, bx: -h/2,         by: 0, sx: -h/2 + front, sy: 0, perpX: 0, perpY: 1 },
+                { label: 'R', dist: rear,  bx:  h/2,         by: 0, sx:  h/2 - rear,  sy: 0, perpX: 0, perpY: 1 },
+                { label: 'SL', dist: sideL, bx: 0, by: -w/2,         sx: 0, sy: -w/2 + sideL, perpX: 1, perpY: 0 },
+                { label: 'SR', dist: sideR, bx: 0, by:  w/2,         sx: 0, sy:  w/2 - sideR, perpX: 1, perpY: 0 }
+            ];
+            sides.forEach(function(s) {
+                if (s.dist < 0.5) return;
+                // Dim line from boundary midpoint to setback midpoint
+                var dimLine = L.polyline(
+                    [transform({x: s.bx, y: s.by}), transform({x: s.sx, y: s.sy})],
+                    sbStyle
+                ).addTo(MapEngine.map);
+                MapEngine.setbackDimLabels.push(dimLine);
+                // Label at midpoint
+                var labelPt = { x: (s.bx + s.sx) / 2, y: (s.by + s.sy) / 2 };
+                // Rotation: perpendicular to lot edge
+                var scrX = s.perpX * cos - s.perpY * sin;
+                var scrY = s.perpX * sin + s.perpY * cos;
+                var lblAngle = -Math.atan2(scrY, scrX) * 180 / Math.PI;
+                lblAngle = ((lblAngle % 180) + 180) % 180;
+                if (lblAngle >= 90) lblAngle -= 180;
+                var m = L.marker(transform(labelPt), {
+                    icon: L.divIcon({
+                        className: '',
+                        html: '<div style="position:relative"><div class="setback-dim-label" style="font-size:' + sbFontScale.toFixed(2) + 'em;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + lblAngle.toFixed(1) + 'deg)">' + s.dist.toFixed(0) + "'" + '</div></div>',
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    }),
+                    interactive: false
+                }).addTo(MapEngine.map);
+                MapEngine.setbackDimLabels.push(m);
+            });
+        }
 
         // Draw setback-to-boundary dim lines + labels for polygon sites
         // Only one label per side (front/rear/sideL/sideR) — placed on the longest edge of that type
