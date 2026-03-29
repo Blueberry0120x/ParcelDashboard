@@ -102,13 +102,6 @@
             ExportEngine.save();
         });
 
-        // Restore vehicles from state
-        if (ConfigEngine.state.vehicles && ConfigEngine.state.vehicles.length > 0) {
-            MapEngine.drawVehicles();
-            MapEngine._rebuildVehicleTabs();
-            MapEngine._seedVehicleInputs(ConfigEngine.state.activeVehicle);
-        }
-
         // Populate CAD coordinate system dropdown
         (function() {
             var sel = document.getElementById('cadZoneSelect');
@@ -218,6 +211,12 @@
         })();
 
         safeRun('MapEngine.init', function() { MapEngine.init(); });
+        // Restore vehicles AFTER MapEngine.init() so the map exists before drawing
+        if (ConfigEngine.state.vehicles && ConfigEngine.state.vehicles.length > 0) {
+            MapEngine.drawVehicles();
+            MapEngine._rebuildVehicleTabs();
+            MapEngine._seedVehicleInputs(ConfigEngine.state.activeVehicle);
+        }
         safeRun('SetbackEngine.initBuildingConfig', function() { SetbackEngine.initBuildingConfig(); });
         safeRun('ElevationTool.init', function() { ElevationTool.init(); });
         safeRun('ResizeEngine.init', function() { ResizeEngine.init(); });

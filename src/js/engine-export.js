@@ -102,8 +102,12 @@ const ExportEngine = {
         // ── Sync toggles ──
         var cf = document.getElementById('commFrontCheck');
         if (cf) s.commFront = cf.checked;
-        if (typeof MapEngine !== 'undefined' && MapEngine.showBldgDims != null) {
-            s.showBldgDims = MapEngine.showBldgDims;
+        // Sync MapEngine UI state -> ConfigEngine.state (single source of truth)
+        if (typeof MapEngine !== 'undefined') {
+            if (MapEngine.showBldgDims != null)  s.showBldgDims  = MapEngine.showBldgDims;
+            if (MapEngine.hiddenDimKeys)         s.hiddenDimKeys = [...MapEngine.hiddenDimKeys];
+            if (MapEngine.chainWOffset != null)  s.chainWOffset  = MapEngine.chainWOffset;
+            if (MapEngine.chainDOffset != null)  s.chainDOffset  = MapEngine.chainDOffset;
         }
 
         // ── Persist: ONE key ──
@@ -132,10 +136,10 @@ const ExportEngine = {
                 buildings:      s.buildings,
                 activeBuilding: s.activeBuilding,
                 commFront:      s.commFront,
-                showBldgDims:   (typeof MapEngine !== 'undefined') ? MapEngine.showBldgDims : s.showBldgDims,
-                hiddenDimKeys:  (typeof MapEngine !== 'undefined' && MapEngine.hiddenDimKeys) ? [...MapEngine.hiddenDimKeys] : [],
-                chainWOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainWOffset : 0,
-                chainDOffset:   (typeof MapEngine !== 'undefined') ? MapEngine.chainDOffset : 0,
+                showBldgDims:   s.showBldgDims  ?? false,
+                hiddenDimKeys:  s.hiddenDimKeys  ? [...s.hiddenDimKeys] : [],
+                chainWOffset:   s.chainWOffset  ?? 0,
+                chainDOffset:   s.chainDOffset  ?? 0,
                 mapOpacity:     s.mapOpacity,
                 setbacksApplied: s.setbacksApplied,
                 freeDrag:       s.freeDrag ?? true,

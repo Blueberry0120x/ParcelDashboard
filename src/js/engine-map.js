@@ -375,6 +375,7 @@ const MapEngine = {
         ConfigEngine.state.activeVehicle = idx;
         this._rebuildVehicleTabs();
         this._seedVehicleInputs(idx);
+        ExportEngine.save();
     },
 
     _rebuildVehicleTabs: function() {
@@ -583,6 +584,8 @@ const MapEngine = {
                 label.textContent = v + '%';
                 ConfigEngine.state.mapOpacity = v;
             });
+            // Persist only on release (not every pixel of drag)
+            slider.addEventListener('change', () => { ExportEngine.save(); });
         });
     },
 
