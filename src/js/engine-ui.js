@@ -16,6 +16,12 @@ const UIEngine = {
         document.getElementById('ui-d').innerText       = d.depth;
         document.getElementById('ui-sqft').innerText    = sqft.toLocaleString() + ' SF  [' + (sqft / 43560).toFixed(2) + ' AC]';
 
+        var exBldg = document.getElementById('ui-exbldg');
+        if (exBldg) {
+            var exSF = d.existingDwellingSF || 0;
+            exBldg.innerText = exSF > 0 ? exSF.toLocaleString() + ' SF' : '--';
+        }
+
         document.getElementById('info-address').innerText = d.address;
         document.getElementById('info-apn').innerText     = d.apn;
         document.getElementById('info-zone').innerText    = d.zoning;

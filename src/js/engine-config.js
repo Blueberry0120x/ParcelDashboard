@@ -58,6 +58,7 @@ const ConfigEngine = {
         if (sd.lotSF != null)   this.data.lotSF           = sd.lotSF;
         if (sd.parcelPolygon)   this.data.parcelPolygon   = sd.parcelPolygon;
         if (sd.siteId)          this.data.siteId          = sd.siteId;
+        if (sd.existingDwellingSF != null) this.data.existingDwellingSF = sd.existingDwellingSF;
 
         // Set coordinate system from site config or auto-detect from address
         var cadZone = sd.cadZone || this._detectCadZone(sd.address || this.data.address);

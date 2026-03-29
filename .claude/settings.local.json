@@ -54,7 +54,13 @@
       "WebFetch(domain:web.archive.org)",
       "WebFetch(domain:datahub.burienwa.gov)",
       "WebFetch(domain:www5.kingcounty.gov)",
-      "WebFetch(domain:burien.news)"
+      "WebFetch(domain:burien.news)",
+      "mcp__claude_ai_GitHub-NP_ClaudeAgent__create_or_update_file",
+      "WebFetch(domain:www.aduhomesinc.com)",
+      "WebFetch(domain:www.autonomous.ai)",
+      "WebFetch(domain:www.gatheradu.com)",
+      "WebFetch(domain:www.dwellito.com)",
+      "WebFetch(domain:library.municode.com)"
     ],
     "additionalDirectories": [
       "C:\\Users\\napham\\.claude\\skills\\mobilize"
