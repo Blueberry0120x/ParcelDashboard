@@ -146,8 +146,8 @@ This is a BLOCKING rule. Do not loop on a failing pattern — step back and ask:
 | `site`  | Static project identity (address, APN, zoning rules, fees, contacts) | You, manually       |
 | `saved` | Session state (lat, lng, buildings, …) | `ExportEngine._payload()` via pushToServer() |
 
-At build time, PS1 merges both into `window.__SITE_DEFAULTS__` (injected into
-ALL suite files — InteractiveMap AND PreApp_Checklist).
+At build time, Python (or PS1 fallback) merges both into `window.__SITE_DEFAULTS__`
+(injected into ALL suite files -- InteractiveMap AND PreApp_Checklist).
 
 **POST /save preserves `site`** — the save handler reads the existing file,
 keeps `site`, and overwrites only `saved`.
@@ -167,20 +167,31 @@ inspectors[]
 3. In `engine-config.js.init()` if it drives ConfigEngine.data
 
 ## ── BUILD PIPELINE ────────────────────────────────────────────────────────────
+- **Primary build:** `py tools/build.py` (Python -- canonical, cross-platform)
+- **Legacy build:** `Engine_InteractiveParcelMap.ps1` (PowerShell -- Windows-only fallback)
 - Source files live in `src/`; compiled output is `Output/InteractiveMap.html` + `Output/PreApp_Checklist.html`
-- Build: run `Engine_InteractiveParcelMap.ps1` (compile only)
-- Dev server: run with `serve` argument → localhost:7734
-  - GET `/`          → serves InteractiveMap.html
-  - GET `/checklist` → serves PreApp_Checklist.html
-  - POST `/save`     → writes site-data.json (preserving site key) + rebuilds both
-- `data/site-data.json` is the on-disk state file; merged into
-  `window.__SITE_DEFAULTS__` at build time via `Get-InjectScript`
-- Em dashes and non-ASCII in PS1 string literals cause cp1252 parse errors —
+- Dev server: `py tools/build.py serve` -- localhost:3040
+  - GET `/`                          -- serves InteractiveMap.html
+  - GET `/checklist`                 -- serves PreApp_Checklist.html
+  - GET `/api/sites`                 -- lists all sites + active flag
+  - POST `/save`                     -- writes .saved to per-site file (preserves .site) + rebuilds
+  - POST `/api/sites/{id}/activate`  -- updates activeSiteId pointer + rebuilds
+  - POST `/api/sites/{id}/update-site` -- edits whitelisted .site fields + rebuilds
+  - POST `/backup-checklist`         -- archives checklist JSON to config/backup/
+- `data/site-data.json` is a **pointer only**: `{"activeSiteId": "CA-4335_EUCLID"}`
+- Per-site data lives in `data/sites/{state}-{id}_{name}.json`
+- Build injects 3 globals into `<head>`:
+  - `__SITE_DEFAULTS__` -- active site's merged .site + .saved
+  - `__SITE_LIST__` -- all sites for dropdown switcher
+  - `__ALL_SITE_DATA__` -- every site's full data (offline file:// switching)
+- Port note: 3034 is Windows-reserved (Hyper-V). Python uses 3040. PS1 uses 3034 (HTTP.sys bypasses)
+- Em dashes and non-ASCII in PS1 string literals cause cp1252 parse errors --
   use plain ASCII hyphens only in PS1 files
+- Architecture diagram: `Output/architecture.html`
 
 ## Project Goal
 
-Interactive parcel map and pre-application checklist suite for land development feasibility. Builds site-specific zoning dashboards (setbacks, FAR, density, fees) on a Leaflet map with draggable buildings, chain dimensions, and vehicle turn templates. Compiles to two standalone HTML files (InteractiveMap + PreApp_Checklist) from modular JS/CSS sources via a PowerShell build pipeline.
+Interactive parcel map and pre-application checklist suite for land development feasibility. Builds site-specific zoning dashboards (setbacks, FAR, density, fees) on a Leaflet map with draggable buildings, chain dimensions, and vehicle turn templates. Compiles to two standalone HTML files (InteractiveMap + PreApp_Checklist) from modular JS/CSS sources via Python build pipeline (tools/build.py).
 
 
 ## File Encoding
@@ -207,22 +218,27 @@ Before declaring any task complete:
 - **Writable:** `Output/InteractiveMap.html`, `Output/PreApp_Checklist.html`, `data/site-data.json` (`.saved` key only, via POST /save), `controller-note/`, `UserPref.json`
 
 
-## Handoff Notes (last updated 2026-03-28)
+## Handoff Notes (last updated 2026-03-29)
 
 ### What was completed this session
-- Westminster restored to stable tag (dad1c2a) -- removed agent-added polygon, restored original pin + all building offsets
-- Fixed var/const SyntaxError in _clampToLot (engine-setback.js) that broke lot clamping for ALL sites since d7d9a24
-- Committed + pushed dirty files from prior session: bootstrap.js offline site-switching, Launch.cmd improvements
-- Controller cleanup dispatch completed, StrictMode gap confirmed already fixed
+- Upgraded build.py to full PS1 parity -- canonical Python build pipeline (tools/build.py)
+  - Fixed: get_active_site_id (pointer-based), get_inject_script (per-site file), save handler (preserve .site)
+  - Added: __SITE_LIST__, __ALL_SITE_DATA__ injection, /update-site endpoint, UTF-8 BOM handling
+  - Verified: Output identical to PS1 build (same line counts, same injected globals)
+- Added hooks baseline v4 (12 hooks in .claude/hooks/) + upgraded session_guard_lite.py
+- Created architecture diagram: Output/architecture.html
+- Port change: Python server uses 3040 (3034 is Windows Hyper-V reserved)
 
 ### What still needs work
 - Polygon-aware coordinate system (Option B): decouple saved.lat/lng from polygon centroid in JS -- needed before Westminster can use polygon mode
 - Public/private config sync endpoints (Reboot Public / Pull from Public) -- architecture approved, not yet implemented
 - Test coverage: zero automated tests currently
+- 4 partial sites need zoning data completion (Burien, Rohn, Laux, El Cajon)
 
 ### Known issues
 - `data/site-data.json` contains real addresses/APNs/inspector names (PII -- accepted risk per controller)
 - Westminster is rectangle-mode only; polygon ingestion deferred until Option B JS refactor is validated
+- Port 3034 blocked by Hyper-V on this machine; Python server uses 3040 instead
 
 
 ## Dev-Check Quality Gate (CTRL-007)
