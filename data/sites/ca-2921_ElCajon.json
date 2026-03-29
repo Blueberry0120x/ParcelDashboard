@@ -13,13 +13,13 @@
                  "lotDepth":  144,
                  "lotSF":  7039,
                  "commercialDepth":  0,
-                 "baseFAR":  1.0,
+                 "baseFAR":  2.0,
                  "commFAR":  6.5,
                  "maxHeight":  0,
-                 "baseHeightLimit":  45,
+                 "baseHeightLimit":  0,
                  "cchsMaxHeight":  0,
-                 "frontSetback":  0,
-                 "rearSetback":  0,
+                 "frontSetback":  10,
+                 "rearSetback":  10,
                  "sideSetback":  0,
                  "densityPerSF":  400,
                  "nefRatePerSF":  0,
@@ -159,7 +159,20 @@
                                    "sideR":  0
                                },
                   "buildings":  [
-
+                                    {
+                                        "orientation": 0,
+                                        "W": 45,
+                                        "D": 60,
+                                        "offsetX": 0,
+                                        "offsetY": 0,
+                                        "spacing": 0,
+                                        "count": 1,
+                                        "stackSpacing": 0,
+                                        "anchor": "center",
+                                        "stories": 4,
+                                        "floorHeight": 10,
+                                        "stackAngle": 0
+                                    }
                                 ],
                   "activeBuilding":  0,
                   "commFront":  false,

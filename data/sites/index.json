@@ -31,9 +31,9 @@
             "file": "wa-405_126th.json",
             "state": "WA",
             "city": "Burien",
-            "zoning": "",
-            "status": "skeleton",
-            "lastUpdated": "2026-03-26"
+            "zoning": "R2",
+            "status": "partial",
+            "lastUpdated": "2026-03-28"
         },
         {
             "id": "CA-4876_CANNINGTON",
@@ -54,8 +54,8 @@
             "state": "CA",
             "city": "Escondido",
             "zoning": "RE-20",
-            "status": "skeleton",
-            "lastUpdated": "2026-03-27"
+            "status": "partial",
+            "lastUpdated": "2026-03-28"
         },
         {
             "id": "CA-12652_LAUX",
@@ -65,7 +65,7 @@
             "state": "CA",
             "city": "Garden Grove",
             "zoning": "R-1",
-            "status": "skeleton",
+            "status": "partial",
             "lastUpdated": "2026-03-28"
         },
         {
@@ -76,8 +76,8 @@
             "state": "CA",
             "city": "San Diego",
             "zoning": "CC-3-9",
-            "status": "skeleton",
-            "lastUpdated": "2026-03-26"
+            "status": "partial",
+            "lastUpdated": "2026-03-28"
         }
     ]
 }

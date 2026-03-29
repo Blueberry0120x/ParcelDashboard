@@ -541,8 +541,13 @@ const SetbackEngine = {
             const chainLayers = [];
             const dimStyle = { color: '#1a202c', weight: 2, opacity: 1, interactive: true, noClip: true, className: 'chain-dim-line' };
 
-            // Witness lines at every boundary
-            chain.forEach((seg) => {
+            // Witness lines at every boundary — only draw if an adjacent segment is visible
+            chain.forEach((seg, j) => {
+                const leftKey  = j > 0 ? prefix + '_' + (j - 1) : null;
+                const rightKey = j < chain.length - 1 ? prefix + '_' + j : null;
+                const leftVis  = leftKey  && !MapEngine.hiddenDimKeys.has(leftKey);
+                const rightVis = rightKey && !MapEngine.hiddenDimKeys.has(rightKey);
+                if (!leftVis && !rightVis) return;
                 const p = isX ? { x: seg.v, y: refCoord } : { x: refCoord, y: seg.v };
                 const l = push(L.polyline([toLatLng(p), toLatLng({ x: p.x + (EXT+EX2)*perpX, y: p.y + (EXT+EX2)*perpY })], dimStyle).addTo(MapEngine.map));
                 chainLayers.push(l);
@@ -586,7 +591,7 @@ const SetbackEngine = {
                 layers.push(m); chainLayers.push(m);
                 m.on('click', () => {
                     MapEngine.hiddenDimKeys.add(dimKey);
-                    layers.forEach(l => MapEngine.map.removeLayer(l));
+                    SetbackEngine.updateBldgDimLabels();
                 });
             }
             return chainLayers;
