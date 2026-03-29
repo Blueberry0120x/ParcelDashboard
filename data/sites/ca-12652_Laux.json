@@ -1,0 +1,180 @@
+{
+  "project": "ProjectBook-Planner",
+  "site": {
+    "siteId": "CA-12652_LAUX",
+    "address": "12652 Laux Ave, Garden Grove, CA 92840",
+    "apn": "231-544-02",
+    "legalDescription": "-- TBD: Pull full legal from OC Assessor deed record or ParcelQuest",
+    "yearBuilt": "1954",
+    "occupancyGroup": "R-3",
+    "zoning": "R-1",
+    "cadZone": "CA_V",
+    "lotWidth": 60,
+    "lotDepth": 120,
+    "lotSF": 7210,
+    "lotWidthSouth": 60,
+    "lotWidthNorth": 60,
+    "lotDepthWest": 120,
+    "lotDepthEast": 120,
+    "lotAcres": 0.17,
+    "commercialDepth": 0,
+    "baseFAR": 0,
+    "commFAR": 0,
+    "maxHeight": 35,
+    "baseHeightLimit": 35,
+    "cchsMaxHeight": 0,
+    "frontSetback": 20,
+    "rearSetback": 10,
+    "sideSetback": 5,
+    "densityPerSF": 0,
+    "nefRatePerSF": 0,
+    "affordabilityPct": 0,
+    "difPerUnit": 0,
+    "difWaiverSF": 0,
+    "unitCount": 1,
+    "unitDensity": 0,
+    "projectType": "SFR + ADU",
+    "architect": "-- TBD",
+    "scopeOfWork": "-- TBD: Define scope -- existing SFR with ADU potential on 7,210 SF R-1 lot.",
+    "cornerVisibilityTriangle": false,
+    "cornerVisTriSize": 0,
+    "cornerVisCorner": "",
+    "densityBonus": false,
+    "notes": "R-1 (Single-Family Residential) -- Garden Grove municipal code. Lot: 7,210 SF, 0.17 ac. Existing 1,041 SF SFR (1954). Recently sold 03/23/2026 for $963,000. ADU potential noted in listing. | TBD - C: Verify lot dimensions from OC Assessor parcel map (60x120 estimated). | TBD - C: baseFAR from Garden Grove R-1 standards (Ch 9.08). | TBD - G: Inspector contacts -- Garden Grove Building & Safety (714) 741-5111.",
+    "inspectors": [
+      {
+        "name": "Building (Combination)",
+        "val": "-- TBD: Garden Grove Building & Safety -- (714) 741-5111"
+      },
+      {
+        "name": "Structural",
+        "val": "-- TBD: Garden Grove Building & Safety"
+      },
+      {
+        "name": "Electrical",
+        "val": "-- TBD: Garden Grove Building & Safety"
+      },
+      {
+        "name": "Mechanical",
+        "val": "-- TBD: Garden Grove Building & Safety"
+      },
+      {
+        "name": "Grading / Civil",
+        "val": "-- TBD: Garden Grove Public Works or OC Grading"
+      }
+    ],
+    "planningAreas": [
+      {
+        "name": "COMMUNITY PLAN AREA",
+        "val": "-- TBD: Garden Grove General Plan land use map"
+      },
+      {
+        "name": "LAND USE DESIGNATION",
+        "val": "-- TBD: Garden Grove General Plan"
+      },
+      {
+        "name": "TRANSIT PRIORITY AREA (TPA)",
+        "val": "-- TBD: OCTA TPA map or HCD TPA lookup"
+      },
+      {
+        "name": "PARKING STANDARDS (PSTPA)",
+        "val": "-- TBD: Confirm if TPA applies"
+      },
+      {
+        "name": "MOBILITY CHOICES",
+        "val": "N/A -- Garden Grove (not SD Municipal Code)"
+      }
+    ],
+    "overlayZones": [
+      {
+        "name": "AIRPORT INFLUENCE AREA",
+        "val": "-- TBD: John Wayne Airport (SNA) ALUCP -- check OC ALUC map"
+      },
+      {
+        "name": "COASTAL OVERLAY",
+        "val": "No -- inland location"
+      },
+      {
+        "name": "VERY HIGH FIRE HAZARD",
+        "val": "-- TBD: Cal Fire FHSZ viewer (osfm.fire.ca.gov)"
+      },
+      {
+        "name": "FAULT ZONE",
+        "val": "-- TBD: CGS AP Zone map (maps.conservation.ca.gov/cgs/ap)"
+      },
+      {
+        "name": "FEMA FLOOD ZONE",
+        "val": "-- TBD: FEMA FIRM map for Garden Grove"
+      }
+    ]
+  },
+  "saved": {
+    "lat": 33.78070029885892,
+    "lng": -117.91236922144893,
+    "rotation": 90,
+    "locked": true,
+    "setbacks": {
+      "front": 4,
+      "rear": 10,
+      "sideL": 4,
+      "sideR": 4
+    },
+    "buildings": [
+      {
+        "orientation": 0,
+        "W": 39,
+        "D": 26,
+        "offsetX": 0.8,
+        "offsetY": 2.8,
+        "spacing": 0,
+        "count": 1,
+        "stackSpacing": 0,
+        "anchor": "front",
+        "stories": 1,
+        "floorHeight": 9,
+        "stackAngle": 0
+      },
+      {
+        "orientation": 0,
+        "W": 17.5,
+        "D": 18.5,
+        "offsetX": 9.3,
+        "offsetY": -20.1,
+        "spacing": 0,
+        "count": 1,
+        "stackSpacing": 0,
+        "stackAngle": 0,
+        "anchor": "center",
+        "stories": 1,
+        "floorHeight": 9
+      },
+      {
+        "orientation": 0,
+        "W": 20,
+        "D": 20,
+        "offsetX": -37,
+        "offsetY": 12.7,
+        "spacing": 0,
+        "count": 1,
+        "stackSpacing": 0,
+        "stackAngle": 0,
+        "anchor": "center",
+        "stories": 1,
+        "floorHeight": 9
+      }
+    ],
+    "activeBuilding": 2,
+    "commFront": false,
+    "showBldgDims": true,
+    "hiddenDimKeys": [],
+    "chainWOffset": 0,
+    "chainDOffset": 0,
+    "mapOpacity": 60,
+    "setbacksApplied": true,
+    "freeDrag": true,
+    "snapEdge": true,
+    "vehicles": [],
+    "activeVehicle": -1
+  },
+  "checklist": null
+}

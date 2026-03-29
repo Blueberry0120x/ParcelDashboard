@@ -1,3 +1,44 @@
+## [2026-03-28 04:10] HYGIENE DISPATCH — stale artifact cleanup (SPECIFIC FILES) -- OVERRIDE
+
+Controller stale-artifact audit (2026-03-28) found artifacts requiring cleanup.
+This is a BLOCKING dispatch — clean before any other work.
+
+### CatchmentDelin_XML (8 items)
+1. DELETE: `__pycache__/` (root)
+2. DELETE: `PyModule/__pycache__/`
+3. git rm --cached: `.claude/report/CLAUDE.md_2026-03-24_2050.bak`
+4. Add to .gitignore: `*.bak`, `*.tif`, `input/archived/`
+5. git rm --cached: `report/flow_acc.tif` (32 MB tracked binary)
+6. git rm --cached: `report/terrain_dem*.tif` (130 MB tracked binaries)
+7. Evaluate: `report/calibrate.html` — gitignore if generated
+8. Evaluate: `input/clean_terrain_xml.py` — commit or gitignore
+
+### LSP_Library (5 items)
+1. DELETE: `__pycache__/` (root)
+2. DELETE: `src/__pycache__/`
+3. git rm --cached: `.claude/report/CLAUDE.md_2026-03-24_2050.bak`
+4. Add to .gitignore: `*.bak`, `reports/sync_log.txt`
+5. Commit or gitignore: `tools/session_guard_lite.py`
+
+### VS_ORD (2 items — rest are gitignored build dirs, ignore)
+1. git rm --cached: `.claude/report/CLAUDE.md_2026-03-24_2050.bak`
+2. Add to .gitignore: `*.bak`
+
+### VS_C3D (4 items — rest are gitignored MSBuild dirs, ignore)
+1. git rm --cached: `.claude/report/CLAUDE.md_2026-03-24_2050.bak`
+2. Add to .gitignore: `*.bak`, `*.mvba`
+3. Commit or gitignore: `tools/session_guard_lite.py`
+4. Commit or gitignore: `00_Report/SelectElement.mvba`, `Set_ProfEleAct.mvba`
+
+### NP_OutlookTeamSuite (1 item)
+1. Delete stale timestamped .xlsx copies in report/ — keep only latest per project
+
+### ProjectBook-Planner (1 item)
+1. Add .gitkeep to empty `report/` dir or populate it
+
+**After cleanup:** commit with `[HYGIENE-DONE]` prefix + touch controller-note/.ping
+
+---
 ## [2026-03-28 03:42] ~~CLEANUP DISPATCH — Commit dirty files + push unpushed -- GLOBAL_UPDATE~~ DONE 2026-03-28
 
 Controller repo-sync (2026-03-28) detected dirty working trees and unpushed commits.

@@ -58,6 +58,17 @@
             "lastUpdated": "2026-03-27"
         },
         {
+            "id": "CA-12652_LAUX",
+            "label": "12652 Laux Ave",
+            "address": "12652 Laux Ave, Garden Grove, CA 92840",
+            "file": "ca-12652_Laux.json",
+            "state": "CA",
+            "city": "Garden Grove",
+            "zoning": "R-1",
+            "status": "skeleton",
+            "lastUpdated": "2026-03-28"
+        },
+        {
             "id": "CA-2921_ELCAJON",
             "label": "2921-2923 El Cajon Blvd",
             "address": "2921-2923 El Cajon Blvd, San Diego, CA 92104",
