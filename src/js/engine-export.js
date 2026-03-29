@@ -156,7 +156,7 @@ const ExportEngine = {
                 if (k && k.indexOf('preapp_') === 0) { ckRaw = localStorage.getItem(k); break; }
             }
             if (ckRaw) payload.checklist = JSON.parse(ckRaw);
-        } catch(e) {}
+        } catch(e) { console.warn('[EXPORT] Checklist parse failed — checklist will not be included in save:', e.message); }
         return payload;
     },
 

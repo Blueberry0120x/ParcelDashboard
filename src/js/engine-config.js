@@ -79,7 +79,7 @@ const ConfigEngine = {
 
         // ── Load saved state: ONE localStorage key > __SITE_DEFAULTS__ > defaults ──
         var stored = null;
-        try { stored = JSON.parse(localStorage.getItem('site_state')); } catch(e) {}
+        try { stored = JSON.parse(localStorage.getItem('site_state')); } catch(e) { console.warn('[CONFIG] Corrupt site_state in localStorage — reverting to defaults:', e.message); }
         // Clear localStorage if site changed (multi-site switch)
         if (stored && this.data.siteId && stored.siteId !== this.data.siteId) {
             localStorage.removeItem('site_state');

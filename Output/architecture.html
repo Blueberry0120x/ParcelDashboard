@@ -706,8 +706,339 @@
 
 </div>
 
-<div class="footer">
-  ProjectBook-Planner &middot; Built 2026-03-29 &middot; 7 sites &middot; 3,579 lines JS &middot; Python build pipeline
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- NATURAL LANGUAGE FLOWS                                                  -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+
+<div style="max-width:1100px;margin:48px auto 0;">
+
+  <h2 style="text-align:center;font-size:22px;font-weight:700;color:#f8fafc;margin-bottom:6px;">Natural Language Flows</h2>
+  <p style="text-align:center;color:#94a3b8;font-size:14px;margin-bottom:36px;">What actually happens — in plain English — for each user journey</p>
+
+  <!-- NL FLOW 1: New Site -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">A</span>
+      Adding a Brand New Site
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">You have an address</div>
+        <div class="nl-node-sub">e.g. 1234 Main St, San Diego CA</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Create site JSON</div>
+        <div class="nl-node-sub">data/sites/ca-1234_main.json<br>.site key: address, APN, zoning, setbacks, FAR</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Register in index</div>
+        <div class="nl-node-sub">data/sites/index.json<br>Add id, label, file, status</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Run build</div>
+        <div class="nl-node-sub">py tools/build.py<br>New site injected into __SITE_LIST__</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Site appears in dropdown</div>
+        <div class="nl-node-sub">Browser shows new address<br>in site-switcher</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Map loads for new site</div>
+        <div class="nl-node-sub">Pin at saved.lat/lng<br>Lot rectangle drawn</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NL FLOW 2: Daily work -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">B</span>
+      Daily Work — Placing Buildings
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Open app</div>
+        <div class="nl-node-sub">py tools/build.py serve<br>localhost:3040</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Map loads</div>
+        <div class="nl-node-sub">Last saved buildings<br>rendered on lot</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Drag building pin</div>
+        <div class="nl-node-sub">MapEngine snaps to lot edges<br>SetbackEngine clamps to boundary<br>Chain dims update live</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Adjust width / depth</div>
+        <div class="nl-node-sub">Type in sidebar inputs<br>Building footprint redraws instantly</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Click Save Config</div>
+        <div class="nl-node-sub">ExportEngine.save()<br>Writes to localStorage + POST /save</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Persisted to JSON</div>
+        <div class="nl-node-sub">ca-{site}.json .saved updated<br>HTML rebuilt<br>"Saved" flash badge</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NL FLOW 3: Setback Config -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">C</span>
+      Changing Setbacks
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Edit setback inputs</div>
+        <div class="nl-node-sub">Front / Rear / Side L / Side R<br>in Concept Design panel</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Click Save Setbacks</div>
+        <div class="nl-node-sub">SetbackEngine.applySetbacks()<br>validates: front+rear &lt; lot depth</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Setback polygon redraws</div>
+        <div class="nl-node-sub">Yellow dashed outline shrinks inward<br>Buildings re-clamped to new zone</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">ExportEngine.save()</div>
+        <div class="nl-node-sub">New setback values written<br>to ConfigEngine.state.setbacks</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Saved to site JSON</div>
+        <div class="nl-node-sub">.saved.setbacks updated<br>Survives reload</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NL FLOW 4: CAD Export -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">D</span>
+      Exporting to AutoCAD (LISP)
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Set CAD Zone</div>
+        <div class="nl-node-sub">Pick CA State Plane VI<br>from COORD dropdown<br>(now saves on change)</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Align map boundary</div>
+        <div class="nl-node-sub">Drag lot corners<br>Set rotation angle<br>Lock position</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Click Export LISP</div>
+        <div class="nl-node-sub">ExportEngine.generateLISP()<br>lot corners → proj4 → CAD coords</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">LISP code appears</div>
+        <div class="nl-node-sub">AutoLISP PLINE command<br>in textarea + JSON file downloads</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Paste into AutoCAD</div>
+        <div class="nl-node-sub">Lot boundary drawn at<br>real-world coordinates</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NL FLOW 5: Site Switch -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">E</span>
+      Switching Between Sites
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Pick site from dropdown</div>
+        <div class="nl-node-sub">Address selector in header<br>(populated from __SITE_LIST__)</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">POST /activate</div>
+        <div class="nl-node-sub">Server writes<br>{"activeSiteId": "CA-..."}<br>to site-data.json</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Server rebuilds HTML</div>
+        <div class="nl-node-sub">New site's .site + .saved<br>injected into __SITE_DEFAULTS__</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Browser reloads</div>
+        <div class="nl-node-sub">bootstrap.js fires fresh<br>ConfigEngine loads new site data</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">New site on map</div>
+        <div class="nl-node-sub">Different address, APN<br>Different buildings + zoning</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NL FLOW 6: Save fails (new) -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">F</span>
+      What Happens When Save Fails
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">User clicks Save</div>
+        <div class="nl-node-sub">ExportEngine.save() fires</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">localStorage always written</div>
+        <div class="nl-node-sub">site_state key updated<br>immediately (offline-safe)</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">POST /save to server</div>
+        <div class="nl-node-sub">Atomic write: .tmp → rename<br>Never corrupts existing file</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-warn">
+        <div class="nl-node-label">If server fails</div>
+        <div class="nl-node-sub">Returns 400/404/500<br>Console error logged<br>localStorage still has data</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Recovery</div>
+        <div class="nl-node-sub">Reload page → localStorage<br>restores last state<br>No data lost</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NL FLOW 7: Elevation -->
+  <div class="nl-flow">
+    <div class="nl-flow-title">
+      <span class="nl-num">G</span>
+      Sampling Elevation
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Click Elevation button</div>
+        <div class="nl-node-sub">ElevationTool activates<br>cursor becomes crosshair</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Click Sample</div>
+        <div class="nl-node-sub">Click any point on map<br>lat/lng captured</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">USGS API called</div>
+        <div class="nl-node-sub">epqs.nationalmap.gov<br>returns elevation in feet</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Pin placed on map</div>
+        <div class="nl-node-sub">Blue circle with elevation tooltip<br>Multiple points accumulate</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Average shown</div>
+        <div class="nl-node-sub">Running average of all<br>sampled points displayed</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  /* ── Natural language flow styles ─────────────────── */
+  .nl-flow {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  .nl-flow-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .nl-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #334155;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .nl-chain {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .nl-node {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 130px;
+    max-width: 160px;
+    flex-shrink: 0;
+  }
+  .nl-node.nl-action { border-color: #1d4ed8; }
+  .nl-node.nl-result { border-color: #15803d; background: #052e16; }
+  .nl-node.nl-warn   { border-color: #b45309; background: #451a03; }
+  .nl-node-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 4px;
+  }
+  .nl-node-sub {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+  .nl-node.nl-result .nl-node-sub { color: #4ade80; }
+  .nl-node.nl-warn   .nl-node-sub { color: #fbbf24; }
+  .nl-arrow {
+    color: #475569;
+    font-size: 22px;
+    padding: 12px 4px 0;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+</style>
+
+<div class="footer" style="margin-top:48px;">
+  ProjectBook-Planner &middot; 2026-03-29 &middot; 7 sites &middot; 3,579 lines JS &middot; Python build pipeline
 </div>
 
 </body>

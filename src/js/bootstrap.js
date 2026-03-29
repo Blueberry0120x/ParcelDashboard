@@ -13,11 +13,11 @@
         }
         function safeStorageSet(key, val) {
             try { localStorage.setItem(key, val); }
-            catch (e) {}
+            catch (e) { console.warn('[STORAGE] setItem failed for key "' + key + '":', e.message); }
         }
         function safeStorageRemove(key) {
             try { localStorage.removeItem(key); }
-            catch (e) {}
+            catch (e) { console.warn('[STORAGE] removeItem failed for key "' + key + '":', e.message); }
         }
         function getStateFromSiteId(siteId) {
             return siteId ? siteId.split('-')[0] : '';
