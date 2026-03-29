@@ -715,41 +715,182 @@
   <h2 style="text-align:center;font-size:22px;font-weight:700;color:#f8fafc;margin-bottom:6px;">Natural Language Flows</h2>
   <p style="text-align:center;color:#94a3b8;font-size:14px;margin-bottom:36px;">What actually happens — in plain English — for each user journey</p>
 
-  <!-- NL FLOW 1: New Site -->
-  <div class="nl-flow">
+  <!-- NL FLOW A1: Address Intake + GIS Research -->
+  <div class="nl-flow" style="border-left:4px solid #3b82f6;">
     <div class="nl-flow-title">
-      <span class="nl-num">A</span>
-      Adding a Brand New Site
+      <span class="nl-num" style="background:#1d4ed8;color:#fff;">A1</span>
+      Address Intake -- GIS Research
     </div>
     <div class="nl-chain">
       <div class="nl-node">
-        <div class="nl-node-label">You have an address</div>
-        <div class="nl-node-sub">e.g. 1234 Main St, San Diego CA</div>
+        <div class="nl-node-label">Designer gives address</div>
+        <div class="nl-node-sub">e.g. "1234 Main St,<br>San Diego CA"<br>This is all you start with.</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
-        <div class="nl-node-label">Create site JSON</div>
-        <div class="nl-node-sub">data/sites/ca-1234_main.json<br>.site key: address, APN, zoning, setbacks, FAR</div>
+        <div class="nl-node-label">GIS Parcel Lookup</div>
+        <div class="nl-node-sub">Search county assessor / GIS portal:<br>
+          <strong>SanDag</strong> (SD), <strong>ParcelQuest</strong>,<br>
+          <strong>Regrid</strong>, <strong>King County</strong> (WA)<br>
+          Find: APN, lot SF, legal desc</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
-        <div class="nl-node-label">Register in index</div>
-        <div class="nl-node-sub">data/sites/index.json<br>Add id, label, file, status</div>
+        <div class="nl-node-label">Get Parcel Geometry</div>
+        <div class="nl-node-sub">Extract from GIS:<br>
+          <strong>Lat/Lng</strong> (centroid or pin)<br>
+          <strong>All vertices</strong> ([lat,lng] pairs)<br>
+          <strong>Segment lengths</strong> per edge<br>
+          <strong>Lot width x depth</strong><br>
+          Shape: rectangle or polygon?</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
-        <div class="nl-node-label">Run build</div>
-        <div class="nl-node-sub">py tools/build.py<br>New site injected into __SITE_LIST__</div>
+        <div class="nl-node-label">Identify Zoning</div>
+        <div class="nl-node-sub">Look up municipal code:<br>
+          Zoning designation (R-1, CC-3-9...)<br>
+          Which city? Which code chapter?<br>
+          Download zoning code PDF<br>
+          → saved to reference/StateRegulation/</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-action">
-        <div class="nl-node-label">Site appears in dropdown</div>
-        <div class="nl-node-sub">Browser shows new address<br>in site-switcher</div>
+        <div class="nl-node-label">Extract Zoning Rules</div>
+        <div class="nl-node-sub">From zoning code PDF / municipal code:<br>
+          Setbacks (F/R/Side)<br>
+          Max height, FAR, density/SF<br>
+          Commercial depth<br>
+          Overlay zones (TPA, coastal,<br>
+          airport, fire, fault)</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Fees + Contacts</div>
+        <div class="nl-node-sub">NEF rate, DIF per unit,<br>
+          affordability %,<br>
+          inspector names/contacts,<br>
+          community plan area</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:#64748b;">
+      <strong style="color:#60a5fa;">Data chain:</strong> Zoning PDFs → Excel workbook (reference/) → JSON (data/sites/) → build injects into HTML
+    </div>
+  </div>
+
+  <!-- NL FLOW A2: Create Skeleton JSON -->
+  <div class="nl-flow" style="border-left:4px solid #3b82f6;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#1d4ed8;color:#fff;">A2</span>
+      Create Skeleton JSON
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Copy site-template.json</div>
+        <div class="nl-node-sub">reference/site-template.json<br>
+          Has every field with 0 or ""<br>
+          Full structure ready to fill</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Name the file</div>
+        <div class="nl-node-sub">Convention:<br>
+          <strong>{state}-{number}_{street}.json</strong><br>
+          e.g. ca-1234_Main.json<br>
+          siteId: CA-1234_MAIN</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Fill .site key</div>
+        <div class="nl-node-sub"><strong>From GIS:</strong> address, APN, lot dims,<br>
+          lat/lng, parcelPolygon vertices<br>
+          <strong>From zoning:</strong> setbacks, FAR,<br>
+          height, density, overlays<br>
+          <strong>Unknown?</strong> Use "-- TBD: [source]"</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Fill .saved key</div>
+        <div class="nl-node-sub">lat, lng from GIS centroid<br>
+          rotation: 0 (aligned later)<br>
+          buildings: [] (empty start)<br>
+          setbacks: from zoning rules<br>
+          locked: false</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Add to index.json</div>
+        <div class="nl-node-sub">data/sites/index.json<br>
+          id, label, address, file,<br>
+          state, city, zoning<br>
+          status: "skeleton"</div>
       </div>
       <div class="nl-arrow">&#8594;</div>
       <div class="nl-node nl-result">
-        <div class="nl-node-label">Map loads for new site</div>
-        <div class="nl-node-sub">Pin at saved.lat/lng<br>Lot rectangle drawn</div>
+        <div class="nl-node-label">Report what's filled</div>
+        <div class="nl-node-sub">Group by checklist section:<br>
+          A: Identity, B: Lot, C: Zoning,<br>
+          D: Overlays, E: Fees,<br>
+          F: Project, G: Inspectors,<br>
+          H: Coordinates</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:#64748b;">
+      <strong style="color:#60a5fa;">Status lifecycle:</strong>
+      <span style="color:#fbbf24;">skeleton</span> (just address + coords) →
+      <span style="color:#fb923c;">partial</span> (zoning filled, some TBDs) →
+      <span style="color:#4ade80;">complete</span> (all fields verified)
+    </div>
+  </div>
+
+  <!-- NL FLOW A3: Build + Activate -->
+  <div class="nl-flow" style="border-left:4px solid #3b82f6;">
+    <div class="nl-flow-title">
+      <span class="nl-num" style="background:#1d4ed8;color:#fff;">A3</span>
+      Build + Activate + Iterate
+    </div>
+    <div class="nl-chain">
+      <div class="nl-node">
+        <div class="nl-node-label">Run build</div>
+        <div class="nl-node-sub">py tools/build.py<br>
+          New site injected into<br>
+          __SITE_LIST__ + __ALL_SITE_DATA__</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Activate site</div>
+        <div class="nl-node-sub">POST /api/sites/{id}/activate<br>
+          OR select from dropdown<br>
+          site-data.json pointer updated</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Map loads at pin</div>
+        <div class="nl-node-sub">Satellite view at lat/lng<br>
+          Lot boundary drawn<br>
+          (rectangle or polygon)</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Align to parcel</div>
+        <div class="nl-node-sub">Drag pin to lot corner<br>
+          Rotate to match lot edges<br>
+          Set CAD zone (CA_VI, WA_N...)<br>
+          Lock position when aligned</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-action">
+        <div class="nl-node-label">Iterate: fill gaps</div>
+        <div class="nl-node-sub">Designer feeds missing data<br>
+          → update JSON → rebuild<br>
+          → repeat until complete<br>
+          Session by session over weeks</div>
+      </div>
+      <div class="nl-arrow">&#8594;</div>
+      <div class="nl-node nl-result">
+        <div class="nl-node-label">Status: complete</div>
+        <div class="nl-node-sub">All fields verified<br>
+          index.json status updated<br>
+          Ready for concept design</div>
       </div>
     </div>
   </div>
