@@ -167,15 +167,7 @@
     "commFront": false,
     "showBldgDims": true,
     "hiddenDimKeys": [],
-    "mergedDimKeys": [
-      "chain_w_5",
-      "chain_w_6",
-      "chain_w_3",
-      "chain_w_1",
-      "chain_d_3",
-      "chain_d_0",
-      "chain_d_1"
-    ],
+    "mergedDimKeys": [],
     "chainWOffset": 26,
     "chainDOffset": -10,
     "mapOpacity": 58,
