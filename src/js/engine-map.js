@@ -977,6 +977,7 @@ const MapEngine = {
                         if (self._propDimHandle) { self.map.removeLayer(self._propDimHandle); self._propDimHandle = null; }
                         self.map.dragging.enable();
                         layers.forEach(ll => { if (ll._path) ll._path.classList.remove('chain-dim-active'); });
+                        ExportEngine.save();
                     });
                 });
             });

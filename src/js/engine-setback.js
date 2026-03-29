@@ -1118,6 +1118,7 @@ const SetbackEngine = {
         if (state.mergedDimKeys) state.mergedDimKeys.forEach(k => MapEngine.mergedDimKeys.add(k));
         if (state.chainWOffset != null) MapEngine.chainWOffset = state.chainWOffset;
         if (state.chainDOffset != null) MapEngine.chainDOffset = state.chainDOffset;
+        if (state.propDimOffsets) MapEngine._propDimOffsets = state.propDimOffsets;
         const dimBtn = document.getElementById('bldgDimBtn');
         dimBtn.classList.toggle('active', dimsOn);
         if (dimsOn) dimBtn.textContent = 'Hide Dims';

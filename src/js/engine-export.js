@@ -137,6 +137,7 @@ const ExportEngine = {
             if (MapEngine.mergedDimKeys)         s.mergedDimKeys  = [...MapEngine.mergedDimKeys];
             if (MapEngine.chainWOffset != null)  s.chainWOffset  = MapEngine.chainWOffset;
             if (MapEngine.chainDOffset != null)  s.chainDOffset  = MapEngine.chainDOffset;
+            if (MapEngine._propDimOffsets)        s.propDimOffsets = MapEngine._propDimOffsets;
         }
 
         // ── Persist: ONE key ──
@@ -170,6 +171,7 @@ const ExportEngine = {
                 mergedDimKeys:  s.mergedDimKeys  ? [...s.mergedDimKeys] : [],
                 chainWOffset:   s.chainWOffset  ?? 0,
                 chainDOffset:   s.chainDOffset  ?? 0,
+                propDimOffsets:  s.propDimOffsets || {},
                 mapOpacity:     s.mapOpacity,
                 setbacksApplied: s.setbacksApplied,
                 freeDrag:       s.freeDrag ?? true,
