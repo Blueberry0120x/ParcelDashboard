@@ -1,87 +1,117 @@
-"""Standalone pre-session guard for any repo.
+"""session_guard_lite.py -- Portable session guard for all project repos.
 
-Self-contained -- no imports from NP_ClaudeAgent. Copy to any repo's
-tools/ folder and wire into .claude/settings.json as a SessionStart hook.
+Runs at SessionStart. Checks:
+  a) CLAUDE.md exists (BLOCKING)
+  b) Unread pings in controller-note/ (BLOCKING)
+  c) Warns about uncommitted work
+  d) Warns about stale artifacts
+  e) Kills OneDrive if running (GLOBAL-025)
 
-Checks enforced:
-  a) Unread pings in controller-note/ (BLOCKING -- exit 1)
-  b) Uncommitted work warning
-  c) Unpushed commits warning
-  d) Branch != main warning
-  e) Kill OneDrive.exe (GLOBAL-025)
+Derives all paths from cwd — no hardcoded paths. Works in any repo.
+Exit 0 = OK, Exit 1 = BLOCKED.
 
-Exit 0 = OK, Exit 1 = unread ping (blocking).
+Uses content-based ISO timestamp comparison (not mtime) so that
+git checkout/merge cannot cause false positives.
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+
+_ISO_RE = re.compile(
+    r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
+    r"(?:\.\d+)?(?:[+-]\d{2}:\d{2}|Z)?)"
+)
+
+
+def _parse_ts(path: Path) -> datetime | None:
+    """Parse ISO timestamp from .ping or .last-read file content."""
+    if not path.exists():
+        return None
+    try:
+        text = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        try:
+            return datetime.fromtimestamp(
+                path.stat().st_mtime, tz=timezone.utc,
+            )
+        except OSError:
+            return None
+    if not text:
+        return datetime.fromtimestamp(
+            path.stat().st_mtime, tz=timezone.utc,
+        )
+    m = _ISO_RE.search(text)
+    if m:
+        raw = m.group(1)
+        if raw.endswith("Z"):
+            raw = raw[:-1] + "+00:00"
+        try:
+            dt = datetime.fromisoformat(raw)
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> str:
-    """Run a command, return stdout. Empty string on failure."""
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=cwd,
-            timeout=10,
-        )
-        return result.stdout.strip()
+        r = subprocess.run(cmd, capture_output=True, text=True,
+                           cwd=cwd, timeout=10)
+        return r.stdout.strip()
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return ""
 
 
+def check_claude_md(repo_root: Path) -> bool:
+    """Return True if CLAUDE.md is missing."""
+    paths = [
+        repo_root / ".claude" / "CLAUDE.md",
+        repo_root / "CLAUDE.md",
+    ]
+    if any(p.exists() for p in paths):
+        return False
+    print("BLOCKED: No CLAUDE.md found")
+    return True
+
+
 def check_pings(repo_root: Path) -> bool:
-    """Check controller-note/ pings. Return True if unread."""
-    note_dir = repo_root / "controller-note"
-    ping_file = note_dir / ".ping"
-    last_read = note_dir / ".last-read"
-
-    if not ping_file.exists():
+    """Return True if unread pings exist (content-based comparison)."""
+    ping = repo_root / "controller-note" / ".ping"
+    last_read = repo_root / "controller-note" / ".last-read"
+    ping_ts = _parse_ts(ping)
+    if ping_ts is None:
         return False
-
-    ping_mtime = ping_file.stat().st_mtime
-    if last_read.exists() and ping_mtime <= last_read.stat().st_mtime:
+    read_ts = _parse_ts(last_read)
+    if read_ts is not None and ping_ts <= read_ts:
         return False
-
-    print("UNREAD PING -- read controller-note/ before proceeding")
+    print("UNREAD PING — read controller-note/ before proceeding")
     return True
 
 
 def check_uncommitted(repo_root: Path) -> None:
-    """Warn about dirty working tree."""
     output = _run(["git", "status", "--porcelain"], cwd=repo_root)
     if output:
-        count = len(output.splitlines())
-        print(f"WARNING: {count} uncommitted file(s) in working tree")
+        print(f"WARNING: {len(output.splitlines())} uncommitted file(s)")
 
 
-def check_unpushed(repo_root: Path) -> None:
-    """Warn about commits not pushed to remote."""
-    output = _run(
-        ["git", "log", "--oneline", "@{u}..HEAD"],
-        cwd=repo_root,
-    )
-    if output:
-        count = len(output.splitlines())
-        print(f"WARNING: {count} unpushed commit(s)")
-
-
-def check_branch(repo_root: Path) -> None:
-    """Warn if current branch is not main."""
-    branch = _run(
-        ["git", "branch", "--show-current"],
-        cwd=repo_root,
-    )
-    if branch and branch != "main":
-        print(f"WARNING: On branch '{branch}', not main")
+def check_stale(repo_root: Path) -> None:
+    patterns = ("*.bak", "*.old", "*.orig", "*.tmp", "*~")
+    skip = {".venv", ".git", "node_modules"}
+    count = 0
+    for pat in patterns:
+        for hit in repo_root.rglob(pat):
+            if any(part in hit.parts for part in skip):
+                continue
+            count += 1
+    if count:
+        print(f"WARNING: {count} stale artifact(s) in active paths")
 
 
 def kill_onedrive() -> None:
-    """Kill OneDrive.exe if running (GLOBAL-025)."""
     tasklist = _run(["tasklist", "/FI", "IMAGENAME eq OneDrive.exe"])
     if "OneDrive.exe" in tasklist:
         _run(["taskkill", "/F", "/IM", "OneDrive.exe"])
@@ -90,7 +120,6 @@ def kill_onedrive() -> None:
 
 def main() -> int:
     repo_root = Path.cwd().resolve()
-
     git_dir = _run(["git", "rev-parse", "--show-toplevel"], cwd=repo_root)
     if git_dir:
         repo_root = Path(git_dir)
@@ -99,14 +128,15 @@ def main() -> int:
     print("-" * 40)
 
     kill_onedrive()
-    has_unread = check_pings(repo_root)
+    missing = check_claude_md(repo_root)
+    unread = check_pings(repo_root)
     check_uncommitted(repo_root)
-    check_unpushed(repo_root)
-    check_branch(repo_root)
+    check_stale(repo_root)
 
     print("-" * 40)
-    if has_unread:
-        print("BLOCKED: Acknowledge pings before proceeding.")
+    if missing or unread:
+        reason = "rule files" if missing else "pings"
+        print(f"BLOCKED: Fix {reason} before proceeding.")
         return 1
 
     print("Session guard passed.")

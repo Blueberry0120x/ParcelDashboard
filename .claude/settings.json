@@ -7,7 +7,72 @@
             "type": "command",
             "command": "py tools/session_guard_lite.py",
             "timeout": 15,
-            "statusMessage": "Running session guard checks..."
+            "statusMessage": "session_guard: rules, pings, stale artifacts..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py .claude/hooks/block_find_exe.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "py .claude/hooks/strictmode_check.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "py .claude/hooks/com_lifecycle_check.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "py .claude/hooks/branch_naming.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py .claude/hooks/backup_config.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py .claude/hooks/secret_scanner.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "py .claude/hooks/upnote_reminder.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py .claude/hooks/ping_check.py",
+            "timeout": 10
           }
         ]
       }

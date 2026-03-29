@@ -1,3 +1,10 @@
+## [2026-03-29 07:30] [HOOKS-UPDATE] Baseline v4 deployed -- GLOBAL_UPDATE
+
+Controller deployed 10 hooks + session_guard_lite + settings.json.
+VERSION file: v4 (2026-03-28). Agent: verify with /done or session_guard.
+
+---
+
 ## [2026-03-28 04:10] HYGIENE DISPATCH — stale artifact cleanup (SPECIFIC FILES) -- OVERRIDE
 
 Controller stale-artifact audit (2026-03-28) found artifacts requiring cleanup.
