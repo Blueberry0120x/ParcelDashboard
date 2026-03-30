@@ -71,6 +71,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "py .claude/hooks/auto_commit.py",
+            "timeout": 20
+          },
+          {
+            "type": "command",
             "command": "py .claude/hooks/ping_check.py",
             "timeout": 10
           }
