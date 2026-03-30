@@ -3,6 +3,113 @@
 > Single rolling note. Newest entries at top. Controller: check this file first.
 > Format: `## [YYYY-MM-DD HH:MM] Topic` per entry. Mark resolved items with ~~strikethrough~~.
 
+## [2026-03-29 23:30] Upgrade Eco-system to dotnet -- ProjectBook-Planner-ProposalNote-ValidationRequestFromController
+
+### Context
+
+Full self-evaluation and engine consistency audit performed on ProjectBook-Planner.
+Current stack: pure JS frontend (7 engines, 3,579 lines) + Python build pipeline (547 lines).
+No backend. No type system. No tests. Engine contract enforced by CLAUDE.md comments only.
+
+### Current Health Scores
+
+| Dimension | Score |
+|-----------|-------|
+| Repo Organization | A+ |
+| Documentation | A |
+| Data Schema | A- (drift in 3 of 7 sites) |
+| Engine Contract Fidelity | C+ (3 active violations) |
+| Code Modularity | C (global singletons, tight coupling) |
+| Testability | F (zero tests) |
+| Save Architecture | A (single _payload() SSOT) |
+| **Overall** | **B (75/100)** |
+
+### Active Contract Violations
+
+1. **Frame A/B co-ownership** -- Both MapEngine and SetbackEngine perform lat/lng <-> feet conversions (should be MapEngine only per contract)
+2. **Private API leaks** -- MapEngine calls SetbackEngine._buildingExtents() and _clampToLot() (underscore = private)
+3. **Missing save triggers** -- Manual bldgOffsetX/Y edits don't call ExportEngine.save()
+
+### Proposed .NET Upgrade -- 6 Phases
+
+#### Phase 1: API Server (ASP.NET Minimal API)
+- Replace Python tools/build.py serve with .NET dev server
+- Endpoints: GET /api/sites, GET /api/sites/{id}, POST /api/sites/{id}/save
+- **Gain:** Single runtime, native async, production-ready server
+- **Tradeoff:** .NET SDK dependency (200 MB), slower cold start, overkill if stays single-user
+- **Cost:** 2-3 days | **Dependency:** None
+
+#### Phase 2: Typed Models (C# Records)
+- SiteIdentity, SessionState, Building, Setbacks as C# records
+- All JSON serialization through typed models
+- **Gain:** Compile-time schema enforcement, catches field drift instantly, IntelliSense
+- **Tradeoff:** Must maintain C# models AND JS objects in sync until Phase 5; breaks "just add a key" flexibility
+- **Cost:** 1 day | **Dependency:** Phase 1
+
+#### Phase 3: Coordinate Frame Service
+- Single canonical ToLatLng()/ToLocal() in C#, LatLng vs LocalPoint as distinct types
+- **Gain:** Kills 4-place conversion duplication, type-safe frame separation
+- **Tradeoff:** API latency blocks real-time drag (50-200ms vs 16ms needed); JS copy still needed for drag/snap; offline/file:// mode breaks
+- **Cost:** 1 week | **Dependency:** Phase 1
+
+#### Phase 4: Event Bus + Save Pipeline
+- Centralized server-side save with validation + optional SignalR sync
+- **Gain:** Every save validated, audit trail, multi-tab sync, catches missing triggers by design
+- **Tradeoff:** Breaks offline saves (currently localStorage works without server); SignalR adds 150KB; over-notification risk
+- **Cost:** 3-4 days | **Dependency:** Phase 1
+
+#### Phase 5: Engine Contract Enforcement (Roslyn Analyzer)
+- Custom analyzer flags cross-engine violations at compile time
+- **Gain:** 7 binding rules become compiler errors; living documentation
+- **Tradeoff:** Complex to write (~500+ lines); only covers C# code (JS still unchecked); false positive risk; 2-5s build overhead
+- **Cost:** 2 weeks | **Dependency:** Phase 1+2
+
+#### Phase 6: Test Harness (xUnit)
+- Coordinate round-trips, FAR math, schema validation, save round-trips
+- **Gain:** Catches intl-feet vs survey-feet, schema conformance, refactor confidence
+- **Tradeoff:** 16+ hours upfront; DOM-coupled functions need mocking; test data fixtures need maintenance
+- **Cost:** 1 week | **Dependency:** None (can start immediately)
+
+### Recommended Execution Order (solo-dev adjusted)
+
+1. Phase 6 (tests) -- no .NET needed, highest standalone ROI
+2. Phase 2 (typed models) -- standalone C# library for JSON validation
+3. Phase 1 (API server) -- when ready to retire Python
+4. Phases 3-5 -- defer until multi-user or team expansion
+
+### Summary Matrix
+
+| Phase | Consistency Gain | Cost | Solo-Dev Value | Multi-Dev Value |
+|-------|-----------------|------|---------------|----------------|
+| 1. API Server | Medium | Medium | Low-Medium | High |
+| 2. Typed Models | **High** | Low | **High** | **High** |
+| 3. Coord Service | Medium | High | Low | Medium |
+| 4. Event Bus | Medium | Medium | Low | High |
+| 5. Contract Enforce | **High** | **Very High** | Low | **High** |
+| 6. Test Harness | **High** | Medium | **High** | **High** |
+
+### VALIDATION REQUEST TO CONTROLLER
+
+**Action required from NP_ClaudeAgent Controller:**
+
+1. **Review this proposal** for ProjectBook-Planner .NET upgrade path
+2. **Run equivalent self-evaluation** (health scores, contract violations, modularity audit) on ALL repos under controller management:
+   - CatchmentDelin_XML
+   - NP_ClaudeAgent (self-eval)
+   - ParcelDashboard
+   - LSP_Library (if applicable)
+   - Any other managed repos
+3. **Assess .NET applicability** per repo -- not all repos need .NET; produce a per-repo recommendation
+4. **Return consolidated report** to this upnote with:
+   - Per-repo health scores
+   - Per-repo .NET phase recommendations (or "not applicable" with reason)
+   - Cross-repo consistency gaps that .NET typed models could unify
+5. **Tag:** `PROPOSAL-DOTNET-UPGRADE-2026-03-29`
+
+This is a **validation request**, not a dispatch. Controller should evaluate and respond with findings, not execute changes.
+
+---
+
 ## [2026-03-29 22:00] SESSION SELF-EVAL — Engine Contract + 12 Skills + 7 Fixes
 
 ### What was done
