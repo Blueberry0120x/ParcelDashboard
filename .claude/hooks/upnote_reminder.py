@@ -32,8 +32,10 @@ def main() -> int:
     result = {
         "message": (
             "CTRL-005 REMINDER: You just committed. If this affects "
-            "cross-repo state, write an upnote to controller-note/ "
-            "and touch .ping. Per CTRL-005, no silent changes."
+            "cross-repo state: (1) write upnote to controller-note/ "
+            "and touch .ping, (2) log key findings to /memories/repo/ "
+            "or /memories/. Per CTRL-005, no silent changes. "
+            "Load skill 'upnote-protocol' for the full ordered workflow."
         ),
     }
     json.dump(result, sys.stdout)
