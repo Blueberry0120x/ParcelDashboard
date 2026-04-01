@@ -53,6 +53,12 @@
         })();
 
         safeRun('ConfigEngine.init', function() { ConfigEngine.init(); });
+        // Sync: write the current site's ID to selected_site so clicking "Checklist"
+        // in the suite bar always opens the checklist for the site shown on the map.
+        safeRun('sync_selected_site', function() {
+            var id = ConfigEngine.data && ConfigEngine.data.siteId;
+            if (id) safeStorageSet('selected_site', id);
+        });
         // Only run UIEngine.init if required fields are present
         var d = (typeof ConfigEngine !== 'undefined' && ConfigEngine.data) ? ConfigEngine.data : null;
         var required = ["address","apn","zoning","width","depth","lotSF"];

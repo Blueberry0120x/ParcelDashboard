@@ -330,7 +330,7 @@
 <body>
 <div class="no-print" style="background:#0f4c81;padding:0 18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;flex-shrink:0">
   <div style="display:flex;align-items:center;height:32px;max-width:90%;margin:0 auto">
-    <a href="/" onclick="if(location.protocol==='file:')this.href='InteractiveMap.html'" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
+    <a href="/" onclick="(function(a){try{var s=document.getElementById('ck-site-sel');if(s&&s.value)localStorage.setItem('selected_site',s.value);}catch(e){}if(location.protocol==='file:')a.href='InteractiveMap.html';})(this)" style="color:rgba(255,255,255,.6);text-decoration:none;padding:0 12px;height:32px;display:flex;align-items:center">Map</a>
     <span style="color:rgba(255,255,255,.25);padding:0 3px">|</span>
     <span style="color:#fff;border-bottom:2px solid #fff;height:32px;display:flex;align-items:center;padding:0 12px">Checklist</span>
     <div id="ck-state-wrap" style="display:flex;align-items:center;gap:4px;margin-left:14px;padding-left:14px;border-left:1px solid rgba(255,255,255,.2)">
@@ -1230,8 +1230,8 @@ function App(){
               <div id="ck-addr-wrap" style={{display:"flex",alignItems:"center",gap:10,marginLeft:20}}>
                 <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}}>
                   <span style={{fontSize:"0.69em",textTransform:"uppercase",letterSpacing:"0.6px",opacity:.7,marginBottom:4,fontWeight:600,whiteSpace:"nowrap",color:"#fff"}}>Address</span>
-                  <select id="ck-site-sel" className="site-select" style={{background:"transparent",color:"#fff",border:"none",fontSize:"1.05em",fontWeight:700,fontFamily:"inherit",cursor:"pointer",padding:0,outline:"none",minWidth:200}} onChange={e=>{if(e.target.value&&window.switchSite)window.switchSite(e.target.value)}}>
-                    <option value={SD.siteId||""}>{SD.address||"Current site"}</option>
+                  <select id="ck-site-sel" className="site-select" defaultValue={SD.siteId||""} style={{background:"transparent",color:"#fff",border:"none",fontSize:"1.05em",fontWeight:700,fontFamily:"inherit",cursor:"pointer",padding:0,outline:"none",minWidth:200}} onChange={e=>{if(e.target.value&&window.switchSite)window.switchSite(e.target.value)}}>
+                    {SITE_LIST.length>0?SITE_LIST.map(s=><option key={s.siteId} value={s.siteId}>{s.address}</option>):<option value={SD.siteId||""}>{SD.address||"Current site"}</option>}
                   </select>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",padding:"9px 16px",background:"#0f4c81",borderRadius:8,boxShadow:"0 4px 6px rgba(15,76,129,.18)",flexShrink:0}}>
@@ -1372,7 +1372,8 @@ window.onerror=function(m,s,l,c,e){var box=document.getElementById('err-box');if
     while(siteSel.firstChild)siteSel.removeChild(siteSel.firstChild);
     var filtered=stateFilter?sites.filter(function(s){return getState(s.siteId)===stateFilter;}):sites;
     if(filtered.length>0){
-      if(!filtered.some(function(s){return s.siteId===activeSite;})){activeSite=filtered[0].siteId;safeStorageSet('selected_site',activeSite);}
+      if(!filtered.some(function(s){return s.siteId===activeSite;})){activeSite=filtered[0].siteId;}
+      safeStorageSet('selected_site',activeSite);
       filtered.forEach(function(s){var o=document.createElement('option');o.value=s.siteId;o.textContent=s.address;if(s.siteId===activeSite)o.selected=true;siteSel.appendChild(o);});
     }else{var o=document.createElement('option');o.value=sd.siteId||'';o.textContent=sd.address||'Current site';o.selected=true;siteSel.appendChild(o);}
   }
