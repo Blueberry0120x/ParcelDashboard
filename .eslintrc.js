@@ -1,4 +1,8 @@
 // ESLint config for ProjectBook-Planner
+// eslint-disable-next-line no-undef
+/* eslint-env node */
+// Note: package.json has "type":"module" for Vitest. This file uses CJS because
+// ESLint v8 requires CommonJS config files (.eslintrc.js = CJS regardless of type).
 // Enforces Engine Contract boundaries — see .claude/skills/engine-contract/SKILL.md
 //
 // Run:  npx eslint src/js/

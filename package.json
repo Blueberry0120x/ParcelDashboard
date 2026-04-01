@@ -5,9 +5,13 @@
   "description": "ProjectBook-Planner — interactive parcel layout tool",
   "scripts": {
     "lint": "eslint src/js/",
-    "lint:fix": "eslint src/js/ --fix"
+    "lint:fix": "eslint src/js/ --fix",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
+  "type": "module",
   "devDependencies": {
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "vitest": "^4.1.2"
   }
 }
