@@ -47,8 +47,8 @@ jobs:
           git add -A
           git commit -m "Mirror from ProjectBook-Planner (real data, dark mode, links fixed, responsive)" --allow-empty
 
-      - name: Force-push to ParcelDashboard
+      - name: Force-push to ParcelDashboard gh-pages
         run: |
-          git push --force https://x-access-token:${MIRROR_TOKEN}@github.com/Blueberry0120x/ParcelDashboard.git HEAD:main
+          git push --force https://x-access-token:${MIRROR_TOKEN}@github.com/Blueberry0120x/ParcelDashboard.git HEAD:gh-pages
         env:
           MIRROR_TOKEN: ${{ secrets.PUBLIC_MIRROR_PAT }}
