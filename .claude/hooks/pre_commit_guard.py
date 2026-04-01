@@ -21,7 +21,11 @@ _ISO_RE = re.compile(
 
 
 def _parse_ts(path: Path) -> datetime | None:
-    """Parse ISO timestamp from .ping or .last-read file content."""
+    """Parse ISO timestamp from .ping or .last-read file content.
+
+    NOTE: This function is duplicated in ping_check.py (standalone hooks
+    cannot import each other). Keep both copies in sync if this logic changes.
+    """
     if not path.exists():
         return None
     try:

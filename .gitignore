@@ -34,3 +34,7 @@ token.json
 
 # Auto-generated checklist backups (server POST /backup-checklist)
 config/backup/
+
+# Machine-local Claude memory (GLOBAL-021)
+.claude/memory/
+.claude/report/

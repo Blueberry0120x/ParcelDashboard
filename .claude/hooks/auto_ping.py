@@ -22,7 +22,12 @@ _UPNOTE_PATTERN = re.compile(
 
 
 def _extract_paths(hook_input: dict) -> list[str]:
-    """Extract file paths from tool input that might be upnote writes."""
+    """Extract file paths from Edit/Write tool input that might be upnote writes.
+
+    Only Edit and Write are checked — the file_path is explicit and reliable.
+    Bash detection was removed (R4): parsing command strings to infer upnote
+    writes is fragile and misfires. Agents must use Edit/Write for upnotes.
+    """
     paths: list[str] = []
     tool_name = hook_input.get("tool_name", "")
     tool_input = hook_input.get("tool_input", {})
@@ -31,23 +36,6 @@ def _extract_paths(hook_input: dict) -> list[str]:
         fp = tool_input.get("file_path", "")
         if fp:
             paths.append(fp)
-    elif tool_name == "Bash":
-        cmd = tool_input.get("command", "")
-        # Catch common patterns: echo/cat/tee to upnote, python -c write
-        if "upnote" in cmd.lower() and "controller-note" in cmd:
-            # Extract paths from the command
-            for token in cmd.split():
-                if _UPNOTE_PATTERN.search(token):
-                    paths.append(token)
-            # If no explicit path found but command targets upnote,
-            # try to find the controller-note dir from project_dir
-            if not paths and "controller-note" in cmd:
-                project_dir = hook_input.get("project_dir", "")
-                if project_dir:
-                    paths.append(
-                        str(Path(project_dir) / "controller-note"
-                            / "placeholder-upnote.md")
-                    )
 
     return paths
 
