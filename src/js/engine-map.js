@@ -26,6 +26,28 @@ const MapEngine = {
         trash:    { label: 'Trash Truck', W: 8,   D: 28,   color: '#65a30d' }
     },
 
+    // ── Coordinate Frame Conversions (canonical — all engines must use these) ──
+    // Converts local {x, y} (feet, lot-centered, rotated) to Leaflet [lat, lng].
+    toLatLng: function(pt, state) {
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+        const rad = state.rotation * Math.PI / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const rx = pt.x * cos - pt.y * sin;
+        const ry = pt.x * sin + pt.y * cos;
+        return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
+    },
+    // Converts Leaflet LatLng {lat, lng} to local {x, y} (feet, lot-centered, rotated).
+    toLocal: function(ll, state) {
+        const F_LAT = 364566;
+        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
+        const rad = state.rotation * Math.PI / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const rx = (ll.lng - state.lng) * F_LNG;
+        const ry = (ll.lat - state.lat) * F_LAT;
+        return { x: rx * cos + ry * sin, y: -rx * sin + ry * cos };
+    },
+
     init: function() {
         const street    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
         const sat       = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',    { maxNativeZoom: 19, maxZoom: 23, crossOrigin: true, attribution: 'Esri' });
@@ -108,17 +130,17 @@ const MapEngine = {
             // Skip if free drag mode is active
             if (idx > 0 && !state.freeDrag) {
                 const prev       = state.buildings[idx - 1];
-                const prevExt    = SetbackEngine._buildingExtents(prev);
-                const thisExt    = SetbackEngine._buildingExtents(bldg);
+                const prevExt    = SetbackEngine.buildingExtents(prev);
+                const thisExt    = SetbackEngine.buildingExtents(bldg);
                 const minOffsetX = prev.offsetX + prevExt.halfDepth + thisExt.halfDepth;
                 newOffsetX       = Math.max(minOffsetX, newOffsetX);
                 bldg.spacing     = parseFloat((newOffsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
             }
             bldg.offsetX = newOffsetX;
             // Always clamp to lot boundary — buildings cannot leave the lot
-            if (typeof SetbackEngine._clampToLot === 'function') {
+            if (typeof SetbackEngine.clampToLot === 'function') {
                 const { front: f, rear: r, sideL: sl, sideR: sr } = state.setbacks;
-                const clamped = SetbackEngine._clampToLot(
+                const clamped = SetbackEngine.clampToLot(
                     bldg.offsetX + (f - r) / 2,
                     bldg.offsetY + (sr - sl) / 2,
                     bldg
@@ -193,7 +215,7 @@ const MapEngine = {
         const state = ConfigEngine.state;
         const bldg = state.buildings[idx];
         const THRESHOLD = 8; // snap within 8 feet
-        const thisExt = SetbackEngine._buildingExtents(bldg);
+        const thisExt = SetbackEngine.buildingExtents(bldg);
         let snappedX = offsetX, snappedY = offsetY;
         let bestDistY = THRESHOLD, bestDistX = THRESHOLD;
 
@@ -308,7 +330,7 @@ const MapEngine = {
         // Snap to other buildings
         state.buildings.forEach((other, i) => {
             if (i === idx) return;
-            const otherExt = SetbackEngine._buildingExtents(other);
+            const otherExt = SetbackEngine.buildingExtents(other);
             const oTop   = other.offsetY + otherExt.halfWidth;
             const oBot   = other.offsetY - otherExt.halfWidth;
             const oRight = other.offsetX + otherExt.halfDepth;

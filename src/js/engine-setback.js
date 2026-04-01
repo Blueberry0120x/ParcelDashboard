@@ -26,7 +26,7 @@ const SetbackEngine = {
     },
 
     // Returns the building's axis-aligned bounding half-extents at a given orientation
-    _buildingExtents: function(bldg) {
+    buildingExtents: function(bldg) {
         const hw   = bldg.W / 2, hh = bldg.D / 2;
         const bRad = bldg.orientation * Math.PI / 180;
         const aC   = Math.abs(Math.cos(bRad)), aS = Math.abs(Math.sin(bRad));
@@ -37,7 +37,7 @@ const SetbackEngine = {
     },
 
     // Clamp a building's base center so its full stack stays within the lot
-    _clampToLot: function(cx, cy, bldg) {
+    clampToLot: function(cx, cy, bldg) {
         const { width: lotW, depth: lotD, parcelPolygon: pp } = ConfigEngine.data;
         const count        = bldg.count        || 1;
         const stackSpacing = bldg.stackSpacing || 0;
@@ -46,7 +46,7 @@ const SetbackEngine = {
         const hw   = bldg.W / 2, hh = bldg.D / 2;
         const bRad = bldg.orientation * Math.PI / 180;
         const bCos = Math.cos(bRad), bSin = Math.sin(bRad);
-        const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+        const { halfDepth, halfWidth } = this.buildingExtents(bldg);
 
         const sAngRad   = stackAngle * Math.PI / 180;
         const sDirX     = Math.cos(sAngRad);
@@ -109,8 +109,8 @@ const SetbackEngine = {
         if (idx <= 0 || idx >= state.buildings.length) return null;
         const prev    = state.buildings[idx - 1];
         const bldg    = state.buildings[idx];
-        const prevExt = this._buildingExtents(prev);
-        const thisExt = this._buildingExtents(bldg);
+        const prevExt = this.buildingExtents(prev);
+        const thisExt = this.buildingExtents(bldg);
         return parseFloat((bldg.offsetX - prev.offsetX - prevExt.halfDepth - thisExt.halfDepth).toFixed(1));
     },
 
@@ -121,8 +121,8 @@ const SetbackEngine = {
         const { front, rear } = state.setbacks;
         const prev    = state.buildings[idx - 1];
         const bldg    = state.buildings[idx];
-        const prevExt = this._buildingExtents(prev);
-        const thisExt = this._buildingExtents(bldg);
+        const prevExt = this.buildingExtents(prev);
+        const thisExt = this.buildingExtents(bldg);
         const count   = bldg.count        || 1;
         const sS      = bldg.stackSpacing || 0;
         const anchor  = bldg.anchor       || 'center';
@@ -138,8 +138,8 @@ const SetbackEngine = {
         if (idx <= 0) return;
         const prev    = state.buildings[idx - 1];
         const bldg    = state.buildings[idx];
-        const prevExt = this._buildingExtents(prev);
-        const thisExt = this._buildingExtents(bldg);
+        const prevExt = this.buildingExtents(prev);
+        const thisExt = this.buildingExtents(bldg);
         bldg.offsetX = parseFloat((prev.offsetX + prevExt.halfDepth + thisExt.halfDepth + gap).toFixed(1));
         bldg.spacing = gap;
         const ox = document.getElementById('bldgOffsetX');
@@ -234,7 +234,7 @@ const SetbackEngine = {
         const state   = ConfigEngine.state;
         const src     = state.buildings[state.activeBuilding] || state.buildings[0] || ConfigEngine.defaultBuilding;
         const last    = state.buildings[state.buildings.length - 1];
-        const lastExt = this._buildingExtents(last);
+        const lastExt = this.buildingExtents(last);
         const newBldg = {
             orientation:  src.orientation,
             W:            src.W,
@@ -249,7 +249,7 @@ const SetbackEngine = {
             stories:      src.stories     || 1,
             floorHeight:  src.floorHeight || 9
         };
-        const newExt    = this._buildingExtents(newBldg);
+        const newExt    = this.buildingExtents(newBldg);
         newBldg.offsetX = parseFloat((last.offsetX + lastExt.halfDepth + newExt.halfDepth).toFixed(1));
         state.buildings.push(newBldg);
         state.activeBuilding = state.buildings.length - 1;
@@ -295,16 +295,7 @@ const SetbackEngine = {
         }
 
         const { front, rear, sideL, sideR } = state.setbacks;
-        const lRad  = state.rotation * Math.PI / 180;
-        const lCos  = Math.cos(lRad), lSin = Math.sin(lRad);
-        const F_LAT = 364566;
-        const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
-
-        const toLatLng = pt => {
-            const rx = pt.x * lCos - pt.y * lSin;
-            const ry = pt.x * lSin + pt.y * lCos;
-            return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
-        };
+        const toLatLng = pt => MapEngine.toLatLng(pt, state);
 
         buildings.forEach((bldg, i) => {
             const count        = bldg.count        || 1;
@@ -322,14 +313,14 @@ const SetbackEngine = {
             let preCx = rawCx;
             if (i > 0 && !state.freeDrag) {
                 const prev       = buildings[i - 1];
-                const prevExt    = this._buildingExtents(prev);
-                const thisExt    = this._buildingExtents(bldg);
+                const prevExt    = this.buildingExtents(prev);
+                const thisExt    = this.buildingExtents(bldg);
                 const prevBaseCx = (prev.offsetX || 0) + (front - rear) / 2;
                 preCx = Math.max(rawCx, prevBaseCx + prevExt.halfDepth + thisExt.halfDepth);
             }
             // Lot boundary is always enforced — buildings cannot leave the lot
             let baseCx, cy;
-            ({ cx: baseCx, cy } = this._clampToLot(preCx, rawCy, bldg));
+            ({ cx: baseCx, cy } = this.clampToLot(preCx, rawCy, bldg));
 
             // Update state if clamped or adjusted
             const newOX = parseFloat((baseCx - (front - rear) / 2).toFixed(1));
@@ -405,15 +396,11 @@ const SetbackEngine = {
 
         const state  = ConfigEngine.state;
         const { front, rear, sideL, sideR } = state.setbacks;
+        const toLatLng = pt => MapEngine.toLatLng(pt, state);
         const lRad  = state.rotation * Math.PI / 180;
         const lCos  = Math.cos(lRad), lSin = Math.sin(lRad);
         const F_LAT = 364566;
         const F_LNG = 365228 * Math.cos(state.lat * Math.PI / 180);
-        const toLatLng = pt => {
-            const rx = pt.x * lCos - pt.y * lSin;
-            const ry = pt.x * lSin + pt.y * lCos;
-            return [state.lat + ry / F_LAT, state.lng + rx / F_LNG];
-        };
 
         const push = layer => { MapEngine.bldgDimLabels.push(layer); return layer; };
         const line = pts => push(L.polyline(pts.map(toLatLng), {
@@ -499,7 +486,7 @@ const SetbackEngine = {
             const count  = bldg.count || 1;
             const ss     = bldg.stackSpacing || 0;
             const anchor = bldg.anchor || 'center';
-            const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+            const { halfDepth, halfWidth } = this.buildingExtents(bldg);
             const step = halfDepth * 2 + ss;
             const aOff = anchor === 'front' ? 0 : anchor === 'rear' ? count - 1 : (count - 1) / 2;
             const baseCx = (front - rear) / 2 + (bldg.offsetX || 0);
@@ -652,19 +639,13 @@ const SetbackEngine = {
         let dLayers = drawChain(dChain, dRef, true, 0, dPerpY, clrDepthAngle, 'chain_d');
 
         // ── Drag-to-reposition via chain lines ──────────────────────────
-        const rad = state.rotation * Math.PI / 180;
-        const rCos = Math.cos(rad), rSin = Math.sin(rad);
-        const toLocal = (ll) => {
-            const rx = (ll.lng - state.lng) * F_LNG;
-            const ry = (ll.lat - state.lat) * F_LAT;
-            return { x: rx * rCos + ry * rSin, y: -rx * rSin + ry * rCos };
-        };
+        const toLocal = ll => MapEngine.toLocal(ll, state);
 
         // Snap anchors: lot edges + all building boundaries
         const wAnchors = [-lotHD, lotHD];
         const dAnchors = [-lotHW, lotHW];
         state.buildings.forEach((bldg) => {
-            const { halfDepth, halfWidth } = this._buildingExtents(bldg);
+            const { halfDepth, halfWidth } = this.buildingExtents(bldg);
             const count  = bldg.count || 1;
             const ss     = bldg.stackSpacing || 0;
             const anchor = bldg.anchor || 'center';
@@ -946,6 +927,7 @@ const SetbackEngine = {
                     if (spEl) spEl.value = bldg.spacing.toFixed(1);
                 }
                 this.drawBuilding();
+                ExportEngine.save();
             });
         });
 
@@ -971,7 +953,7 @@ const SetbackEngine = {
             const bldg = state.buildings[state.activeBuilding];
             if (!bldg) return;
             const { depth: lotD } = ConfigEngine.data;
-            const ext  = this._buildingExtents(bldg);
+            const ext  = this.buildingExtents(bldg);
             const sS   = bldg.stackSpacing || 0;
             const step = ext.halfDepth * 2 + sS;
             const maxN = Math.max(1, Math.floor((lotD + sS) / step));
@@ -986,7 +968,7 @@ const SetbackEngine = {
             const bldg = state.buildings[state.activeBuilding];
             if (!bldg) return;
             const { depth: lotD } = ConfigEngine.data;
-            const ext   = this._buildingExtents(bldg);
+            const ext   = this.buildingExtents(bldg);
             const count = bldg.count || 1;
             let g = Math.max(0, parseFloat(document.getElementById('bldgStackSpacing').value) || 0);
             if (count > 1) {
