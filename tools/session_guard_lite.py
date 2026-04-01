@@ -88,7 +88,7 @@ def check_pings(repo_root: Path) -> bool:
     read_ts = _parse_ts(last_read)
     if read_ts is not None and ping_ts <= read_ts:
         return False
-    print("UNREAD PING — read controller-note/ before proceeding")
+    print("UNREAD PING — run /upnote-protocol to acknowledge before proceeding")
     return True
 
 
@@ -115,17 +115,44 @@ def check_behind_remote(repo_root: Path) -> None:
         )
 
 
-def check_stale(repo_root: Path) -> None:
-    patterns = ("*.bak", "*.old", "*.orig", "*.tmp", "*~")
-    skip = {".venv", ".git", "node_modules"}
-    count = 0
-    for pat in patterns:
+def check_stale_artifacts(repo_root: Path) -> int:
+    """Auto-clean stale artifacts at session start. Return count removed."""
+    import shutil
+
+    stale_patterns = (
+        "*.bak", "*.old", "*.orig", "*.tmp", "*~",
+        "*.copy", "*.rej", "*.pyc",
+    )
+    stale_dirs = ("__pycache__", ".pytest_cache")
+    skip = {".venv", ".git", "node_modules", "report"}
+
+    removed = 0
+
+    for pat in stale_patterns:
         for hit in repo_root.rglob(pat):
             if any(part in hit.parts for part in skip):
                 continue
-            count += 1
-    if count:
-        print(f"WARNING: {count} stale artifact(s) in active paths")
+            try:
+                hit.unlink()
+                removed += 1
+            except OSError:
+                pass
+
+    for dirname in stale_dirs:
+        for hit in repo_root.rglob(dirname):
+            if any(part in hit.parts for part in skip):
+                continue
+            if hit.is_dir():
+                try:
+                    shutil.rmtree(hit)
+                    removed += 1
+                except OSError:
+                    pass
+
+    if removed:
+        print(f"AUTO-CLEAN: removed {removed} stale artifact(s)")
+
+    return removed
 
 
 def kill_onedrive() -> None:
@@ -149,7 +176,7 @@ def main() -> int:
     unread = check_pings(repo_root)
     check_uncommitted(repo_root)
     check_behind_remote(repo_root)
-    check_stale(repo_root)
+    check_stale_artifacts(repo_root)
 
     print("-" * 40)
     if missing:
@@ -159,7 +186,7 @@ def main() -> int:
     if unread:
         print(
             "ACTION REQUIRED: Unread ping(s) detected. "
-            "Read controller-note/ as your FIRST action this session."
+            "Run /upnote-protocol as your FIRST action this session."
         )
 
     print("Session guard passed.")

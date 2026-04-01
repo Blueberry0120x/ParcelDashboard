@@ -105,7 +105,7 @@ def main() -> int:
         msg = (
             f"STOP BLOCKED (CTRL-005): unread ping(s) in {len(unread)} repo(s): "
             + ", ".join(unread[:5])
-            + ". Acknowledge before finishing."
+            + ". Run /upnote-protocol to acknowledge before finishing."
         )
         print(msg, file=sys.stderr)
         return 2

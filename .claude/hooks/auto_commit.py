@@ -60,7 +60,7 @@ def main() -> int:
         sample += f" (+{len(lines) - 5} more)"
 
     # Stage all changes
-    rc, out = _run(["git", "add", "-A"], repo_root)
+    rc, out = _run(["git", "add", "-u"], repo_root)
     if rc != 0:
         return 0
 

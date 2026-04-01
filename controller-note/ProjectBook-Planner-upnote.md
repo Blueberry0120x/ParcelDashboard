@@ -1,3 +1,8 @@
+## [2026-04-01 01:30] Hooks baseline v8 deployed -- global_update
+
+Deployed 0 hooks from v6 to v8.
+Rules enforced: GLOBAL-003, GLOBAL-006, GLOBAL-010, GLOBAL-013, GLOBAL-014, GLOBAL-025, GLOBAL-027, CTRL-005, CTRL-008.
+
 # ProjectBook-Planner -- Agent Upnote
 
 > Single rolling note. Newest entries at top. Controller: check this file first.
