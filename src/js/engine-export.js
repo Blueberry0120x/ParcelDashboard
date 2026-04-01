@@ -172,6 +172,7 @@ const ExportEngine = {
                 chainWOffset:   s.chainWOffset  ?? 0,
                 chainDOffset:   s.chainDOffset  ?? 0,
                 propDimOffsets:  s.propDimOffsets || {},
+                parcelPolygon:  ConfigEngine.data.parcelPolygon || null,
                 mapOpacity:     s.mapOpacity,
                 setbacksApplied: s.setbacksApplied,
                 freeDrag:       s.freeDrag ?? true,

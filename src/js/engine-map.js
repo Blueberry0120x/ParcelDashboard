@@ -13,6 +13,7 @@ const MapEngine = {
     _saveTimer:  null,         // debounce handle for ExportEngine.save()
     dimDragMode: false,        // when true, clicking dim lines activates drag handle
     dimMergeMode: false,       // when true, clicking dim segments merges them with neighbor
+    _parcelEditCentroid: null, // centroid of parcelPolygon captured at PM edit start
     // Vehicle overlay
     vehiclePolys: [], vehicleMarkers: [], vehicleLabels: [],
     VEHICLE_TYPES: {
@@ -82,6 +83,7 @@ const MapEngine = {
         this._activeBase = sat;
         this.map.on('baselayerchange', (e) => { this._activeBase = e.layer; e.layer.setOpacity(ConfigEngine.state.mapOpacity / 100); });
         this.buildOpacityPanel();
+        this.buildParcelEditControl();
 
         this.lotPoly     = L.polygon([], { color: '#d9381e', weight: 3, fillOpacity: 0, noClip: true }).addTo(this.map);
         this.commPoly    = L.polygon([], { color: '#0f4c81', weight: 1, fillColor: '#0f4c81', fillOpacity: 0.3, noClip: true }).addTo(this.map);
@@ -697,6 +699,108 @@ const MapEngine = {
             }
         });
         this.map.addControl(new DimMergeCtrl());
+    },
+
+    buildParcelEditControl: function() {
+        const self = this;
+        if (!window.L || !L.PM) {
+            console.warn('[PARCEL EDIT] Leaflet.PM not loaded — parcel editor disabled.');
+            return;
+        }
+        if (!ConfigEngine.data.parcelPolygon || ConfigEngine.data.parcelPolygon.length < 3) return;
+
+        const ParcelEditCtrl = L.Control.extend({
+            options: { position: 'bottomright' },
+            onAdd: function() {
+                var c = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-parcel-edit');
+                c.innerHTML = '<a href="#" title="Edit parcel boundary vertices" role="button" aria-label="Edit parcel boundary" style="font-size:12px;padding:0 8px;min-width:80px;display:flex;align-items:center;gap:5px;white-space:nowrap;">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+                    '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                    'Edit Parcel</a>';
+                L.DomEvent.disableClickPropagation(c);
+                c.querySelector('a').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    self._startParcelEdit();
+                });
+                return c;
+            }
+        });
+        this.map.addControl(new ParcelEditCtrl());
+    },
+
+    _startParcelEdit: function() {
+        var pp = ConfigEngine.data.parcelPolygon;
+        if (!pp || pp.length < 3 || !L.PM) return;
+
+        // Compute and store centroid for inverse transform at save time
+        var n = pp.length;
+        if (pp[n - 1][0] === pp[0][0] && pp[n - 1][1] === pp[0][1]) n--;
+        var cLat = 0, cLng = 0;
+        for (var i = 0; i < n; i++) { cLat += pp[i][0]; cLng += pp[i][1]; }
+        this._parcelEditCentroid = { lat: cLat / n, lng: cLng / n };
+
+        this.lotPoly.pm.enable({
+            allowSelfIntersection: false,
+            draggable: false,
+            removeLayerBelowMinVertices: false,
+            preventVertexRemoval: false
+        });
+        this._showParcelEditBar();
+    },
+
+    _saveParcelEdit: function() {
+        var state = ConfigEngine.state;
+        var cent = this._parcelEditCentroid;
+        if (!cent) return;
+
+        // Extract dragged vertex positions from PM-edited polygon
+        var latLngs = this.lotPoly.getLatLngs()[0];
+
+        // Inverse display transform:
+        // displayed = [state.lat + (stored_lat - cLat), state.lng + (stored_lng - cLng)]
+        // => stored_lat = ll.lat - state.lat + cLat
+        var newPoly = latLngs.map(function(ll) {
+            return [ll.lat - state.lat + cent.lat, ll.lng - state.lng + cent.lng];
+        });
+
+        this.lotPoly.pm.disable();
+        ConfigEngine.data.parcelPolygon = newPoly;
+        this._parcelEditCentroid = null;
+        this._hideParcelEditBar();
+        ExportEngine.save();
+        this.render();
+    },
+
+    _cancelParcelEdit: function() {
+        this.lotPoly.pm.disable();
+        this._parcelEditCentroid = null;
+        this._hideParcelEditBar();
+        this.render(); // re-render restores original polygon from ConfigEngine.data
+    },
+
+    _showParcelEditBar: function() {
+        var existing = document.getElementById('parcel-edit-bar');
+        if (existing) existing.remove();
+        var self = this;
+        var bar = document.createElement('div');
+        bar.id = 'parcel-edit-bar';
+        bar.style.cssText = 'position:absolute;bottom:70px;right:10px;z-index:1001;display:flex;' +
+            'gap:6px;background:rgba(255,255,255,0.97);border:1px solid #ccc;border-radius:6px;' +
+            'padding:6px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-size:13px;align-items:center;';
+        bar.innerHTML = '<span style="margin-right:6px;color:#555;">Drag vertices to reshape parcel</span>' +
+            '<button id="parcel-edit-save" style="background:#2563eb;color:#fff;border:none;border-radius:4px;' +
+            'padding:4px 12px;cursor:pointer;font-size:12px;font-weight:600;">Save</button>' +
+            '<button id="parcel-edit-cancel" style="background:#e5e7eb;color:#333;border:none;border-radius:4px;' +
+            'padding:4px 10px;cursor:pointer;font-size:12px;">Cancel</button>';
+        this.map.getContainer().appendChild(bar);
+        document.getElementById('parcel-edit-save').addEventListener('click', function() { self._saveParcelEdit(); });
+        document.getElementById('parcel-edit-cancel').addEventListener('click', function() { self._cancelParcelEdit(); });
+    },
+
+    _hideParcelEditBar: function() {
+        var bar = document.getElementById('parcel-edit-bar');
+        if (bar) bar.remove();
     },
 
     buildRecenterControl: function() {

@@ -116,6 +116,10 @@ const ConfigEngine = {
                 this.state.vehicles      = saved.vehicles;
                 this.state.activeVehicle = saved.activeVehicle ?? -1;
             }
+            // Restore edited parcel polygon only if site JSON didn't supply one
+            if (saved.parcelPolygon && !this.data.parcelPolygon) {
+                this.data.parcelPolygon = saved.parcelPolygon;
+            }
         } else {
             // Fall back to __SITE_DEFAULTS__
             this.state.lat      = sd.lat      ?? this.defaults.lat;

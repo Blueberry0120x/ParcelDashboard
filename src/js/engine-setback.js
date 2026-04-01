@@ -786,6 +786,7 @@ const SetbackEngine = {
                     setLayers(drawChain(chain, newRef, isX, isX ? perpX : (newRef > 0 ? 1 : -1), isX ? (newRef > 0 ? 1 : -1) : perpY, rotDeg, prefix));
                     handle.setLatLng(toLatLng(getHPt()));
                 });
+                handle.on('dragend', () => { ExportEngine.save(); });
             };
             autoHandle(wChain, false, wPerpX, 0, 'chainWOffset', chainRefX, wAnchors, clrWidthAngle, 'chain_w', () => wLayers, (l) => { wLayers = l; });
             autoHandle(dChain, true,  0, dPerpY, 'chainDOffset', chainRefY, dAnchors, clrDepthAngle, 'chain_d', () => dLayers, (l) => { dLayers = l; });
