@@ -1,3 +1,18 @@
+## [2026-04-01 15:30] dev-check fixes: B-001 + B-002 in checklist.html -- update
+
+Controller ran dev-check + logic-check on two-way map/checklist site linking (33c225a).
+Two bugs found and fixed in src/checklist.html — committed at 67252ae.
+
+- B-001 (high): populateSites() siteSel was null-captured before React 18 async commit.
+  Fixed: dynamic getElementById each call. State filter now works.
+- B-002 (medium): React re-renders overwrote plain-script state filtering.
+  Fixed: ckStateFilter React state + ckStateChange custom event bridge.
+- Cleanup: removed dead var siteSel.
+- dev-check: 10 clean rounds. logic-check: 10 clean rounds, 4 accepted concerns.
+- 67/67 npm tests pass.
+
+---
+
 ## [2026-03-29 07:30] [HOOKS-UPDATE] Baseline v4 deployed -- GLOBAL_UPDATE
 
 Controller deployed 10 hooks + session_guard_lite + settings.json.
