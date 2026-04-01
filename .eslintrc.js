@@ -16,7 +16,9 @@ module.exports = {
     },
     // Globals: engines loaded as plain script tags (no modules)
     globals: {
-        L: "readonly",          // Leaflet
+        L: "readonly",              // Leaflet
+        proj4: "readonly",          // proj4js — loaded via CDN script tag
+        html2canvas: "readonly",    // html2canvas — loaded via CDN script tag
         ConfigEngine: "readonly",
         MapEngine: "readonly",
         SetbackEngine: "readonly",
@@ -53,7 +55,7 @@ module.exports = {
         // ── General quality rules ──────────────────────────────────────────
         "no-unused-vars": ["warn", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true }],
         "no-undef": "error",
-        "eqeqeq": ["error", "always"],
+        "eqeqeq": ["error", "always", { "null": "ignore" }],
         "no-console": "off",   // console.warn/log used intentionally for diagnostics
     },
 
@@ -72,6 +74,24 @@ module.exports = {
             files: ["src/js/engine-export.js"],
             rules: {
                 // ExportEngine owns the write path — allowed to use localStorage directly
+                "no-restricted-globals": "off",
+                "no-restricted-syntax": "off",
+            }
+        },
+        {
+            files: ["src/js/engine-config.js"],
+            rules: {
+                // ConfigEngine is the read path — it reads back site_state that ExportEngine
+                // writes, and runs a one-time migration from legacy keys. Legitimate access.
+                "no-restricted-globals": "off",
+                "no-restricted-syntax": "off",
+            }
+        },
+        {
+            files: ["src/js/bootstrap.js"],
+            rules: {
+                // bootstrap.js is the app init layer — safeStorageGet/Set/Remove wrappers
+                // exist here specifically to handle localStorage access before engines boot.
                 "no-restricted-globals": "off",
                 "no-restricted-syntax": "off",
             }
