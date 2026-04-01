@@ -263,6 +263,13 @@ Before declaring any task complete:
 - **Writable:** `Output/InteractiveMap.html`, `Output/PreApp_Checklist.html`, `data/site-data.json` (`.saved` key only, via POST /save), `controller-note/`, `UserPref.json`
 
 
+## Config & Settings Ownership
+
+- `UserPref.json` — user preferences and agent correction keywords (git-tracked, project root)
+- `data/site-data.json` — active site pointer; `.saved` key written by `ExportEngine.save()` only
+- `data/sites/*.json` — per-site identity and saved session state (git-tracked)
+
+
 ## Handoff Notes (last updated 2026-03-29)
 
 ### What was completed this session
