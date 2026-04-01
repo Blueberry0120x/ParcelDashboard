@@ -482,7 +482,7 @@ const SetbackEngine = {
         let chainRefX = null;   // fixed x for the width chain (front edge)
         let chainRefY = null;   // fixed y for the depth chain (left edge)
 
-        state.buildings.forEach((bldg) => {
+        state.buildings.forEach((bldg, bIdx) => {
             const count  = bldg.count || 1;
             const ss     = bldg.stackSpacing || 0;
             const anchor = bldg.anchor || 'center';
@@ -497,15 +497,15 @@ const SetbackEngine = {
             if (chainRefX === null) chainRefX = cxFirst - halfDepth;
             if (chainRefY === null) chainRefY = cy - halfWidth;
 
-            // Width chain: building left/right edges
-            wPts.push({ v: cy - halfWidth });
-            wPts.push({ v: cy + halfWidth });
+            // Width chain: tag with pairId + trueLen so label shows perpendicular W, not bbox projection
+            wPts.push({ v: cy - halfWidth, pairId: `w${bIdx}`, trueLen: bldg.W });
+            wPts.push({ v: cy + halfWidth, pairId: `w${bIdx}`, trueLen: bldg.W });
 
-            // Depth chain: each copy's front/rear edges
+            // Depth chain: tag each copy — label shows perpendicular D, not bbox projection
             for (let j = 0; j < count; j++) {
                 const cx = baseCx + (j - aOff) * step;
-                dPts.push({ v: cx - halfDepth });
-                dPts.push({ v: cx + halfDepth });
+                dPts.push({ v: cx - halfDepth, pairId: `d${bIdx}_${j}`, trueLen: bldg.D });
+                dPts.push({ v: cx + halfDepth, pairId: `d${bIdx}_${j}`, trueLen: bldg.D });
             }
         });
 
@@ -577,9 +577,14 @@ const SetbackEngine = {
                 // Ticks
                 pLine([{ x: d1.x - tk45x, y: d1.y - tk45y }, { x: d1.x + tk45x, y: d1.y + tk45y }]);
                 pLine([{ x: d2.x - tk45x, y: d2.y - tk45y }, { x: d2.x + tk45x, y: d2.y + tk45y }]);
-                // Label — show merged indicator if multiple segments combined
+                // Label — use true perpendicular W/D when segment spans exactly one building face;
+                // otherwise fall back to axis-aligned dist (setback gaps, lot edges)
                 const isMerged = run.keys.length > 1;
-                const labelText = dist.toFixed(1) + "'" + (isMerged ? ' \u2194' : '');
+                const startPt = chain[run.startIdx], endPt = chain[run.endIdx];
+                const isBldgFace = !isMerged && startPt.pairId && endPt.pairId
+                    && startPt.pairId === endPt.pairId;
+                const labelDist = isBldgFace ? startPt.trueLen : dist;
+                const labelText = labelDist.toFixed(1) + "'" + (isMerged ? ' \u2194' : '');
                 const m = push(L.marker(toLatLng(mid), {
                     icon: L.divIcon({
                         className: '',

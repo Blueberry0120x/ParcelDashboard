@@ -107,3 +107,59 @@ describe('Golden regression — Westminster (ca-11001_Westminster)', () => {
         })
     })
 })
+
+// ─── CANNINGTON (ca-4876_Cannington.json) ─────────────────────────────────────
+// Site: 4876 Cannington Dr, San Diego, CA 92117
+// Lot: 50 × 100 ft | rotation: 27°
+// 2 buildings: B0 W=30 D=60 orient=1.6° at ox=5.2, oy=10.1
+//              B1 W=10 D=30 orient=1.6° at ox=24.1, oy=-21
+// Stable reference: v5.0-multisite-stable (2026-03-26)
+// Golden values captured 2026-04-01
+const CA_STATE = { lat: 32.830866730073865, lng: -117.16883137822153, rotation: 27 }
+
+const CA_SETBACKS = { front: 10, rear: 0, sideL: 4, sideR: 4 }
+const CA_BLDGS = [
+    {
+        label: 'B0 (W=30 D=60 orient=1.6)',
+        cx: (CA_SETBACKS.front - CA_SETBACKS.rear) / 2 + 5.2,
+        cy: (CA_SETBACKS.sideR - CA_SETBACKS.sideL) / 2 + 10.1,
+        bldg: { W: 30, D: 60, orientation: 1.6 },
+    },
+    {
+        label: 'B1 (W=10 D=30 orient=1.6)',
+        cx: (CA_SETBACKS.front - CA_SETBACKS.rear) / 2 + 24.1,
+        cy: (CA_SETBACKS.sideR - CA_SETBACKS.sideL) / 2 + (-21),
+        bldg: { W: 10, D: 30, orientation: 1.6 },
+    },
+]
+
+const CA_GOLDEN = [
+    // B0 — corners C0..C3
+    [
+        [32.830812172, -117.168812825],
+        [32.830851563, -117.168726998],
+        [32.830996061, -117.168820586],
+        [32.830956670, -117.168906413],
+    ],
+    // B1 — corners C0..C3
+    [
+        [32.830808954, -117.168706733],
+        [32.830822084, -117.168678124],
+        [32.830894333, -117.168724918],
+        [32.830881203, -117.168753527],
+    ],
+]
+
+describe('Golden regression — Cannington (ca-4876_Cannington)', () => {
+    CA_BLDGS.forEach(({ label, cx, cy, bldg }, bi) => {
+        const corners = bldgCorners(cx, cy, bldg, CA_STATE)
+        CA_GOLDEN[bi].forEach((expected, ci) => {
+            it(`${label} C${ci} lat matches golden`, () => {
+                expect(corners[ci][0]).toBeCloseTo(expected[0], 6)
+            })
+            it(`${label} C${ci} lng matches golden`, () => {
+                expect(corners[ci][1]).toBeCloseTo(expected[1], 6)
+            })
+        })
+    })
+})
