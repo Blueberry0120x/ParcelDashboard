@@ -1,36 +1,65 @@
-# Hooks Baseline — Deployment Guide
+# Hooks Baseline v9 — Deployment Guide
 
-Portable enforcement hooks for all repos in the ecosystem.
-Pushed via CTRL-004 Baseline Push. Source: `NP_ClaudeAgent/reference/best-practices/hooks-baseline/`.
+Portable enforcement hooks, skills, and tools for all repos in the ecosystem.
+Deployed via CTRL-004 Baseline Push and `/sync-hooks`.
+Source of truth: `NP_ClaudeAgent/reference/best-practices/hooks-baseline/`
 
-## What's included
+## Folder structure (v9+)
 
-| File | Hook Event | Rule Enforced | Behavior |
-|------|-----------|---------------|----------|
-| `session_guard_lite.py` | SessionStart | GLOBAL-006, CTRL-005 | BLOCK if CLAUDE.md missing or pings unread |
-| `block_find_exe.py` | PreToolUse (Bash) | GLOBAL-027 | BLOCK find.exe, secret-hunting, curl\|bash |
-| `strictmode_check.py` | PreToolUse (Bash) | GLOBAL-010 | BLOCK commit if PS files lack StrictMode |
-| `com_lifecycle_check.py` | PreToolUse (Bash) | GLOBAL-013 | BLOCK commit if COM objects lack try/finally |
-| `branch_naming.py` | PreToolUse (Bash) | GLOBAL-003 | BLOCK invalid branch names |
-| `backup_config.py` | PreToolUse (Edit/Write) | GLOBAL-014 | Auto-backup config files before edit |
-| `secret_scanner.py` | PostToolUse (Bash) | GLOBAL-027 | WARN if tokens detected in output |
-| `upnote_reminder.py` | PostToolUse (Bash) | CTRL-005 | Remind to write upnote after git commit |
-| `ping_check.py` | Stop | CTRL-005 | BLOCK finish if unread pings across repos |
-| `settings.json.template` | — | — | Template for .claude/settings.json |
+```
+hooks-baseline/
+  hooks/          → {repo}/.claude/hooks/      (16 hook scripts)
+  skills/         → {repo}/.claude/commands/   (10 skill files)
+  tools/          → {repo}/tools/              (session_guard_lite.py)
+  settings.json.template  → merged into {repo}/.claude/settings.json
+  VERSION
+  README.md
+```
 
-## Deployment (per repo)
+**Rule:** source files live in the matching subfolder. `/sync-hooks` copies each subfolder to its destination. Future hooks go in `hooks/`, future skills in `skills/`, future tools in `tools/`.
 
-1. Copy hooks to repo:
-   ```
-   cp block_find_exe.py strictmode_check.py com_lifecycle_check.py \
-      branch_naming.py backup_config.py secret_scanner.py \
-      upnote_reminder.py ping_check.py  {repo}/.claude/hooks/
-   cp session_guard_lite.py  {repo}/tools/
-   ```
+## Hooks (`hooks/` → `.claude/hooks/`)
 
-2. Merge `settings.json.template` into `{repo}/.claude/settings.json`
+| File | Event | Rule | Behavior |
+|------|-------|------|----------|
+| `session_guard_lite.py` | — | — | lives in `tools/` (see below) |
+| `block_find_exe.py` | PreToolUse(Bash) | GLOBAL-027 | BLOCK find.exe, secret-hunting, curl\|bash |
+| `strictmode_check.py` | PreToolUse(Bash) | GLOBAL-010 | BLOCK commit if PS files lack StrictMode |
+| `com_lifecycle_check.py` | PreToolUse(Bash) | GLOBAL-013 | BLOCK commit if COM objects lack try/finally |
+| `branch_naming.py` | PreToolUse(Bash) | GLOBAL-003 | BLOCK invalid branch names |
+| `pre_commit_guard.py` | PreToolUse(Bash) | GLOBAL-028 | BLOCK commits missing required gates |
+| `backup_config.py` | PreToolUse(Edit\|Write) | GLOBAL-014 | Auto-backup config before edit |
+| `secret_scanner.py` | PostToolUse(Bash) | GLOBAL-027 | WARN if tokens detected in output |
+| `upnote_reminder.py` | PostToolUse(Bash) | CTRL-005 | Remind to write upnote after git commit |
+| `cross_repo_ping.py` | PostToolUse(Bash) | CTRL-005 | Auto-ping on cross-repo writes |
+| `ping_check.py` | Stop | CTRL-005 | BLOCK finish if unread pings |
+| `auto_commit.py` | Stop | GLOBAL-028 | Auto-commit staged changes on session end |
+| `auto_ping.py` | PostToolUse(Edit\|Write\|Bash) | CTRL-005 | Auto-touch .ping on upnote writes |
+| `compact_reinject.py` | SessionStart(compact) | GLOBAL-006 | Re-inject context after compaction |
+| `config_audit.py` | ConfigChange | GLOBAL-009 | Log all settings changes |
+| `hook_chain_guard.py` | PreToolUse(Bash) | GLOBAL-028 | Prevent hook chain corruption |
+| `single_instance.py` | SessionStart | CTRL-008 | Block duplicate remote sessions |
 
-3. Commit: `"Add baseline enforcement hooks (CTRL-004)"`
+## Tools (`tools/` → `{repo}/tools/`)
+
+| File | Purpose |
+|------|---------|
+| `session_guard_lite.py` | SessionStart gate — BLOCK if CLAUDE.md missing or pings unread (GLOBAL-006, CTRL-005) |
+
+## Skills (`skills/` → `.claude/commands/`)
+
+| File | Trigger | What it does |
+|------|---------|-------------|
+| `done.md` | `/done` | Completion gate (MANDATORY before declaring done) |
+| `hygiene.md` | `/hygiene` | Stale artifact scan (GLOBAL-028) |
+| `repo-check.md` | `/repo-check` | Full CTRL-001→004 + hygiene |
+| `baseline.md` | `/baseline` | Deploy hooks to all repos (CTRL-004) |
+| `harvest.md` | `/harvest` | CTRL-001 inspection |
+| `check-pings.md` | `/check-pings` | Scan pings across repos (CTRL-005) |
+| `sync-hooks.md` | `/sync-hooks` | Detect outdated hooks, push updates |
+| `cleanup.md` | `/cleanup` | Auto-clean stale files/folders (GLOBAL-028) |
+| `scaffold.md` | `/scaffold` | Enforce uniform folder structure |
+| `remote-status.md` | `/remote-status` | Check remote controller + nudge processes |
 
 ## Triple-check architecture
 
@@ -42,19 +71,8 @@ Layer 2: Hooks (programmatic — fires on every tool call / stop)
 Layer 3: Skills (on-demand — /done, /hygiene, /repo-check)
 ```
 
-| CLAUDE.md rule | Hook enforcement | What it catches |
-|---------------|-----------------|-----------------|
-| "never use find.exe" | block_find_exe.py BLOCKS | Agent ignoring text rule |
-| "check pings at session start" | session_guard_lite.py BLOCKS | Agent skipping protocol |
-| "never expose secrets" | secret_scanner.py WARNS | Token leaks in output |
-| "StrictMode in all PS files" | strictmode_check.py BLOCKS commit | Missing StrictMode |
-| "COM objects need try/finally" | com_lifecycle_check.py BLOCKS commit | Ghost COM processes |
-| "backup before config change" | backup_config.py auto-backs up | Config overwrites |
-| "valid branch names only" | branch_naming.py BLOCKS | Bad naming conventions |
-| "write upnote after changes" | upnote_reminder.py REMINDS | Silent cross-repo changes |
-| "acknowledge all pings" | ping_check.py BLOCKS finish | Unread communications |
-
 ## Updating
 
-Source of truth: `NP_ClaudeAgent/reference/best-practices/hooks-baseline/`
-CTRL-004 syncs this to all repos. To update: edit source, push, run repo-sync.
+1. Edit files in `hooks/`, `skills/`, or `tools/` in this repo
+2. Bump `VERSION` (increment number, update date and counts)
+3. Run `/sync-hooks` — deploys to all active repos, commits, pushes

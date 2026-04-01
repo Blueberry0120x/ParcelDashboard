@@ -1,3 +1,7 @@
+## [2026-04-01 03:10] Hooks baseline v9 deployed -- global_update
+
+Restructured baseline: hooks/ skills/ tools/ subfolders. 16 hooks, 10 skills, session_guard_lite in tools/.
+
 ## [2026-04-01 01:30] Hooks baseline v8 deployed -- global_update
 
 Deployed 0 hooks from v6 to v8.
