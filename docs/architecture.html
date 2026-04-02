@@ -653,7 +653,7 @@
       <div style="margin-top:16px; font-size:13px;">
         <strong style="color:#fb7185;">What's in _payload():</strong>
         <div style="margin-top:6px; display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; font-size:12px; color:#94a3b8;">
-          <div><code>lat</code>, <code>lng</code>, <code>rotation</code>, <code>locked</code></div>
+          <div><code>lat</code>, <code>lng</code>, <code>rotation</code>, <code>siteNorthDeg</code>, <code>locked</code></div>
           <div><code>buildings[]</code> (W, D, offset, count, stacking...)</div>
           <div><code>setbacks</code> (front, rear, sideL, sideR)</div>
           <div><code>vehicles[]</code>, <code>activeVehicle</code></div>
@@ -810,6 +810,11 @@
           <td>...modify <code>lotPoly</code>. MapEngine.render() is the ONLY function that creates/updates the lot polygon.</td>
         </tr>
         <tr>
+          <td style="color:#f1f5f9;">Set site north bearing (siteNorthDeg)</td>
+          <td style="color:#34d399;font-weight:600;">MapEngine</td>
+          <td>...set siteNorthDeg. Compass SN arm drag calls MapEngine.updateNorthArrow(). Independent of rotation.</td>
+        </tr>
+        <tr>
           <td style="color:#f1f5f9;">Convert local coords (ft) to lat/lng</td>
           <td><span class="eng eng-map">MapEngine</span></td>
           <td>...do its own lat/lng math. The conversion formula lives in MapEngine ONLY. Other engines work in local feet.</td>
@@ -929,6 +934,8 @@
         <li>MapEngine creates/updates Leaflet layers with the lat/lng values.</li>
         <li><strong style="color:#f87171;">NEVER skip step 2.</strong> SetbackEngine must NEVER convert to lat/lng itself. MapEngine must NEVER compute extents or distances in feet itself.</li>
       </ol>
+
+      <p><strong>siteNorthDeg</strong> — stored separately from <code>rotation</code>. Controls only the compass SN arrow direction (reference bearing for drawings). Never affects lot geometry, building positions, or frame transforms. Draggable on the compass widget.</p>
 
       <p><strong style="color:#fbbf24;">Polygon vertex frame (the KB-1 bug):</strong> When a <code>parcelPolygon</code> exists, the polygon vertices arrive as lat/lng (Frame A). They must be converted to Frame B (local feet relative to the pin) ONCE at the start of <code>updateBldgDimLabels()</code>, using the pin as origin — NOT the polygon centroid. The current code uses the centroid as origin, which is why KB-1 exists. The fix: convert polygon vertices to local feet using <code>state.lat/state.lng</code> as the origin, not <code>ccLat/ccLng</code>.</p>
     </div>
