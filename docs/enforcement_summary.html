@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NP_ClaudeAgent — Enforcement System</title>
+<style>
+:root {
+  --bg:#0d1117; --surface:#161b22; --border:#30363d;
+  --text:#e6edf3; --muted:#8b949e;
+  --block:#f85149; --warn:#d29922; --ok:#3fb950; --info:#58a6ff;
+  --purple:#bc8cff; --orange:#ffa657; --accent:#1f6feb;
+  --nav-w:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.6;}
+
+/* ── LAYOUT ── */
+.shell{display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+nav{
+  width:var(--nav-w);min-width:var(--nav-w);
+  background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 0;position:fixed;top:0;left:0;height:100vh;
+  overflow-y:auto;z-index:100;transition:transform .25s ease;
+}
+nav .logo{padding:0 20px 16px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--info);border-bottom:1px solid var(--border);margin-bottom:12px;}
+nav h2{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:10px 20px 4px;}
+nav a{display:flex;align-items:center;gap:8px;padding:9px 20px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;font-size:13px;transition:all .15s;}
+nav a:hover,nav a.active{color:var(--text);border-left-color:var(--info);background:rgba(88,166,255,.08);}
+nav a .icon{font-size:15px;width:18px;text-align:center;}
+.nav-sep{border-top:1px solid var(--border);margin:10px 0;}
+
+/* ── HAMBURGER ── */
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;font-size:18px;color:var(--text);line-height:1;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;}
+
+/* ── MAIN ── */
+main{margin-left:var(--nav-w);flex:1;padding:32px 40px;max-width:900px;}
+
+/* ── SECTIONS ── */
+section{display:none;}
+section.active{display:block;}
+h1{font-size:22px;font-weight:700;margin-bottom:4px;}
+.subtitle{color:var(--muted);margin-bottom:28px;font-size:13px;}
+h3{font-size:15px;font-weight:600;margin:28px 0 12px;}
+h4{font-size:13px;font-weight:600;margin:20px 0 8px;color:var(--info);}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;}
+.badge-block{background:rgba(248,81,73,.15);color:var(--block);border:1px solid rgba(248,81,73,.3);}
+.badge-warn{background:rgba(210,153,34,.15);color:var(--warn);border:1px solid rgba(210,153,34,.3);}
+.badge-ok{background:rgba(63,185,80,.15);color:var(--ok);border:1px solid rgba(63,185,80,.3);}
+.badge-info{background:rgba(88,166,255,.12);color:var(--info);border:1px solid rgba(88,166,255,.3);}
+.badge-new{background:rgba(188,140,255,.15);color:var(--purple);border:1px solid rgba(188,140,255,.3);}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;}
+.stat-box .num{font-size:26px;font-weight:700;line-height:1;}
+.stat-box .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+.stat-box.red .num{color:var(--block);}
+.stat-box.yellow .num{color:var(--warn);}
+.stat-box.green .num{color:var(--ok);}
+.stat-box.blue .num{color:var(--info);}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:12px;}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.card-head strong{font-size:14px;}
+.card p{color:var(--muted);font-size:13px;line-height:1.7;}
+code{background:#0d1117;padding:1px 5px;border-radius:4px;font-size:12px;font-family:'Consolas',monospace;color:var(--orange);}
+
+/* ── CHANGE CARDS ── */
+.change-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.change-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.ch-head{padding:11px 15px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ch-head strong{font-size:13px;flex:1;min-width:0;}
+.ch-body{padding:12px 15px;}
+.reason{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.diff{font-size:12px;font-family:'Consolas',monospace;background:#0d1117;border-radius:5px;padding:9px 11px;line-height:1.9;overflow-x:auto;}
+.diff .rm{color:var(--block);}
+.diff .add{color:var(--ok);}
+.diff .ctx{color:#484f58;}
+
+/* ── FLOW ── */
+.phase{margin-bottom:5px;}
+.phase-head{display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;user-select:none;transition:border-color .15s;-webkit-tap-highlight-color:transparent;}
+.phase-head:active{background:rgba(255,255,255,.04);}
+.phase-head:hover{border-color:var(--info);}
+.ph-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;flex:1;}
+.chevron{color:var(--muted);transition:transform .2s;font-size:11px;flex-shrink:0;}
+.phase-head.open .chevron{transform:rotate(90deg);}
+.phase-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;background:rgba(255,255,255,.01);}
+.phase-body.open{display:block;}
+.hook-row{display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(48,54,61,.5);}
+.hook-row:last-child{border-bottom:none;}
+.hk-name{font-family:'Consolas',monospace;font-size:12px;color:var(--orange);margin-bottom:3px;}
+.hk-desc{font-size:12px;color:var(--muted);flex:1;line-height:1.6;}
+.connector{width:2px;height:16px;background:var(--border);margin:0 auto 0 20px;}
+
+/* ── TREE ── */
+.tree{font-family:'Consolas',monospace;font-size:13px;line-height:2.1;}
+.tree-node{cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:4px;padding:2px 0;}
+.tree-node:active{opacity:.7;}
+.cmd{color:var(--info);}
+.desc{color:var(--muted);font-size:12px;margin-left:6px;font-family:'Segoe UI',sans-serif;}
+.tree-children{display:none;padding-left:20px;border-left:1px dashed var(--border);margin-left:8px;margin-top:2px;margin-bottom:4px;}
+.tree-children.open{display:block;}
+.tree-sub{color:var(--orange);}
+.tree-icon{color:var(--muted);width:14px;flex-shrink:0;}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:20px;border-radius:8px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px;}
+th{background:var(--surface);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid rgba(48,54,61,.4);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ════════════════════════
+   MOBILE BREAKPOINTS
+════════════════════════ */
+@media(max-width:768px){
+  nav{transform:translateX(-100%);}
+  nav.open{transform:translateX(0);}
+  .hamburger{display:flex;}
+  .overlay.show{display:block;}
+  main{margin-left:0;padding:60px 16px 24px;}
+  h1{font-size:18px;}
+  .stats{grid-template-columns:repeat(3,1fr);}
+  .stats .stat-box:nth-child(4),.stats .stat-box:nth-child(5){grid-column:span 1;}
+  .change-grid{grid-template-columns:1fr;}
+  .hook-row{flex-direction:column;gap:8px;}
+  .badge{font-size:10px;padding:2px 6px;}
+  .phase-head{padding:12px;}
+  main>section>h1{padding-top:4px;}
+}
+@media(max-width:480px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .stats .stat-box:last-child{grid-column:span 2;}
+  h1{font-size:17px;}
+  main{padding:56px 14px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- hamburger -->
+<button class="hamburger" id="ham" aria-label="Menu">☰</button>
+<div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+<div class="shell">
+<!-- ── NAV ── -->
+<nav id="sidenav">
+  <div class="logo">NP_ClaudeAgent</div>
+  <h2>Navigation</h2>
+  <a href="#" class="active" data-sec="overview"><span class="icon">📊</span>Overview</a>
+  <a href="#" data-sec="changes"><span class="icon">🔧</span>What Changed (6)</a>
+  <div class="nav-sep"></div>
+  <h2>Reference</h2>
+  <a href="#" data-sec="lifecycle"><span class="icon">🔁</span>Hook Lifecycle</a>
+  <a href="#" data-sec="commands"><span class="icon">🗂</span>Commands Map</a>
+  <a href="#" data-sec="protocols"><span class="icon">📋</span>Protocol Reference</a>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+
+<!-- ══════════════════ OVERVIEW ══════════════════ -->
+<section id="overview" class="active">
+  <h1>Enforcement System</h1>
+  <p class="subtitle">NP_ClaudeAgent · 2026-04-02 · Consolidation pass</p>
+
+  <div class="stats">
+    <div class="stat-box red">  <div class="num">9</div> <div class="lbl">Blockers</div></div>
+    <div class="stat-box yellow"><div class="num">10</div><div class="lbl">Warnings</div></div>
+    <div class="stat-box blue"> <div class="num">19</div><div class="lbl">Hooks</div></div>
+    <div class="stat-box green"><div class="num">21</div><div class="lbl">Commands</div></div>
+    <div class="stat-box blue"> <div class="num">411</div><div class="lbl">Tests ✓</div></div>
+  </div>
+
+  <h3>What This System Does</h3>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-info">Controller</span><strong>Auto-enforces coding standards across 12+ repos</strong></div>
+    <p>19 hooks fire at 5 lifecycle points — no manual steps. They block bad commits, warn on policy drift, auto-clean stale files, prevent secret leaks, and enforce cross-platform compatibility.</p>
+  </div>
+
+  <h3>Five Lifecycle Phases</h3>
+
+  <div class="card">
+    <div class="card-head"><span class="badge badge-block">1 · Session Start</span><span style="color:var(--muted);font-size:12px;margin-left:auto">3 hooks always · 1 on compaction</span></div>
+    <p>Checks rule files exist (blocking), cleans stale artifacts, scans pings, verifies hook/skill inventory and XPLAT-001.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-block">2 · Pre-Bash</span><span style="color:var(--muted);font-size:12px;margin-left:auto">7 hooks · all potential blockers</span></div>
+    <p>Runs before every shell command. Blocks find.exe, validates branch names, enforces PS StrictMode and COM lifecycle on commit, enforces XPLAT-001, prevents duplicate remote sessions.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-warn">3 · Pre-Edit/Write</span><span style="color:var(--muted);font-size:12px;margin-left:auto">2 hooks · warn only</span></div>
+    <p>Auto-backs up config files. Reminds to trace hook chains before editing hook files.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-warn">4 · Post-Tool</span><span style="color:var(--muted);font-size:12px;margin-left:auto">5 hooks · warn / notify / auto</span></div>
+    <p>Scans for leaked secrets, reminds to write upnotes after commits, announces unread pings, sends GitHub notifications for major ops, auto-touches .ping on upnote writes.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-block">5 · Session Stop</span><span style="color:var(--muted);font-size:12px;margin-left:auto">1 blocker · 1 auto-commit</span></div>
+    <p>Blocks session end if any repo has unread pings. Auto-commits any pending changes so no work is silently lost.</p>
+  </div>
+</section>
+
+<!-- ══════════════════ CHANGES ══════════════════ -->
+<section id="changes">
+  <h1>What Changed</h1>
+  <p class="subtitle">6 consolidations · 1 bug fix · 411 tests passing</p>
+
+  <h3>Hook Changes (3)</h3>
+  <div class="change-grid">
+
+    <div class="change-card">
+      <div class="ch-head"><span class="badge badge-block">Fix</span><strong>pre_commit_guard.py</strong><span class="badge badge-ok">Done</span></div>
+      <div class="ch-body">
+        <p class="reason">Ping blocking at commit was wrong timing. The rule is "don't END a session with unread pings" — not "don't commit with them." ping_check at Stop is the gate. Blocking pre-commit added friction with no safety benefit.</p>
+        <div class="diff">
+          <div class="rm">− check unread ping → BLOCK</div>
+          <div class="rm">− _parse_ts() / datetime imports</div>
+          <div class="add">+ auto-clean stale .bak/.tmp only</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-card">
+      <div class="ch-head"><span class="badge badge-info">Dedup</span><strong>settings.json</strong><span class="badge badge-ok">Done</span></div>
+      <div class="ch-body">
+        <p class="reason">single_instance.py was wired at BOTH SessionStart and PreToolUse. Same file, same logic. SessionStart fires before any action is possible — the PreToolUse wire (on --start) is the correct and only gate.</p>
+        <div class="diff">
+          <div class="rm">− SessionStart: single_instance.py</div>
+          <div class="ctx">  PreToolUse: single_instance.py ← kept</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-card">
+      <div class="ch-head"><span class="badge badge-info">Dedup</span><strong>rules_memory_check.py</strong><span class="badge badge-ok">Done</span></div>
+      <div class="ch-body">
+        <p class="reason">Both session_guard and rules_memory_check checked that CLAUDE.md and global_rules.md exist. session_guard owns the blocking existence gate. rules_memory_check now owns only its unique work.</p>
+        <div class="diff">
+          <div class="rm">− check CLAUDE.md exists</div>
+          <div class="rm">− check global_rules.md exists</div>
+          <div class="add">+ XPLAT-001 content check  ← unique</div>
+          <div class="add">+ all hooks .py exist?     ← unique</div>
+          <div class="add">+ all skills .md exist?    ← unique</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-card">
+      <div class="ch-head"><span class="badge badge-warn">Bug Fix</span><strong>test_remote_invoke.py</strong><span class="badge badge-ok">Done</span></div>
+      <div class="ch-body">
+        <p class="reason">Pre-existing failure. Test mocked subprocess.run but not _is_pid_alive, which uses ctypes directly. A real .pid file in tools/ was alive — ctypes saw it and added a ghost second result.</p>
+        <div class="diff">
+          <div class="add">+ @patch("…_is_pid_alive", return_value=False)</div>
+          <div class="ctx">  PID-file fallback isolated from live env</div>
+          <div class="ctx">  411 tests pass (was 1 failure)</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Command Changes</h3>
+  <div class="change-grid">
+
+    <div class="change-card">
+      <div class="ch-head"><span class="badge badge-info">Stub</span><strong>/cleanup → /hygiene</strong><span class="badge badge-ok">Done</span></div>
+      <div class="ch-body">
+        <p class="reason">Both commands did the exact same thing. /hygiene is the GLOBAL-028 canonical name. /cleanup was a duplicate name pointing to identical logic.</p>
+        <div class="diff">
+          <div class="rm">− /cleanup  (full duplicate)</div>
+          <div class="add">+ /cleanup  → stub → /hygiene</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-card">
+      <div class="ch-head"><span class="badge badge-new">New</span><strong>/launch-nudge + keywords</strong><span class="badge badge-ok">Done</span></div>
+      <div class="ch-body">
+        <p class="reason">No keyword existed for the unified nudge agent or controller console. Added commands + wired as Recognized Trigger Phrases so natural language works immediately.</p>
+        <div class="diff">
+          <div class="add">+ "launch nudge"      → nudge_agent.ps1</div>
+          <div class="add">+ "launch controller" → src.main controller</div>
+          <div class="add">+ /remote-invoke absorbs both + status</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════ LIFECYCLE ══════════════════ -->
+<section id="lifecycle">
+  <h1>Hook Lifecycle</h1>
+  <p class="subtitle">Tap any phase to expand &nbsp;·&nbsp; <span class="badge badge-block">BLOCK</span> halts action &nbsp;·&nbsp; <span class="badge badge-warn">WARN</span> injects message &nbsp;·&nbsp; <span class="badge badge-ok">AUTO</span> acts silently</p>
+
+  <div class="flow">
+
+    <div class="phase">
+      <div class="phase-head" onclick="togglePhase(this)">
+        <span class="badge badge-block">SessionStart</span>
+        <span class="ph-label">Session Opens</span>
+        <span style="color:var(--muted);font-size:12px">3+1 hooks</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="phase-body">
+        <div class="hook-row">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">session_guard.py</div><div class="hk-desc">CLAUDE.md + global_rules.md must exist. Auto-cleans stale artifacts. Warns on unread pings.</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-ok">AUTO</span>
+          <div><div class="hk-name">compact_reinject.py</div><div class="hk-desc">Compaction only. Re-injects handoff notes + rules into context window.</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-warn">WARN</span>
+          <div><div class="hk-name">rules_memory_check.py</div><div class="hk-desc">Deep inventory: XPLAT-001 in CLAUDE.md · all hook .py files exist · all skill .md files exist.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="connector"></div>
+
+    <div class="phase">
+      <div class="phase-head" onclick="togglePhase(this)">
+        <span class="badge badge-block">PreToolUse · Bash</span>
+        <span class="ph-label">Before Every Shell Command</span>
+        <span style="color:var(--muted);font-size:12px">7 hooks</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="phase-body">
+        <div class="hook-row">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">block_find_exe.py</div><div class="hk-desc">Always. Blocks find.exe, wmic CommandLine dumps, tasklist /V, .env/.pem/.key globs (GLOBAL-027, Defender T1552.004).</div></div>
+        </div>
+        <div class="hook-row" style="background:rgba(88,166,255,.04)">
+          <span class="badge badge-ok">AUTO</span>
+          <div><div class="hk-name">pre_commit_guard.py <span style="color:var(--muted)">[on commit]</span></div><div class="hk-desc">Auto-deletes stale .bak/.tmp before commit. Ping block removed — ping_check is the sole gate.</div></div>
+        </div>
+        <div class="hook-row" style="background:rgba(88,166,255,.04)">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">xplat_guard.py <span style="color:var(--muted)">[on commit]</span></div><div class="hk-desc">AST scan for dead platform-gated else branches (XPLAT-001 / GLOBAL-029).</div></div>
+        </div>
+        <div class="hook-row" style="background:rgba(88,166,255,.04)">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">strictmode_check.py <span style="color:var(--muted)">[on commit]</span></div><div class="hk-desc">Staged .ps1/.psm1 must have Set-StrictMode -Version Latest (GLOBAL-010).</div></div>
+        </div>
+        <div class="hook-row" style="background:rgba(88,166,255,.04)">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">com_lifecycle_check.py <span style="color:var(--muted)">[on commit]</span></div><div class="hk-desc">COM objects must be wrapped in try/finally (GLOBAL-013).</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">branch_naming.py <span style="color:var(--muted)">[on checkout -b]</span></div><div class="hk-desc">Allows: main, feature/*, fix/*, claude/*-devN, refactor/*, archived/* (GLOBAL-003).</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">single_instance.py <span style="color:var(--muted)">[on --start]</span></div><div class="hk-desc">Blocks remote-invoke --start if a session is already running. Only wire — removed from SessionStart.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="connector"></div>
+
+    <div class="phase">
+      <div class="phase-head" onclick="togglePhase(this)">
+        <span class="badge badge-warn">PreToolUse · Edit/Write</span>
+        <span class="ph-label">Before File Edits</span>
+        <span style="color:var(--muted);font-size:12px">2 hooks</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="phase-body">
+        <div class="hook-row">
+          <span class="badge badge-ok">AUTO</span>
+          <div><div class="hk-name">backup_config.py</div><div class="hk-desc">Auto-backs up settings.json, CLAUDE.md, keybindings.json, repos.json to ~/.claude/backups/ (GLOBAL-014).</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-warn">WARN</span>
+          <div><div class="hk-name">hook_chain_guard.py</div><div class="hk-desc">Editing .claude/hooks/*.py or .github/workflows/*.yml? Injects a reminder to trace the full hook chain first.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="connector"></div>
+
+    <div class="phase">
+      <div class="phase-head" onclick="togglePhase(this)">
+        <span class="badge badge-warn">PostToolUse</span>
+        <span class="ph-label">After Tool Runs</span>
+        <span style="color:var(--muted);font-size:12px">5 hooks</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="phase-body">
+        <div class="hook-row">
+          <span class="badge badge-warn">WARN</span>
+          <div><div class="hk-name">secret_scanner.py <span style="color:var(--muted)">[after Bash]</span></div><div class="hk-desc">Scans stdout for ghp_, gho_, github_pat_, sk-, cse_, Bearer tokens. Warns to redact (GLOBAL-027).</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-warn">WARN</span>
+          <div><div class="hk-name">upnote_reminder.py <span style="color:var(--muted)">[after commit]</span></div><div class="hk-desc">After git commit: reminds to write upnote + touch .ping for cross-repo changes (CTRL-005).</div></div>
+        </div>
+        <div class="hook-row" style="background:rgba(88,166,255,.04)">
+          <span class="badge badge-warn">WARN</span>
+          <div><div class="hk-name">cross_repo_ping.py <span style="color:var(--muted)">[after commit]</span></div><div class="hk-desc">Re-scans all repos for unread pings after commit. Announces any found (CTRL-005 mid-session re-scan).</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-ok">AUTO</span>
+          <div><div class="hk-name">post_action_notify.py <span style="color:var(--muted)">[after major op]</span></div><div class="hk-desc">GitHub notification on [DISPATCH-DONE], [BASELINE], [CTRL-*] commits and major CLI runs.</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-ok">AUTO</span>
+          <div><div class="hk-name">auto_ping.py <span style="color:var(--muted)">[after Edit/Write]</span></div><div class="hk-desc">File matches controller-note/*-upnote.md? Auto-touches .ping with ISO timestamp (CTRL-005).</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="connector"></div>
+
+    <div class="phase">
+      <div class="phase-head" onclick="togglePhase(this)">
+        <span class="badge badge-block">Stop</span>
+        <span class="ph-label">Session Ends</span>
+        <span style="color:var(--muted);font-size:12px">2 hooks</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="phase-body">
+        <div class="hook-row">
+          <span class="badge badge-block">BLOCK</span>
+          <div><div class="hk-name">ping_check.py</div><div class="hk-desc">SOLE ping gate. Scans NP_ClaudeAgent + all repos in local_repos.json. Content-based ISO comparison (not mtime). Blocks if any unread ping exists anywhere.</div></div>
+        </div>
+        <div class="hook-row">
+          <span class="badge badge-ok">AUTO</span>
+          <div><div class="hk-name">auto_commit.py</div><div class="hk-desc">git add -u + commit any pending changes. No work silently lost between sessions.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+      <div class="card" style="flex:1;min-width:200px">
+        <div class="card-head"><span class="badge badge-ok">Notification</span></div>
+        <div class="hk-name" style="margin:6px 0 4px">PowerShell MessageBox</div>
+        <p>"Claude Code needs your attention" system popup.</p>
+      </div>
+      <div class="card" style="flex:1;min-width:200px">
+        <div class="card-head"><span class="badge badge-info">ConfigChange</span></div>
+        <div class="hk-name" style="margin:6px 0 4px">config_audit.py</div>
+        <p>Timestamped audit log entry when settings or skills change.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ COMMANDS ══════════════════ -->
+<section id="commands">
+  <h1>Commands Map</h1>
+  <p class="subtitle">Tap any row to expand · Bold = orchestrator · Mono = sub-step or flag</p>
+
+  <h4>Full Deploy Chain</h4>
+  <div class="tree">
+    <div class="tree-node" onclick="toggleTree(this)"><span class="tree-icon">▶</span><span class="cmd">/push-baseline</span><span class="desc">Full deploy to all repos + verify</span></div>
+    <div class="tree-children">
+      <div><span class="tree-sub">step 1 → </span><span class="cmd">/sync-hooks</span><span class="desc"> deploy hooks-baseline version</span></div>
+      <div><span class="tree-sub">step 2 → </span><span class="cmd">/baseline</span><span class="desc"> CTRL-004 settings + baseline sections</span></div>
+      <div><span class="tree-sub">step 3 → </span><span class="cmd">/scaffold</span><span class="desc"> canonical folder structure</span></div>
+      <div><span class="tree-sub">step 4 → </span><span class="cmd">/check-rules</span><span class="desc"> rules + hooks + skills consistency</span></div>
+      <div><span class="tree-sub">step 5 → </span><span class="cmd">/check-pings</span><span class="desc"> scan all repos for unread pings</span></div>
+    </div>
+  </div>
+  <div class="tree" style="margin-top:4px">
+    <div class="tree-node" onclick="toggleTree(this)"><span class="tree-icon">▶</span><span class="cmd">/repo-check</span><span class="desc">Full health cycle CTRL-001→004 + hygiene</span></div>
+    <div class="tree-children">
+      <div><span class="tree-sub">step 1 → </span><span class="cmd">/harvest</span><span class="desc"> branch scan + INSP flags</span></div>
+      <div><span class="tree-sub">step 2 → </span><span class="cmd">/push-baseline</span><span class="desc"> full deploy chain (above)</span></div>
+      <div><span class="tree-sub">step 3 → </span><span class="cmd">/hygiene</span><span class="desc"> stale artifact scan + delete</span></div>
+      <div><span class="tree-sub">step 4 → </span><span class="cmd">/done</span><span class="desc"> completion gate</span></div>
+    </div>
+  </div>
+
+  <h4>Remote Control</h4>
+  <div class="tree">
+    <div class="tree-node" onclick="toggleTree(this)"><span class="tree-icon">▶</span><span class="cmd">/remote-invoke</span><span class="desc">CTRL-008 — keywords: "launch remote", "launch controller"</span></div>
+    <div class="tree-children">
+      <div><span class="tree-sub">--start    → </span>launch claude.exe remote-control + nudge agent</div>
+      <div><span class="tree-sub">--reinvoke → </span>stop existing + start fresh (crash recovery)</div>
+      <div><span class="tree-sub">--stop     → </span>terminate session + cleanup PIDs</div>
+      <div><span class="tree-sub">--status   → </span>cross-ref PID files + live processes</div>
+      <div><span class="tree-sub">console    → </span><code>py -m src.main controller</code> (runs inside session)</div>
+    </div>
+  </div>
+  <div class="tree" style="margin-top:4px">
+    <div class="tree-node" onclick="toggleTree(this)"><span class="tree-icon">▶</span><span class="cmd">/launch-nudge</span><span class="desc">Unified keep-alive — keyword: "launch nudge"</span></div>
+    <div class="tree-children">
+      <div><span class="tree-sub">Windows → </span><code>tools/nudge_agent.ps1</code> (sleep prevention + F15)</div>
+      <div><span class="tree-sub">Linux   → </span>Python heartbeat subprocess via remote-invoke</div>
+    </div>
+  </div>
+
+  <h4>Quality Gates</h4>
+  <div class="tree">
+    <div class="tree-node" onclick="toggleTree(this)"><span class="tree-icon">▶</span><span class="cmd">/done</span><span class="desc">Completion gate — MANDATORY before declaring done</span></div>
+    <div class="tree-children">
+      <div><span class="tree-sub">runs → </span><code>py tools/completion_gate.py</code></div>
+      <div><span class="tree-sub">checks → </span>pytest all pass · pipeline dry-run · analyze 100%</div>
+    </div>
+  </div>
+  <div class="tree" style="margin-top:4px">
+    <div class="tree-node" onclick="toggleTree(this)"><span class="tree-icon">▶</span><span class="cmd">/dev-check</span><span class="desc">CTRL-007 multi-persona quality review</span></div>
+    <div class="tree-children">
+      <div><span class="tree-sub">personas → </span>32 (arch, security, UX, perf, a11y)</div>
+      <div><span class="tree-sub">gate     → </span>10 consecutive clean rounds</div>
+      <div><span class="tree-sub">auto-fix → </span>CRITICAL + HIGH findings fixed in loop</div>
+    </div>
+  </div>
+
+  <h4>Retired Stubs</h4>
+  <div class="tree">
+    <div style="color:var(--muted)"><span class="tree-icon" style="opacity:.4">─</span><span class="cmd">/cleanup</span><span class="desc"> → /hygiene</span></div>
+    <div style="color:var(--muted);margin-top:2px"><span class="tree-icon" style="opacity:.4">─</span><span class="cmd">/remote-status</span><span class="desc"> → /remote-invoke</span></div>
+    <div style="color:var(--muted);margin-top:2px"><span class="tree-icon" style="opacity:.4">─</span><span class="cmd">/launch-controller</span><span class="desc"> → /remote-invoke (merged)</span></div>
+  </div>
+</section>
+
+<!-- ══════════════════ PROTOCOLS ══════════════════ -->
+<section id="protocols">
+  <h1>Protocol Reference</h1>
+  <p class="subtitle">Trigger phrases · CTRL map · Safety contract</p>
+
+  <h3>Trigger Phrases (GLOBAL-024)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Phrase</th><th>Action</th><th>Gate?</th></tr></thead>
+      <tbody>
+        <tr><td><code>launch controller</code> / <code>launch remote</code></td><td>Start CTRL-008 remote session + console</td><td>No — act now</td></tr>
+        <tr><td><code>launch nudge</code></td><td>Start/stop nudge_agent.ps1</td><td>No — act now</td></tr>
+        <tr><td><code>check pings</code></td><td>Scan .ping vs .last-read all repos</td><td>Yes — report first</td></tr>
+        <tr><td><code>check notes</code></td><td>Read upnotes all repos</td><td>Yes — report first</td></tr>
+        <tr><td><code>check cloud</code> / <code>check remote</code></td><td>git fetch, report if behind</td><td>Yes — report first</td></tr>
+        <tr><td><code>check branches</code></td><td>CTRL-001 Harvest, flag stale/dup</td><td>Yes — report first</td></tr>
+        <tr><td><code>repo sync</code></td><td>CTRL-001 → CTRL-004 full sync</td><td>Yes — report first</td></tr>
+        <tr><td><code>remote status</code></td><td>Check CTRL-008 process alive</td><td>Yes — report first</td></tr>
+        <tr><td><code>verify dispatch</code></td><td>Scan [DISPATCH-DONE] commits</td><td>Yes — report first</td></tr>
+        <tr><td><code>dev-check</code> / <code>quality check</code></td><td>CTRL-007 32-persona review</td><td>No — run now</td></tr>
+        <tr><td><code>logic-check</code> / <code>validate plan</code></td><td>CTRL-010 strategic validation</td><td>No — run now</td></tr>
+        <tr><td><code>session exit</code></td><td>GLOBAL-023 exit checklist</td><td>No — run now</td></tr>
+        <tr><td><code>cloud-kill</code></td><td>Kill OneDrive sync (GLOBAL-025)</td><td>No — immediate</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>CTRL Function Map</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>CTRL</th><th>Name</th><th>CLI</th><th>Does</th></tr></thead>
+      <tbody>
+        <tr><td>001–004</td><td>Repo-Sync</td><td><code>repo-sync</code></td><td>Harvest → Cross-Check → Analyze → Baseline Push</td></tr>
+        <tr><td>005</td><td>Controller-Note</td><td><code>controller-note</code></td><td>Upnote + ping protocol between all agents</td></tr>
+        <tr><td>006</td><td>Git-Projection</td><td><code>launch</code></td><td>Trigger HTML mirror → GitHub Pages</td></tr>
+        <tr><td>007</td><td>Dev-Check</td><td><code>dev-check</code></td><td>32-persona quality review, 10 clean rounds</td></tr>
+        <tr><td>008</td><td>Remote-Invoke</td><td><code>remote-invoke</code></td><td>Claude CLI remote session + keep-alive</td></tr>
+        <tr><td>009</td><td>Note-Verify</td><td><code>note-verify</code></td><td>Round-trip ping/verify/commit self-healing</td></tr>
+        <tr><td>010</td><td>Logic-Check</td><td><code>logic-check</code></td><td>Multi-persona strategic plan validation</td></tr>
+        <tr><td>012</td><td>Log-Chat</td><td><code>log-chat</code></td><td>Session history archival (local + git-tracked)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Safety Contract</h3>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-block">Write — own repo</span><strong>NP_ClaudeAgent/ — full access</strong></div>
+    <p>All source, config, tools, hooks, commands.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-warn">Write — other repos (4 paths only)</span></div>
+    <p><code>controller-note/</code> · <code>.claude/</code> hooks + settings · <code>CLAUDE.md</code> baseline sections only · <code>report/</code> scaffold folders</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="badge badge-ok">Read — all active repos</span></div>
+    <p>Harvest, cross-check, analyze. Never touches project source, VBA, data files, or Python engines.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+// Nav
+document.querySelectorAll('nav a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const sec=a.dataset.sec;
+    document.querySelectorAll('nav a').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('section').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById(sec).classList.add('active');
+    closeNav();
+    window.scrollTo(0,0);
+  });
+});
+
+// Hamburger
+document.getElementById('ham').addEventListener('click',()=>{
+  document.getElementById('sidenav').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+});
+function closeNav(){
+  document.getElementById('sidenav').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// Phase accordion
+function togglePhase(h){
+  const b=h.nextElementSibling;
+  const o=h.classList.contains('open');
+  h.classList.toggle('open',!o);
+  b.classList.toggle('open',!o);
+}
+
+// Tree
+function toggleTree(n){
+  const c=n.nextElementSibling;
+  if(!c||!c.classList.contains('tree-children'))return;
+  const o=c.classList.contains('open');
+  c.classList.toggle('open',!o);
+  const ic=n.querySelector('.tree-icon');
+  if(ic)ic.textContent=o?'▶':'▼';
+}
+
+// Open first phase
+document.querySelector('.phase-head').click();
+</script>
+</body>
+</html>
