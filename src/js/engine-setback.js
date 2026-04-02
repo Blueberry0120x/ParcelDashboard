@@ -636,8 +636,13 @@ const SetbackEngine = {
 
         // ── Draw the two chain dims ──────────────────────────────────────
         // Perpendicular flips outward: if chain is on the rear/right half, push further out
-        const wRef = chainRefX + MapEngine.chainWOffset;
-        const dRef = chainRefY + MapEngine.chainDOffset;
+        // Clamp chain dim reference lines to lot bounds + self-heal stale offsets
+        const wRefRaw = chainRefX + MapEngine.chainWOffset;
+        const dRefRaw = chainRefY + MapEngine.chainDOffset;
+        const wRef = Math.max(-lotHD, Math.min(lotHD, wRefRaw));
+        const dRef = Math.max(-lotHW, Math.min(lotHW, dRefRaw));
+        if (wRef !== wRefRaw) MapEngine.chainWOffset = wRef - chainRefX;
+        if (dRef !== dRefRaw) MapEngine.chainDOffset = dRef - chainRefY;
         const wPerpX = wRef > 0 ? 1 : -1;
         const dPerpY = dRef > 0 ? 1 : -1;
         let wLayers = drawChain(wChain, wRef, false, wPerpX, 0, clrWidthAngle, 'chain_w');
@@ -665,13 +670,17 @@ const SetbackEngine = {
             dAnchors.push(cy - halfWidth, cy + halfWidth);
         });
 
-        const snapTo = (val, anchors) => {
-            let best = anchors[0], bestD = Math.abs(val - anchors[0]);
-            for (let i = 1; i < anchors.length; i++) {
-                const d = Math.abs(val - anchors[i]);
+        // Threshold snap: only snap when within CHAIN_SNAP_THRESH ft of an anchor.
+        // Always hard-clamps to [minBound, maxBound] so chain stays inside lot.
+        const CHAIN_SNAP_THRESH = 4;
+        const snapTo = (val, anchors, minBound, maxBound) => {
+            const bounded = Math.max(minBound, Math.min(maxBound, val));
+            let best = null, bestD = CHAIN_SNAP_THRESH;
+            for (let i = 0; i < anchors.length; i++) {
+                const d = Math.abs(bounded - anchors[i]);
                 if (d < bestD) { best = anchors[i]; bestD = d; }
             }
-            return best;
+            return best !== null ? best : bounded;
         };
 
         // Attach drag behavior to all polylines in a chain
@@ -724,7 +733,7 @@ const SetbackEngine = {
                     activeHandle.on('drag', () => {
                         const loc    = toLocal(activeHandle.getLatLng());
                         const rawVal = isX ? loc.y : loc.x;
-                        const snapped = snapTo(rawVal, anchors);
+                        const snapped = snapTo(rawVal, anchors, isX ? -lotHW : -lotHD, isX ? lotHW : lotHD);
                         if (MapEngine[offsetProp] === snapped - baseRef) return;
                         MapEngine[offsetProp] = snapped - baseRef;
                         const newRef = baseRef + MapEngine[offsetProp];
@@ -778,7 +787,7 @@ const SetbackEngine = {
                 handle.on('drag', () => {
                     const loc     = toLocal(handle.getLatLng());
                     const rawVal  = isX ? loc.y : loc.x;
-                    const snapped = snapTo(rawVal, anchors);
+                    const snapped = snapTo(rawVal, anchors, isX ? -lotHW : -lotHD, isX ? lotHW : lotHD);
                     if (MapEngine[offsetProp] === snapped - baseRef) return;
                     MapEngine[offsetProp] = snapped - baseRef;
                     const newRef = baseRef + MapEngine[offsetProp];
@@ -926,6 +935,13 @@ const SetbackEngine = {
                 if (!bldg) return;
                 bldg.offsetX = parseFloat(document.getElementById('bldgOffsetX').value) || 0;
                 bldg.offsetY = parseFloat(document.getElementById('bldgOffsetY').value) || 0;
+                // Clamp typed values to lot boundary
+                const { front: _f, rear: _r, sideL: _sl, sideR: _sr } = state.setbacks;
+                const _cl = this.clampToLot(bldg.offsetX + (_f-_r)/2, bldg.offsetY + (_sr-_sl)/2, bldg);
+                bldg.offsetX = parseFloat((_cl.cx - (_f-_r)/2).toFixed(1));
+                bldg.offsetY = parseFloat((_cl.cy - (_sr-_sl)/2).toFixed(1));
+                document.getElementById('bldgOffsetX').value = bldg.offsetX.toFixed(1);
+                document.getElementById('bldgOffsetY').value = bldg.offsetY.toFixed(1);
                 if (idx > 0) {
                     const gap = this._computeGap(idx);
                     bldg.spacing = gap !== null ? gap : 0;

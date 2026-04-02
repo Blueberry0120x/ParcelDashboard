@@ -43,6 +43,7 @@ Reads `ConfigEngine.state` and constructs the canonical save object:
     mapOpacity,
     setbacksApplied,
     freeDrag, snapEdge,
+    siteNorthDeg,     // compass SN arm bearing — independent of rotation
     vehicles: [...],
     activeVehicle
   }

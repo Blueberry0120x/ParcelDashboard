@@ -37,6 +37,7 @@ const ConfigEngine = {
         setbacksApplied: false,
         freeDrag:       true,
         snapEdge:       true,
+        siteNorthDeg:   0,
         setbacks:       { front: 10, rear: 10, sideL: 0, sideR: 0 },
         buildings:      null,
         activeBuilding: 0,
@@ -108,6 +109,7 @@ const ConfigEngine = {
             this.state.setbacksApplied = saved.setbacksApplied ?? false;
             this.state.freeDrag       = saved.freeDrag       ?? true;
             this.state.snapEdge       = saved.snapEdge       ?? true;
+            this.state.siteNorthDeg   = saved.siteNorthDeg   ?? 0;
             if (saved.buildings && saved.buildings.length) {
                 this.state.buildings      = saved.buildings;
                 this.state.activeBuilding = saved.activeBuilding ?? 0;

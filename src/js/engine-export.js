@@ -177,6 +177,7 @@ const ExportEngine = {
                 setbacksApplied: s.setbacksApplied,
                 freeDrag:       s.freeDrag ?? true,
                 snapEdge:       s.snapEdge ?? true,
+                siteNorthDeg:   s.siteNorthDeg ?? 0,
                 vehicles:       s.vehicles || [],
                 activeVehicle:  s.activeVehicle ?? -1
             }

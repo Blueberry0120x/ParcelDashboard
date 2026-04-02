@@ -81,7 +81,7 @@ project, siteId
 lat, lng, rotation, locked, setbacks,
 buildings, activeBuilding, commFront, showBldgDims,
 hiddenDimKeys, chainWOffset, chainDOffset, mapOpacity,
-setbacksApplied, freeDrag, snapEdge, vehicles, activeVehicle
+setbacksApplied, freeDrag, snapEdge, siteNorthDeg, vehicles, activeVehicle
 
 # Conditional (appended if present in localStorage)
 checklist

@@ -19,18 +19,34 @@ The map centers on `state.lat, state.lng` — the pin the user placed during GIS
 
 ## Rotation
 
-`state.rotation` is the lot rotation in degrees (0 = north-aligned, positive = clockwise).
+`state.rotation` is the **geometric** lot rotation in degrees — controls the coordinate frame only.
 
 **Where rotation is used:**
 - MapEngine.render() — rotates lot polygon corners before converting to lat/lng
 - SetbackEngine — all local frame math uses this angle
-- North arrow compass — shows site north vs true north
 - Chain dimensions — text labels rotated to stay readable
 
 **Setting rotation:**
 - Rotation slider (0-360) in sidebar → fires `input` event → updates state → redraws
 - Degree input box → same chain
 - Both trigger `ExportEngine.save()` on change
+
+## Site North (siteNorthDeg)
+
+`state.siteNorthDeg` is a **reference-only bearing**, completely independent of `rotation`. Controls only the red SN arrow on the compass widget (bottom-left). Does NOT affect lot geometry, building positions, or any frame math.
+
+**Use case:** Like a CAD north arrow — drag it to match the actual cardinal direction of the site's street frontage for drawings/exports/snapshots.
+
+**Setting siteNorthDeg:**
+- Drag the red SN arm on the compass like a clock hand
+- Drag computes `atan2(dx, -dy)` from SVG center → 0–360° clockwise from true north
+- On mouseup: `ExportEngine.save()` — persists in `saved.siteNorthDeg`
+
+**Key separation:**
+| Field | Controls |
+|---|---|
+| `rotation` | Lot polygon orientation, building frame, dim text angles — geometry |
+| `siteNorthDeg` | Compass SN arrow only — reference annotation, never geometry |
 
 ## Drag Behavior
 

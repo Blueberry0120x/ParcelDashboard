@@ -155,6 +155,13 @@ const MapEngine = {
                 const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
                 bldg.offsetX = snapped.x;
                 bldg.offsetY = snapped.y;
+                // Re-clamp after snap — snap can push a building past the lot edge
+                if (typeof SetbackEngine.clampToLot === 'function') {
+                    const { front: f2, rear: r2, sideL: sl2, sideR: sr2 } = state.setbacks;
+                    const cl2 = SetbackEngine.clampToLot(bldg.offsetX + (f2-r2)/2, bldg.offsetY + (sr2-sl2)/2, bldg);
+                    bldg.offsetX = parseFloat((cl2.cx - (f2-r2)/2).toFixed(1));
+                    bldg.offsetY = parseFloat((cl2.cy - (sr2-sl2)/2).toFixed(1));
+                }
             }
             if (state.activeBuilding === idx) {
                 const ox   = document.getElementById('bldgOffsetX');
@@ -176,6 +183,13 @@ const MapEngine = {
                     const snapped = this._applySnap(idx, bldg.offsetX, bldg.offsetY);
                     bldg.offsetX = snapped.x;
                     bldg.offsetY = snapped.y;
+                    // Re-clamp after snap — snap can push past lot edge
+                    if (typeof SetbackEngine.clampToLot === 'function') {
+                        const { front: f2, rear: r2, sideL: sl2, sideR: sr2 } = state.setbacks;
+                        const cl2 = SetbackEngine.clampToLot(bldg.offsetX + (f2-r2)/2, bldg.offsetY + (sr2-sl2)/2, bldg);
+                        bldg.offsetX = parseFloat((cl2.cx - (f2-r2)/2).toFixed(1));
+                        bldg.offsetY = parseFloat((cl2.cy - (sr2-sl2)/2).toFixed(1));
+                    }
                 }
             }
             SetbackEngine.drawBuilding();
@@ -560,10 +574,12 @@ const MapEngine = {
                     '<text x="-44" y="4"   text-anchor="middle" fill="#ffffff" stroke="rgba(0,0,0,.85)" stroke-width="3" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="8">W</text>' +
                     // Arc from TN to SN — red, thicker
                     '<path id="compassArc" d="" fill="none" stroke="#d9381e" stroke-width="3" stroke-dasharray="3,2" opacity="0.9"/>' +
-                    // Site North arm — red, thicker
-                    '<g id="siteNorthArm">' +
+                    // Site North arm — red, draggable to set siteNorthDeg
+                    '<g id="siteNorthArm" style="cursor:grab">' +
+                    '  <title>Site North \u2014 drag to set bearing</title>' +
                     '  <line x1="0" y1="0" x2="0" y2="-28" stroke="#d9381e" stroke-width="4" stroke-linecap="round"/>' +
                     '  <polygon points="0,-36 -5,-22 5,-22" fill="#d9381e"/>' +
+                    '  <circle r="20" fill="transparent" stroke="none"/>' +
                     '</g>' +
                     // Angle label — red, larger, white outline, pushed below circle
                     '<text id="compassDeg" x="0" y="74" text-anchor="middle" fill="#d9381e" stroke="rgba(255,255,255,.9)" stroke-width="3" paint-order="stroke" font-family="Segoe UI,Arial,sans-serif" font-size="10" font-weight="bold">SN 0.0\u00b0</text>' +
@@ -573,6 +589,44 @@ const MapEngine = {
             }
         });
         this.map.addControl(new NorthControl());
+
+        // Wire SN arm drag — clock-hand style, sets siteNorthDeg independent of lot rotation
+        L.Util.requestAnimFrame(function() {
+            var compassSvg = document.getElementById('compassSvg');
+            var snArm      = document.getElementById('siteNorthArm');
+            if (!compassSvg || !snArm) return;
+            var dragging = false;
+
+            function getAngle(clientX, clientY) {
+                var rect = compassSvg.getBoundingClientRect();
+                // ViewBox origin (0,0) is at (50/100)*width from left, (50/132)*height from top
+                var cx = rect.left + (50 / 100) * rect.width;
+                var cy = rect.top  + (50 / 132) * rect.height;
+                var dx = clientX - cx, dy = clientY - cy;
+                var a = Math.atan2(dx, -dy) * 180 / Math.PI;
+                return ((a % 360) + 360) % 360;
+            }
+
+            snArm.addEventListener('mousedown', function(e) {
+                dragging = true;
+                snArm.style.cursor = 'grabbing';
+                if (MapEngine.map) MapEngine.map.dragging.disable();
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!dragging) return;
+                ConfigEngine.state.siteNorthDeg = parseFloat(getAngle(e.clientX, e.clientY).toFixed(1));
+                MapEngine.updateNorthArrow();
+            });
+            document.addEventListener('mouseup', function() {
+                if (!dragging) return;
+                dragging = false;
+                snArm.style.cursor = 'grab';
+                if (MapEngine.map) MapEngine.map.dragging.enable();
+                ExportEngine.save();
+            });
+        });
     },
 
     buildOpacityPanel: function() {
@@ -832,18 +886,15 @@ const MapEngine = {
         const deg  = document.getElementById('compassDeg');
         const arc  = document.getElementById('compassArc');
         if (!arm) return;
-        const rot   = ConfigEngine.state.rotation;         // user-set rotation in degrees
-        const rad   = rot * Math.PI / 180;
-        // SN arm points toward the front of the lot — opposite of True North
-        const angle = Math.atan2(-Math.cos(rad), -Math.sin(rad)) * 180 / Math.PI;
-        arm.setAttribute('transform', 'rotate(' + angle.toFixed(2) + ')');
-        // Show the rotation value the user actually controls
-        if (deg) deg.textContent = rot.toFixed(1) + '\u00b0';
-        // Arc from 0° to SN arm angle at r=22
-        const normAngle = ((angle % 360) + 360) % 360;
-        if (arc && Math.abs(rot) >= 0.5) {
-            const r = 22, aRad = angle * Math.PI / 180;
-            arc.setAttribute('d', 'M 0 -' + r + ' A ' + r + ' ' + r + ' 0 ' + (normAngle > 180 ? 1 : 0) + ' 1 ' +
+        // siteNorthDeg is independent of lot rotation — purely a reference bearing
+        const snDeg = ConfigEngine.state.siteNorthDeg || 0;
+        arm.setAttribute('transform', 'rotate(' + snDeg.toFixed(2) + ')');
+        if (deg) deg.textContent = 'SN ' + snDeg.toFixed(1) + '\u00b0';
+        // Arc from TN (0°) to SN arm position at r=22
+        const normSnDeg = ((snDeg % 360) + 360) % 360;
+        if (arc && normSnDeg >= 0.5) {
+            const r = 22, aRad = snDeg * Math.PI / 180;
+            arc.setAttribute('d', 'M 0 -' + r + ' A ' + r + ' ' + r + ' 0 ' + (normSnDeg > 180 ? 1 : 0) + ' 1 ' +
                 (r * Math.sin(aRad)).toFixed(2) + ' ' + (-r * Math.cos(aRad)).toFixed(2));
         } else if (arc) {
             arc.setAttribute('d', '');

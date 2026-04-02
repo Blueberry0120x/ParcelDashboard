@@ -87,6 +87,10 @@ Returns clamped `(cx, cy)` — MapEngine applies these to the marker position.
 - Does the snap calculation itself (MapEngine owns this)
 - Returns snapped `(offsetX, offsetY)`
 
+**IMPORTANT — re-clamp after snap:** `_applySnap` runs AFTER `clampToLot` in the drag handler. It can push a building past the lot boundary (e.g., snapping to another building that is itself near the boundary). For this reason, the drag handler and dragend both apply a **second clamp pass** immediately after snap. The order is: drag position → clamp → snap → re-clamp.
+
+**Direct offset input also clamped:** When the user types a value directly into the `bldgOffsetX`/`bldgOffsetY` inputs, the `change` event handler clamps the value to lot bounds before passing it to `drawBuilding()`.
+
 ## Building Extents (SetbackEngine._buildingExtents)
 
 Returns axis-aligned bounding box half-dimensions for a building:

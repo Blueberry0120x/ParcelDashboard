@@ -53,6 +53,8 @@ MapEngine and SetbackEngine share coordinate math. A "small change" in one engin
 
 **Handoff:** SetbackEngine (Frame B feet) -> MapEngine converts -> Leaflet draws (Frame A lat/lng)
 
+**siteNorthDeg** — stored in `ConfigEngine.state`, set by MapEngine compass drag. Reference-only bearing for the compass SN arrow. Never enters frame math. Completely independent of `state.rotation`.
+
 ## Full Visual Reference
 
 The complete contract with tables, diagrams, and debug cheat sheet is in:

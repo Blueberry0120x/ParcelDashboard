@@ -86,10 +86,12 @@ lng = state.lng + rx / F_LNG
 - Restored as `new Set()` in MapEngine on load
 
 ### Chain repositioning (drag)
-- Enable dim drag mode via toggle button
+- Enable dim drag mode via toggle button (or click any chain line to get a handle)
 - Drag chain dim line perpendicular to its direction
 - Updates `chainWOffset` or `chainDOffset` in real time
-- Offsets snap to lot edges and building boundaries
+- **Threshold snap (4 ft):** snaps to lot edges and building boundaries only when within 4 ft — freely draggable between anchors
+- **Hard clamped to lot bounds:** `wRef` and `dRef` cannot go outside `[-lotHD, lotHD]` / `[-lotHW, lotHW]`; stale offsets auto-correct on first render
+- `snapTo(val, anchors, minBound, maxBound)` — always returns a value within `[minBound, maxBound]`
 - Saved in `_payload()` → persists across reloads
 
 ## Constants
