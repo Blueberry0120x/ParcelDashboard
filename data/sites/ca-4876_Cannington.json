@@ -161,8 +161,8 @@
         "orientation": 1.6,
         "W": 10,
         "D": 30,
-        "offsetX": 24.1,
-        "offsetY": -21,
+        "offsetX": 22,
+        "offsetY": -21.1,
         "spacing": 0,
         "count": 1,
         "stackSpacing": 0,
@@ -176,8 +176,32 @@
     "commFront": false,
     "showBldgDims": true,
     "hiddenDimKeys": [],
+    "mergedDimKeys": [],
     "chainWOffset": 0,
     "chainDOffset": 0,
+    "propDimOffsets": {},
+    "parcelPolygon": [
+      [
+        32.830862219121,
+        -117.168652470328
+      ],
+      [
+        32.830733660942,
+        -117.168921574475
+      ],
+      [
+        32.830859930042,
+        -117.16901406526
+      ],
+      [
+        32.830990783819,
+        -117.168735202345
+      ],
+      [
+        32.830862219121,
+        -117.168652470328
+      ]
+    ],
     "mapOpacity": 70,
     "setbacksApplied": false,
     "freeDrag": true,

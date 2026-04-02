@@ -138,8 +138,11 @@
       "lot_right",
       "lot_front"
     ],
+    "mergedDimKeys": [],
     "chainWOffset": 0,
     "chainDOffset": 40,
+    "propDimOffsets": {},
+    "parcelPolygon": null,
     "mapOpacity": 60,
     "setbacksApplied": false,
     "freeDrag": true,
