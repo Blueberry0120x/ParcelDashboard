@@ -64,6 +64,17 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py .claude/hooks/threshold_commit.py",
+            "timeout": 30,
+            "statusMessage": "Checking commit thresholds (>200 lines or >2 files)..."
+          }
+        ]
       }
     ],
     "Stop": [
