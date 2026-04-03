@@ -78,6 +78,17 @@
             "zoning": "CC-3-9",
             "status": "partial",
             "lastUpdated": "2026-03-28"
+        },
+        {
+            "id": "WA-10404_KIRKLAND",
+            "label": "10404 NE 124th St",
+            "address": "10404 NE 124th St, Kirkland, WA 98034",
+            "file": "wa-10404_Kirkland.json",
+            "state": "WA",
+            "city": "Kirkland",
+            "zoning": "TBD",
+            "status": "skeleton",
+            "lastUpdated": "2026-04-03"
         }
     ]
 }
